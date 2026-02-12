@@ -1,0 +1,345 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurer Marstek Venus Energy Manager",
+        "description": "Sélectionnez le capteur qui mesure l'importation/exportation du réseau électrique.",
+        "data": {
+          "consumption_sensor": "Capteur de consommation réseau"
+        },
+        "data_description": {
+          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau. Le contrôleur ajustera les batteries pour maintenir cette valeur proche de 0W."
+        }
+      },
+      "batteries": {
+        "title": "Nombre de batteries",
+        "description": "Combien de batteries Marstek Venus avez-vous installées ?",
+        "data": {
+          "num_batteries": "Nombre de batteries"
+        }
+      },
+      "battery_config": {
+        "title": "Configurer la batterie {battery_num}",
+        "description": "Entrez les détails de connexion et les limites pour la batterie {battery_num}.",
+        "data": {
+          "name": "Nom",
+          "host": "Adresse IP",
+          "port": "Port Modbus",
+          "battery_version": "Modèle de batterie",
+          "max_charge_power": "Puissance de charge maximale (W)",
+          "max_discharge_power": "Puissance de décharge maximale (W)",
+          "max_soc": "SOC maximum (%)",
+          "min_soc": "SOC minimum (%)",
+          "enable_charge_hysteresis": "Activer l'hystérésis de charge",
+          "charge_hysteresis_percent": "Pourcentage d'hystérésis (%)"
+        },
+        "data_description": {
+          "name": "Nom descriptif pour identifier cette batterie",
+          "host": "Adresse IP de la batterie sur votre réseau local",
+          "port": "Port Modbus (généralement 502)",
+          "battery_version": "Sélectionnez la version du modèle de votre batterie. v1/v2 pour les anciens modèles, v3 pour les nouveaux modèles avec cartographie de registres mise à jour",
+          "max_charge_power": "Puissance maximale autorisée pour charger la batterie",
+          "max_discharge_power": "Puissance maximale autorisée pour décharger la batterie",
+          "max_soc": "État de charge maximum - la batterie ne se chargera pas au-dessus de cette valeur",
+          "min_soc": "État de charge minimum - la batterie ne se déchargera pas en dessous de cette valeur",
+          "enable_charge_hysteresis": "Empêche la batterie de se charger lorsque le SOC est proche du maximum",
+          "charge_hysteresis_percent": "La batterie ne se chargera pas tant que le SOC ne descend pas à (max_soc - hystérésis). Ex : SOC max 100% avec 5% d'hystérésis = pas de charge avant 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Plages horaires sans décharge",
+        "description": "Voulez-vous configurer des plages horaires pendant lesquelles les batteries ne se déchargeront PAS ? (elles peuvent toujours se charger s'il y a un excédent solaire)",
+        "data": {
+          "configure_time_slots": "Configurer les plages horaires"
+        }
+      },
+      "add_time_slot": {
+        "title": "Plage horaire {slot_num}",
+        "description": "Définissez une plage horaire pendant laquelle les batteries ne se déchargeront PAS. Utile pour les heures de pointe ou lorsque vous préférez consommer du réseau.",
+        "data": {
+          "start_time": "Heure de début",
+          "end_time": "Heure de fin",
+          "days": "Jours de la semaine"
+        },
+        "data_description": {
+          "start_time": "Heure de début de la plage (format 24h)",
+          "end_time": "Heure de fin de la plage (format 24h)",
+          "days": "Jours où cette plage s'applique"
+        }
+      },
+      "add_more_slots": {
+        "title": "Ajouter d'autres plages horaires",
+        "description": "Vous avez actuellement {current_slots} plage(s) configurée(s). Vous pouvez ajouter jusqu'à {max_slots} plages au total.",
+        "data": {
+          "add_more": "Ajouter une autre plage horaire"
+        }
+      },
+      "excluded_devices": {
+        "title": "Gestion des appareils spéciaux",
+        "description": "Configurez les appareils avec une gestion spéciale : vous pouvez EXCLURE les appareils qui ne doivent PAS être alimentés par la batterie, ou AJOUTER des appareils qui DOIVENT être alimentés par la batterie même s'ils ne sont pas dans le capteur de consommation domestique.",
+        "data": {
+          "configure_excluded_devices": "Configurer les appareils spéciaux"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Appareil spécial {device_num}",
+        "description": "Configurez comment la batterie doit gérer cet appareil.",
+        "data": {
+          "power_sensor": "Capteur de puissance de l'appareil",
+          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique"
+        },
+        "data_description": {
+          "power_sensor": "Capteur qui mesure la puissance consommée par cet appareil (en W)",
+          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Ajouter d'autres appareils exclus",
+        "description": "Vous avez actuellement {current_devices} appareil(s) exclu(s). Vous pouvez ajouter jusqu'à {max_devices} appareils au total.",
+        "data": {
+          "add_more": "Ajouter un autre appareil exclu"
+        }
+      },
+      "predictive_charging": {
+        "title": "Charge prédictive depuis le réseau",
+        "description": "Voulez-vous activer la charge intelligente depuis le réseau ? Cette fonction permet de charger les batteries depuis le réseau pendant les heures creuses lorsque la prévision solaire pour le lendemain est insuffisante.",
+        "data": {
+          "configure_predictive_charging": "Configurer la charge prédictive"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Configuration de la charge prédictive",
+        "description": "Configurez quand et comment charger les batteries depuis le réseau en fonction des prévisions solaires.",
+        "data": {
+          "start_time": "Heure de début (tarif heures creuses)",
+          "end_time": "Heure de fin (tarif heures creuses)",
+          "days": "Jours de la semaine",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
+          "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
+          "days": "Jours où la charge depuis le réseau est autorisée",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh (ex : Solcast)",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Charge complète hebdomadaire",
+        "description": "Voulez-vous activer la charge complète hebdomadaire pour l'équilibrage des cellules ? Cette fonction charge les batteries à 100% une fois par semaine pour équilibrer les cellules.",
+        "data": {
+          "configure_weekly_full_charge": "Configurer la charge complète hebdomadaire"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Configuration de la charge complète hebdomadaire",
+        "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
+        "data": {
+          "weekly_full_charge_day": "Jour de la semaine"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
+      "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
+      "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
+      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries."
+    },
+    "abort": {
+      "already_configured": "Cette intégration est déjà configurée."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reconfigurer Marstek Venus Energy Manager",
+        "description": "Modifiez la configuration de l'intégration. Les modifications seront appliquées lors du redémarrage de l'intégration.",
+        "data": {
+          "consumption_sensor": "Capteur de consommation réseau"
+        },
+        "data_description": {
+          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau."
+        }
+      },
+      "batteries": {
+        "title": "Nombre de batteries",
+        "description": "Modifiez le nombre de batteries. Si vous réduisez le nombre, les dernières batteries configurées seront supprimées.",
+        "data": {
+          "num_batteries": "Nombre de batteries"
+        }
+      },
+      "battery_config": {
+        "title": "Configurer la batterie {battery_num}",
+        "description": "Modifiez les détails pour la batterie {battery_num}.",
+        "data": {
+          "name": "Nom",
+          "host": "Adresse IP",
+          "port": "Port Modbus",
+          "battery_version": "Modèle de batterie",
+          "max_charge_power": "Puissance de charge maximale (W)",
+          "max_discharge_power": "Puissance de décharge maximale (W)",
+          "max_soc": "SOC maximum (%)",
+          "min_soc": "SOC minimum (%)",
+          "enable_charge_hysteresis": "Activer l'hystérésis de charge",
+          "charge_hysteresis_percent": "Pourcentage d'hystérésis (%)"
+        },
+        "data_description": {
+          "name": "Nom descriptif pour identifier cette batterie",
+          "host": "Adresse IP de la batterie sur votre réseau local",
+          "port": "Port Modbus (généralement 502)",
+          "battery_version": "Sélectionnez la version du modèle de votre batterie. v1/v2 pour les anciens modèles, v3 pour les nouveaux modèles avec cartographie de registres mise à jour",
+          "max_charge_power": "Puissance maximale autorisée pour charger la batterie",
+          "max_discharge_power": "Puissance maximale autorisée pour décharger la batterie",
+          "max_soc": "État de charge maximum",
+          "min_soc": "État de charge minimum",
+          "enable_charge_hysteresis": "Empêche la batterie de se charger lorsque le SOC est proche du maximum",
+          "charge_hysteresis_percent": "La batterie ne se chargera pas tant que le SOC ne descend pas à (max_soc - hystérésis). Ex : SOC max 100% avec 5% d'hystérésis = pas de charge avant 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Plages horaires sans décharge",
+        "description": "Voulez-vous reconfigurer les plages horaires ? Les plages actuelles seront remplacées.",
+        "data": {
+          "configure_time_slots": "Configurer les plages horaires"
+        }
+      },
+      "add_time_slot": {
+        "title": "Plage horaire {slot_num}",
+        "description": "Définissez ou modifiez une plage horaire pendant laquelle les batteries ne se déchargeront PAS.",
+        "data": {
+          "start_time": "Heure de début",
+          "end_time": "Heure de fin",
+          "days": "Jours de la semaine"
+        },
+        "data_description": {
+          "start_time": "Heure de début de la plage (format 24h)",
+          "end_time": "Heure de fin de la plage (format 24h)",
+          "days": "Jours où cette plage s'applique"
+        }
+      },
+      "add_more_slots": {
+        "title": "Ajouter d'autres plages horaires",
+        "description": "Vous avez {current_slots} plage(s) configurée(s). Vous pouvez ajouter jusqu'à {max_slots} au total.",
+        "data": {
+          "add_more": "Ajouter une autre plage horaire"
+        }
+      },
+      "excluded_devices": {
+        "title": "Gestion des appareils spéciaux",
+        "description": "Configurez les appareils avec une gestion spéciale : vous pouvez EXCLURE les appareils qui ne doivent PAS être alimentés par la batterie, ou AJOUTER des appareils qui DOIVENT être alimentés par la batterie même s'ils ne sont pas dans le capteur de consommation domestique.",
+        "data": {
+          "configure_excluded_devices": "Configurer les appareils spéciaux"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Appareil spécial {device_num}",
+        "description": "Configurez comment la batterie doit gérer cet appareil.",
+        "data": {
+          "power_sensor": "Capteur de puissance de l'appareil",
+          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique"
+        },
+        "data_description": {
+          "power_sensor": "Capteur qui mesure la puissance consommée par cet appareil (en W)",
+          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Ajouter d'autres appareils spéciaux",
+        "description": "Vous avez {current_devices} appareil(s) configuré(s). Vous pouvez ajouter jusqu'à {max_devices} au total.",
+        "data": {
+          "add_more": "Ajouter un autre appareil spécial"
+        }
+      },
+      "predictive_charging": {
+        "title": "Charge prédictive depuis le réseau",
+        "description": "Voulez-vous activer la charge intelligente depuis le réseau ? Cette fonction permet de charger les batteries depuis le réseau pendant les heures creuses lorsque la prévision solaire pour le lendemain est insuffisante.",
+        "data": {
+          "configure_predictive_charging": "Configurer la charge prédictive"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Configuration de la charge prédictive",
+        "description": "Configurez quand et comment charger les batteries depuis le réseau en fonction des prévisions solaires.",
+        "data": {
+          "start_time": "Heure de début (tarif heures creuses)",
+          "end_time": "Heure de fin (tarif heures creuses)",
+          "days": "Jours de la semaine",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
+          "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
+          "days": "Jours où la charge depuis le réseau est autorisée",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh (ex : Solcast)",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Charge complète hebdomadaire",
+        "description": "Voulez-vous activer la charge complète hebdomadaire pour l'équilibrage des cellules ? Cette fonction charge les batteries à 100% une fois par semaine pour équilibrer les cellules.",
+        "data": {
+          "configure_weekly_full_charge": "Configurer la charge complète hebdomadaire"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Configuration de la charge complète hebdomadaire",
+        "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
+        "data": {
+          "weekly_full_charge_day": "Jour de la semaine"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+        }
+      },
+      "pd_advanced": {
+        "title": "Paramètres avancés du contrôleur PD",
+        "description": "Configurez les paramètres avancés du contrôleur PD pour affiner le comportement de charge/décharge de la batterie. Ne modifiez ces valeurs que si vous comprenez la théorie du contrôle PID. Les valeurs par défaut fonctionnent bien pour la plupart des installations.",
+        "data": {
+          "configure_pd_advanced": "Configurer les paramètres avancés du contrôleur PD"
+        }
+      },
+      "pd_advanced_config": {
+        "title": "Configuration du contrôleur PD",
+        "description": "Ajustez le contrôleur proportionnel-dérivé qui gère les ajustements de puissance de la batterie. Les modifications seront appliquées après le redémarrage de l'intégration.",
+        "data": {
+          "pd_kp": "Kp - Gain proportionnel",
+          "pd_kd": "Kd - Gain dérivé",
+          "pd_deadband": "Bande morte (W)",
+          "pd_max_power_change": "Changement de puissance max par cycle (W)",
+          "pd_direction_hysteresis": "Hystérésis de direction (W)"
+        },
+        "data_description": {
+          "pd_kp": "Réactivité au déséquilibre du réseau. Valeurs plus élevées = réponse plus rapide mais risque de dépassement. Plage : 0.1-2.0, par défaut : 0.65",
+          "pd_kd": "Amortissement pour éviter les oscillations. Valeurs plus élevées = transitions plus douces mais stabilisation plus lente. Plage : 0.0-2.0, par défaut : 0.5",
+          "pd_deadband": "Tolérance de puissance du réseau autour de zéro. Empêche les micro-ajustements aux fluctuations mineures. Des valeurs plus élevées réduisent la sensibilité. Plage : 0-200W, par défaut : 40W",
+          "pd_max_power_change": "Changement de puissance maximale de la batterie par cycle de contrôle (2.5s). Empêche les commandes abruptes. Valeurs plus faibles = plus doux mais plus lent. Plage : 100-2000W, par défaut : 800W",
+          "pd_direction_hysteresis": "Seuil de puissance requis pour basculer entre charge et décharge. Empêche les changements rapides de direction. Plage : 0-200W, par défaut : 60W"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
+      "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
+      "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
+      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries."
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Lundi",
+        "tue": "Mardi",
+        "wed": "Mercredi",
+        "thu": "Jeudi",
+        "fri": "Vendredi",
+        "sat": "Samedi",
+        "sun": "Dimanche"
+      }
+    }
+  }
+}

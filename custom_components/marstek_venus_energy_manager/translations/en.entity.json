@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "system_soc": {
+        "name": "System SOC"
+      },
+      "system_charge_power": {
+        "name": "System Charge Power"
+      },
+      "system_discharge_power": {
+        "name": "System Discharge Power"
+      },
+      "system_total_energy": {
+        "name": "System Total Energy"
+      },
+      "system_stored_energy": {
+        "name": "System Stored Energy"
+      }
+    }
+  }
+}

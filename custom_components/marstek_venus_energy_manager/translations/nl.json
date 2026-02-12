@@ -1,0 +1,345 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Marstek Venus Energy Manager configureren",
+        "description": "Selecteer de sensor die het netimport/-exportvermogen meet.",
+        "data": {
+          "consumption_sensor": "Netverbruikssensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft. De controller past de batterijen aan om deze waarde dicht bij 0W te houden."
+        }
+      },
+      "batteries": {
+        "title": "Aantal batterijen",
+        "description": "Hoeveel Marstek Venus batterijen heeft u geïnstalleerd?",
+        "data": {
+          "num_batteries": "Aantal batterijen"
+        }
+      },
+      "battery_config": {
+        "title": "Batterij {battery_num} configureren",
+        "description": "Voer verbindingsgegevens en limieten in voor batterij {battery_num}.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres",
+          "port": "Modbus-poort",
+          "battery_version": "Batterijmodel",
+          "max_charge_power": "Maximaal laadvermogen (W)",
+          "max_discharge_power": "Maximaal ontlaadvermogen (W)",
+          "max_soc": "Maximale SOC (%)",
+          "min_soc": "Minimale SOC (%)",
+          "enable_charge_hysteresis": "Laadhysterese inschakelen",
+          "charge_hysteresis_percent": "Hysterese percentage (%)"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de batterij op uw lokale netwerk",
+          "port": "Modbus-poort (meestal 502)",
+          "battery_version": "Selecteer de modelversie van uw batterij. v1/v2 voor oudere modellen, v3 voor nieuwere modellen met bijgewerkte registerkaart",
+          "max_charge_power": "Maximaal toegestaan vermogen om de batterij op te laden",
+          "max_discharge_power": "Maximaal toegestaan vermogen om de batterij te ontladen",
+          "max_soc": "Maximale laadtoestand - batterij laadt niet boven deze waarde",
+          "min_soc": "Minimale laadtoestand - batterij ontlaadt niet onder deze waarde",
+          "enable_charge_hysteresis": "Voorkomt dat de batterij laadt wanneer SOC dicht bij het maximum is",
+          "charge_hysteresis_percent": "Batterij laadt niet tot SOC daalt naar (max_soc - hysterese). Bijv.: Max SOC 100% met 5% hysterese = geen laden tot 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Geen-ontlading tijdslots",
+        "description": "Wilt u tijdslots configureren waarin batterijen NIET ontladen? (ze kunnen nog steeds laden als er overtollige zonne-energie is)",
+        "data": {
+          "configure_time_slots": "Tijdslots configureren"
+        }
+      },
+      "add_time_slot": {
+        "title": "Tijdslot {slot_num}",
+        "description": "Definieer een tijdslot waarin batterijen NIET ontladen. Nuttig voor piekuren of wanneer u liever vanuit het net wilt verbruiken.",
+        "data": {
+          "start_time": "Starttijd",
+          "end_time": "Eindtijd",
+          "days": "Dagen van de week"
+        },
+        "data_description": {
+          "start_time": "Starttijd van het tijdslot (24u-formaat)",
+          "end_time": "Eindtijd van het tijdslot (24u-formaat)",
+          "days": "Dagen waarop dit tijdslot van toepassing is"
+        }
+      },
+      "add_more_slots": {
+        "title": "Meer tijdslots toevoegen",
+        "description": "U heeft momenteel {current_slots} geconfigureerde tijdslot(en). U kunt in totaal maximaal {max_slots} tijdslots toevoegen.",
+        "data": {
+          "add_more": "Nog een tijdslot toevoegen"
+        }
+      },
+      "excluded_devices": {
+        "title": "Speciaal apparatenbeheer",
+        "description": "Configureer apparaten met speciaal beheer: u kunt apparaten UITSLUITEN die NIET door de batterij gevoed mogen worden, of apparaten TOEVOEGEN die WEL door de batterij gevoed moeten worden, zelfs als ze niet in de huisverbruikssensor zitten.",
+        "data": {
+          "configure_excluded_devices": "Speciale apparaten configureren"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Speciaal apparaat {device_num}",
+        "description": "Configureer hoe de batterij dit apparaat moet beheren.",
+        "data": {
+          "power_sensor": "Apparaatvermogensensor",
+          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor"
+        },
+        "data_description": {
+          "power_sensor": "Sensor die het door dit apparaat verbruikte vermogen meet (in W)",
+          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Meer uitgesloten apparaten toevoegen",
+        "description": "U heeft momenteel {current_devices} uitgesloten apparaat/apparaten. U kunt in totaal maximaal {max_devices} apparaten toevoegen.",
+        "data": {
+          "add_more": "Nog een uitgesloten apparaat toevoegen"
+        }
+      },
+      "predictive_charging": {
+        "title": "Voorspellend netladen",
+        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor de volgende dag onvoldoende is.",
+        "data": {
+          "configure_predictive_charging": "Voorspellend laden configureren"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Configuratie voorspellend laden",
+        "description": "Configureer wanneer en hoe batterijen vanuit het net geladen moeten worden op basis van de zonnevoorspelling.",
+        "data": {
+          "start_time": "Starttijd (daltarief)",
+          "end_time": "Eindtijd (daltarief)",
+          "days": "Dagen van de week",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
+          "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
+          "days": "Dagen waarop netladen is toegestaan",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert (bijv. Solcast)",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Wekelijkse volledige lading",
+        "description": "Wilt u wekelijkse volledige batterijlading voor celbalancering inschakelen? Deze functie laadt batterijen één keer per week op tot 100% om de cellen te balanceren.",
+        "data": {
+          "configure_weekly_full_charge": "Wekelijkse volledige lading configureren"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Configuratie wekelijkse volledige lading",
+        "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
+        "data": {
+          "weekly_full_charge_day": "Dag van de week"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
+      "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
+      "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
+      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen."
+    },
+    "abort": {
+      "already_configured": "Deze integratie is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Marstek Venus Energy Manager opnieuw configureren",
+        "description": "Wijzig de integratieconfiguratie. Wijzigingen worden toegepast bij het herstarten van de integratie.",
+        "data": {
+          "consumption_sensor": "Netverbruikssensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft."
+        }
+      },
+      "batteries": {
+        "title": "Aantal batterijen",
+        "description": "Wijzig het aantal batterijen. Als u het aantal vermindert, worden de laatst geconfigureerde batterijen verwijderd.",
+        "data": {
+          "num_batteries": "Aantal batterijen"
+        }
+      },
+      "battery_config": {
+        "title": "Batterij {battery_num} configureren",
+        "description": "Wijzig de details voor batterij {battery_num}.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres",
+          "port": "Modbus-poort",
+          "battery_version": "Batterijmodel",
+          "max_charge_power": "Maximaal laadvermogen (W)",
+          "max_discharge_power": "Maximaal ontlaadvermogen (W)",
+          "max_soc": "Maximale SOC (%)",
+          "min_soc": "Minimale SOC (%)",
+          "enable_charge_hysteresis": "Laadhysterese inschakelen",
+          "charge_hysteresis_percent": "Hysterese percentage (%)"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de batterij op uw lokale netwerk",
+          "port": "Modbus-poort (meestal 502)",
+          "battery_version": "Selecteer de modelversie van uw batterij. v1/v2 voor oudere modellen, v3 voor nieuwere modellen met bijgewerkte registerkaart",
+          "max_charge_power": "Maximaal toegestaan vermogen om de batterij op te laden",
+          "max_discharge_power": "Maximaal toegestaan vermogen om de batterij te ontladen",
+          "max_soc": "Maximale laadtoestand",
+          "min_soc": "Minimale laadtoestand",
+          "enable_charge_hysteresis": "Voorkomt dat de batterij laadt wanneer SOC dicht bij het maximum is",
+          "charge_hysteresis_percent": "Batterij laadt niet tot SOC daalt naar (max_soc - hysterese). Bijv.: Max SOC 100% met 5% hysterese = geen laden tot 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Geen-ontlading tijdslots",
+        "description": "Wilt u tijdslots opnieuw configureren? Huidige tijdslots worden vervangen.",
+        "data": {
+          "configure_time_slots": "Tijdslots configureren"
+        }
+      },
+      "add_time_slot": {
+        "title": "Tijdslot {slot_num}",
+        "description": "Definieer of wijzig een tijdslot waarin batterijen NIET ontladen.",
+        "data": {
+          "start_time": "Starttijd",
+          "end_time": "Eindtijd",
+          "days": "Dagen van de week"
+        },
+        "data_description": {
+          "start_time": "Starttijd van het tijdslot (24u-formaat)",
+          "end_time": "Eindtijd van het tijdslot (24u-formaat)",
+          "days": "Dagen waarop dit tijdslot van toepassing is"
+        }
+      },
+      "add_more_slots": {
+        "title": "Meer tijdslots toevoegen",
+        "description": "U heeft {current_slots} geconfigureerde tijdslot(en). U kunt in totaal maximaal {max_slots} toevoegen.",
+        "data": {
+          "add_more": "Nog een tijdslot toevoegen"
+        }
+      },
+      "excluded_devices": {
+        "title": "Speciaal apparatenbeheer",
+        "description": "Configureer apparaten met speciaal beheer: u kunt apparaten UITSLUITEN die NIET door de batterij gevoed mogen worden, of apparaten TOEVOEGEN die WEL door de batterij gevoed moeten worden, zelfs als ze niet in de huisverbruikssensor zitten.",
+        "data": {
+          "configure_excluded_devices": "Speciale apparaten configureren"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Speciaal apparaat {device_num}",
+        "description": "Configureer hoe de batterij dit apparaat moet beheren.",
+        "data": {
+          "power_sensor": "Apparaatvermogensensor",
+          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor"
+        },
+        "data_description": {
+          "power_sensor": "Sensor die het door dit apparaat verbruikte vermogen meet (in W)",
+          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Meer speciale apparaten toevoegen",
+        "description": "U heeft {current_devices} geconfigureerd(e) apparaat/apparaten. U kunt in totaal maximaal {max_devices} toevoegen.",
+        "data": {
+          "add_more": "Nog een speciaal apparaat toevoegen"
+        }
+      },
+      "predictive_charging": {
+        "title": "Voorspellend netladen",
+        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor de volgende dag onvoldoende is.",
+        "data": {
+          "configure_predictive_charging": "Voorspellend laden configureren"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Configuratie voorspellend laden",
+        "description": "Configureer wanneer en hoe batterijen vanuit het net geladen moeten worden op basis van de zonnevoorspelling.",
+        "data": {
+          "start_time": "Starttijd (daltarief)",
+          "end_time": "Eindtijd (daltarief)",
+          "days": "Dagen van de week",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
+          "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
+          "days": "Dagen waarop netladen is toegestaan",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert (bijv. Solcast)",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Wekelijkse volledige lading",
+        "description": "Wilt u wekelijkse volledige batterijlading voor celbalancering inschakelen? Deze functie laadt batterijen één keer per week op tot 100% om de cellen te balanceren.",
+        "data": {
+          "configure_weekly_full_charge": "Wekelijkse volledige lading configureren"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Configuratie wekelijkse volledige lading",
+        "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
+        "data": {
+          "weekly_full_charge_day": "Dag van de week"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+        }
+      },
+      "pd_advanced": {
+        "title": "Geavanceerde PD-regelaar parameters",
+        "description": "Configureer geavanceerde PD-regelaar parameters voor het afstemmen van het laad-/ontlaadgedrag van de batterij. Wijzig deze waarden alleen als u de PID-regeltheorie begrijpt. De standaardwaarden werken goed voor de meeste installaties.",
+        "data": {
+          "configure_pd_advanced": "Geavanceerde PD-regelaar parameters configureren"
+        }
+      },
+      "pd_advanced_config": {
+        "title": "PD-regelaar configuratie",
+        "description": "Stel de proportioneel-differentiële regelaar in die de batterijvermogensaanpassingen beheert. Wijzigingen worden toegepast na het herstarten van de integratie.",
+        "data": {
+          "pd_kp": "Kp - Proportionele versterking",
+          "pd_kd": "Kd - Differentiële versterking",
+          "pd_deadband": "Dode band (W)",
+          "pd_max_power_change": "Max vermogenswijziging per cyclus (W)",
+          "pd_direction_hysteresis": "Richting hysterese (W)"
+        },
+        "data_description": {
+          "pd_kp": "Responsiviteit op netwerk onbalans. Hogere waarden = snellere respons maar risico op overshoot. Bereik: 0.1-2.0, standaard: 0.65",
+          "pd_kd": "Demping om oscillatie te voorkomen. Hogere waarden = soepelere overgangen maar tragere stabilisatie. Bereik: 0.0-2.0, standaard: 0.5",
+          "pd_deadband": "Netwerk vermogenstolerantie rond nul. Voorkomt micro-aanpassingen bij kleine fluctuaties. Hogere waarden verminderen de gevoeligheid. Bereik: 0-200W, standaard: 40W",
+          "pd_max_power_change": "Maximale batterijvermogenswijziging per regelcyclus (2.5s). Voorkomt abrupte commando's. Lagere waarden = soepeler maar langzamer. Bereik: 100-2000W, standaard: 800W",
+          "pd_direction_hysteresis": "Vermogensdrempel vereist om te schakelen tussen laden en ontladen. Voorkomt snelle richtingsveranderingen. Bereik: 0-200W, standaard: 60W"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
+      "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
+      "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
+      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen."
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Maandag",
+        "tue": "Dinsdag",
+        "wed": "Woensdag",
+        "thu": "Donderdag",
+        "fri": "Vrijdag",
+        "sat": "Zaterdag",
+        "sun": "Zondag"
+      }
+    }
+  }
+}

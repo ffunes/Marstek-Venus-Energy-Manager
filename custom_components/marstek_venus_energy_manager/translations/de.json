@@ -1,0 +1,345 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Marstek Venus Energy Manager konfigurieren",
+        "description": "Wählen Sie den Sensor aus, der die Netzimport-/Exportleistung misst.",
+        "data": {
+          "consumption_sensor": "Netzverbrauchssensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt. Der Controller passt die Batterien an, um diesen Wert nahe 0W zu halten."
+        }
+      },
+      "batteries": {
+        "title": "Anzahl der Batterien",
+        "description": "Wie viele Marstek Venus Batterien haben Sie installiert?",
+        "data": {
+          "num_batteries": "Anzahl der Batterien"
+        }
+      },
+      "battery_config": {
+        "title": "Batterie {battery_num} konfigurieren",
+        "description": "Geben Sie Verbindungsdetails und Grenzwerte für Batterie {battery_num} ein.",
+        "data": {
+          "name": "Name",
+          "host": "IP-Adresse",
+          "port": "Modbus-Port",
+          "battery_version": "Batteriemodell",
+          "max_charge_power": "Maximale Ladeleistung (W)",
+          "max_discharge_power": "Maximale Entladeleistung (W)",
+          "max_soc": "Maximaler SOC (%)",
+          "min_soc": "Minimaler SOC (%)",
+          "enable_charge_hysteresis": "Ladehysterese aktivieren",
+          "charge_hysteresis_percent": "Hysterese-Prozentsatz (%)"
+        },
+        "data_description": {
+          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
+          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
+          "port": "Modbus-Port (normalerweise 502)",
+          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. v1/v2 für ältere Modelle, v3 für neuere Modelle mit aktualisierter Registerkarte",
+          "max_charge_power": "Maximal zulässige Leistung zum Laden der Batterie",
+          "max_discharge_power": "Maximal zulässige Leistung zum Entladen der Batterie",
+          "max_soc": "Maximaler Ladezustand - Batterie lädt nicht über diesen Wert",
+          "min_soc": "Minimaler Ladezustand - Batterie entlädt nicht unter diesen Wert",
+          "enable_charge_hysteresis": "Verhindert das Laden der Batterie, wenn der SOC nahe am Maximum ist",
+          "charge_hysteresis_percent": "Batterie lädt nicht, bis der SOC auf (max_soc - Hysterese) fällt. Bsp.: Max SOC 100% mit 5% Hysterese = kein Laden bis 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Keine-Entladung-Zeitfenster",
+        "description": "Möchten Sie Zeitfenster konfigurieren, in denen Batterien NICHT entladen werden? (sie können bei überschüssiger Solarenergie noch laden)",
+        "data": {
+          "configure_time_slots": "Zeitfenster konfigurieren"
+        }
+      },
+      "add_time_slot": {
+        "title": "Zeitfenster {slot_num}",
+        "description": "Definieren Sie ein Zeitfenster, in dem Batterien NICHT entladen werden. Nützlich für Spitzenlastzeiten oder wenn Sie lieber aus dem Netz verbrauchen möchten.",
+        "data": {
+          "start_time": "Startzeit",
+          "end_time": "Endzeit",
+          "days": "Wochentage"
+        },
+        "data_description": {
+          "start_time": "Startzeit des Zeitfensters (24h-Format)",
+          "end_time": "Endzeit des Zeitfensters (24h-Format)",
+          "days": "Tage, an denen dieses Zeitfenster gilt"
+        }
+      },
+      "add_more_slots": {
+        "title": "Weitere Zeitfenster hinzufügen",
+        "description": "Sie haben derzeit {current_slots} konfigurierte(s) Zeitfenster. Sie können insgesamt bis zu {max_slots} Zeitfenster hinzufügen.",
+        "data": {
+          "add_more": "Weiteres Zeitfenster hinzufügen"
+        }
+      },
+      "excluded_devices": {
+        "title": "Spezielle Geräteverwaltung",
+        "description": "Konfigurieren Sie Geräte mit spezieller Verwaltung: Sie können Geräte AUSSCHLIESSEN, die NICHT von der Batterie versorgt werden sollen, oder Geräte HINZUFÜGEN, die von der Batterie versorgt werden sollen, auch wenn sie nicht im Hausverbrauchssensor enthalten sind.",
+        "data": {
+          "configure_excluded_devices": "Spezielle Geräte konfigurieren"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Spezielles Gerät {device_num}",
+        "description": "Konfigurieren Sie, wie die Batterie dieses Gerät verwalten soll.",
+        "data": {
+          "power_sensor": "Geräteleistungssensor",
+          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten"
+        },
+        "data_description": {
+          "power_sensor": "Sensor, der die von diesem Gerät verbrauchte Leistung misst (in W)",
+          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Weitere ausgeschlossene Geräte hinzufügen",
+        "description": "Sie haben derzeit {current_devices} ausgeschlossene(s) Gerät(e). Sie können insgesamt bis zu {max_devices} Geräte hinzufügen.",
+        "data": {
+          "add_more": "Weiteres ausgeschlossenes Gerät hinzufügen"
+        }
+      },
+      "predictive_charging": {
+        "title": "Prädiktive Netzladung",
+        "description": "Möchten Sie intelligentes Netzladen aktivieren? Diese Funktion ermöglicht das Laden der Batterien aus dem Netz während der Niedrigtarifzeiten, wenn die Solarprognose für den nächsten Tag unzureichend ist.",
+        "data": {
+          "configure_predictive_charging": "Prädiktive Ladung konfigurieren"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Konfiguration der prädiktiven Ladung",
+        "description": "Konfigurieren Sie, wann und wie die Batterien aus dem Netz basierend auf der Solarprognose geladen werden sollen.",
+        "data": {
+          "start_time": "Startzeit (Niedrigtarif)",
+          "end_time": "Endzeit (Niedrigtarif)",
+          "days": "Wochentage",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
+          "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
+          "days": "Tage, an denen Netzladung erlaubt ist",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert (z.B. Solcast)",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Wöchentliche Vollladung",
+        "description": "Möchten Sie die wöchentliche Vollladung zur Zellenbalancierung aktivieren? Diese Funktion lädt die Batterien einmal pro Woche auf 100%, um die Zellen auszugleichen.",
+        "data": {
+          "configure_weekly_full_charge": "Wöchentliche Vollladung konfigurieren"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Konfiguration der wöchentlichen Vollladung",
+        "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
+        "data": {
+          "weekly_full_charge_day": "Wochentag"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
+      "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
+      "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
+      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien."
+    },
+    "abort": {
+      "already_configured": "Diese Integration ist bereits konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Marstek Venus Energy Manager neu konfigurieren",
+        "description": "Ändern Sie die Integrationskonfiguration. Änderungen werden beim Neustart der Integration angewendet.",
+        "data": {
+          "consumption_sensor": "Netzverbrauchssensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt."
+        }
+      },
+      "batteries": {
+        "title": "Anzahl der Batterien",
+        "description": "Ändern Sie die Anzahl der Batterien. Wenn Sie die Anzahl reduzieren, werden die zuletzt konfigurierten Batterien entfernt.",
+        "data": {
+          "num_batteries": "Anzahl der Batterien"
+        }
+      },
+      "battery_config": {
+        "title": "Batterie {battery_num} konfigurieren",
+        "description": "Ändern Sie die Details für Batterie {battery_num}.",
+        "data": {
+          "name": "Name",
+          "host": "IP-Adresse",
+          "port": "Modbus-Port",
+          "battery_version": "Batteriemodell",
+          "max_charge_power": "Maximale Ladeleistung (W)",
+          "max_discharge_power": "Maximale Entladeleistung (W)",
+          "max_soc": "Maximaler SOC (%)",
+          "min_soc": "Minimaler SOC (%)",
+          "enable_charge_hysteresis": "Ladehysterese aktivieren",
+          "charge_hysteresis_percent": "Hysterese-Prozentsatz (%)"
+        },
+        "data_description": {
+          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
+          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
+          "port": "Modbus-Port (normalerweise 502)",
+          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. v1/v2 für ältere Modelle, v3 für neuere Modelle mit aktualisierter Registerkarte",
+          "max_charge_power": "Maximal zulässige Leistung zum Laden der Batterie",
+          "max_discharge_power": "Maximal zulässige Leistung zum Entladen der Batterie",
+          "max_soc": "Maximaler Ladezustand",
+          "min_soc": "Minimaler Ladezustand",
+          "enable_charge_hysteresis": "Verhindert das Laden der Batterie, wenn der SOC nahe am Maximum ist",
+          "charge_hysteresis_percent": "Batterie lädt nicht, bis der SOC auf (max_soc - Hysterese) fällt. Bsp.: Max SOC 100% mit 5% Hysterese = kein Laden bis 95%"
+        }
+      },
+      "time_slots": {
+        "title": "Keine-Entladung-Zeitfenster",
+        "description": "Möchten Sie Zeitfenster neu konfigurieren? Aktuelle Zeitfenster werden ersetzt.",
+        "data": {
+          "configure_time_slots": "Zeitfenster konfigurieren"
+        }
+      },
+      "add_time_slot": {
+        "title": "Zeitfenster {slot_num}",
+        "description": "Definieren oder ändern Sie ein Zeitfenster, in dem Batterien NICHT entladen werden.",
+        "data": {
+          "start_time": "Startzeit",
+          "end_time": "Endzeit",
+          "days": "Wochentage"
+        },
+        "data_description": {
+          "start_time": "Startzeit des Zeitfensters (24h-Format)",
+          "end_time": "Endzeit des Zeitfensters (24h-Format)",
+          "days": "Tage, an denen dieses Zeitfenster gilt"
+        }
+      },
+      "add_more_slots": {
+        "title": "Weitere Zeitfenster hinzufügen",
+        "description": "Sie haben {current_slots} konfigurierte(s) Zeitfenster. Sie können insgesamt bis zu {max_slots} hinzufügen.",
+        "data": {
+          "add_more": "Weiteres Zeitfenster hinzufügen"
+        }
+      },
+      "excluded_devices": {
+        "title": "Spezielle Geräteverwaltung",
+        "description": "Konfigurieren Sie Geräte mit spezieller Verwaltung: Sie können Geräte AUSSCHLIESSEN, die NICHT von der Batterie versorgt werden sollen, oder Geräte HINZUFÜGEN, die von der Batterie versorgt werden sollen, auch wenn sie nicht im Hausverbrauchssensor enthalten sind.",
+        "data": {
+          "configure_excluded_devices": "Spezielle Geräte konfigurieren"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Spezielles Gerät {device_num}",
+        "description": "Konfigurieren Sie, wie die Batterie dieses Gerät verwalten soll.",
+        "data": {
+          "power_sensor": "Geräteleistungssensor",
+          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten"
+        },
+        "data_description": {
+          "power_sensor": "Sensor, der die von diesem Gerät verbrauchte Leistung misst (in W)",
+          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Weitere spezielle Geräte hinzufügen",
+        "description": "Sie haben {current_devices} konfigurierte(s) Gerät(e). Sie können insgesamt bis zu {max_devices} hinzufügen.",
+        "data": {
+          "add_more": "Weiteres spezielles Gerät hinzufügen"
+        }
+      },
+      "predictive_charging": {
+        "title": "Prädiktive Netzladung",
+        "description": "Möchten Sie intelligentes Netzladen aktivieren? Diese Funktion ermöglicht das Laden der Batterien aus dem Netz während der Niedrigtarifzeiten, wenn die Solarprognose für den nächsten Tag unzureichend ist.",
+        "data": {
+          "configure_predictive_charging": "Prädiktive Ladung konfigurieren"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Konfiguration der prädiktiven Ladung",
+        "description": "Konfigurieren Sie, wann und wie die Batterien aus dem Netz basierend auf der Solarprognose geladen werden sollen.",
+        "data": {
+          "start_time": "Startzeit (Niedrigtarif)",
+          "end_time": "Endzeit (Niedrigtarif)",
+          "days": "Wochentage",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
+          "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
+          "days": "Tage, an denen Netzladung erlaubt ist",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert (z.B. Solcast)",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Wöchentliche Vollladung",
+        "description": "Möchten Sie die wöchentliche Vollladung zur Zellenbalancierung aktivieren? Diese Funktion lädt die Batterien einmal pro Woche auf 100%, um die Zellen auszugleichen.",
+        "data": {
+          "configure_weekly_full_charge": "Wöchentliche Vollladung konfigurieren"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Konfiguration der wöchentlichen Vollladung",
+        "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
+        "data": {
+          "weekly_full_charge_day": "Wochentag"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+        }
+      },
+      "pd_advanced": {
+        "title": "Erweiterte PD-Regler-Parameter",
+        "description": "Konfigurieren Sie erweiterte PD-Regler-Parameter zur Feinabstimmung des Lade-/Entladeverhaltens der Batterie. Ändern Sie diese Werte nur, wenn Sie die PID-Regelungstheorie verstehen. Die Standardwerte funktionieren für die meisten Installationen gut.",
+        "data": {
+          "configure_pd_advanced": "Erweiterte PD-Regler-Parameter konfigurieren"
+        }
+      },
+      "pd_advanced_config": {
+        "title": "PD-Regler-Konfiguration",
+        "description": "Passen Sie den Proportional-Differential-Regler an, der die Batterieleistungsanpassungen verwaltet. Änderungen werden nach dem Neustart der Integration angewendet.",
+        "data": {
+          "pd_kp": "Kp - Proportionalverstärkung",
+          "pd_kd": "Kd - Differentialverstärkung",
+          "pd_deadband": "Totband (W)",
+          "pd_max_power_change": "Max. Leistungsänderung pro Zyklus (W)",
+          "pd_direction_hysteresis": "Richtungshysterese (W)"
+        },
+        "data_description": {
+          "pd_kp": "Reaktionsfähigkeit auf Netzungleichgewicht. Höhere Werte = schnellere Reaktion, aber Risiko von Überschwingen. Bereich: 0.1-2.0, Standard: 0.65",
+          "pd_kd": "Dämpfung zur Vermeidung von Schwingungen. Höhere Werte = sanftere Übergänge, aber langsamere Stabilisierung. Bereich: 0.0-2.0, Standard: 0.5",
+          "pd_deadband": "Netzleistungstoleranz um Null. Verhindert Mikroanpassungen bei kleinen Schwankungen. Höhere Werte reduzieren die Empfindlichkeit. Bereich: 0-200W, Standard: 40W",
+          "pd_max_power_change": "Maximale Batterieleistungsänderung pro Regelzyklus (2.5s). Verhindert abrupte Befehle. Niedrigere Werte = sanfter, aber langsamer. Bereich: 100-2000W, Standard: 800W",
+          "pd_direction_hysteresis": "Leistungsschwelle zum Wechsel zwischen Laden und Entladen. Verhindert schnelle Richtungswechsel. Bereich: 0-200W, Standard: 60W"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
+      "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
+      "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
+      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien."
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Montag",
+        "tue": "Dienstag",
+        "wed": "Mittwoch",
+        "thu": "Donnerstag",
+        "fri": "Freitag",
+        "sat": "Samstag",
+        "sun": "Sonntag"
+      }
+    }
+  }
+}

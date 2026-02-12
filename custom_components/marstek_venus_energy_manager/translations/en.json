@@ -1,0 +1,345 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Marstek Venus Energy Manager",
+        "description": "Select the sensor that measures grid import/export power.",
+        "data": {
+          "consumption_sensor": "Grid consumption sensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid. The controller will adjust batteries to keep this value near 0W."
+        }
+      },
+      "batteries": {
+        "title": "Number of batteries",
+        "description": "How many Marstek Venus batteries do you have installed?",
+        "data": {
+          "num_batteries": "Number of batteries"
+        }
+      },
+      "battery_config": {
+        "title": "Configure battery {battery_num}",
+        "description": "Enter connection details and limits for battery {battery_num}.",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "port": "Modbus Port",
+          "battery_version": "Battery Model",
+          "max_charge_power": "Maximum charge power (W)",
+          "max_discharge_power": "Maximum discharge power (W)",
+          "max_soc": "Maximum SOC (%)",
+          "min_soc": "Minimum SOC (%)",
+          "enable_charge_hysteresis": "Enable Charge Hysteresis",
+          "charge_hysteresis_percent": "Hysteresis Percentage (%)"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. v1/v2 for older models, v3 for newer models with updated register map",
+          "max_charge_power": "Maximum power allowed to charge the battery",
+          "max_discharge_power": "Maximum power allowed to discharge the battery",
+          "max_soc": "Maximum state of charge - battery won't charge above this value",
+          "min_soc": "Minimum state of charge - battery won't discharge below this value",
+          "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
+          "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%"
+        }
+      },
+      "time_slots": {
+        "title": "No-discharge time slots",
+        "description": "Do you want to configure time slots where batteries will NOT discharge? (they can still charge if there's excess solar)",
+        "data": {
+          "configure_time_slots": "Configure time slots"
+        }
+      },
+      "add_time_slot": {
+        "title": "Time slot {slot_num}",
+        "description": "Define a time slot where batteries will NOT discharge. Useful for peak hours or when you prefer to consume from the grid.",
+        "data": {
+          "start_time": "Start time",
+          "end_time": "End time",
+          "days": "Days of the week"
+        },
+        "data_description": {
+          "start_time": "Start time of the slot (24h format)",
+          "end_time": "End time of the slot (24h format)",
+          "days": "Days when this slot applies"
+        }
+      },
+      "add_more_slots": {
+        "title": "Add more time slots",
+        "description": "You currently have {current_slots} configured slot(s). You can add up to {max_slots} slots in total.",
+        "data": {
+          "add_more": "Add another time slot"
+        }
+      },
+      "excluded_devices": {
+        "title": "Special Device Management",
+        "description": "Configure devices with special management: you can EXCLUDE devices that should NOT be powered by battery, or ADD devices that SHOULD be powered by battery even if they're not in the home consumption sensor.",
+        "data": {
+          "configure_excluded_devices": "Configure special devices"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Special Device {device_num}",
+        "description": "Configure how the battery should manage this device.",
+        "data": {
+          "power_sensor": "Device power sensor",
+          "included_in_consumption": "Consumption is included in home consumption sensor"
+        },
+        "data_description": {
+          "power_sensor": "Sensor that measures the power consumed by this device (in W)",
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Add more excluded devices",
+        "description": "You currently have {current_devices} excluded device(s). You can add up to {max_devices} devices total.",
+        "data": {
+          "add_more": "Add another excluded device"
+        }
+      },
+      "predictive_charging": {
+        "title": "Predictive Grid Charging",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
+        "data": {
+          "configure_predictive_charging": "Configure predictive charging"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Predictive Charging Configuration",
+        "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
+        "data": {
+          "start_time": "Start time (off-peak tariff)",
+          "end_time": "End time (off-peak tariff)",
+          "days": "Days of the week",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
+          "end_time": "End time of charging window (e.g., 06:00)",
+          "days": "Days when grid charging is allowed",
+          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh (e.g., Solcast)",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Weekly Full Charge",
+        "description": "Do you want to enable weekly full battery charge for cell balancing? This feature charges batteries to 100% once per week to balance the cells.",
+        "data": {
+          "configure_weekly_full_charge": "Configure weekly full charge"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Weekly Full Charge Configuration",
+        "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
+        "data": {
+          "weekly_full_charge_day": "Day of the week"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
+      "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
+      "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
+      "too_low": "Contracted power must be greater than total battery charging capacity."
+    },
+    "abort": {
+      "already_configured": "This integration is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reconfigure Marstek Venus Energy Manager",
+        "description": "Modify the integration configuration. Changes will be applied when restarting the integration.",
+        "data": {
+          "consumption_sensor": "Grid consumption sensor"
+        },
+        "data_description": {
+          "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid."
+        }
+      },
+      "batteries": {
+        "title": "Number of batteries",
+        "description": "Modify the number of batteries. If you reduce the number, the last configured batteries will be removed.",
+        "data": {
+          "num_batteries": "Number of batteries"
+        }
+      },
+      "battery_config": {
+        "title": "Configure battery {battery_num}",
+        "description": "Modify the details for battery {battery_num}.",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "port": "Modbus Port",
+          "battery_version": "Battery Model",
+          "max_charge_power": "Maximum charge power (W)",
+          "max_discharge_power": "Maximum discharge power (W)",
+          "max_soc": "Maximum SOC (%)",
+          "min_soc": "Minimum SOC (%)",
+          "enable_charge_hysteresis": "Enable Charge Hysteresis",
+          "charge_hysteresis_percent": "Hysteresis Percentage (%)"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. v1/v2 for older models, v3 for newer models with updated register map",
+          "max_charge_power": "Maximum power allowed to charge the battery",
+          "max_discharge_power": "Maximum power allowed to discharge the battery",
+          "max_soc": "Maximum state of charge",
+          "min_soc": "Minimum state of charge",
+          "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
+          "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%"
+        }
+      },
+      "time_slots": {
+        "title": "No-discharge time slots",
+        "description": "Do you want to reconfigure time slots? Current slots will be replaced.",
+        "data": {
+          "configure_time_slots": "Configure time slots"
+        }
+      },
+      "add_time_slot": {
+        "title": "Time slot {slot_num}",
+        "description": "Define or modify a time slot where batteries will NOT discharge.",
+        "data": {
+          "start_time": "Start time",
+          "end_time": "End time",
+          "days": "Days of the week"
+        },
+        "data_description": {
+          "start_time": "Start time of the slot (24h format)",
+          "end_time": "End time of the slot (24h format)",
+          "days": "Days when this slot applies"
+        }
+      },
+      "add_more_slots": {
+        "title": "Add more time slots",
+        "description": "You have {current_slots} configured slot(s). You can add up to {max_slots} in total.",
+        "data": {
+          "add_more": "Add another time slot"
+        }
+      },
+      "excluded_devices": {
+        "title": "Special Device Management",
+        "description": "Configure devices with special management: you can EXCLUDE devices that should NOT be powered by battery, or ADD devices that SHOULD be powered by battery even if they're not in the home consumption sensor.",
+        "data": {
+          "configure_excluded_devices": "Configure special devices"
+        }
+      },
+      "add_excluded_device": {
+        "title": "Special Device {device_num}",
+        "description": "Configure how the battery should manage this device.",
+        "data": {
+          "power_sensor": "Device power sensor",
+          "included_in_consumption": "Consumption is included in home consumption sensor"
+        },
+        "data_description": {
+          "power_sensor": "Sensor that measures the power consumed by this device (in W)",
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)"
+        }
+      },
+      "add_more_excluded_devices": {
+        "title": "Add more excluded devices",
+        "description": "You have {current_devices} excluded device(s). You can add up to {max_devices} in total.",
+        "data": {
+          "add_more": "Add another excluded device"
+        }
+      },
+      "predictive_charging": {
+        "title": "Predictive Grid Charging",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
+        "data": {
+          "configure_predictive_charging": "Configure predictive charging"
+        }
+      },
+      "predictive_charging_config": {
+        "title": "Predictive Charging Configuration",
+        "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
+        "data": {
+          "start_time": "Start time (off-peak tariff)",
+          "end_time": "End time (off-peak tariff)",
+          "days": "Days of the week",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
+          "end_time": "End time of charging window (e.g., 06:00)",
+          "days": "Days when grid charging is allowed",
+          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh (e.g., Solcast)",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "weekly_full_charge": {
+        "title": "Weekly Full Charge",
+        "description": "Do you want to enable weekly full battery charge for cell balancing? This feature charges batteries to 100% once per week to balance the cells.",
+        "data": {
+          "configure_weekly_full_charge": "Configure weekly full charge"
+        }
+      },
+      "weekly_full_charge_config": {
+        "title": "Weekly Full Charge Configuration",
+        "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
+        "data": {
+          "weekly_full_charge_day": "Day of the week"
+        },
+        "data_description": {
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+        }
+      },
+      "pd_advanced": {
+        "title": "Advanced PD Controller Parameters",
+        "description": "Configure advanced PD controller parameters for expert tuning of battery charge/discharge behavior. Only modify these if you understand PID control theory. Default values work well for most installations.",
+        "data": {
+          "configure_pd_advanced": "Configure advanced PD controller parameters"
+        }
+      },
+      "pd_advanced_config": {
+        "title": "PD Controller Configuration",
+        "description": "Tune the Proportional-Derivative controller that manages battery power adjustments. Changes will apply after integration reload.",
+        "data": {
+          "pd_kp": "Kp - Proportional Gain",
+          "pd_kd": "Kd - Derivative Gain",
+          "pd_deadband": "Deadband (W)",
+          "pd_max_power_change": "Max Power Change per Cycle (W)",
+          "pd_direction_hysteresis": "Direction Hysteresis (W)"
+        },
+        "data_description": {
+          "pd_kp": "Responsiveness to grid imbalance. Higher values = faster response but risk of overshoot. Range: 0.1-2.0, default: 0.65",
+          "pd_kd": "Damping to prevent oscillation. Higher values = smoother transitions but slower settling. Range: 0.0-2.0, default: 0.5",
+          "pd_deadband": "Grid power tolerance around zero. Prevents micro-adjustments to minor fluctuations. Higher values reduce sensitivity. Range: 0-200W, default: 40W",
+          "pd_max_power_change": "Maximum battery power change per control cycle (2.5s). Prevents abrupt commands. Lower values = smoother but slower. Range: 100-2000W, default: 800W",
+          "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
+      "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
+      "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
+      "too_low": "Contracted power must be greater than total battery charging capacity."
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "domain": "marstek_venus_energy_manager",
+  "name": "Marstek Venus Energy Manager",
+  "codeowners": [
+    "@ffunes"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/ffunes/marstek-venus-energy-manager",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/ffunes/marstek-venus-energy-manager/issues",
+  "version": "1.0.0",
+  "requirements": [
+    "pymodbus>=3.0.0"
+  ],
+  "zeroconf": [
+    "_modbus._tcp.local."
+  ],
+  "integration_type": "device",
+  "icon": "mdi:battery-heart"
+}
