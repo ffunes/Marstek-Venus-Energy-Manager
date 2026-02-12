@@ -22,17 +22,30 @@ If you find this integration useful, you can support my work:
 
 ## Key Features
 
-*   **Real-time Monitoring**: View battery SOC, power flow (charge/discharge), voltage, current, temperature, and cell-level health data.
-*   **Multi-Battery Support**: Seamlessly manage up to 4 batteries as a single system with aggregated system-wide sensors.
-*   **Smart Energy Management**:
-    *   **Predictive Grid Charging**: Automatically charge from the grid during cheap off-peak hours based on solar forecasts to ensure sufficient energy for the next day.
-    *   **No-Discharge Time Slots**: Prevent battery discharge during specific times (e.g., peak grid rates) while still allowing charging.
-    *   **Weekly Full Charge**: Option to force a full charge once a week for cell balancing and health maintenance.
-    *   **Load Exclusion**: "Hide" specific heavy loads (like EV chargers) from the battery to prevent rapid draining, effectively reserving battery power for household baseload.
+### 1. Core Functionality: Dynamic Power Control
+This is the primary operating mode of the integration, designed to maximize self-consumption.
+*   **Zero Export/Import (PD Controller)**: A built-in Proportional-Derivative controller continuously monitors your grid meter (e.g., Shelly EM) and adjusts battery charge/discharge rates to keep grid exchange close to 0W.
+*   **Oscillation Prevention**: Advanced logic with "Deadband" and "Derivative Gain" prevents the battery from wildly swinging between charge/discharge during sudden load spikes (like a coffee machine toggling on/off).
 *   **Hardware Control**:
     *   Set maximum charge and discharge power limits.
     *   Configure minimum and maximum SOC operational limits.
     *   Force charge or discharge modes manually.
+
+### 2. Advanced: Predictive Grid Charging
+**Optional** feature that operates independently of normal usage to ensure energy security.
+*   **Smart Energy Balance**: The system intelligently decides *if* and *how much* to charge from the grid overnight based on:
+    1.  **Usable Energy**: Current battery level above discharge cutoff.
+    2.  **Solar Forecast**: Expected production for tomorrow (via Solcast/Forecast.Solar).
+    3.  **Consumption Forecast**: 7-day rolling average of your actual home usage.
+*   **The Logic**: If `(Usable Battery + Solar Forecast) < Expected Consumption`, it charges from the grid during cheap overnight hours to cover *exactly* the deficit.
+*   **Cost Saving**: If there is a surplus, it stays idle, saving you money by not buying unnecessary grid power.
+
+### 3. Additional Management Features
+*   **Real-time Monitoring**: View battery SOC, power flow, voltage, current, temperature, and cell-level health.
+*   **Multi-Battery Support**: Seamlessly manage up to 4 batteries as a single aggregated system.
+*   **No-Discharge Time Slots**: Prevent battery discharge during specific times (e.g., peak grid rates).
+*   **Weekly Full Charge**: Option to force a full charge once a week for cell balancing.
+*   **Load Exclusion**: "Hide" specific heavy loads (like EV chargers) from the battery to prevent rapid draining.
 
 ## Requirements
 
