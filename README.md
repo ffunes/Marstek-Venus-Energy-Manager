@@ -48,7 +48,7 @@ If you find this integration useful, you can support my work:
 
 1.  **HACS (Recommended)**:
     *   Add this repository as a **Custom Repository** in HACS:
-        *   Url: `https://github.com/fer_f/marstek-venus-energy-manager` (Replace with actual URL if different)
+        *   Url: `https://github.com/ffunes/Marstek-Venus-Energy-Manager`
         *   Category: **Integration**
     *   Search for "Marstek Venus Energy Manager" and install.
     *   Restart Home Assistant.
