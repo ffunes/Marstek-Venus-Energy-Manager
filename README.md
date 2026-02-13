@@ -17,7 +17,7 @@ The **Marstek Venus Energy Manager** is a comprehensive Home Assistant integrati
 
 If you find this integration useful, you can support my work:
 
-<a href="https://buymeacoffee.com/ffunes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 145px !important;" ></a>
+<a href="https://buymeacoffee.com/ffunes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="40" width="145" ></a>
 
 
 ## Key Features
