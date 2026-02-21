@@ -229,7 +229,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             try:
                 value = await self.client.async_read_register(
                     register=sensor["register"],
-                    data_type=sensor["data_type"],
+                    data_type=sensor.get("data_type", "uint16"),
                     count=sensor.get("count"),
                     sensor_key=key,
                 )
