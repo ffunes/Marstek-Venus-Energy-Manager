@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.3] - 2026-02-22
+
+### Fixed
+- Fix `KeyError` for `force_mode` when `data_type` is missing (PR #3 by @openschwall).
+
 ## [1.0.2] - 2026-02-20
 
 ### Fixed
