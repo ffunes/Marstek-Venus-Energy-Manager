@@ -574,51 +574,71 @@ class OptionsFlowHandler(OptionsFlow):
     async def _test_connection(self, host: str, port: int, version: str = "v2") -> bool:
         """Test connection to a Marstek Venus battery.
 
-        If a coordinator already holds a connection to this host,
-        reuse it instead of opening a second (unsupported) connection.
-        Marstek firmware only supports one Modbus TCP connection at a time.
+        If a coordinator already holds a connection to this host, temporarily
+        close it (under lock) to free the single-connection slot, run the test,
+        and reconnect. Marstek firmware only supports one Modbus TCP connection.
         """
+        soc_register = REGISTER_MAP.get(version, {}).get("battery_soc")
+        if soc_register is None:
+            return False
+
         # Check if there's an active coordinator for this host
         entry_data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id, {})
         coordinators = entry_data.get("coordinators", [])
-
+        existing_coordinator = None
         for coordinator in coordinators:
             if coordinator.host == host:
-                # Reuse existing connection - read SOC register as test
-                soc_register = REGISTER_MAP.get(version, {}).get("battery_soc")
-                if soc_register is None:
-                    return False
+                existing_coordinator = coordinator
+                break
+
+        if existing_coordinator is not None:
+            # Hold the lock so polling and control loop wait (no errors/warnings)
+            async with existing_coordinator.lock:
+                # Close existing connection to free the single-connection slot
+                await existing_coordinator.client.async_close()
+
+                # Test with a fresh connection
+                test_client = MarstekModbusClient(host, port)
                 try:
-                    async with coordinator.lock:
-                        value = await coordinator.client.async_read_register(
-                            soc_register, "uint16"
-                        )
+                    connected = await test_client.async_connect()
+                    if not connected:
+                        await existing_coordinator.client.async_connect()
+                        return False
+
+                    value = await test_client.async_read_register(
+                        soc_register, "uint16"
+                    )
+                    await test_client.async_close()
+
+                    # Reconnect the coordinator's connection
+                    await existing_coordinator.client.async_connect()
+
                     return value is not None
                 except Exception:
+                    try:
+                        await test_client.async_close()
+                    except Exception:
+                        pass
+                    # Always reconnect coordinator, even on error
+                    await existing_coordinator.client.async_connect()
+                    return False
+        else:
+            # No existing coordinator for this host - open new connection directly
+            client = MarstekModbusClient(host, port)
+            try:
+                connected = await client.async_connect()
+                if not connected:
                     return False
 
-        # No existing coordinator for this host - open new connection
-        client = MarstekModbusClient(host, port)
-        try:
-            connected = await client.async_connect()
-            if not connected:
-                return False
-
-            # Test with version-specific SOC register
-            soc_register = REGISTER_MAP.get(version, {}).get("battery_soc")
-            if soc_register is None:
+                value = await client.async_read_register(soc_register, "uint16")
                 await client.async_close()
-                return False
-
-            value = await client.async_read_register(soc_register, "uint16")
-            await client.async_close()
-            return value is not None
-        except Exception:
-            try:
-                await client.async_close()
+                return value is not None
             except Exception:
-                pass
-            return False
+                try:
+                    await client.async_close()
+                except Exception:
+                    pass
+                return False
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Start the options flow - ask for consumption sensor."""

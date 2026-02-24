@@ -1,0 +1,3 @@
+### Fixed
+- **V3 RS485 Control Mode switch missing**: Restored `RS485 Control Mode` switch definition in `SWITCH_DEFINITIONS_V3`. The switch had been incorrectly removed, preventing V3 users from toggling RS485 control mode via the UI.
+- **Options flow connection validation**: Changed how battery connections are validated during reconfiguration. Instead of opening a second Modbus TCP connection (which the firmware rejects since it only supports one simultaneous connection), the options flow now temporarily closes the coordinator's active connection under lock, tests with a fresh connection, and reconnects the coordinator. Polling and control loop pause transparently during the test.

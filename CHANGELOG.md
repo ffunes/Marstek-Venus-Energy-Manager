@@ -1,10 +1,10 @@
 # Changelog
 
-## [1.0.4b3] - 2026-02-23
+## [1.0.4b4] - 2026-02-24
 
 ### Fixed
 - **V3 RS485 Control Mode switch missing**: Restored `RS485 Control Mode` switch definition in `SWITCH_DEFINITIONS_V3`. The switch had been incorrectly removed, preventing V3 users from toggling RS485 control mode via the UI.
-- **Options flow "cannot_connect" on reconfiguration**: The connection test in the options flow opened a second Modbus TCP connection while the coordinator already held the first one. Marstek firmware only supports one simultaneous connection. Fixed by reusing the existing coordinator's connection for the test when the battery is already configured with the same IP.
+- **Options flow connection validation**: Changed how battery connections are validated during reconfiguration. Instead of opening a second Modbus TCP connection (which the firmware rejects since it only supports one simultaneous connection), the options flow now temporarily closes the coordinator's active connection under lock, tests with a fresh connection, and reconnects the coordinator. Polling and control loop pause transparently during the test.
 
 ## [1.0.4b2] - 2026-02-23
 
