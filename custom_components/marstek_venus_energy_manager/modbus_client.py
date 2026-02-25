@@ -284,6 +284,10 @@ class MarstekModbusClient:
                 if not self._is_shutting_down:
                     _LOGGER.exception("Exception during Modbus read at register %d (0x%04X) on attempt %d: %s", register, register, attempt + 1, e)
 
+            # During shutdown, don't retry or reconnect - exit immediately to release the connection
+            if self._is_shutting_down:
+                return None
+
             attempt += 1
             if attempt < max_retries:
                 # Exponential backoff with jitter
@@ -293,17 +297,15 @@ class MarstekModbusClient:
 
                 # Reconnect if connection was lost
                 if not self.client.connected:
-                    if not self._is_shutting_down:
-                        _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
+                    _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
                     await self.async_connect()
 
-        if not self._is_shutting_down:
-            _LOGGER.error(
-                "Failed to read register %d (0x%04X) after %d attempts",
-                register,
-                register,
-                max_retries,
-            )
+        _LOGGER.error(
+            "Failed to read register %d (0x%04X) after %d attempts",
+            register,
+            register,
+            max_retries,
+        )
         return None
 
     async def async_write_register(self, register: int, value: int, max_retries: int = 3, retry_delay: float = 0.1) -> bool:
@@ -335,6 +337,10 @@ class MarstekModbusClient:
                 if not self._is_shutting_down:
                     _LOGGER.exception("Exception during modbus write at register %d (0x%04X) on attempt %d: %s", register, register, attempt + 1, e)
 
+            # During shutdown, don't retry or reconnect - exit immediately to release the connection
+            if self._is_shutting_down:
+                return False
+
             attempt += 1
             if attempt < max_retries:
                 # Exponential backoff with jitter
@@ -344,15 +350,13 @@ class MarstekModbusClient:
 
                 # Reconnect if connection was lost
                 if not self.client.connected:
-                    if not self._is_shutting_down:
-                        _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
+                    _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
                     await self.async_connect()
 
-        if not self._is_shutting_down:
-            _LOGGER.error(
-                "Failed to write register %d (0x%04X) after %d attempts",
-                register,
-                register,
-                max_retries,
-            )
+        _LOGGER.error(
+            "Failed to write register %d (0x%04X) after %d attempts",
+            register,
+            register,
+            max_retries,
+        )
         return False

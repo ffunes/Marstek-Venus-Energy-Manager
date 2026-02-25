@@ -165,6 +165,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
         _LOGGER.debug("[%s] Coordinator poll tick at %s", self.name, now.isoformat())
 
+        if self._is_shutting_down:
+            _LOGGER.debug("[%s] Shutdown in progress, skipping poll", self.name)
+            return self.data or {}
+
         # Get the entity registry to check for disabled entities
         if self._entity_registry is None:
             self._entity_registry = er.async_get(self.hass)

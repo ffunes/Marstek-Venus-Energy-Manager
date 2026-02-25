@@ -1,7 +1,4 @@
 ### Fixed
-- **V3 shutdown hangs on RS485 disable**: The shutdown sequence wrote `0` to register 42000 to disable RS485 control mode, but the firmware only accepts `0x55BB` (21947). The invalid value caused a Modbus Exception 3 (Illegal Data Value) with 40s+ timeout, blocking integration reload. Now writes the correct `command_off` value (0x55BB).
-- **V3 work mode manipulation removed**: Removed V3-specific code that set `user_work_mode` to Manual (0) on setup and restored to Auto (1) on shutdown via register 43000. V3 batteries operate the same as V2 and do not require work mode changes. This also eliminates the state conflict that caused the RS485 disable to fail during shutdown.
-
-### Removed
-- `Working Mode` select entity for V3 batteries (was exposed as Manual / Anti-Feed / Trade Mode). The register is not needed for integration control.
-- `user_work_mode` entry from V3 register map (set to `None`, matching V2).
+- **Reconfiguration fails randomly with connection error**: When the user saved options, the in-flight coordinator poll (which takes ~5-6s for V3) would survive the shutdown `disconnect()` call and automatically reconnect via the Modbus retry logic, occupying the battery's single TCP connection slot. The new `async_setup_entry` would then fail with `[Errno 111] Connect call failed`. Fixed by:
+  - Modbus client read/write retries now exit immediately when `_is_shutting_down` is set, preventing reconnection attempts that would steal the TCP slot.
+  - Coordinator poll now checks the shutdown flag at the start of each cycle and returns early with cached data.
