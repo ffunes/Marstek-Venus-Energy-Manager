@@ -1,6 +1,0 @@
-Release 1.0.4b7
-
-### Fixed
-- **Reconfiguration fails randomly with connection error**: When the user saved options, the in-flight coordinator poll (which takes ~5-6s for V3) would survive the shutdown `disconnect()` call and automatically reconnect via the Modbus retry logic, occupying the battery's single TCP connection slot. The new `async_setup_entry` would then fail with `[Errno 111] Connect call failed`. Fixed by:
-  - Modbus client read/write retries now exit immediately when `_is_shutting_down` is set, preventing reconnection attempts that would steal the TCP slot.
-  - Coordinator poll now checks the shutdown flag at the start of each cycle and returns early with cached data.
