@@ -35,6 +35,9 @@ from .const import (
     DEFAULT_PD_DEADBAND,
     DEFAULT_PD_MAX_POWER_CHANGE,
     DEFAULT_PD_DIRECTION_HYSTERESIS,
+    DEFAULT_SLOT_TARGET_GRID_POWER,
+    DEFAULT_SLOT_MIN_CHARGE_POWER,
+    DEFAULT_SLOT_MIN_DISCHARGE_POWER,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .calculated_sensors import async_setup_entry as async_setup_calculated_sensors
@@ -209,23 +212,44 @@ class ChargeDischargeController:
                          start_time.strftime("%H:%M:%S"), end_time.strftime("%H:%M:%S"))
             
             # Check if current time is within the slot
-            if start_time <= end_time:
-                # Normal case: slot doesn't cross midnight
-                if start_time <= current_time <= end_time:
-                    _LOGGER.info("MATCH! Slot %d: %s IS ALLOWED - time %s within %s - %s (day: %s)", 
-                                i+1, operation_type.upper(), current_time.strftime("%H:%M:%S"), 
-                                start_time.strftime("%H:%M:%S"), end_time.strftime("%H:%M:%S"), current_day)
-                    return True
-            else:
-                # Slot crosses midnight
-                if current_time >= start_time or current_time <= end_time:
-                    _LOGGER.info("MATCH! Slot %d: %s IS ALLOWED - time %s within %s - %s (crosses midnight, day: %s)", 
-                                i+1, operation_type.upper(), current_time.strftime("%H:%M:%S"), 
-                                start_time.strftime("%H:%M:%S"), end_time.strftime("%H:%M:%S"), current_day)
-                    return True
+            if start_time <= current_time <= end_time:
+                _LOGGER.info("MATCH! Slot %d: %s IS ALLOWED - time %s within %s - %s (day: %s)",
+                            i+1, operation_type.upper(), current_time.strftime("%H:%M:%S"),
+                            start_time.strftime("%H:%M:%S"), end_time.strftime("%H:%M:%S"), current_day)
+                return True
         
         _LOGGER.info("No matching time slot found - %s NOT ALLOWED (slots configured but none match)", operation_type.upper())
         return False
+
+    def _get_active_slot(self) -> dict | None:
+        """Get the currently active time slot, or None if no slot is active.
+
+        Returns the full slot dict so callers can extract target_grid_power,
+        min_charge_power, min_discharge_power, etc.
+        """
+        from datetime import datetime, time as dt_time
+
+        time_slots = self.config_entry.data.get("no_discharge_time_slots", [])
+        if not time_slots:
+            return None
+
+        now = datetime.now()
+        current_time = now.time()
+        current_day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now.weekday()]
+
+        for slot in time_slots:
+            if current_day not in slot.get("days", []):
+                continue
+            try:
+                start_time = dt_time.fromisoformat(slot["start_time"])
+                end_time = dt_time.fromisoformat(slot["end_time"])
+            except Exception:
+                continue
+
+            if start_time <= current_time <= end_time:
+                return slot
+
+        return None
 
     def _get_available_batteries(self, is_charging: bool) -> list:
         """Get list of available batteries for the current operation.
@@ -1768,12 +1792,18 @@ class ChargeDischargeController:
         
         # Use moving average to smooth out instantaneous spikes
         sensor_filtered = sum(self.sensor_history) / len(self.sensor_history)
-        
+
+        # Get active time slot parameters (target grid power, min charge/discharge power)
+        active_slot = self._get_active_slot()
+        active_target = active_slot.get("target_grid_power", DEFAULT_SLOT_TARGET_GRID_POWER) if active_slot else DEFAULT_SLOT_TARGET_GRID_POWER
+        min_charge = active_slot.get("min_charge_power", DEFAULT_SLOT_MIN_CHARGE_POWER) if active_slot else DEFAULT_SLOT_MIN_CHARGE_POWER
+        min_discharge = active_slot.get("min_discharge_power", DEFAULT_SLOT_MIN_DISCHARGE_POWER) if active_slot else DEFAULT_SLOT_MIN_DISCHARGE_POWER
+
         # CRITICAL: Check deadband on FILTERED sensor (actual grid balance) BEFORE compensation
-        # This is the real grid import/export that we want to keep near 0
-        if abs(sensor_filtered) < self.deadband:
-            _LOGGER.debug("ChargeDischargeController: Filtered sensor %.1fW is within deadband ±%dW, no action taken.",
-                          sensor_filtered, self.deadband)
+        # Deadband is centered around the active target grid power
+        if abs(sensor_filtered - active_target) < self.deadband:
+            _LOGGER.debug("ChargeDischargeController: Filtered sensor %.1fW within deadband ±%dW of target %dW, no action.",
+                          sensor_filtered, self.deadband, active_target)
             
             # Reset integral when within deadband to prevent accumulation (only if Ki > 0)
             if self.ki > 0 and self.error_integral != 0.0:
@@ -1812,10 +1842,10 @@ class ChargeDischargeController:
 
         # FIRST EXECUTION: Initialize with sensor reading
         if self.first_execution:
-            _LOGGER.info("ChargeDischargeController: First execution - initializing with sensor value: %fW", sensor_actual)
+            _LOGGER.info("ChargeDischargeController: First execution - initializing with sensor value: %fW (target: %dW)", sensor_actual, active_target)
             self.previous_sensor = sensor_actual
-            # Initial power is negative of sensor reading (to counteract grid flow)
-            self.previous_power = -sensor_actual
+            # Initial power counteracts the difference from target grid power
+            self.previous_power = -(sensor_actual - active_target)
             self.first_execution = False
             
             # Get available batteries and set initial power
@@ -1848,7 +1878,7 @@ class ChargeDischargeController:
             
             # Reset PD state for clean start (CRITICAL: clear saturated integral)
             self.error_integral = 0.0
-            self.previous_error = -sensor_actual
+            self.previous_error = -(sensor_actual - active_target)
             self.last_output_sign = 1 if self.previous_power > 0 else (-1 if self.previous_power < 0 else 0)
             self.sign_changes = 0
             _LOGGER.info("PD state initialized: previous_error=%.1fW, last_output_sign=%d, integral=0 (cleared)", 
@@ -1861,10 +1891,11 @@ class ChargeDischargeController:
         _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, UPDATING BATTERIES!",
                       sensor_actual)
         
-        # PD CONTROLLER: Calculate adjustment based on grid imbalance
-        # Positive sensor = importing from grid → need to reduce battery consumption (discharge more or charge less)
-        # Negative sensor = exporting to grid → need to increase battery consumption (charge more or discharge less)
-        error = sensor_actual
+        # PD CONTROLLER: Calculate adjustment based on grid imbalance relative to target
+        # error > 0: grid power above target → need to discharge more / charge less
+        # error < 0: grid power below target → need to charge more / discharge less
+        # active_target was calculated before deadband check (reuse it here)
+        error = sensor_actual - active_target
         
         # Note: Oscillation detection moved to end of method (after checking restrictions)
         # This prevents false positives when controller is paused by time slot restrictions
@@ -1962,7 +1993,18 @@ class ChargeDischargeController:
         
         # Note: last_output_sign and previous_error will be updated at the end of the method
         # This is done conditionally based on whether the operation is restricted by time slots
-        
+
+        # MINIMUM POWER CHECK: Avoid inefficient low-power operation
+        # If PD output is below the configured minimum, stay idle instead
+        if new_power > 0 and min_charge > 0 and new_power < min_charge:
+            _LOGGER.debug("PD: Charge power %.1fW below minimum %dW, setting to idle",
+                          new_power, min_charge)
+            new_power = 0
+        elif new_power < 0 and min_discharge > 0 and abs(new_power) < min_discharge:
+            _LOGGER.debug("PD: Discharge power %.1fW below minimum %dW, setting to idle",
+                          abs(new_power), min_discharge)
+            new_power = 0
+
         # Log control output
         if self.ki > 0:
             # Calculate integral utilization percentage for monitoring

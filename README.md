@@ -24,7 +24,7 @@ If you find this integration useful, you can support my work:
 
 ### 1. Core Functionality: Dynamic Power Control
 This is the primary operating mode of the integration, designed to maximize self-consumption.
-*   **Zero Export/Import (PD Controller)**: A built-in Proportional-Derivative controller continuously monitors your grid meter (e.g., Shelly EM) and adjusts battery charge/discharge rates to keep grid exchange close to 0W.
+*   **Zero Export/Import (PD Controller)**: A built-in Proportional-Derivative controller continuously monitors your grid meter (e.g., Shelly EM) and adjusts battery charge/discharge rates to keep grid exchange close to your configured target (0W by default, configurable per time slot).
 *   **Oscillation Prevention**: Advanced logic with "Deadband" and "Derivative Gain" prevents the battery from wildly swinging between charge/discharge during sudden load spikes (like a coffee machine toggling on/off).
 *   **Hardware Control**:
     *   Set maximum charge and discharge power limits.
@@ -43,7 +43,7 @@ This is the primary operating mode of the integration, designed to maximize self
 ### 3. Additional Management Features
 *   **Real-time Monitoring**: View battery SOC, power flow, voltage, current, temperature, and cell-level health.
 *   **Multi-Battery Support**: Seamlessly manage up to 4 batteries as a single aggregated system.
-*   **No-Discharge Time Slots**: Prevent battery discharge during specific times (e.g., peak grid rates).
+*   **No-Discharge Time Slots**: Prevent battery discharge during specific times (e.g., peak grid rates). Each slot supports configurable **target grid power**, **minimum charge power**, and **minimum discharge power**.
 *   **Weekly Full Charge**: Option to force a full charge once a week for cell balancing.
 *   **Load Exclusion**: "Hide" specific heavy loads (like EV chargers) from the battery to prevent rapid draining.
 
@@ -100,12 +100,15 @@ This integration is configured entirely via the Home Assistant UI.
     *   **Charge Hysteresis**: (Optional) Prevent rapid cycling near the charge limit.
 
 ### 4. Time Slots (Optional)
-You can define specific time periods where the battery is **forbidden from discharging**. This is useful for saving battery power for evening peaks or overnight usage.
+You can define specific time periods where the battery is **forbidden from discharging**. This is useful for saving battery power for evening peaks or overnight usage. Each time slot also supports advanced per-slot controller parameters.
 *   **Enable**: Check "Configure time slots".
 *   **Add Slot**:
     *   **Start/End Time**: Define the window (e.g., `14:00` to `18:00`).
     *   **Days**: Select applicable days of the week.
     *   **Apply to charge**: (Advanced) If checked, this slot also restricts charging.
+    *   **Target Grid Power** *(New in v1.1.0)*: The grid power level the controller regulates toward during this slot. Default: `0W` (zero grid flow). Set to negative values (e.g., `-150W`) to intentionally maintain slight export, or positive values to allow slight import. Useful for tariff optimization when feed-in is more valuable than self-consumption. Range: `-500W` to `+500W`.
+    *   **Minimum Charge Power** *(New in v1.1.0)*: If the PD controller calculates a charge power below this threshold, it stays idle instead. Prevents inefficient low-power charging that causes micro-cycling and battery wear. Default: `0W` (disabled). Range: `0W` to `500W`.
+    *   **Minimum Discharge Power** *(New in v1.1.0)*: Same as above but for discharging. Default: `0W` (disabled). Range: `0W` to `500W`.
 
 ### 5. Excluded Devices (Optional)
 This feature allows you to "mask" high-power devices so the battery doesn't try to cover their load. For example, if you turn on a 7kW car charger, you might not want your 2.5kW battery to drain itself instantly.
@@ -137,7 +140,7 @@ LFP batteries need to hit 100% periodically to balance individual cells.
 The integration uses a PD (Proportional-Derivative) controller to manage battery power output based on grid consumption.
 *   **Kp (Proportional Gain)**: Controls how aggressively the battery responds to grid imbalance. Higher values = faster response but potential for overshoot.
 *   **Kd (Derivative Gain)**: Provides damping to prevent oscillations. Higher values = smoother transitions but slower settling time.
-*   **Deadband**: The "ignore" zone around zero grid export/import (Watts). The battery won't adjust if grid power is within this range, preventing constant micro-adjustments.
+*   **Deadband**: The "ignore" zone around the target grid power (Watts). The battery won't adjust if grid power is within this range of the target, preventing constant micro-adjustments.
 *   **Max Power Change**: The maximum allowable change in battery power output per control cycle (Watts). Prevents sudden large power swings that could stress the inverter.
 *   **Direction Hysteresis**: The power threshold (Watts) required to switch between charging and discharging. Prevents rapid flipping between modes when consumption is hovering around zero.
 

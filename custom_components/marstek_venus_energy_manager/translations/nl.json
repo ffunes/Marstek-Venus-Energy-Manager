@@ -59,12 +59,18 @@
         "data": {
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
-          "days": "Dagen van de week"
+          "days": "Dagen van de week",
+          "target_grid_power": "Doelvermogen netwerk (W)",
+          "min_charge_power": "Minimaal laadvermogen (W)",
+          "min_discharge_power": "Minimaal ontlaadvermogen (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
-          "days": "Dagen waarop dit tijdslot van toepassing is"
+          "days": "Dagen waarop dit tijdslot van toepassing is",
+          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan.",
+          "min_charge_power": "Minimaal vermogen om te laden. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld.",
+          "min_discharge_power": "Minimaal vermogen om te ontladen. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld."
         }
       },
       "add_more_slots": {
@@ -147,7 +153,9 @@
       "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
       "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
       "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
-      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen."
+      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen.",
+      "overlapping_slots": "Dit tijdslot overlapt met een bestaand tijdslot. Pas de tijden of dagen aan.",
+      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00)."
     },
     "abort": {
       "already_configured": "Deze integratie is al geconfigureerd."
@@ -213,12 +221,18 @@
         "data": {
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
-          "days": "Dagen van de week"
+          "days": "Dagen van de week",
+          "target_grid_power": "Doelvermogen netwerk (W)",
+          "min_charge_power": "Minimaal laadvermogen (W)",
+          "min_discharge_power": "Minimaal ontlaadvermogen (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
-          "days": "Dagen waarop dit tijdslot van toepassing is"
+          "days": "Dagen waarop dit tijdslot van toepassing is",
+          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan.",
+          "min_charge_power": "Minimaal vermogen om te laden. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld.",
+          "min_discharge_power": "Minimaal vermogen om te ontladen. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld."
         }
       },
       "add_more_slots": {
@@ -326,7 +340,9 @@
       "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
       "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
       "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
-      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen."
+      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen.",
+      "overlapping_slots": "Dit tijdslot overlapt met een bestaand tijdslot. Pas de tijden of dagen aan.",
+      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00)."
     }
   },
   "selector": {

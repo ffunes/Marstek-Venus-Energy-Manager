@@ -59,12 +59,18 @@
         "data": {
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
-          "days": "Jours de la semaine"
+          "days": "Jours de la semaine",
+          "target_grid_power": "Puissance réseau cible (W)",
+          "min_charge_power": "Puissance minimale de charge (W)",
+          "min_discharge_power": "Puissance minimale de décharge (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
-          "days": "Jours où cette plage s'applique"
+          "days": "Jours où cette plage s'applique",
+          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée.",
+          "min_charge_power": "Puissance minimale pour charger. En dessous, le contrôleur reste en veille. 0 = désactivé.",
+          "min_discharge_power": "Puissance minimale pour décharger. En dessous, le contrôleur reste en veille. 0 = désactivé."
         }
       },
       "add_more_slots": {
@@ -147,7 +153,9 @@
       "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
       "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
       "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
-      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries."
+      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries.",
+      "overlapping_slots": "Ce créneau horaire chevauche un créneau existant. Ajustez les horaires ou les jours.",
+      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00)."
     },
     "abort": {
       "already_configured": "Cette intégration est déjà configurée."
@@ -213,12 +221,18 @@
         "data": {
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
-          "days": "Jours de la semaine"
+          "days": "Jours de la semaine",
+          "target_grid_power": "Puissance réseau cible (W)",
+          "min_charge_power": "Puissance minimale de charge (W)",
+          "min_discharge_power": "Puissance minimale de décharge (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
-          "days": "Jours où cette plage s'applique"
+          "days": "Jours où cette plage s'applique",
+          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée.",
+          "min_charge_power": "Puissance minimale pour charger. En dessous, le contrôleur reste en veille. 0 = désactivé.",
+          "min_discharge_power": "Puissance minimale pour décharger. En dessous, le contrôleur reste en veille. 0 = désactivé."
         }
       },
       "add_more_slots": {
@@ -326,7 +340,9 @@
       "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
       "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
       "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
-      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries."
+      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries.",
+      "overlapping_slots": "Ce créneau horaire chevauche un créneau existant. Ajustez les horaires ou les jours.",
+      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00)."
     }
   },
   "selector": {

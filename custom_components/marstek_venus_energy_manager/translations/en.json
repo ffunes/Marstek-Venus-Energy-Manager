@@ -59,12 +59,18 @@
         "data": {
           "start_time": "Start time",
           "end_time": "End time",
-          "days": "Days of the week"
+          "days": "Days of the week",
+          "target_grid_power": "Target Grid Power (W)",
+          "min_charge_power": "Minimum Charge Power (W)",
+          "min_discharge_power": "Minimum Discharge Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
-          "days": "Days when this slot applies"
+          "days": "Days when this slot applies",
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import.",
+          "min_charge_power": "Minimum power for charging. Below this, the controller stays idle. 0 = disabled.",
+          "min_discharge_power": "Minimum power for discharging. Below this, the controller stays idle. 0 = disabled."
         }
       },
       "add_more_slots": {
@@ -147,7 +153,9 @@
       "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
       "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
       "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
-      "too_low": "Contracted power must be greater than total battery charging capacity."
+      "too_low": "Contracted power must be greater than total battery charging capacity.",
+      "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
+      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00)."
     },
     "abort": {
       "already_configured": "This integration is already configured."
@@ -213,12 +221,18 @@
         "data": {
           "start_time": "Start time",
           "end_time": "End time",
-          "days": "Days of the week"
+          "days": "Days of the week",
+          "target_grid_power": "Target Grid Power (W)",
+          "min_charge_power": "Minimum Charge Power (W)",
+          "min_discharge_power": "Minimum Discharge Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
-          "days": "Days when this slot applies"
+          "days": "Days when this slot applies",
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import.",
+          "min_charge_power": "Minimum power for charging. Below this, the controller stays idle. 0 = disabled.",
+          "min_discharge_power": "Minimum power for discharging. Below this, the controller stays idle. 0 = disabled."
         }
       },
       "add_more_slots": {
@@ -326,7 +340,9 @@
       "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
       "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
       "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
-      "too_low": "Contracted power must be greater than total battery charging capacity."
+      "too_low": "Contracted power must be greater than total battery charging capacity.",
+      "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
+      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00)."
     }
   },
   "selector": {

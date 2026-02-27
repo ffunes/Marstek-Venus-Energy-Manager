@@ -60,13 +60,19 @@
           "start_time": "Hora de inicio",
           "end_time": "Hora de fin",
           "days": "Días de la semana",
-          "apply_to_charge": "Aplicar también a la carga"
+          "apply_to_charge": "Aplicar también a la carga",
+          "target_grid_power": "Potencia objetivo de red (W)",
+          "min_charge_power": "Potencia mínima de carga (W)",
+          "min_discharge_power": "Potencia mínima de descarga (W)"
         },
         "data_description": {
           "start_time": "Hora de inicio de la franja (formato 24h)",
           "end_time": "Hora de fin de la franja (formato 24h)",
           "days": "Días en los que se aplica esta franja",
-          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)"
+          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)",
+          "target_grid_power": "Potencia de red a la que el controlador regula durante esta franja. 0W = flujo cero (predeterminado). Negativo = ligera exportación (ej: -150W). Positivo = permitir ligera importación.",
+          "min_charge_power": "Potencia mínima para cargar. Por debajo, el controlador queda en reposo. 0 = desactivado.",
+          "min_discharge_power": "Potencia mínima para descargar. Por debajo, el controlador queda en reposo. 0 = desactivado."
         }
       },
       "add_more_slots": {
@@ -149,7 +155,9 @@
       "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
       "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
       "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías."
+      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías.",
+      "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
+      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00)."
     },
     "abort": {
       "already_configured": "Esta integración ya está configurada."
@@ -216,13 +224,19 @@
           "start_time": "Hora de inicio",
           "end_time": "Hora de fin",
           "days": "Días de la semana",
-          "apply_to_charge": "Aplicar también a la carga"
+          "apply_to_charge": "Aplicar también a la carga",
+          "target_grid_power": "Potencia objetivo de red (W)",
+          "min_charge_power": "Potencia mínima de carga (W)",
+          "min_discharge_power": "Potencia mínima de descarga (W)"
         },
         "data_description": {
           "start_time": "Hora de inicio de la franja (formato 24h)",
           "end_time": "Hora de fin de la franja (formato 24h)",
           "days": "Días en los que se aplica esta franja",
-          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)"
+          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)",
+          "target_grid_power": "Potencia de red a la que el controlador regula durante esta franja. 0W = flujo cero (predeterminado). Negativo = ligera exportación (ej: -150W). Positivo = permitir ligera importación.",
+          "min_charge_power": "Potencia mínima para cargar. Por debajo, el controlador queda en reposo. 0 = desactivado.",
+          "min_discharge_power": "Potencia mínima para descargar. Por debajo, el controlador queda en reposo. 0 = desactivado."
         }
       },
       "add_more_slots": {
@@ -330,7 +344,9 @@
       "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
       "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
       "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías."
+      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías.",
+      "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
+      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00)."
     }
   },
   "selector": {

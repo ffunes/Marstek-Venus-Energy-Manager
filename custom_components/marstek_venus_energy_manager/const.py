@@ -890,3 +890,8 @@ DEFAULT_PD_KD = 0.5
 DEFAULT_PD_DEADBAND = 40
 DEFAULT_PD_MAX_POWER_CHANGE = 800
 DEFAULT_PD_DIRECTION_HYSTERESIS = 60
+
+# Default target grid power per time slot (0W = regulate to zero grid flow)
+DEFAULT_SLOT_TARGET_GRID_POWER = 0
+DEFAULT_SLOT_MIN_CHARGE_POWER = 0     # Minimum charge power per slot (0 = disabled)
+DEFAULT_SLOT_MIN_DISCHARGE_POWER = 0  # Minimum discharge power per slot (0 = disabled)

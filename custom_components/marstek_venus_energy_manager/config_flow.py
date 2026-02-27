@@ -50,6 +50,32 @@ from .modbus_client import MarstekModbusClient
 _LOGGER = logging.getLogger(__name__)
 
 
+def _time_ranges_overlap(start1: str, end1: str, start2: str, end2: str) -> bool:
+    """Check if two time ranges overlap. Assumes start < end (no midnight crossing)."""
+    from datetime import time as dt_time
+
+    s1 = dt_time.fromisoformat(start1)
+    e1 = dt_time.fromisoformat(end1)
+    s2 = dt_time.fromisoformat(start2)
+    e2 = dt_time.fromisoformat(end2)
+
+    return s1 < e2 and s2 < e1
+
+
+def _slots_overlap(new_slot: dict, existing_slots: list[dict]) -> bool:
+    """Check if new_slot overlaps with any existing slot on shared days."""
+    new_days = set(new_slot.get("days", []))
+    for slot in existing_slots:
+        if not (new_days & set(slot.get("days", []))):
+            continue
+        if _time_ranges_overlap(
+            new_slot["start_time"], new_slot["end_time"],
+            slot["start_time"], slot["end_time"],
+        ):
+            return True
+    return False
+
+
 class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Marstek Venus Energy Manager."""
 
@@ -250,6 +276,9 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Step 5: Add a time slot configuration."""
+        slot_num = len(self.time_slots) + 1
+        errors = {}
+
         if user_input is not None:
             # Save the time slot
             time_slot = {
@@ -257,36 +286,79 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 "end_time": user_input["end_time"],
                 "days": user_input["days"],
                 "apply_to_charge": user_input.get("apply_to_charge", False),
+                "target_grid_power": user_input.get("target_grid_power", 0),
+                "min_charge_power": user_input.get("min_charge_power", 0),
+                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
-            self.time_slots.append(time_slot)
-            
-            # Check if user wants to add more slots (max 4)
-            if len(self.time_slots) < 4:
-                return await self.async_step_add_more_slots()
-            else:
-                # Max slots reached, move to excluded devices
-                self.config_data["no_discharge_time_slots"] = self.time_slots
-                return await self.async_step_excluded_devices()
 
-        slot_num = len(self.time_slots) + 1
+            if user_input["start_time"] >= user_input["end_time"]:
+                errors["base"] = "midnight_crossing"
+            elif _slots_overlap(time_slot, self.time_slots):
+                errors["base"] = "overlapping_slots"
+            else:
+                self.time_slots.append(time_slot)
+
+                # Check if user wants to add more slots (max 4)
+                if len(self.time_slots) < 4:
+                    return await self.async_step_add_more_slots()
+                else:
+                    # Max slots reached, move to excluded devices
+                    self.config_data["no_discharge_time_slots"] = self.time_slots
+                    return await self.async_step_excluded_devices()
+
+        defaults = {
+            "start_time": user_input["start_time"] if user_input else None,
+            "end_time": user_input["end_time"] if user_input else None,
+            "days": user_input["days"] if user_input else ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+            "apply_to_charge": user_input.get("apply_to_charge", False) if user_input else False,
+            "target_grid_power": user_input.get("target_grid_power", 0) if user_input else 0,
+            "min_charge_power": user_input.get("min_charge_power", 0) if user_input else 0,
+            "min_discharge_power": user_input.get("min_discharge_power", 0) if user_input else 0,
+        }
+
+        schema_dict = {
+            vol.Required("start_time"): TimeSelector(),
+            vol.Required("end_time"): TimeSelector(),
+            vol.Required("days", default=defaults["days"]):
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                        translation_key="weekday",
+                        multiple=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            vol.Required("apply_to_charge", default=defaults["apply_to_charge"]): bool,
+            vol.Optional("target_grid_power", default=defaults["target_grid_power"]):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=-500, max=500, step=10,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="W",
+                    )
+                ),
+            vol.Optional("min_charge_power", default=defaults["min_charge_power"]):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=500, step=10,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="W",
+                    )
+                ),
+            vol.Optional("min_discharge_power", default=defaults["min_discharge_power"]):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=500, step=10,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="W",
+                    )
+                ),
+        }
+
         return self.async_show_form(
             step_id="add_time_slot",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("start_time"): TimeSelector(),
-                    vol.Required("end_time"): TimeSelector(),
-                    vol.Required("days", default=["mon", "tue", "wed", "thu", "fri", "sat", "sun"]):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                                translation_key="weekday",
-                                multiple=True,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    vol.Required("apply_to_charge", default=False): bool,
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
+            errors=errors if errors else None,
             description_placeholders={
                 "slot_num": str(slot_num),
                 "description": f"Configure time slot {slot_num} (no discharge period)"
@@ -845,42 +917,70 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_add_time_slot(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Add a time slot."""
+        errors = {}
+
         if user_input is not None:
             time_slot = {
                 "start_time": user_input["start_time"],
                 "end_time": user_input["end_time"],
                 "days": user_input["days"],
                 "apply_to_charge": user_input.get("apply_to_charge", False),
+                "target_grid_power": user_input.get("target_grid_power", 0),
+                "min_charge_power": user_input.get("min_charge_power", 0),
+                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
-            self.time_slots.append(time_slot)
-            
-            if len(self.time_slots) < 4:
-                return await self.async_step_add_more_slots()
-            else:
-                self.config_data["no_discharge_time_slots"] = self.time_slots
-                return await self.async_step_excluded_devices()
 
-        # Load existing time slots if available and not yet added
-        current_slots = self.config_entry.data.get("no_discharge_time_slots", [])
-        slot_num = len(self.time_slots)
-        
-        if slot_num < len(current_slots):
-            current_slot = current_slots[slot_num]
+            if user_input["start_time"] >= user_input["end_time"]:
+                errors["base"] = "midnight_crossing"
+            elif _slots_overlap(time_slot, self.time_slots):
+                errors["base"] = "overlapping_slots"
+            else:
+                self.time_slots.append(time_slot)
+
+                if len(self.time_slots) < 4:
+                    return await self.async_step_add_more_slots()
+                else:
+                    self.config_data["no_discharge_time_slots"] = self.time_slots
+                    return await self.async_step_excluded_devices()
+
+        # Load defaults from existing slots or user_input (on error re-show)
+        if user_input:
             defaults = {
-                "start_time": current_slot.get("start_time", "00:00:00"),
-                "end_time": current_slot.get("end_time", "00:00:00"),
-                "days": current_slot.get("days", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
-                "apply_to_charge": current_slot.get("apply_to_charge", False),
+                "start_time": user_input["start_time"],
+                "end_time": user_input["end_time"],
+                "days": user_input["days"],
+                "apply_to_charge": user_input.get("apply_to_charge", False),
+                "target_grid_power": user_input.get("target_grid_power", 0),
+                "min_charge_power": user_input.get("min_charge_power", 0),
+                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
         else:
-            defaults = {
-                "start_time": "00:00:00",
-                "end_time": "00:00:00",
-                "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                "apply_to_charge": False,
-            }
+            current_slots = self.config_entry.data.get("no_discharge_time_slots", [])
+            slot_num = len(self.time_slots)
 
-        slot_num += 1
+            if slot_num < len(current_slots):
+                current_slot = current_slots[slot_num]
+                defaults = {
+                    "start_time": current_slot.get("start_time", "00:00:00"),
+                    "end_time": current_slot.get("end_time", "00:00:00"),
+                    "days": current_slot.get("days", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
+                    "apply_to_charge": current_slot.get("apply_to_charge", False),
+                    "target_grid_power": current_slot.get("target_grid_power", 0),
+                    "min_charge_power": current_slot.get("min_charge_power", 0),
+                    "min_discharge_power": current_slot.get("min_discharge_power", 0),
+                }
+            else:
+                defaults = {
+                    "start_time": "00:00:00",
+                    "end_time": "00:00:00",
+                    "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                    "apply_to_charge": False,
+                    "target_grid_power": 0,
+                    "min_charge_power": 0,
+                    "min_discharge_power": 0,
+                }
+
+        slot_num = len(self.time_slots) + 1
         return self.async_show_form(
             step_id="add_time_slot",
             data_schema=vol.Schema(
@@ -897,8 +997,33 @@ class OptionsFlowHandler(OptionsFlow):
                             )
                         ),
                     vol.Required("apply_to_charge", default=defaults["apply_to_charge"]): bool,
+                    vol.Optional("target_grid_power", default=defaults["target_grid_power"]):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=-500, max=500, step=10,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
+                    vol.Optional("min_charge_power", default=defaults["min_charge_power"]):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=0, max=500, step=10,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
+                    vol.Optional("min_discharge_power", default=defaults["min_discharge_power"]):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=0, max=500, step=10,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
                 }
             ),
+            errors=errors if errors else None,
             description_placeholders={"slot_num": str(slot_num)},
         )
 

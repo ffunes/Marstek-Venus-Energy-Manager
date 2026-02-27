@@ -59,12 +59,18 @@
         "data": {
           "start_time": "Startzeit",
           "end_time": "Endzeit",
-          "days": "Wochentage"
+          "days": "Wochentage",
+          "target_grid_power": "Ziel-Netzleistung (W)",
+          "min_charge_power": "Minimale Ladeleistung (W)",
+          "min_discharge_power": "Minimale Entladeleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
-          "days": "Tage, an denen dieses Zeitfenster gilt"
+          "days": "Tage, an denen dieses Zeitfenster gilt",
+          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt.",
+          "min_charge_power": "Minimale Leistung zum Laden. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert.",
+          "min_discharge_power": "Minimale Leistung zum Entladen. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert."
         }
       },
       "add_more_slots": {
@@ -147,7 +153,9 @@
       "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
       "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
       "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
-      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien."
+      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien.",
+      "overlapping_slots": "Dieses Zeitfenster überschneidet sich mit einem bestehenden. Passen Sie die Zeiten oder Tage an.",
+      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00)."
     },
     "abort": {
       "already_configured": "Diese Integration ist bereits konfiguriert."
@@ -213,12 +221,18 @@
         "data": {
           "start_time": "Startzeit",
           "end_time": "Endzeit",
-          "days": "Wochentage"
+          "days": "Wochentage",
+          "target_grid_power": "Ziel-Netzleistung (W)",
+          "min_charge_power": "Minimale Ladeleistung (W)",
+          "min_discharge_power": "Minimale Entladeleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
-          "days": "Tage, an denen dieses Zeitfenster gilt"
+          "days": "Tage, an denen dieses Zeitfenster gilt",
+          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt.",
+          "min_charge_power": "Minimale Leistung zum Laden. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert.",
+          "min_discharge_power": "Minimale Leistung zum Entladen. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert."
         }
       },
       "add_more_slots": {
@@ -326,7 +340,9 @@
       "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
       "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
       "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
-      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien."
+      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien.",
+      "overlapping_slots": "Dieses Zeitfenster überschneidet sich mit einem bestehenden. Passen Sie die Zeiten oder Tage an.",
+      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00)."
     }
   },
   "selector": {
