@@ -47,15 +47,15 @@
         }
       },
       "time_slots": {
-        "title": "Keine-Entladung-Zeitfenster",
-        "description": "Möchten Sie Zeitfenster konfigurieren, in denen Batterien NICHT entladen werden? (sie können bei überschüssiger Solarenergie noch laden)",
+        "title": "Entladungs-Zeitfenster",
+        "description": "Möchten Sie Zeitfenster konfigurieren? Wenn konfiguriert, entladen sich die Batterien NUR während dieser Zeitfenster. Ohne Zeitfenster arbeiten sie jederzeit.",
         "data": {
           "configure_time_slots": "Zeitfenster konfigurieren"
         }
       },
       "add_time_slot": {
         "title": "Zeitfenster {slot_num}",
-        "description": "Definieren Sie ein Zeitfenster, in dem Batterien NICHT entladen werden. Nützlich für Spitzenlastzeiten oder wenn Sie lieber aus dem Netz verbrauchen möchten.",
+        "description": "Definieren Sie ein Zeitfenster, in dem Batterien entladen werden DÜRFEN. Außerhalb dieses Zeitfensters wird nicht entladen.",
         "data": {
           "start_time": "Startzeit",
           "end_time": "Endzeit",
@@ -209,15 +209,15 @@
         }
       },
       "time_slots": {
-        "title": "Keine-Entladung-Zeitfenster",
-        "description": "Möchten Sie Zeitfenster neu konfigurieren? Aktuelle Zeitfenster werden ersetzt.",
+        "title": "Entladungs-Zeitfenster",
+        "description": "Möchten Sie Zeitfenster neu konfigurieren? Wenn deaktiviert, werden alle Zeitfenster entfernt (Batterien arbeiten jederzeit).",
         "data": {
           "configure_time_slots": "Zeitfenster konfigurieren"
         }
       },
       "add_time_slot": {
         "title": "Zeitfenster {slot_num}",
-        "description": "Definieren oder ändern Sie ein Zeitfenster, in dem Batterien NICHT entladen werden.",
+        "description": "Definieren oder ändern Sie ein Zeitfenster, in dem Batterien entladen werden DÜRFEN.",
         "data": {
           "start_time": "Startzeit",
           "end_time": "Endzeit",

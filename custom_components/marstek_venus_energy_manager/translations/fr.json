@@ -47,15 +47,15 @@
         }
       },
       "time_slots": {
-        "title": "Plages horaires sans décharge",
-        "description": "Voulez-vous configurer des plages horaires pendant lesquelles les batteries ne se déchargeront PAS ? (elles peuvent toujours se charger s'il y a un excédent solaire)",
+        "title": "Plages horaires de décharge",
+        "description": "Voulez-vous configurer des plages horaires ? Si configurées, les batteries ne se déchargeront QUE pendant ces plages. Sans plages configurées, elles fonctionnent en permanence.",
         "data": {
           "configure_time_slots": "Configurer les plages horaires"
         }
       },
       "add_time_slot": {
         "title": "Plage horaire {slot_num}",
-        "description": "Définissez une plage horaire pendant laquelle les batteries ne se déchargeront PAS. Utile pour les heures de pointe ou lorsque vous préférez consommer du réseau.",
+        "description": "Définissez une plage horaire pendant laquelle les batteries POURRONT se décharger. En dehors de cette plage, elles ne se déchargeront pas.",
         "data": {
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
@@ -209,15 +209,15 @@
         }
       },
       "time_slots": {
-        "title": "Plages horaires sans décharge",
-        "description": "Voulez-vous reconfigurer les plages horaires ? Les plages actuelles seront remplacées.",
+        "title": "Plages horaires de décharge",
+        "description": "Voulez-vous reconfigurer les plages horaires ? Si décoché, toutes les plages seront supprimées (les batteries fonctionneront en permanence).",
         "data": {
           "configure_time_slots": "Configurer les plages horaires"
         }
       },
       "add_time_slot": {
         "title": "Plage horaire {slot_num}",
-        "description": "Définissez ou modifiez une plage horaire pendant laquelle les batteries ne se déchargeront PAS.",
+        "description": "Définissez ou modifiez une plage horaire pendant laquelle les batteries POURRONT se décharger.",
         "data": {
           "start_time": "Heure de début",
           "end_time": "Heure de fin",

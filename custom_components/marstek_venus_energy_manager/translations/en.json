@@ -47,15 +47,15 @@
         }
       },
       "time_slots": {
-        "title": "No-discharge time slots",
-        "description": "Do you want to configure time slots where batteries will NOT discharge? (they can still charge if there's excess solar)",
+        "title": "Discharge time slots",
+        "description": "Do you want to configure time slots? If configured, batteries will ONLY discharge during these slots. Without slots, they operate at all times.",
         "data": {
           "configure_time_slots": "Configure time slots"
         }
       },
       "add_time_slot": {
         "title": "Time slot {slot_num}",
-        "description": "Define a time slot where batteries will NOT discharge. Useful for peak hours or when you prefer to consume from the grid.",
+        "description": "Define a time slot where batteries will be ALLOWED to discharge. Outside this slot, they will not discharge.",
         "data": {
           "start_time": "Start time",
           "end_time": "End time",
@@ -209,15 +209,15 @@
         }
       },
       "time_slots": {
-        "title": "No-discharge time slots",
-        "description": "Do you want to reconfigure time slots? Current slots will be replaced.",
+        "title": "Discharge time slots",
+        "description": "Do you want to reconfigure time slots? If unchecked, all slots will be removed (batteries will operate at all times).",
         "data": {
           "configure_time_slots": "Configure time slots"
         }
       },
       "add_time_slot": {
         "title": "Time slot {slot_num}",
-        "description": "Define or modify a time slot where batteries will NOT discharge.",
+        "description": "Define or modify a time slot where batteries will be ALLOWED to discharge.",
         "data": {
           "start_time": "Start time",
           "end_time": "End time",

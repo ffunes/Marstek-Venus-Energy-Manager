@@ -47,15 +47,15 @@
         }
       },
       "time_slots": {
-        "title": "Geen-ontlading tijdslots",
-        "description": "Wilt u tijdslots configureren waarin batterijen NIET ontladen? (ze kunnen nog steeds laden als er overtollige zonne-energie is)",
+        "title": "Ontladingstijdslots",
+        "description": "Wilt u tijdslots configureren? Indien geconfigureerd, ontladen batterijen ALLEEN tijdens deze tijdslots. Zonder tijdslots werken ze altijd.",
         "data": {
           "configure_time_slots": "Tijdslots configureren"
         }
       },
       "add_time_slot": {
         "title": "Tijdslot {slot_num}",
-        "description": "Definieer een tijdslot waarin batterijen NIET ontladen. Nuttig voor piekuren of wanneer u liever vanuit het net wilt verbruiken.",
+        "description": "Definieer een tijdslot waarin batterijen WEL mogen ontladen. Buiten dit tijdslot wordt niet ontladen.",
         "data": {
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
@@ -209,15 +209,15 @@
         }
       },
       "time_slots": {
-        "title": "Geen-ontlading tijdslots",
-        "description": "Wilt u tijdslots opnieuw configureren? Huidige tijdslots worden vervangen.",
+        "title": "Ontladingstijdslots",
+        "description": "Wilt u tijdslots opnieuw configureren? Indien uitgeschakeld, worden alle tijdslots verwijderd (batterijen werken altijd).",
         "data": {
           "configure_time_slots": "Tijdslots configureren"
         }
       },
       "add_time_slot": {
         "title": "Tijdslot {slot_num}",
-        "description": "Definieer of wijzig een tijdslot waarin batterijen NIET ontladen.",
+        "description": "Definieer of wijzig een tijdslot waarin batterijen WEL mogen ontladen.",
         "data": {
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
