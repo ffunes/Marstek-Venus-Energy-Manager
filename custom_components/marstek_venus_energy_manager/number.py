@@ -1,14 +1,19 @@
 """Number platform for the Marstek Venus Energy Manager integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, CONFIG_NUMBER_DEFINITIONS
 from .coordinator import MarstekVenusDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -19,9 +24,20 @@ async def async_setup_entry(
     """Set up the number platform."""
     coordinators: list[MarstekVenusDataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
     entities = []
+
+    # Add Modbus register numbers (per battery)
     for coordinator in coordinators:
         for definition in coordinator.number_definitions:
             entities.append(MarstekVenusNumber(coordinator, definition))
+
+    # Add config numbers (system-level, PD parameters)
+    for definition in CONFIG_NUMBER_DEFINITIONS:
+        # Skip conditional entities if their feature is disabled
+        condition = definition.get("condition")
+        if condition and not entry.data.get(condition, False):
+            continue
+        entities.append(MarstekConfigNumberEntity(hass, entry, definition))
+
     async_add_entities(entities)
 
 
@@ -103,4 +119,54 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
+        }
+
+
+class MarstekConfigNumberEntity(NumberEntity):
+    """Number entity for system-level configuration parameters (PD controller, etc.)."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, definition: dict) -> None:
+        """Initialize the config number entity."""
+        self.hass = hass
+        self.entry = entry
+        self._definition = definition
+        self._key = definition["key"]
+
+        self._attr_name = definition["name"]
+        self._attr_unique_id = f"{entry.entry_id}_{definition['key']}"
+        self._attr_icon = definition.get("icon")
+        self._attr_native_unit_of_measurement = definition.get("unit")
+        self._attr_native_min_value = definition["min"]
+        self._attr_native_max_value = definition["max"]
+        self._attr_native_step = definition["step"]
+        self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_should_poll = False
+
+    @property
+    def native_value(self):
+        """Return the current value from config_entry.data."""
+        return self.entry.data.get(self._key, self._definition["default"])
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Update the value in config_entry.data and hot-reload controller."""
+        new_data = dict(self.entry.data)
+        new_data[self._key] = value
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+
+        # Hot-reload PD params in the controller without restarting the integration
+        controller = self.hass.data[DOMAIN][self.entry.entry_id].get("controller")
+        if controller:
+            controller.update_pd_parameters()
+
+        _LOGGER.info("Config parameter %s updated to %s", self._key, value)
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
         }

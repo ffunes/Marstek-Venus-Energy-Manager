@@ -60,17 +60,13 @@
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
           "days": "Jours de la semaine",
-          "target_grid_power": "Puissance réseau cible (W)",
-          "min_charge_power": "Puissance minimale de charge (W)",
-          "min_discharge_power": "Puissance minimale de décharge (W)"
+          "target_grid_power": "Puissance réseau cible (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
           "days": "Jours où cette plage s'applique",
-          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée.",
-          "min_charge_power": "Puissance minimale pour charger. En dessous, le contrôleur reste en veille. 0 = désactivé.",
-          "min_discharge_power": "Puissance minimale pour décharger. En dessous, le contrôleur reste en veille. 0 = désactivé."
+          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée."
         }
       },
       "add_more_slots": {
@@ -92,11 +88,13 @@
         "description": "Configurez comment la batterie doit gérer cet appareil.",
         "data": {
           "power_sensor": "Capteur de puissance de l'appareil",
-          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique"
+          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique",
+          "allow_solar_surplus": "Autoriser l'utilisation du surplus solaire (ne pas charger la batterie)"
         },
         "data_description": {
           "power_sensor": "Capteur qui mesure la puissance consommée par cet appareil (en W)",
-          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)"
+          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)",
+          "allow_solar_surplus": "Si coché, l'appareil pourra consommer l'énergie directement des panneaux solaires (surplus) sans que la batterie essaie de compenser. Recommandé pour les appareils à forte consommation comme les chargeurs de VE."
         }
       },
       "add_more_excluded_devices": {
@@ -222,17 +220,13 @@
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
           "days": "Jours de la semaine",
-          "target_grid_power": "Puissance réseau cible (W)",
-          "min_charge_power": "Puissance minimale de charge (W)",
-          "min_discharge_power": "Puissance minimale de décharge (W)"
+          "target_grid_power": "Puissance réseau cible (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
           "days": "Jours où cette plage s'applique",
-          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée.",
-          "min_charge_power": "Puissance minimale pour charger. En dessous, le contrôleur reste en veille. 0 = désactivé.",
-          "min_discharge_power": "Puissance minimale pour décharger. En dessous, le contrôleur reste en veille. 0 = désactivé."
+          "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée."
         }
       },
       "add_more_slots": {
@@ -254,11 +248,13 @@
         "description": "Configurez comment la batterie doit gérer cet appareil.",
         "data": {
           "power_sensor": "Capteur de puissance de l'appareil",
-          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique"
+          "included_in_consumption": "La consommation est incluse dans le capteur de consommation domestique",
+          "allow_solar_surplus": "Autoriser l'utilisation du surplus solaire (ne pas charger la batterie)"
         },
         "data_description": {
           "power_sensor": "Capteur qui mesure la puissance consommée par cet appareil (en W)",
-          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)"
+          "included_in_consumption": "✓ COCHÉ = Le capteur domestique INCLUT déjà cet appareil → La batterie ne l'alimentera PAS (exclu). ✗ DÉCOCHÉ = Le capteur domestique ne le voit pas → La batterie l'alimentera (additionnel)",
+          "allow_solar_surplus": "Si coché, l'appareil pourra consommer l'énergie directement des panneaux solaires (surplus) sans que la batterie essaie de compenser. Recommandé pour les appareils à forte consommation comme les chargeurs de VE."
         }
       },
       "add_more_excluded_devices": {
@@ -325,14 +321,18 @@
           "pd_kd": "Kd - Gain dérivé",
           "pd_deadband": "Bande morte (W)",
           "pd_max_power_change": "Changement de puissance max par cycle (W)",
-          "pd_direction_hysteresis": "Hystérésis de direction (W)"
+          "pd_direction_hysteresis": "Hystérésis de direction (W)",
+          "pd_min_charge_power": "Puissance minimale de charge (W)",
+          "pd_min_discharge_power": "Puissance minimale de décharge (W)"
         },
         "data_description": {
           "pd_kp": "Réactivité au déséquilibre du réseau. Valeurs plus élevées = réponse plus rapide mais risque de dépassement. Plage : 0.1-2.0, par défaut : 0.65",
           "pd_kd": "Amortissement pour éviter les oscillations. Valeurs plus élevées = transitions plus douces mais stabilisation plus lente. Plage : 0.0-2.0, par défaut : 0.5",
           "pd_deadband": "Tolérance de puissance du réseau autour de zéro. Empêche les micro-ajustements aux fluctuations mineures. Des valeurs plus élevées réduisent la sensibilité. Plage : 0-200W, par défaut : 40W",
           "pd_max_power_change": "Changement de puissance maximale de la batterie par cycle de contrôle (2.5s). Empêche les commandes abruptes. Valeurs plus faibles = plus doux mais plus lent. Plage : 100-2000W, par défaut : 800W",
-          "pd_direction_hysteresis": "Seuil de puissance requis pour basculer entre charge et décharge. Empêche les changements rapides de direction. Plage : 0-200W, par défaut : 60W"
+          "pd_direction_hysteresis": "Seuil de puissance requis pour basculer entre charge et décharge. Empêche les changements rapides de direction. Plage : 0-200W, par défaut : 60W",
+          "pd_min_charge_power": "Puissance minimale pour charger. En dessous de ce seuil, le contrôleur reste en veille au lieu de charger à faible puissance. 0 = désactivé.",
+          "pd_min_discharge_power": "Puissance minimale pour décharger. En dessous de ce seuil, le contrôleur reste en veille au lieu de décharger à faible puissance. 0 = désactivé."
         }
       }
     },

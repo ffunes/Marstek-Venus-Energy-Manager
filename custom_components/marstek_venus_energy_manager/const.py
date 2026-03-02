@@ -883,6 +883,8 @@ CONF_PD_KD = "pd_controller_kd"
 CONF_PD_DEADBAND = "pd_controller_deadband"
 CONF_PD_MAX_POWER_CHANGE = "pd_controller_max_power_change"
 CONF_PD_DIRECTION_HYSTERESIS = "pd_controller_direction_hysteresis"
+CONF_PD_MIN_CHARGE_POWER = "pd_min_charge_power"
+CONF_PD_MIN_DISCHARGE_POWER = "pd_min_discharge_power"
 
 # Default PD Controller Parameters
 DEFAULT_PD_KP = 0.65
@@ -890,8 +892,91 @@ DEFAULT_PD_KD = 0.5
 DEFAULT_PD_DEADBAND = 40
 DEFAULT_PD_MAX_POWER_CHANGE = 800
 DEFAULT_PD_DIRECTION_HYSTERESIS = 60
+DEFAULT_PD_MIN_CHARGE_POWER = 0       # Minimum charge power (0 = disabled)
+DEFAULT_PD_MIN_DISCHARGE_POWER = 0    # Minimum discharge power (0 = disabled)
 
 # Default target grid power per time slot (0W = regulate to zero grid flow)
 DEFAULT_SLOT_TARGET_GRID_POWER = 0
-DEFAULT_SLOT_MIN_CHARGE_POWER = 0     # Minimum charge power per slot (0 = disabled)
-DEFAULT_SLOT_MIN_DISCHARGE_POWER = 0  # Minimum discharge power per slot (0 = disabled)
+
+# Configuration Number Definitions (for config entities exposed in the UI)
+CONFIG_NUMBER_DEFINITIONS = [
+    {
+        "key": CONF_PD_KP,
+        "name": "PD Kp",
+        "min": 0.1,
+        "max": 2.0,
+        "step": 0.05,
+        "default": DEFAULT_PD_KP,
+        "icon": "mdi:tune",
+    },
+    {
+        "key": CONF_PD_KD,
+        "name": "PD Kd",
+        "min": 0.0,
+        "max": 2.0,
+        "step": 0.05,
+        "default": DEFAULT_PD_KD,
+        "icon": "mdi:tune",
+    },
+    {
+        "key": CONF_PD_DEADBAND,
+        "name": "PD Deadband",
+        "min": 0,
+        "max": 200,
+        "step": 5,
+        "unit": "W",
+        "default": DEFAULT_PD_DEADBAND,
+        "icon": "mdi:arrow-collapse-horizontal",
+    },
+    {
+        "key": CONF_PD_MAX_POWER_CHANGE,
+        "name": "PD Max Power Change",
+        "min": 100,
+        "max": 2000,
+        "step": 50,
+        "unit": "W",
+        "default": DEFAULT_PD_MAX_POWER_CHANGE,
+        "icon": "mdi:delta",
+    },
+    {
+        "key": CONF_PD_DIRECTION_HYSTERESIS,
+        "name": "PD Direction Hysteresis",
+        "min": 0,
+        "max": 200,
+        "step": 5,
+        "unit": "W",
+        "default": DEFAULT_PD_DIRECTION_HYSTERESIS,
+        "icon": "mdi:swap-horizontal",
+    },
+    {
+        "key": CONF_PD_MIN_CHARGE_POWER,
+        "name": "PD Min Charge Power",
+        "min": 0,
+        "max": 500,
+        "step": 10,
+        "unit": "W",
+        "default": DEFAULT_PD_MIN_CHARGE_POWER,
+        "icon": "mdi:battery-charging-low",
+    },
+    {
+        "key": CONF_PD_MIN_DISCHARGE_POWER,
+        "name": "PD Min Discharge Power",
+        "min": 0,
+        "max": 500,
+        "step": 10,
+        "unit": "W",
+        "default": DEFAULT_PD_MIN_DISCHARGE_POWER,
+        "icon": "mdi:battery-low",
+    },
+    {
+        "key": CONF_MAX_CONTRACTED_POWER,
+        "name": "Max Contracted Power",
+        "min": 1000,
+        "max": 15000,
+        "step": 100,
+        "unit": "W",
+        "default": 7000,
+        "icon": "mdi:transmission-tower",
+        "condition": CONF_ENABLE_PREDICTIVE_CHARGING,
+    },
+]

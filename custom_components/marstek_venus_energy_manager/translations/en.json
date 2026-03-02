@@ -60,17 +60,13 @@
           "start_time": "Start time",
           "end_time": "End time",
           "days": "Days of the week",
-          "target_grid_power": "Target Grid Power (W)",
-          "min_charge_power": "Minimum Charge Power (W)",
-          "min_discharge_power": "Minimum Discharge Power (W)"
+          "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
           "days": "Days when this slot applies",
-          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import.",
-          "min_charge_power": "Minimum power for charging. Below this, the controller stays idle. 0 = disabled.",
-          "min_discharge_power": "Minimum power for discharging. Below this, the controller stays idle. 0 = disabled."
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
       "add_more_slots": {
@@ -92,11 +88,13 @@
         "description": "Configure how the battery should manage this device.",
         "data": {
           "power_sensor": "Device power sensor",
-          "included_in_consumption": "Consumption is included in home consumption sensor"
+          "included_in_consumption": "Consumption is included in home consumption sensor",
+          "allow_solar_surplus": "Allow to use solar surplus (do not charge battery)"
         },
         "data_description": {
           "power_sensor": "Sensor that measures the power consumed by this device (in W)",
-          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)"
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)",
+          "allow_solar_surplus": "If checked, the device will be able to consume energy directly from solar panels (surplus) without the battery trying to compensate. Recommended for high consumption devices like EV chargers."
         }
       },
       "add_more_excluded_devices": {
@@ -222,17 +220,13 @@
           "start_time": "Start time",
           "end_time": "End time",
           "days": "Days of the week",
-          "target_grid_power": "Target Grid Power (W)",
-          "min_charge_power": "Minimum Charge Power (W)",
-          "min_discharge_power": "Minimum Discharge Power (W)"
+          "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
           "days": "Days when this slot applies",
-          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import.",
-          "min_charge_power": "Minimum power for charging. Below this, the controller stays idle. 0 = disabled.",
-          "min_discharge_power": "Minimum power for discharging. Below this, the controller stays idle. 0 = disabled."
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
       "add_more_slots": {
@@ -254,11 +248,13 @@
         "description": "Configure how the battery should manage this device.",
         "data": {
           "power_sensor": "Device power sensor",
-          "included_in_consumption": "Consumption is included in home consumption sensor"
+          "included_in_consumption": "Consumption is included in home consumption sensor",
+          "allow_solar_surplus": "Allow to use solar surplus (do not charge battery)"
         },
         "data_description": {
           "power_sensor": "Sensor that measures the power consumed by this device (in W)",
-          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)"
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)",
+          "allow_solar_surplus": "If checked, the device will be able to consume energy directly from solar panels (surplus) without the battery trying to compensate. Recommended for high consumption devices like EV chargers."
         }
       },
       "add_more_excluded_devices": {
@@ -325,14 +321,18 @@
           "pd_kd": "Kd - Derivative Gain",
           "pd_deadband": "Deadband (W)",
           "pd_max_power_change": "Max Power Change per Cycle (W)",
-          "pd_direction_hysteresis": "Direction Hysteresis (W)"
+          "pd_direction_hysteresis": "Direction Hysteresis (W)",
+          "pd_min_charge_power": "Minimum Charge Power (W)",
+          "pd_min_discharge_power": "Minimum Discharge Power (W)"
         },
         "data_description": {
           "pd_kp": "Responsiveness to grid imbalance. Higher values = faster response but risk of overshoot. Range: 0.1-2.0, default: 0.65",
           "pd_kd": "Damping to prevent oscillation. Higher values = smoother transitions but slower settling. Range: 0.0-2.0, default: 0.5",
           "pd_deadband": "Grid power tolerance around zero. Prevents micro-adjustments to minor fluctuations. Higher values reduce sensitivity. Range: 0-200W, default: 40W",
           "pd_max_power_change": "Maximum battery power change per control cycle (2.5s). Prevents abrupt commands. Lower values = smoother but slower. Range: 100-2000W, default: 800W",
-          "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W"
+          "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W",
+          "pd_min_charge_power": "Minimum power for charging. Below this threshold, the controller stays idle instead of charging at low power. 0 = disabled.",
+          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled."
         }
       }
     },

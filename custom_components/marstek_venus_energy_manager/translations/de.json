@@ -60,17 +60,13 @@
           "start_time": "Startzeit",
           "end_time": "Endzeit",
           "days": "Wochentage",
-          "target_grid_power": "Ziel-Netzleistung (W)",
-          "min_charge_power": "Minimale Ladeleistung (W)",
-          "min_discharge_power": "Minimale Entladeleistung (W)"
+          "target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
           "days": "Tage, an denen dieses Zeitfenster gilt",
-          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt.",
-          "min_charge_power": "Minimale Leistung zum Laden. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert.",
-          "min_discharge_power": "Minimale Leistung zum Entladen. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert."
+          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt."
         }
       },
       "add_more_slots": {
@@ -92,11 +88,13 @@
         "description": "Konfigurieren Sie, wie die Batterie dieses Gerät verwalten soll.",
         "data": {
           "power_sensor": "Geräteleistungssensor",
-          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten"
+          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten",
+          "allow_solar_surplus": "Solarüberschuss nutzen erlauben (Batterie nicht laden)"
         },
         "data_description": {
           "power_sensor": "Sensor, der die von diesem Gerät verbrauchte Leistung misst (in W)",
-          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)"
+          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)",
+          "allow_solar_surplus": "Wenn aktiviert, kann das Gerät Energie direkt von den Solarmodulen (Überschuss) verbrauchen, ohne dass die Batterie versucht zu kompensieren. Empfohlen für Geräte mit hohem Verbrauch wie EV-Ladestationen."
         }
       },
       "add_more_excluded_devices": {
@@ -222,17 +220,13 @@
           "start_time": "Startzeit",
           "end_time": "Endzeit",
           "days": "Wochentage",
-          "target_grid_power": "Ziel-Netzleistung (W)",
-          "min_charge_power": "Minimale Ladeleistung (W)",
-          "min_discharge_power": "Minimale Entladeleistung (W)"
+          "target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
           "days": "Tage, an denen dieses Zeitfenster gilt",
-          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt.",
-          "min_charge_power": "Minimale Leistung zum Laden. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert.",
-          "min_discharge_power": "Minimale Leistung zum Entladen. Darunter bleibt der Regler im Leerlauf. 0 = deaktiviert."
+          "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt."
         }
       },
       "add_more_slots": {
@@ -254,11 +248,13 @@
         "description": "Konfigurieren Sie, wie die Batterie dieses Gerät verwalten soll.",
         "data": {
           "power_sensor": "Geräteleistungssensor",
-          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten"
+          "included_in_consumption": "Verbrauch ist im Hausverbrauchssensor enthalten",
+          "allow_solar_surplus": "Solarüberschuss nutzen erlauben (Batterie nicht laden)"
         },
         "data_description": {
           "power_sensor": "Sensor, der die von diesem Gerät verbrauchte Leistung misst (in W)",
-          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)"
+          "included_in_consumption": "✓ AKTIVIERT = Haussensor enthält dieses Gerät BEREITS → Batterie wird es NICHT versorgen (ausgeschlossen). ✗ DEAKTIVIERT = Haussensor sieht es nicht → Batterie wird es versorgen (zusätzlich)",
+          "allow_solar_surplus": "Wenn aktiviert, kann das Gerät Energie direkt von den Solarmodulen (Überschuss) verbrauchen, ohne dass die Batterie versucht zu kompensieren. Empfohlen für Geräte mit hohem Verbrauch wie EV-Ladestationen."
         }
       },
       "add_more_excluded_devices": {
@@ -325,14 +321,18 @@
           "pd_kd": "Kd - Differentialverstärkung",
           "pd_deadband": "Totband (W)",
           "pd_max_power_change": "Max. Leistungsänderung pro Zyklus (W)",
-          "pd_direction_hysteresis": "Richtungshysterese (W)"
+          "pd_direction_hysteresis": "Richtungshysterese (W)",
+          "pd_min_charge_power": "Minimale Ladeleistung (W)",
+          "pd_min_discharge_power": "Minimale Entladeleistung (W)"
         },
         "data_description": {
           "pd_kp": "Reaktionsfähigkeit auf Netzungleichgewicht. Höhere Werte = schnellere Reaktion, aber Risiko von Überschwingen. Bereich: 0.1-2.0, Standard: 0.65",
           "pd_kd": "Dämpfung zur Vermeidung von Schwingungen. Höhere Werte = sanftere Übergänge, aber langsamere Stabilisierung. Bereich: 0.0-2.0, Standard: 0.5",
           "pd_deadband": "Netzleistungstoleranz um Null. Verhindert Mikroanpassungen bei kleinen Schwankungen. Höhere Werte reduzieren die Empfindlichkeit. Bereich: 0-200W, Standard: 40W",
           "pd_max_power_change": "Maximale Batterieleistungsänderung pro Regelzyklus (2.5s). Verhindert abrupte Befehle. Niedrigere Werte = sanfter, aber langsamer. Bereich: 100-2000W, Standard: 800W",
-          "pd_direction_hysteresis": "Leistungsschwelle zum Wechsel zwischen Laden und Entladen. Verhindert schnelle Richtungswechsel. Bereich: 0-200W, Standard: 60W"
+          "pd_direction_hysteresis": "Leistungsschwelle zum Wechsel zwischen Laden und Entladen. Verhindert schnelle Richtungswechsel. Bereich: 0-200W, Standard: 60W",
+          "pd_min_charge_power": "Minimale Leistung zum Laden. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu laden. 0 = deaktiviert.",
+          "pd_min_discharge_power": "Minimale Leistung zum Entladen. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu entladen. 0 = deaktiviert."
         }
       }
     },

@@ -5,6 +5,7 @@ a Marstek Venus battery system asynchronously.
 """
 
 from pymodbus.client import AsyncModbusTcpClient
+from pymodbus.exceptions import ConnectionException, ModbusIOException
 import asyncio
 from typing import Optional
 
@@ -49,11 +50,22 @@ class MarstekModbusClient:
         self.host = host
         self.port = port
 
-        # Create pymodbus async TCP client instance
+        # Store constructor params for creating fresh client instances on reconnect
+        self._host = host
+        self._port = port
+        self._timeout = timeout
+        self._is_v3 = is_v3
+        self._message_wait_ms = message_wait_ms
+
+        # Create pymodbus async TCP client instance with auto-reconnect disabled.
+        # We manage reconnection ourselves by creating fresh client instances,
+        # which avoids pymodbus's internal reconnect_delay growing up to 300s.
         self.client = AsyncModbusTcpClient(
             host=host,
             port=port,
             timeout=timeout,
+            reconnect_delay=0,
+            reconnect_delay_max=0,
         )
 
         # Set v3 packet correction as attribute (compatible across all pymodbus 3.x)
@@ -73,19 +85,51 @@ class MarstekModbusClient:
         """
         self._is_shutting_down = value
 
+    @property
+    def connected(self) -> bool:
+        """Return whether the client is currently connected."""
+        return self.client is not None and self.client.connected
+
     async def async_connect(self) -> bool:
         """
         Connect asynchronously to the Modbus TCP server.
+
+        Always creates a fresh AsyncModbusTcpClient instance to avoid reusing
+        internal buffers/state that may be left in an inconsistent state after
+        network interruptions. This also resets pymodbus's internal reconnect
+        delay which can grow up to 300 seconds after repeated failures.
 
         Returns:
             bool: True if connection succeeded, False otherwise.
         """
         try:
-            # Simple connection attempt
+            # Close and discard existing client to release the battery's
+            # single TCP connection slot and avoid half-open connections
+            if self.client is not None:
+                try:
+                    result = self.client.close()
+                    if asyncio.iscoroutine(result):
+                        await result
+                except Exception:
+                    pass
+
+            # Create a fresh client instance (no corrupted state, no backoff)
+            self.client = AsyncModbusTcpClient(
+                host=self._host,
+                port=self._port,
+                timeout=self._timeout,
+                reconnect_delay=0,
+                reconnect_delay_max=0,
+            )
+
+            # Restore v3 packet correction and timing
+            if self._is_v3:
+                self.client.trace_packet = _marstek_v3_packet_correction
+            self.client.message_wait_milliseconds = self._message_wait_ms
+
             connected = await self.client.connect()
-            
-            # For pymodbus, None means success in some versions
-            if connected is None or connected is True:
+
+            if connected:
                 await asyncio.sleep(0.2)  # Wait for connection to stabilize
                 _LOGGER.info(
                     "Connected to Modbus server at %s:%s with unit %s",
@@ -115,16 +159,16 @@ class MarstekModbusClient:
 
     async def async_close(self) -> None:
         """
-        Close the Modbus TCP connection asynchronously.
+        Close the Modbus TCP connection safely (handles sync or async close).
         """
+        if self.client is None:
+            return
         try:
-            if self.client is not None:
-                if hasattr(self.client, 'connected') and self.client.connected:
-                    self.client.close()
-                else:
-                    self.client.close()
+            result = self.client.close()
+            if asyncio.iscoroutine(result):
+                await result
         except Exception as e:
-            _LOGGER.error("Error closing Modbus connection: %s", e)
+            _LOGGER.debug("Error closing Modbus connection: %s", e)
 
     async def async_read_register(
         self,
@@ -280,6 +324,20 @@ class MarstekModbusClient:
                     else:
                         raise ValueError(f"Unsupported data_type: {data_type}")
 
+            except (ConnectionException, ModbusIOException):
+                if self._is_shutting_down:
+                    return None
+                # Connection is dead or unresponsive — try to create a fresh connection
+                _LOGGER.debug("Connection lost during read of register %d (0x%04X), attempting reconnect", register)
+                reconnected = await self.async_connect()
+                if not reconnected:
+                    _LOGGER.debug("Reconnect failed for register %d (0x%04X) read - aborting", register, register)
+                    return None
+                # Fresh connection established — retry the read once more
+                _LOGGER.info("Reconnected successfully, retrying read of register %d (0x%04X)", register, register)
+                attempt += 1  # Count reconnect as an attempt to prevent infinite loops
+                continue
+
             except Exception as e:
                 if not self._is_shutting_down:
                     _LOGGER.exception("Exception during Modbus read at register %d (0x%04X) on attempt %d: %s", register, register, attempt + 1, e)
@@ -295,12 +353,7 @@ class MarstekModbusClient:
                 await asyncio.sleep(current_retry_delay + jitter)
                 current_retry_delay = min(current_retry_delay * 2, 5.0)  # Cap at 5 seconds
 
-                # Reconnect if connection was lost
-                if not self.client.connected:
-                    _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
-                    await self.async_connect()
-
-        _LOGGER.error(
+        _LOGGER.debug(
             "Failed to read register %d (0x%04X) after %d attempts",
             register,
             register,
@@ -333,6 +386,20 @@ class MarstekModbusClient:
                 )
                 return not result.isError()
 
+            except (ConnectionException, ModbusIOException):
+                if self._is_shutting_down:
+                    return False
+                # Connection is dead or unresponsive — try to create a fresh connection
+                _LOGGER.debug("Connection lost during write to register %d (0x%04X), attempting reconnect", register)
+                reconnected = await self.async_connect()
+                if not reconnected:
+                    _LOGGER.debug("Reconnect failed for register %d (0x%04X) write - aborting", register, register)
+                    return False
+                # Fresh connection established — retry the write once more
+                _LOGGER.info("Reconnected successfully, retrying write to register %d (0x%04X)", register, register)
+                attempt += 1  # Count reconnect as an attempt to prevent infinite loops
+                continue
+
             except Exception as e:
                 if not self._is_shutting_down:
                     _LOGGER.exception("Exception during modbus write at register %d (0x%04X) on attempt %d: %s", register, register, attempt + 1, e)
@@ -348,12 +415,7 @@ class MarstekModbusClient:
                 await asyncio.sleep(current_retry_delay + jitter)
                 current_retry_delay = min(current_retry_delay * 2, 5.0)  # Cap at 5 seconds
 
-                # Reconnect if connection was lost
-                if not self.client.connected:
-                    _LOGGER.warning("Connection lost, reconnecting before retry %d for register %d (0x%04X)", attempt + 1, register, register)
-                    await self.async_connect()
-
-        _LOGGER.error(
+        _LOGGER.debug(
             "Failed to write register %d (0x%04X) after %d attempts",
             register,
             register,

@@ -60,17 +60,13 @@
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
           "days": "Dagen van de week",
-          "target_grid_power": "Doelvermogen netwerk (W)",
-          "min_charge_power": "Minimaal laadvermogen (W)",
-          "min_discharge_power": "Minimaal ontlaadvermogen (W)"
+          "target_grid_power": "Doelvermogen netwerk (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
           "days": "Dagen waarop dit tijdslot van toepassing is",
-          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan.",
-          "min_charge_power": "Minimaal vermogen om te laden. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld.",
-          "min_discharge_power": "Minimaal vermogen om te ontladen. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld."
+          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan."
         }
       },
       "add_more_slots": {
@@ -92,11 +88,13 @@
         "description": "Configureer hoe de batterij dit apparaat moet beheren.",
         "data": {
           "power_sensor": "Apparaatvermogensensor",
-          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor"
+          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor",
+          "allow_solar_surplus": "Zonne-overschot gebruiken toestaan (batterij niet laden)"
         },
         "data_description": {
           "power_sensor": "Sensor die het door dit apparaat verbruikte vermogen meet (in W)",
-          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)"
+          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)",
+          "allow_solar_surplus": "Indien aangevinkt, kan het apparaat energie rechtstreeks van de zonnepanelen (overschot) verbruiken zonder dat de batterij probeert te compenseren. Aanbevolen voor apparaten met hoog verbruik zoals EV-laders."
         }
       },
       "add_more_excluded_devices": {
@@ -222,17 +220,13 @@
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
           "days": "Dagen van de week",
-          "target_grid_power": "Doelvermogen netwerk (W)",
-          "min_charge_power": "Minimaal laadvermogen (W)",
-          "min_discharge_power": "Minimaal ontlaadvermogen (W)"
+          "target_grid_power": "Doelvermogen netwerk (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
           "days": "Dagen waarop dit tijdslot van toepassing is",
-          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan.",
-          "min_charge_power": "Minimaal vermogen om te laden. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld.",
-          "min_discharge_power": "Minimaal vermogen om te ontladen. Hieronder blijft de regelaar inactief. 0 = uitgeschakeld."
+          "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan."
         }
       },
       "add_more_slots": {
@@ -254,11 +248,13 @@
         "description": "Configureer hoe de batterij dit apparaat moet beheren.",
         "data": {
           "power_sensor": "Apparaatvermogensensor",
-          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor"
+          "included_in_consumption": "Verbruik is opgenomen in huisverbruikssensor",
+          "allow_solar_surplus": "Zonne-overschot gebruiken toestaan (batterij niet laden)"
         },
         "data_description": {
           "power_sensor": "Sensor die het door dit apparaat verbruikte vermogen meet (in W)",
-          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)"
+          "included_in_consumption": "✓ AANGEVINKT = Huissensor bevat dit apparaat AL → Batterij zal het NIET voeden (uitgesloten). ✗ NIET AANGEVINKT = Huissensor ziet het niet → Batterij zal het voeden (extra)",
+          "allow_solar_surplus": "Indien aangevinkt, kan het apparaat energie rechtstreeks van de zonnepanelen (overschot) verbruiken zonder dat de batterij probeert te compenseren. Aanbevolen voor apparaten met hoog verbruik zoals EV-laders."
         }
       },
       "add_more_excluded_devices": {
@@ -325,14 +321,18 @@
           "pd_kd": "Kd - Differentiële versterking",
           "pd_deadband": "Dode band (W)",
           "pd_max_power_change": "Max vermogenswijziging per cyclus (W)",
-          "pd_direction_hysteresis": "Richting hysterese (W)"
+          "pd_direction_hysteresis": "Richting hysterese (W)",
+          "pd_min_charge_power": "Minimaal laadvermogen (W)",
+          "pd_min_discharge_power": "Minimaal ontlaadvermogen (W)"
         },
         "data_description": {
           "pd_kp": "Responsiviteit op netwerk onbalans. Hogere waarden = snellere respons maar risico op overshoot. Bereik: 0.1-2.0, standaard: 0.65",
           "pd_kd": "Demping om oscillatie te voorkomen. Hogere waarden = soepelere overgangen maar tragere stabilisatie. Bereik: 0.0-2.0, standaard: 0.5",
           "pd_deadband": "Netwerk vermogenstolerantie rond nul. Voorkomt micro-aanpassingen bij kleine fluctuaties. Hogere waarden verminderen de gevoeligheid. Bereik: 0-200W, standaard: 40W",
           "pd_max_power_change": "Maximale batterijvermogenswijziging per regelcyclus (2.5s). Voorkomt abrupte commando's. Lagere waarden = soepeler maar langzamer. Bereik: 100-2000W, standaard: 800W",
-          "pd_direction_hysteresis": "Vermogensdrempel vereist om te schakelen tussen laden en ontladen. Voorkomt snelle richtingsveranderingen. Bereik: 0-200W, standaard: 60W"
+          "pd_direction_hysteresis": "Vermogensdrempel vereist om te schakelen tussen laden en ontladen. Voorkomt snelle richtingsveranderingen. Bereik: 0-200W, standaard: 60W",
+          "pd_min_charge_power": "Minimaal vermogen om te laden. Onder deze drempel blijft de regelaar inactief in plaats van laden op laag vermogen. 0 = uitgeschakeld.",
+          "pd_min_discharge_power": "Minimaal vermogen om te ontladen. Onder deze drempel blijft de regelaar inactief in plaats van ontladen op laag vermogen. 0 = uitgeschakeld."
         }
       }
     },

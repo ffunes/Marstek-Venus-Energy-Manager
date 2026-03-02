@@ -1,14 +1,22 @@
 """Select platform for the Marstek Venus Energy Manager integration."""
 from __future__ import annotations
 
+import logging
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    CONF_ENABLE_WEEKLY_FULL_CHARGE,
+    CONF_WEEKLY_FULL_CHARGE_DAY,
+)
 from .coordinator import MarstekVenusDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -19,9 +27,16 @@ async def async_setup_entry(
     """Set up the select platform."""
     coordinators: list[MarstekVenusDataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
     entities = []
+
+    # Add Modbus register selects (per battery)
     for coordinator in coordinators:
         for definition in coordinator.select_definitions:
             entities.append(MarstekVenusSelect(coordinator, definition))
+
+    # Add weekly full charge day select (system-level)
+    if entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False):
+        entities.append(WeeklyFullChargeDaySelect(hass, entry))
+
     async_add_entities(entities)
 
 
@@ -66,4 +81,45 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
+        }
+
+
+WEEKDAY_OPTIONS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+
+
+class WeeklyFullChargeDaySelect(SelectEntity):
+    """Select entity to choose the day for weekly full charge."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the weekly full charge day select."""
+        self.hass = hass
+        self.entry = entry
+
+        self._attr_name = "Weekly Full Charge Day"
+        self._attr_unique_id = f"{entry.entry_id}_weekly_full_charge_day"
+        self._attr_icon = "mdi:calendar-week"
+        self._attr_options = WEEKDAY_OPTIONS
+        self._attr_should_poll = False
+
+    @property
+    def current_option(self) -> str:
+        """Return the currently selected day."""
+        return self.entry.data.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
+
+    async def async_select_option(self, option: str) -> None:
+        """Update the selected day in config_entry.data."""
+        new_data = dict(self.entry.data)
+        new_data[CONF_WEEKLY_FULL_CHARGE_DAY] = option
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+        _LOGGER.info("Weekly full charge day updated to %s", option)
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
         }

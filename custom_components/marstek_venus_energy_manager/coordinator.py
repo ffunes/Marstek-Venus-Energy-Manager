@@ -69,6 +69,13 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self.lock = asyncio.Lock()
         self._is_shutting_down = False  # Flag to suppress errors during shutdown
 
+        # Connection health monitoring
+        self._consecutive_failures = 0
+        self._max_failures_before_reconnect = 3   # Fresh client after 3 failed poll cycles
+        self._max_failures_before_suspend = 5     # Suspend after 5 failed poll cycles
+        self._is_connected = False
+        self._suspension_reset_time = None         # When suspended, retry after this time
+
         # Timestamp-based update tracking
         self._last_update_times = {}
         self._entity_registry = None
@@ -114,13 +121,53 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Log sensor count for debugging
         _LOGGER.info("[%s] Total sensors to poll: %d", self.name, len(self._all_definitions))
 
+    @property
+    def is_available(self) -> bool:
+        """Return whether the battery is currently reachable."""
+        return self._is_connected and not self._is_shutting_down
+
     async def connect(self) -> bool:
         """Connect to the Modbus client."""
-        return await self.client.async_connect()
+        connected = await self.client.async_connect()
+        if connected:
+            self._is_connected = True
+            self._consecutive_failures = 0
+        return connected
 
     async def disconnect(self) -> None:
         """Disconnect from the Modbus client."""
         await self.client.async_close()
+
+    async def async_reconnect_fresh(self) -> bool:
+        """Close the current connection and reconnect with a fresh client.
+
+        Creates a brand new AsyncModbusTcpClient instance which resets all
+        internal state including corrupted sockets and stuck backoff timers.
+        This fixes the permanent disconnection bug where v3 batteries
+        (single TCP connection) refuse new connections because they still
+        hold a zombie connection from the old client.
+
+        Returns True if reconnection succeeded.
+        """
+        _LOGGER.warning(
+            "[%s] Creating fresh connection to %s:%s (consecutive failures: %d)",
+            self.name, self.host, self.port, self._consecutive_failures
+        )
+
+        async with self.lock:
+            # async_connect() internally closes old client and creates a new one
+            connected = await self.client.async_connect()
+
+            if connected:
+                self._consecutive_failures = 0
+                self._is_connected = True
+                self._suspension_reset_time = None
+                _LOGGER.info("[%s] Fresh reconnection successful", self.name)
+            else:
+                self._is_connected = False
+                _LOGGER.warning("[%s] Fresh reconnection failed", self.name)
+
+            return connected
 
     def set_shutting_down(self, value: bool) -> None:
         """
@@ -156,6 +203,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         """Update all sensors asynchronously with per-sensor interval skipping.
 
         Sensors disabled in Home Assistant are skipped, except dependencies which are always fetched.
+        Includes connection health monitoring: tracks consecutive poll failures and
+        triggers fresh reconnections when the battery becomes unreachable.
         """
         from homeassistant.util.dt import utcnow
         from homeassistant.helpers import entity_registry as er
@@ -168,6 +217,23 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         if self._is_shutting_down:
             _LOGGER.debug("[%s] Shutdown in progress, skipping poll", self.name)
             return self.data or {}
+
+        # === CONNECTION HEALTH CHECK ===
+        # If connection is suspended (too many failures), wait for cooldown
+        if self._suspension_reset_time is not None:
+            if now >= self._suspension_reset_time:
+                _LOGGER.info("[%s] Connection suspension expired - attempting fresh reconnection", self.name)
+                self._suspension_reset_time = None
+                self._consecutive_failures = 0
+                reconnected = await self.async_reconnect_fresh()
+                if not reconnected:
+                    # Suspend again for another 2 minutes
+                    self._suspension_reset_time = now + timedelta(minutes=2)
+                    _LOGGER.warning("[%s] Reconnection failed, suspending for another 2 minutes", self.name)
+                    return self.data or {}
+            else:
+                _LOGGER.debug("[%s] Connection suspended - skipping poll", self.name)
+                return self.data or {}
 
         # Get the entity registry to check for disabled entities
         if self._entity_registry is None:
@@ -182,6 +248,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Set client unit ID for this battery
         self.client.unit_id = 1
+
+        # Track read attempts vs successes for connection health monitoring
+        sensors_attempted = 0
+        sensors_succeeded = 0
 
         # Iterate over each sensor definition to poll if due
         for sensor in self._all_definitions:
@@ -250,6 +320,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
             # Attempt to read the sensor value from Modbus
             # Lock ensures reads don't interleave with control loop writes
+            sensors_attempted += 1
             try:
                 async with self.lock:
                     value = await self.client.async_read_register(
@@ -260,6 +331,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     )
 
                 if value is not None:
+                    sensors_succeeded += 1
                     # Apply scaling if defined
                     if "scale" in sensor:
                         value *= sensor["scale"]
@@ -283,17 +355,60 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.error("[%s] Error reading register %d for %s: %s",
                                  self.name, sensor["register"], key, e)
 
+        # === CONNECTION HEALTH TRACKING ===
+        # Only track failures when we actually attempted reads (not when all sensors
+        # were simply skipped because their polling interval hasn't elapsed yet)
+        if sensors_attempted == 0:
+            _LOGGER.debug("[%s] No sensors due for update this cycle", self.name)
+        elif sensors_succeeded > 0:
+            # At least some sensors read successfully - connection is healthy
+            if self._consecutive_failures > 0:
+                _LOGGER.info(
+                    "[%s] Connection recovered after %d consecutive failures",
+                    self.name, self._consecutive_failures
+                )
+            self._consecutive_failures = 0
+            self._is_connected = True
+        else:
+            # All attempted reads failed - connection issue
+            self._consecutive_failures += 1
+
+            # Mark as unavailable immediately to stop control loop writes
+            self._is_connected = False
+
+            _LOGGER.warning(
+                "[%s] All %d read attempts failed (consecutive failures: %d) - marked unavailable",
+                self.name, sensors_attempted, self._consecutive_failures
+            )
+
+            if self._consecutive_failures >= self._max_failures_before_reconnect:
+                # Try a fresh reconnection
+                _LOGGER.warning(
+                    "[%s] %d consecutive failures - attempting fresh reconnection",
+                    self.name, self._consecutive_failures
+                )
+                await self.async_reconnect_fresh()
+
+            if self._consecutive_failures >= self._max_failures_before_suspend:
+                # Too many failures - suspend polling to avoid flooding the battery
+                self._suspension_reset_time = now + timedelta(minutes=2)
+                _LOGGER.error(
+                    "[%s] Polling suspended after %d consecutive failures. "
+                    "Will retry in 2 minutes.",
+                    self.name, self._consecutive_failures
+                )
+
         # Defensive check
         if self.data is None:
             self.data = {}
 
         # Update the coordinator's data
         self.data.update(updated_data)
-        
+
         # Log updates for debugging
         if updated_data:
             _LOGGER.debug("[%s] Updated %d sensors: %s", self.name, len(updated_data), list(updated_data.keys()))
-        
+
         return self.data
 
     def _get_entity_type(self, sensor_definition: dict) -> str:
@@ -317,33 +432,29 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def write_register(self, register: int, value: int, do_refresh: bool = True):
         """Write a value to a register and optionally do an immediate refresh."""
+        success = False
         async with self.lock:
             self.client.unit_id = 1
-            
-            # Skip connection check for write operations too
-            # The pymodbus reconnection logic will handle connection issues
-            
+
             try:
                 success = await self.client.async_write_register(register, value)
                 if not success:
                     if not self._is_shutting_down:
                         _LOGGER.warning("[%s] Failed to write register %d with value %d", self.name, register, value)
-                    return False
-                
-                # If refresh requested, immediately trigger an update
-                if do_refresh:
-                    _LOGGER.debug("[%s] Write successful for register %d, triggering immediate refresh", self.name, register)
-                    # Release lock before requesting refresh to avoid deadlock
-                    
-                return True
+                else:
+                    # Successful write confirms healthy connection
+                    self._consecutive_failures = 0
+                    self._is_connected = True
             except Exception as e:
                 if not self._is_shutting_down:
                     _LOGGER.error("[%s] Exception writing register %d: %s", self.name, register, e)
-                return False
-        
-        # Do refresh outside the lock
-        if do_refresh:
+
+        # Do refresh outside the lock to avoid deadlock
+        if success and do_refresh:
+            _LOGGER.debug("[%s] Write successful for register %d, triggering immediate refresh", self.name, register)
             await self.async_request_refresh()
+
+        return success
 
     async def async_read_power_feedback(self) -> dict | None:
         """Read power-related registers for immediate feedback after control loop write.
@@ -457,6 +568,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     self.data["set_charge_power"] = charge_fb
                     self.data["set_discharge_power"] = discharge_fb
                     self.data["battery_power"] = power_fb
+
+                # Successful write+read confirms healthy connection
+                self._consecutive_failures = 0
+                self._is_connected = True
 
                 return {
                     "force_mode": force_fb,

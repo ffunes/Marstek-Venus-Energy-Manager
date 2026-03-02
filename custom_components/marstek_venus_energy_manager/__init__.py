@@ -35,9 +35,11 @@ from .const import (
     DEFAULT_PD_DEADBAND,
     DEFAULT_PD_MAX_POWER_CHANGE,
     DEFAULT_PD_DIRECTION_HYSTERESIS,
+    CONF_PD_MIN_CHARGE_POWER,
+    CONF_PD_MIN_DISCHARGE_POWER,
+    DEFAULT_PD_MIN_CHARGE_POWER,
+    DEFAULT_PD_MIN_DISCHARGE_POWER,
     DEFAULT_SLOT_TARGET_GRID_POWER,
-    DEFAULT_SLOT_MIN_CHARGE_POWER,
-    DEFAULT_SLOT_MIN_DISCHARGE_POWER,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .calculated_sensors import async_setup_entry as async_setup_calculated_sensors
@@ -76,6 +78,8 @@ class ChargeDischargeController:
         self.kd = config_entry.data.get(CONF_PD_KD, DEFAULT_PD_KD)
         self.max_power_change_per_cycle = config_entry.data.get(CONF_PD_MAX_POWER_CHANGE, DEFAULT_PD_MAX_POWER_CHANGE)
         self.direction_hysteresis = config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
+        self.min_charge_power = config_entry.data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
+        self.min_discharge_power = config_entry.data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
 
         # Sensor filtering to avoid reacting to instantaneous spikes
         self.sensor_history = []  # Keep last 3 readings for faster response
@@ -144,6 +148,19 @@ class ChargeDischargeController:
                      "ENABLED" if self.weekly_full_charge_enabled else "DISABLED",
                      self.weekly_full_charge_day.upper() if self.weekly_full_charge_enabled else "N/A")
 
+    def update_pd_parameters(self):
+        """Re-read PD controller parameters from config_entry.data (hot-reload)."""
+        self.deadband = self.config_entry.data.get(CONF_PD_DEADBAND, DEFAULT_PD_DEADBAND)
+        self.kp = self.config_entry.data.get(CONF_PD_KP, DEFAULT_PD_KP)
+        self.kd = self.config_entry.data.get(CONF_PD_KD, DEFAULT_PD_KD)
+        self.max_power_change_per_cycle = self.config_entry.data.get(CONF_PD_MAX_POWER_CHANGE, DEFAULT_PD_MAX_POWER_CHANGE)
+        self.direction_hysteresis = self.config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
+        self.min_charge_power = self.config_entry.data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
+        self.min_discharge_power = self.config_entry.data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
+        self.max_contracted_power = self.config_entry.data.get(CONF_MAX_CONTRACTED_POWER, 7000)
+        _LOGGER.info("PD parameters hot-reloaded: Kp=%.2f, Kd=%.2f, deadband=%d, max_change=%d, hysteresis=%d, min_charge=%d, min_discharge=%d",
+                     self.kp, self.kd, self.deadband, self.max_power_change_per_cycle, self.direction_hysteresis, self.min_charge_power, self.min_discharge_power)
+
     def _is_operation_allowed(self, is_charging: bool) -> bool:
         """Check if charging or discharging is allowed based on time slots.
         
@@ -159,10 +176,12 @@ class ChargeDischargeController:
         from datetime import datetime, time as dt_time
         
         # Read time slots from config entry (allows live updates from options flow)
-        time_slots = self.config_entry.data.get("no_discharge_time_slots", [])
-        
+        all_time_slots = self.config_entry.data.get("no_discharge_time_slots", [])
+        # Filter out disabled slots - treat as if they don't exist
+        time_slots = [s for s in all_time_slots if s.get("enabled", True)]
+
         if not time_slots:
-            _LOGGER.debug("No time slots configured - operation always allowed")
+            _LOGGER.debug("No active time slots configured - operation always allowed")
             return True
         
         now = datetime.now()
@@ -184,7 +203,7 @@ class ChargeDischargeController:
         for i, slot in enumerate(time_slots):
             # Check if this slot applies to the current operation (charge/discharge)
             apply_to_charge = slot.get("apply_to_charge", False)
-            
+
             # Skip slot if it's charging and this slot doesn't restrict charging
             if is_charging and not apply_to_charge:
                 _LOGGER.debug("Slot %d: Skipping for charging (apply_to_charge=False)", i+1)
@@ -238,6 +257,9 @@ class ChargeDischargeController:
         current_day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now.weekday()]
 
         for slot in time_slots:
+            # Skip disabled slots
+            if not slot.get("enabled", True):
+                continue
             if current_day not in slot.get("days", []):
                 continue
             try:
@@ -265,6 +287,12 @@ class ChargeDischargeController:
         available_batteries = []
         for coordinator in self.coordinators:
             if coordinator.data is None:
+                continue
+
+            # Skip batteries that are unreachable
+            if not coordinator.is_available:
+                _LOGGER.debug("%s: Skipping - battery unreachable (failures: %d)",
+                             coordinator.name, coordinator._consecutive_failures)
                 continue
                 
             current_soc = coordinator.data.get("battery_soc", 0)
@@ -1374,6 +1402,14 @@ class ChargeDischargeController:
 
         Returns True if command was acknowledged, False otherwise.
         """
+        # Skip if battery is unreachable
+        if not coordinator.is_available:
+            _LOGGER.debug(
+                "[%s] Skipping power write - battery unreachable (failures: %d)",
+                coordinator.name, coordinator._consecutive_failures
+            )
+            return False
+
         # Determine expected force mode
         if charge_power > 0:
             expected_force_mode = 1  # Charge
@@ -1431,12 +1467,13 @@ class ChargeDischargeController:
             )
         return False
 
-    def _calculate_excluded_devices_adjustment(self) -> float:
+    def _calculate_excluded_devices_adjustment(self, current_grid_power: float) -> float:
         """Calculate power adjustment for excluded devices.
         
         Logic:
         - If device IS included in home consumption sensor (included_in_consumption=True):
           → SUBTRACT its power (battery should NOT power this device)
+          → If allow_solar_surplus is True, the adjustment is capped to current_grid_power so it can consume surplus.
         - If device is NOT included in home consumption sensor (included_in_consumption=False):
           → ADD its power (battery SHOULD power this device, even though home sensor doesn't see it)
         
@@ -1462,17 +1499,25 @@ class ChargeDischargeController:
             try:
                 device_power = float(state.state)
                 included_in_consumption = device.get("included_in_consumption", True)
+                allow_solar_surplus = device.get("allow_solar_surplus", False)
                 
                 if included_in_consumption:
                     # Device IS in home sensor → SUBTRACT (don't power from battery)
-                    total_adjustment += device_power
-                    _LOGGER.debug("Excluded device %s consuming %.1fW (included in consumption, SUBTRACTING)", 
-                                power_sensor, device_power)
+                    if allow_solar_surplus:
+                        adjustment = min(device_power, max(0, current_grid_power))
+                        total_adjustment += adjustment
+                        current_grid_power -= adjustment
+                        _LOGGER.debug("Excluded device %s consuming %.1fW (solar surplus allowed, adjusting by %.1fW)", 
+                                    power_sensor, device_power, adjustment)
+                    else:
+                        total_adjustment += device_power
+                        _LOGGER.debug("Excluded device %s consuming %.1fW (included in consumption, SUBTRACTING)", 
+                                    power_sensor, device_power)
                 else:
                     # Device is NOT in home sensor → ADD (power from battery)
                     total_adjustment -= device_power
                     _LOGGER.debug("Additional device %s consuming %.1fW (NOT in consumption, ADDING)", 
-                                power_sensor, device_power)
+                                    power_sensor, device_power)
             except (ValueError, TypeError):
                 _LOGGER.warning("Could not parse device sensor %s: %s", power_sensor, state.state)
         
@@ -1793,11 +1838,11 @@ class ChargeDischargeController:
         # Use moving average to smooth out instantaneous spikes
         sensor_filtered = sum(self.sensor_history) / len(self.sensor_history)
 
-        # Get active time slot parameters (target grid power, min charge/discharge power)
+        # Get active time slot parameters (target grid power)
         active_slot = self._get_active_slot()
         active_target = active_slot.get("target_grid_power", DEFAULT_SLOT_TARGET_GRID_POWER) if active_slot else DEFAULT_SLOT_TARGET_GRID_POWER
-        min_charge = active_slot.get("min_charge_power", DEFAULT_SLOT_MIN_CHARGE_POWER) if active_slot else DEFAULT_SLOT_MIN_CHARGE_POWER
-        min_discharge = active_slot.get("min_discharge_power", DEFAULT_SLOT_MIN_DISCHARGE_POWER) if active_slot else DEFAULT_SLOT_MIN_DISCHARGE_POWER
+        min_charge = self.min_charge_power
+        min_discharge = self.min_discharge_power
 
         # CRITICAL: Check deadband on FILTERED sensor (actual grid balance) BEFORE compensation
         # Deadband is centered around the active target grid power
@@ -1825,7 +1870,7 @@ class ChargeDischargeController:
         # Adjust for excluded/additional devices
         # Positive adjustment = reduce battery discharge (excluded devices)
         # Negative adjustment = increase battery discharge (additional devices not in home sensor)
-        excluded_adjustment = self._calculate_excluded_devices_adjustment()
+        excluded_adjustment = self._calculate_excluded_devices_adjustment(sensor_actual)
         if excluded_adjustment != 0:
             if excluded_adjustment > 0:
                 _LOGGER.info("Reducing battery demand by %.1fW (excluded devices)", excluded_adjustment)
@@ -1847,15 +1892,35 @@ class ChargeDischargeController:
             # Initial power counteracts the difference from target grid power
             self.previous_power = -(sensor_actual - active_target)
             self.first_execution = False
-            
+
             # Get available batteries and set initial power
             is_charging = self.previous_power > 0
+
+            # Check time slot restrictions BEFORE sending any power to batteries
+            operation_allowed = self._is_operation_allowed(is_charging)
+            if not operation_allowed:
+                if is_charging:
+                    _LOGGER.info("ChargeDischargeController: First execution - Charging NOT ALLOWED by time slot, starting at 0W")
+                else:
+                    _LOGGER.info("ChargeDischargeController: First execution - Discharging NOT ALLOWED by time slot, starting at 0W")
+                self.previous_power = 0
+                is_charging = False
+                # Initialize PD state at 0
+                self.error_integral = 0.0
+                self.previous_error = -(sensor_actual - active_target)
+                self.last_output_sign = 0
+                self.sign_changes = 0
+                # Set all batteries to 0
+                for coordinator in self.coordinators:
+                    await self._set_battery_power(coordinator, 0, 0)
+                return
+
             available_batteries = self._get_available_batteries(is_charging)
-            
+
             if not available_batteries:
                 _LOGGER.debug("ChargeDischargeController: No available batteries for initial setup.")
                 return
-            
+
             # Distribute initial power respecting individual battery limits
             power_allocation = self._distribute_power_by_limits(abs(self.previous_power), available_batteries, is_charging)
 
@@ -1870,20 +1935,20 @@ class ChargeDischargeController:
                     await self._set_battery_power(coordinator, power, 0)
                 else:
                     await self._set_battery_power(coordinator, 0, power)
-            
+
             # Set remaining batteries (over capacity) to 0
             for coordinator in self.coordinators:
                 if coordinator not in available_batteries:
                     await self._set_battery_power(coordinator, 0, 0)
-            
+
             # Reset PD state for clean start (CRITICAL: clear saturated integral)
             self.error_integral = 0.0
             self.previous_error = -(sensor_actual - active_target)
             self.last_output_sign = 1 if self.previous_power > 0 else (-1 if self.previous_power < 0 else 0)
             self.sign_changes = 0
-            _LOGGER.info("PD state initialized: previous_error=%.1fW, last_output_sign=%d, integral=0 (cleared)", 
+            _LOGGER.info("PD state initialized: previous_error=%.1fW, last_output_sign=%d, integral=0 (cleared)",
                         self.previous_error, self.last_output_sign)
-            
+
             return
 
         # SUBSEQUENT EXECUTIONS: Continue with PD control
@@ -2336,6 +2401,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "unsub_control": unsub_control,
         "unsub_refresh": unsub_refresh,
     }
+
+    # Listen for config entry updates so config entities refresh their state
+    async def _async_update_listener(hass: HomeAssistant, updated_entry: ConfigEntry) -> None:
+        """Handle config entry updates (from Options Flow or config entities)."""
+        _LOGGER.debug("Config entry updated, hot-reloading controller parameters")
+        if controller:
+            controller.update_pd_parameters()
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     # Schedule daily consumption capture at 23:55 local time every day
     # This captures the day's battery discharge energy before the sensor resets at midnight local

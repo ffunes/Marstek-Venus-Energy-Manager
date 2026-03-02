@@ -39,11 +39,15 @@ from .const import (
     CONF_PD_DEADBAND,
     CONF_PD_MAX_POWER_CHANGE,
     CONF_PD_DIRECTION_HYSTERESIS,
+    CONF_PD_MIN_CHARGE_POWER,
+    CONF_PD_MIN_DISCHARGE_POWER,
     DEFAULT_PD_KP,
     DEFAULT_PD_KD,
     DEFAULT_PD_DEADBAND,
     DEFAULT_PD_MAX_POWER_CHANGE,
     DEFAULT_PD_DIRECTION_HYSTERESIS,
+    DEFAULT_PD_MIN_CHARGE_POWER,
+    DEFAULT_PD_MIN_DISCHARGE_POWER,
 )
 from .modbus_client import MarstekModbusClient
 
@@ -186,7 +190,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 # Store version
                 user_input[CONF_BATTERY_VERSION] = battery_version
-                # Convert power values from string to int
                 user_input["max_charge_power"] = int(user_input["max_charge_power"])
                 user_input["max_discharge_power"] = int(user_input["max_discharge_power"])
                 self.battery_configs.append(user_input)
@@ -215,26 +218,10 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )),
-                    vol.Required("max_charge_power", default="2500"):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=[
-                                    {"value": "800", "label": "800W"},
-                                    {"value": "2500", "label": "2500W"},
-                                ],
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    vol.Required("max_discharge_power", default="2500"):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=[
-                                    {"value": "800", "label": "800W"},
-                                    {"value": "2500", "label": "2500W"},
-                                ],
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
+                    vol.Required("max_charge_power", default=2500):
+                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                    vol.Required("max_discharge_power", default=2500):
+                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
                     vol.Required("max_soc", default=100):
                         NumberSelector(NumberSelectorConfig(min=80, max=100, step=1, mode=NumberSelectorMode.SLIDER)),
                     vol.Required("min_soc", default=12):
@@ -287,8 +274,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 "days": user_input["days"],
                 "apply_to_charge": user_input.get("apply_to_charge", False),
                 "target_grid_power": user_input.get("target_grid_power", 0),
-                "min_charge_power": user_input.get("min_charge_power", 0),
-                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
 
             if user_input["start_time"] >= user_input["end_time"]:
@@ -312,8 +297,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             "days": user_input["days"] if user_input else ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
             "apply_to_charge": user_input.get("apply_to_charge", False) if user_input else False,
             "target_grid_power": user_input.get("target_grid_power", 0) if user_input else 0,
-            "min_charge_power": user_input.get("min_charge_power", 0) if user_input else 0,
-            "min_discharge_power": user_input.get("min_discharge_power", 0) if user_input else 0,
         }
 
         schema_dict = {
@@ -333,22 +316,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 NumberSelector(
                     NumberSelectorConfig(
                         min=-500, max=500, step=10,
-                        mode=NumberSelectorMode.SLIDER,
-                        unit_of_measurement="W",
-                    )
-                ),
-            vol.Optional("min_charge_power", default=defaults["min_charge_power"]):
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=0, max=500, step=10,
-                        mode=NumberSelectorMode.SLIDER,
-                        unit_of_measurement="W",
-                    )
-                ),
-            vol.Optional("min_discharge_power", default=defaults["min_discharge_power"]):
-                NumberSelector(
-                    NumberSelectorConfig(
-                        min=0, max=500, step=10,
                         mode=NumberSelectorMode.SLIDER,
                         unit_of_measurement="W",
                     )
@@ -424,6 +391,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             excluded_device = {
                 "power_sensor": user_input["power_sensor"],
                 "included_in_consumption": user_input.get("included_in_consumption", True),
+                "allow_solar_surplus": user_input.get("allow_solar_surplus", False),
             }
             self.excluded_devices.append(excluded_device)
             
@@ -443,6 +411,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required("power_sensor"):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Required("included_in_consumption", default=True): bool,
+                    vol.Optional("allow_solar_surplus", default=False): bool,
                 }
             ),
             description_placeholders={
@@ -858,26 +827,10 @@ class OptionsFlowHandler(OptionsFlow):
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )),
-                    vol.Required("max_charge_power", default=str(defaults["max_charge_power"])):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=[
-                                    {"value": "800", "label": "800W"},
-                                    {"value": "2500", "label": "2500W"},
-                                ],
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    vol.Required("max_discharge_power", default=str(defaults["max_discharge_power"])):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=[
-                                    {"value": "800", "label": "800W"},
-                                    {"value": "2500", "label": "2500W"},
-                                ],
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
+                    vol.Required("max_charge_power", default=defaults["max_charge_power"]):
+                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                    vol.Required("max_discharge_power", default=defaults["max_discharge_power"]):
+                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
                     vol.Required("max_soc", default=defaults["max_soc"]):
                         NumberSelector(NumberSelectorConfig(min=80, max=100, step=1, mode=NumberSelectorMode.SLIDER)),
                     vol.Required("min_soc", default=defaults["min_soc"]):
@@ -926,8 +879,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "days": user_input["days"],
                 "apply_to_charge": user_input.get("apply_to_charge", False),
                 "target_grid_power": user_input.get("target_grid_power", 0),
-                "min_charge_power": user_input.get("min_charge_power", 0),
-                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
 
             if user_input["start_time"] >= user_input["end_time"]:
@@ -951,8 +902,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "days": user_input["days"],
                 "apply_to_charge": user_input.get("apply_to_charge", False),
                 "target_grid_power": user_input.get("target_grid_power", 0),
-                "min_charge_power": user_input.get("min_charge_power", 0),
-                "min_discharge_power": user_input.get("min_discharge_power", 0),
             }
         else:
             current_slots = self.config_entry.data.get("no_discharge_time_slots", [])
@@ -966,8 +915,6 @@ class OptionsFlowHandler(OptionsFlow):
                     "days": current_slot.get("days", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
                     "apply_to_charge": current_slot.get("apply_to_charge", False),
                     "target_grid_power": current_slot.get("target_grid_power", 0),
-                    "min_charge_power": current_slot.get("min_charge_power", 0),
-                    "min_discharge_power": current_slot.get("min_discharge_power", 0),
                 }
             else:
                 defaults = {
@@ -976,8 +923,6 @@ class OptionsFlowHandler(OptionsFlow):
                     "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
                     "apply_to_charge": False,
                     "target_grid_power": 0,
-                    "min_charge_power": 0,
-                    "min_discharge_power": 0,
                 }
 
         slot_num = len(self.time_slots) + 1
@@ -1001,22 +946,6 @@ class OptionsFlowHandler(OptionsFlow):
                         NumberSelector(
                             NumberSelectorConfig(
                                 min=-500, max=500, step=10,
-                                mode=NumberSelectorMode.SLIDER,
-                                unit_of_measurement="W",
-                            )
-                        ),
-                    vol.Optional("min_charge_power", default=defaults["min_charge_power"]):
-                        NumberSelector(
-                            NumberSelectorConfig(
-                                min=0, max=500, step=10,
-                                mode=NumberSelectorMode.SLIDER,
-                                unit_of_measurement="W",
-                            )
-                        ),
-                    vol.Optional("min_discharge_power", default=defaults["min_discharge_power"]):
-                        NumberSelector(
-                            NumberSelectorConfig(
-                                min=0, max=500, step=10,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="W",
                             )
@@ -1092,6 +1021,7 @@ class OptionsFlowHandler(OptionsFlow):
             excluded_device = {
                 "power_sensor": user_input["power_sensor"],
                 "included_in_consumption": user_input.get("included_in_consumption", True),
+                "allow_solar_surplus": user_input.get("allow_solar_surplus", False),
             }
             self.excluded_devices.append(excluded_device)
             
@@ -1111,9 +1041,11 @@ class OptionsFlowHandler(OptionsFlow):
             current_device = current_devices[device_num]
             default_sensor = current_device.get("power_sensor", "")
             default_included = current_device.get("included_in_consumption", True)
+            default_allow_solar_surplus = current_device.get("allow_solar_surplus", False)
         else:
             default_sensor = ""
             default_included = True
+            default_allow_solar_surplus = False
         
         device_num += 1
         return self.async_show_form(
@@ -1123,6 +1055,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required("power_sensor", default=default_sensor):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Required("included_in_consumption", default=default_included): bool,
+                    vol.Optional("allow_solar_surplus", default=default_allow_solar_surplus): bool,
                 }
             ),
             description_placeholders={
@@ -1358,6 +1291,8 @@ class OptionsFlowHandler(OptionsFlow):
                 self.config_data[CONF_PD_DEADBAND] = DEFAULT_PD_DEADBAND
                 self.config_data[CONF_PD_MAX_POWER_CHANGE] = DEFAULT_PD_MAX_POWER_CHANGE
                 self.config_data[CONF_PD_DIRECTION_HYSTERESIS] = DEFAULT_PD_DIRECTION_HYSTERESIS
+                self.config_data[CONF_PD_MIN_CHARGE_POWER] = DEFAULT_PD_MIN_CHARGE_POWER
+                self.config_data[CONF_PD_MIN_DISCHARGE_POWER] = DEFAULT_PD_MIN_DISCHARGE_POWER
 
                 # Final step: Update entry and reload
                 self.hass.config_entries.async_update_entry(
@@ -1372,7 +1307,9 @@ class OptionsFlowHandler(OptionsFlow):
             self.config_entry.data.get(CONF_PD_KD, DEFAULT_PD_KD) != DEFAULT_PD_KD or
             self.config_entry.data.get(CONF_PD_DEADBAND, DEFAULT_PD_DEADBAND) != DEFAULT_PD_DEADBAND or
             self.config_entry.data.get(CONF_PD_MAX_POWER_CHANGE, DEFAULT_PD_MAX_POWER_CHANGE) != DEFAULT_PD_MAX_POWER_CHANGE or
-            self.config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS) != DEFAULT_PD_DIRECTION_HYSTERESIS
+            self.config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS) != DEFAULT_PD_DIRECTION_HYSTERESIS or
+            self.config_entry.data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER) != DEFAULT_PD_MIN_CHARGE_POWER or
+            self.config_entry.data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER) != DEFAULT_PD_MIN_DISCHARGE_POWER
         )
 
         return self.async_show_form(
@@ -1399,6 +1336,8 @@ class OptionsFlowHandler(OptionsFlow):
             self.config_data[CONF_PD_DEADBAND] = user_input["pd_deadband"]
             self.config_data[CONF_PD_MAX_POWER_CHANGE] = user_input["pd_max_power_change"]
             self.config_data[CONF_PD_DIRECTION_HYSTERESIS] = user_input["pd_direction_hysteresis"]
+            self.config_data[CONF_PD_MIN_CHARGE_POWER] = user_input["pd_min_charge_power"]
+            self.config_data[CONF_PD_MIN_DISCHARGE_POWER] = user_input["pd_min_discharge_power"]
 
             # Final step: Update entry and reload
             self.hass.config_entries.async_update_entry(
@@ -1414,6 +1353,8 @@ class OptionsFlowHandler(OptionsFlow):
         current_deadband = existing_config.get(CONF_PD_DEADBAND, DEFAULT_PD_DEADBAND)
         current_max_change = existing_config.get(CONF_PD_MAX_POWER_CHANGE, DEFAULT_PD_MAX_POWER_CHANGE)
         current_hysteresis = existing_config.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
+        current_min_charge = existing_config.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
+        current_min_discharge = existing_config.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
 
         # Show form
         return self.async_show_form(
@@ -1450,6 +1391,22 @@ class OptionsFlowHandler(OptionsFlow):
                                 min=0, max=200, step=5, mode=NumberSelectorMode.SLIDER
                             )
                         ),
+                    vol.Optional("pd_min_charge_power", default=current_min_charge):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=0, max=500, step=10,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
+                    vol.Optional("pd_min_discharge_power", default=current_min_discharge):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=0, max=500, step=10,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
                 }
             ),
             description_placeholders={
@@ -1458,7 +1415,9 @@ class OptionsFlowHandler(OptionsFlow):
                     "**Kd (Derivative Gain)**: Damping to prevent oscillation. Higher = smoother transitions but slower settling.\n\n"
                     "**Deadband**: Grid power tolerance (W) around zero. Prevents micro-adjustments to minor fluctuations.\n\n"
                     "**Max Power Change**: Maximum battery power change per control cycle (W). Prevents abrupt battery commands.\n\n"
-                    "**Direction Hysteresis**: Power threshold (W) required to switch between charging and discharging. Prevents rapid direction changes."
+                    "**Direction Hysteresis**: Power threshold (W) required to switch between charging and discharging. Prevents rapid direction changes.\n\n"
+                    "**Min Charge Power**: Minimum power for charging. Below this, the controller stays idle. 0 = disabled.\n\n"
+                    "**Min Discharge Power**: Minimum power for discharging. Below this, the controller stays idle. 0 = disabled."
                 )
             },
         )

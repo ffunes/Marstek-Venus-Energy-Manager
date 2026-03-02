@@ -6,7 +6,6 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -35,9 +34,14 @@ async def async_setup_entry(
     if controller:
         entities.append(ManualModeSwitch(hass, entry, controller))
 
-    # Add predictive charging override switch (system-level, not per-battery)
+    # Add predictive charging switch (system-level, not per-battery)
     if controller and controller.predictive_charging_enabled:
-        entities.append(PredictiveChargingOverrideSwitch(hass, entry, controller))
+        entities.append(PredictiveChargingSwitch(hass, entry, controller))
+
+    # Add time slot enable/disable switches
+    time_slots = entry.data.get("no_discharge_time_slots", [])
+    for index in range(len(time_slots)):
+        entities.append(TimeSlotSwitch(hass, entry, index))
 
     async_add_entities(entities)
 
@@ -90,63 +94,127 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
         }
 
 
-class PredictiveChargingOverrideSwitch(SwitchEntity):
-    """Switch to override predictive grid charging for the current slot."""
+class PredictiveChargingSwitch(SwitchEntity):
+    """Switch to enable/disable predictive grid charging.
+
+    ON = predictive charging enabled (default when configured).
+    OFF = predictive charging paused (overridden).
+    """
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
-        """Initialize the override switch."""
+        """Initialize the predictive charging switch."""
         self.hass = hass
         self.entry = entry
         self.controller = controller
 
-        self._attr_name = "Override Predictive Charging"
-        self._attr_unique_id = f"{entry.entry_id}_override_predictive_charging"
-        self._attr_icon = "mdi:cancel"
+        self._attr_name = "Predictive Charging"
+        self._attr_unique_id = f"{entry.entry_id}_predictive_charging"
+        self._attr_icon = "mdi:solar-power"
         self._attr_should_poll = False
-        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def is_on(self) -> bool:
-        """Return True if override is active."""
-        return self.controller.predictive_charging_overridden
+        """Return True if predictive charging is enabled (not overridden)."""
+        return not self.controller.predictive_charging_overridden
 
     async def async_turn_on(self, **kwargs) -> None:
-        """Turn on the override to interrupt predictive charging."""
-        if self.controller.grid_charging_active:
-            self.controller.predictive_charging_overridden = True
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "title": "Predictive Charging Override Active",
-                    "message": "Predictive grid charging has been manually overridden. Turn off the switch to resume charging.",
-                    "notification_id": "predictive_charging_override",
-                },
-            )
-        else:
-            self.controller.predictive_charging_overridden = True
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "create",
-                {
-                    "title": "Override Switch Enabled",
-                    "message": "Predictive charging override is now enabled. It will block charging when the time slot becomes active.",
-                    "notification_id": "predictive_charging_override",
-                },
-            )
-        # Trigger state update
-        self.async_write_ha_state()
-
-    async def async_turn_off(self, **kwargs) -> None:
-        """Turn off the override to resume predictive charging."""
+        """Enable predictive charging (remove override)."""
         self.controller.predictive_charging_overridden = False
         await self.hass.services.async_call(
             "persistent_notification",
             "dismiss",
             {"notification_id": "predictive_charging_override"},
         )
-        # Trigger state update
+        _LOGGER.info("Predictive charging enabled")
         self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable predictive charging (activate override)."""
+        self.controller.predictive_charging_overridden = True
+        if self.controller.grid_charging_active:
+            message = "Predictive grid charging has been paused. Turn the switch back on to resume."
+        else:
+            message = "Predictive charging is now disabled. It will not activate when the time slot becomes active."
+        await self.hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "title": "Predictive Charging Disabled",
+                "message": message,
+                "notification_id": "predictive_charging_override",
+            },
+        )
+        _LOGGER.info("Predictive charging disabled (overridden)")
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class TimeSlotSwitch(SwitchEntity):
+    """Switch to enable/disable an individual time slot."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, index: int) -> None:
+        """Initialize the time slot switch."""
+        self.hass = hass
+        self.entry = entry
+        self._slot_index = index
+
+        self._attr_name = f"Time Slot {index + 1}"
+        self._attr_unique_id = f"{entry.entry_id}_time_slot_{index}_enabled"
+        self._attr_icon = "mdi:clock-outline"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the time slot is enabled."""
+        slots = self.entry.data.get("no_discharge_time_slots", [])
+        if self._slot_index < len(slots):
+            return slots[self._slot_index].get("enabled", True)
+        return False
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return time slot details as attributes."""
+        slots = self.entry.data.get("no_discharge_time_slots", [])
+        if self._slot_index >= len(slots):
+            return {}
+        slot = slots[self._slot_index]
+        days = slot.get("days", [])
+        days_str = ", ".join(d.capitalize() for d in days) if days else "None"
+        return {
+            "schedule": f"{slot.get('start_time', '??')}-{slot.get('end_time', '??')}",
+            "days": days_str,
+            "apply_to_charge": slot.get("apply_to_charge", False),
+            "target_grid_power": f"{slot.get('target_grid_power', 0)} W",
+        }
+
+    async def _update_slot_enabled(self, enabled: bool) -> None:
+        """Update the enabled state of this slot in config_entry.data."""
+        new_data = dict(self.entry.data)
+        slots = [dict(s) for s in new_data.get("no_discharge_time_slots", [])]
+        if self._slot_index < len(slots):
+            slots[self._slot_index]["enabled"] = enabled
+            new_data["no_discharge_time_slots"] = slots
+            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+            state = "enabled" if enabled else "disabled"
+            _LOGGER.info("Time slot %d %s", self._slot_index + 1, state)
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Enable the time slot."""
+        await self._update_slot_enabled(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable the time slot."""
+        await self._update_slot_enabled(False)
 
     @property
     def device_info(self):
@@ -172,7 +240,6 @@ class ManualModeSwitch(SwitchEntity):
         self._attr_unique_id = f"{entry.entry_id}_manual_mode"
         self._attr_icon = "mdi:hand-back-right"
         self._attr_should_poll = False
-        self._attr_entity_category = EntityCategory.CONFIG
 
     @property
     def is_on(self) -> bool:
