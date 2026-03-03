@@ -30,6 +30,13 @@ This is the primary operating mode of the integration, designed to maximize self
     *   Set maximum charge and discharge power limits.
     *   Configure minimum and maximum SOC operational limits.
     *   Force charge or discharge modes manually.
+*   **Battery load sharing**: Intelligent battery selection that uses the minimum number of batteries needed to keep each one operating in its optimal efficiency zone. Based on the Venus efficiency curve, batteries activate when total power exceeds 60% of combined capacity (peak efficiency ~91% at 1000-1500W). Features:
+    *   **Discharge priority**: Highest SOC first (drain fullest battery).
+    *   **Charge priority**: Lowest SOC first (fill emptiest battery).
+    *   **SOC hysteresis (5%)**: Active battery stays selected until another exceeds it by 5% SOC.
+    *   **Energy hysteresis (2.5 kWh)**: Tiebreaker uses lifetime energy with 2.5 kWh advantage for active battery, balancing long-term wear.
+    *   **Power hysteresis (±100W)**: Activates 2nd battery at 60% capacity threshold, deactivates at 50% to prevent ping-pong with fluctuating loads.
+    *   Applies to all modes: normal PD control, solar charging, and predictive grid charging.
 
 ### 2. Advanced: Predictive Grid Charging
 **Optional** feature that operates independently of normal usage to ensure energy security.
@@ -107,8 +114,6 @@ You can define specific time periods where the battery is **forbidden from disch
     *   **Days**: Select applicable days of the week.
     *   **Apply to charge**: (Advanced) If checked, this slot also restricts charging.
     *   **Target Grid Power** *(New in v1.1.0)*: The grid power level the controller regulates toward during this slot. Default: `0W` (zero grid flow). Set to negative values (e.g., `-150W`) to intentionally maintain slight export, or positive values to allow slight import. Useful for tariff optimization when feed-in is more valuable than self-consumption. Range: `-500W` to `+500W`.
-    *   **Minimum Charge Power** *(New in v1.1.0)*: If the PD controller calculates a charge power below this threshold, it stays idle instead. Prevents inefficient low-power charging that causes micro-cycling and battery wear. Default: `0W` (disabled). Range: `0W` to `500W`.
-    *   **Minimum Discharge Power** *(New in v1.1.0)*: Same as above but for discharging. Default: `0W` (disabled). Range: `0W` to `500W`.
 
 ### 5. Excluded Devices (Optional)
 This feature allows you to "mask" high-power devices so the battery doesn't try to cover their load. For example, if you turn on a 7kW car charger, you might not want your 2.5kW battery to drain itself instantly.
@@ -116,6 +121,7 @@ This feature allows you to "mask" high-power devices so the battery doesn't try 
 *   **Add Device**:
     *   **Power Sensor**: The entity measuring the power of the heavy load (e.g., `sensor.wallbox_power`).
     *   **Included in Consumption**: Check this if your *Main Household Sensor* (step 2) already sees this load. Uncheck if it's on a separate circuit not monitored by the main sensor.
+    *   **Allow Solar Surplus**: If checked, the battery will not charge to compensate for this device's consumption when the system is running on solar surplus.
 
 ### 6. Predictive Charging (Optional)
 Automatically charge the battery from the grid during a specific window if tomorrow's solar forecast is low.
@@ -143,7 +149,8 @@ The integration uses a PD (Proportional-Derivative) controller to manage battery
 *   **Deadband**: The "ignore" zone around the target grid power (Watts). The battery won't adjust if grid power is within this range of the target, preventing constant micro-adjustments.
 *   **Max Power Change**: The maximum allowable change in battery power output per control cycle (Watts). Prevents sudden large power swings that could stress the inverter.
 *   **Direction Hysteresis**: The power threshold (Watts) required to switch between charging and discharging. Prevents rapid flipping between modes when consumption is hovering around zero.
-
+*   **Minimum Charge Power**: If the PD controller calculates a charge power below this threshold, it stays idle instead. Prevents inefficient low-power charging that causes micro-cycling and battery wear. Default: `0W` (disabled). Range: `0W` to `500W`.
+*   **Minimum Discharge Power**: Same as above but for discharging. Default: `0W` (disabled). Range: `0W` to `500W`.
 ---
 
 ## Entities & Controls
@@ -151,13 +158,21 @@ The integration uses a PD (Proportional-Derivative) controller to manage battery
 ### System-Wide Entities
 These controls affect the entire system or aggregate data from all batteries.
 
-*   **Marstek Venus System SOC/Power/Energy**: Aggregated sensors for the whole battery bank.
-*   **Manual Mode (Switch)**:
+  - **Controls**: Manual Mode, Predictive Charging (inverted logic), Time Slot switches, Weekly Full Charge Day select — all without `EntityCategory` so they appear in the Controls section.
+     **Manual Mode (Switch)**:
     *   **Action**: Pauses the automatic PD controller and predictive logic. Sets all batteries to an idle state (0W).
     *   **Use Case**: Enable this when you want to manually control charge/discharge rates using the slider controls on individual batteries.
-*   **Override Predictive Charging (Switch)**:
+*   **Predictive Charging (Switch)**:
     *   **Action**: Manually stops or prevents the predictive grid charging logic from running, even if the schedule and forecast conditions are met.
     *   **Use Case**: Skip a scheduled night charge if you know you won't need it.
+    *   **Time Slot switches**: Enable/disable individual no-discharge time slots on the fly.
+    *   **Weekly Full Charge Day select entity**: Pick the balancing day directly from the UI.
+  - **Sensors**: Aggregated sensors for the whole battery bank.    
+  - **Configuration**: Kp, Kd, deadband, max power change, direction hysteresis, min charge/discharge power — all hot-reloadable without integration restart.
+  - **Diagnostic**: Discharge Window sensor (new), Predictive Charging Active binary sensor.
+    *   **Excluded Devices Config sensor**: Read-only diagnostic showing the number of excluded devices, with per-device details (sensor entity, included_in_consumption, allow_solar_surplus) as attributes.
+    *   **Discharge Window diagnostic sensor**: Real-time sensor showing whether the system is currently inside an allowed discharge time slot. Displays "Active (Slot N)", "Inactive", or "No slots". Attributes include all slot configuration details (schedule, days, enabled, apply_to_charge, target_grid_power).
+    *   **Active Batteries diagnostic sensor**: Real-time sensor showing which batteries are currently active in load sharing. Displays "Discharging: Venus 1", "Charging: Venus 2", or "Idle". Attributes include per-battery SOC, lifetime discharged/charged energy, and active battery counts. Only created for multi-battery setups.
 
 ### Individual Battery Entities
 For each configured battery (`Device`), you will see:

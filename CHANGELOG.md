@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0b1] - 2026-03-02
+## [1.2.0b1] - 2026-03-03
 
 ### Added
 - **Solar surplus mode for excluded devices**: New `allow_solar_surplus` option in excluded device configuration. When the battery is **charging**, no adjustment is applied — the PD controller sees real grid power and naturally reduces charging to leave solar for the device. When the battery is **discharging**, full exclusion applies so the battery won't drain to power the device. Recommended for high-consumption devices like EV chargers.
