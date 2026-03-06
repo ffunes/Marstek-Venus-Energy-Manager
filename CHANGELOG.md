@@ -3,10 +3,9 @@
 ## [1.2.1] - 2026-03-06
 
 ### Fixed
-- **Charge/discharge power limits swapped in PD controller**: The clamp logic used `max_discharge_power` to limit charging and vice versa. With discharge=800W and charge=2500W, charging was capped at 800W. Both limits now apply to their correct direction.
+
 - **Max charge/discharge power changes from UI ignored by control loop**: Changing `Max Charge Power` or `Max Discharge Power` number entities wrote to the Modbus register but did not update the coordinator attributes used by the PD controller. The initial config flow values were used forever. Changes now take effect immediately.
-- **Solar surplus excluded devices caused persistent grid import**: The adjustment formula created a feedback loop — as the battery reduced charging, more device consumption was attributed to solar, making the PD stop reducing further. Converged at ~670W grid import instead of 0W. Now uses direction-based logic: during charging, no adjustment (PD sees real grid and reduces charging naturally); during discharging, full exclusion (battery won't drain to power the device).
-- **Active Batteries sensor flickering to Idle during deadband**: The load sharing battery lists were cleared when the grid sensor entered the deadband, even though batteries kept executing their last command. The lists now persist through deadband cycles.
+
 
 ## [1.2.0] - 2026-03-04
 
