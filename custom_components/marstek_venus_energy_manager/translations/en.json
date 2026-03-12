@@ -18,14 +18,26 @@
           "num_batteries": "Number of batteries"
         }
       },
-      "battery_config": {
-        "title": "Configure battery {battery_num}",
-        "description": "Enter connection details and limits for battery {battery_num}.",
+      "battery_connection": {
+        "title": "Configure battery {battery_num} — Connection",
+        "description": "Enter connection details and battery model for battery {battery_num}.",
         "data": {
           "name": "Name",
           "host": "IP Address",
           "port": "Modbus Port",
-          "battery_version": "Battery Model",
+          "battery_version": "Battery Model"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
+        }
+      },
+      "battery_limits": {
+        "title": "Configure battery {battery_num} — Limits",
+        "description": "Enter power and SOC limits for battery {battery_num}.",
+        "data": {
           "max_charge_power": "Maximum charge power (W)",
           "max_discharge_power": "Maximum discharge power (W)",
           "max_soc": "Maximum SOC (%)",
@@ -34,10 +46,6 @@
           "charge_hysteresis_percent": "Hysteresis Percentage (%)"
         },
         "data_description": {
-          "name": "Descriptive name to identify this battery",
-          "host": "IP address of the battery on your local network",
-          "port": "Modbus port (usually 502)",
-          "battery_version": "Select your battery model version. v1/v2 for older models, v3 for newer models with updated register map",
           "max_charge_power": "Maximum power allowed to charge the battery",
           "max_discharge_power": "Maximum power allowed to discharge the battery",
           "max_soc": "Maximum state of charge - battery won't charge above this value",
@@ -60,12 +68,14 @@
           "start_time": "Start time",
           "end_time": "End time",
           "days": "Days of the week",
+          "apply_to_charge": "Apply also to charging",
           "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
           "days": "Days when this slot applies",
+          "apply_to_charge": "If checked, the slot will also restrict charging (battery will only charge during this slot)",
           "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
@@ -140,10 +150,16 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week"
+          "weekly_full_charge_day": "Day of the week",
+          "enable_weekly_full_charge_delay": "Delay 100% charge until afternoon",
+          "delay_safety_margin_min": "Safety margin (minutes)",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
+          "enable_weekly_full_charge_delay": "Keep batteries at configured max SOC during the morning and only unlock 100% when remaining solar energy is just enough to complete the charge. This protects batteries from high temperatures at full charge and prioritizes solar self-consumption.",
+          "delay_safety_margin_min": "Time buffer before sunset. The system unlocks charging this many minutes before the estimated end of solar production to ensure enough time to complete the charge.",
+          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh. Required if delay is enabled and predictive charging is not configured."
         }
       }
     },
@@ -178,14 +194,26 @@
           "num_batteries": "Number of batteries"
         }
       },
-      "battery_config": {
-        "title": "Configure battery {battery_num}",
-        "description": "Modify the details for battery {battery_num}.",
+      "battery_connection": {
+        "title": "Configure battery {battery_num} — Connection",
+        "description": "Modify connection details and battery model for battery {battery_num}.",
         "data": {
           "name": "Name",
           "host": "IP Address",
           "port": "Modbus Port",
-          "battery_version": "Battery Model",
+          "battery_version": "Battery Model"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
+        }
+      },
+      "battery_limits": {
+        "title": "Configure battery {battery_num} — Limits",
+        "description": "Modify power and SOC limits for battery {battery_num}.",
+        "data": {
           "max_charge_power": "Maximum charge power (W)",
           "max_discharge_power": "Maximum discharge power (W)",
           "max_soc": "Maximum SOC (%)",
@@ -194,10 +222,6 @@
           "charge_hysteresis_percent": "Hysteresis Percentage (%)"
         },
         "data_description": {
-          "name": "Descriptive name to identify this battery",
-          "host": "IP address of the battery on your local network",
-          "port": "Modbus port (usually 502)",
-          "battery_version": "Select your battery model version. v1/v2 for older models, v3 for newer models with updated register map",
           "max_charge_power": "Maximum power allowed to charge the battery",
           "max_discharge_power": "Maximum power allowed to discharge the battery",
           "max_soc": "Maximum state of charge",
@@ -220,12 +244,14 @@
           "start_time": "Start time",
           "end_time": "End time",
           "days": "Days of the week",
+          "apply_to_charge": "Apply also to charging",
           "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "start_time": "Start time of the slot (24h format)",
           "end_time": "End time of the slot (24h format)",
           "days": "Days when this slot applies",
+          "apply_to_charge": "If checked, the slot will also restrict charging (battery will only charge during this slot)",
           "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
@@ -300,10 +326,16 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week"
+          "weekly_full_charge_day": "Day of the week",
+          "enable_weekly_full_charge_delay": "Delay 100% charge until afternoon",
+          "delay_safety_margin_min": "Safety margin (minutes)",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
+          "enable_weekly_full_charge_delay": "Keep batteries at configured max SOC during the morning and only unlock 100% when remaining solar energy is just enough to complete the charge. This protects batteries from high temperatures at full charge and prioritizes solar self-consumption.",
+          "delay_safety_margin_min": "Time buffer before sunset. The system unlocks charging this many minutes before the estimated end of solar production to ensure enough time to complete the charge.",
+          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh. Required if delay is enabled and predictive charging is not configured."
         }
       },
       "pd_advanced": {

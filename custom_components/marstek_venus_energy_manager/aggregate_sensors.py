@@ -150,48 +150,48 @@ class MarstekVenusAggregateSensor(SensorEntity):
 
     def _calculate_total_charge_power(self) -> float | None:
         """Calculate total charge power across all batteries.
-        
-        Charge power is positive in battery_power, so we sum only positive values.
+
+        Charge power is negative in ac_power, so we sum only negative values and return absolute value.
         """
         total_power = 0
         has_data = False
-        
+
         for coordinator in self.coordinators:
             if coordinator.data:
-                power = coordinator.data.get("battery_power")
+                power = coordinator.data.get("ac_power")
                 if power is not None:
-                    # Only count positive values (charging)
-                    if power > 0:
-                        total_power += power
+                    # Only count negative values (charging)
+                    if power < 0:
+                        total_power += abs(power)
                         has_data = True
-        
+
         if not has_data:
             return 0  # Return 0 instead of None when not charging
-        
+
         return round(total_power, self.definition.get("precision", 0))
 
     def _calculate_total_discharge_power(self) -> float | None:
         """Calculate total discharge power across all batteries.
 
-        Discharge power is negative in battery_power, so we sum only negative values and return absolute value.
+        Discharge power is positive in ac_power, so we sum only positive values.
         """
         total_power = 0
         has_data = False
-        battery_powers = []  # For debug logging
+        ac_powers = []  # For debug logging
 
         for coordinator in self.coordinators:
             if coordinator.data:
-                power = coordinator.data.get("battery_power")
+                power = coordinator.data.get("ac_power")
                 if power is not None:
-                    battery_powers.append(f"{coordinator.name}={power}W")
-                    # Only count negative values (discharging)
-                    if power < 0:
-                        total_power += abs(power)
+                    ac_powers.append(f"{coordinator.name}={power}W")
+                    # Only count positive values (discharging)
+                    if power > 0:
+                        total_power += power
                         has_data = True
 
         # Debug logging to see what's being summed
-        if battery_powers:
-            _LOGGER.debug(f"System Discharge Power calculation: {', '.join(battery_powers)} → Total: {total_power}W")
+        if ac_powers:
+            _LOGGER.debug(f"System Discharge Power calculation: {', '.join(ac_powers)} → Total: {total_power}W")
 
         if not has_data:
             return 0  # Return 0 instead of None when not discharging

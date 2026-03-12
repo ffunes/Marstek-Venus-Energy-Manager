@@ -31,9 +31,13 @@ from .const import (
     CONF_MAX_CONTRACTED_POWER,
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
+    CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
+    CONF_DELAY_SAFETY_MARGIN_MIN,
+    DEFAULT_DELAY_SAFETY_MARGIN_MIN,
     CONF_BATTERY_VERSION,
     DEFAULT_VERSION,
     REGISTER_MAP,
+    MAX_POWER_BY_VERSION,
     CONF_PD_KP,
     CONF_PD_KD,
     CONF_PD_DEADBAND,
@@ -92,6 +96,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         self.battery_index = 0
         self.time_slots = []
         self.excluded_devices = []
+        self._current_battery_data = {}  # Stores connection data between battery steps
 
     async def _test_connection(self, host: str, port: int, version: str = "v2") -> bool:
         """Test connection to a Marstek Venus battery using version-specific register."""
@@ -152,7 +157,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step 2: Ask for the number of batteries."""
         if user_input is not None:
             self.config_data["num_batteries"] = int(user_input["num_batteries"])
-            return await self.async_step_battery_config()
+            return await self.async_step_battery_connection()
 
         return self.async_show_form(
             step_id="batteries",
@@ -168,60 +173,86 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_battery_config(
+    async def async_step_battery_connection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 3: Configure each battery individually."""
+        """Step 3a: Connection details and battery model for each battery."""
         errors = {}
+        battery_num = self.battery_index + 1
 
         if user_input is not None:
-            # Get version for connection test
             battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
-
-            # Test connection before saving
             connection_result = await self._test_connection(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
-                battery_version
+                battery_version,
             )
-
             if not connection_result:
                 errors["base"] = "cannot_connect"
             else:
-                # Store version
-                user_input[CONF_BATTERY_VERSION] = battery_version
-                user_input["max_charge_power"] = int(user_input["max_charge_power"])
-                user_input["max_discharge_power"] = int(user_input["max_discharge_power"])
-                self.battery_configs.append(user_input)
-                self.battery_index += 1
+                self._current_battery_data = {
+                    CONF_NAME: user_input[CONF_NAME],
+                    CONF_HOST: user_input[CONF_HOST],
+                    CONF_PORT: user_input[CONF_PORT],
+                    CONF_BATTERY_VERSION: battery_version,
+                }
+                return await self.async_step_battery_limits()
 
-        if not errors and self.battery_index >= self.config_data["num_batteries"]:
-            # All batteries configured, move to time slots configuration
-            self.config_data["batteries"] = self.battery_configs
-            return await self.async_step_time_slots()
-
-        # Show form for the next battery
-        battery_num = self.battery_index + 1
         return self.async_show_form(
-            step_id="battery_config",
+            step_id="battery_connection",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=f"Marstek Venus {battery_num}"):
-                        str,
+                    vol.Required(CONF_NAME, default=f"Marstek Venus {battery_num}"): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=502): int,
                     vol.Required(CONF_BATTERY_VERSION, default=DEFAULT_VERSION):
                         SelectSelector(SelectSelectorConfig(
                             options=[
-                                {"value": "v2", "label": "v1/v2"},
-                                {"value": "v3", "label": "v3"},
+                                {"value": "v2", "label": "Ev2"},
+                                {"value": "v3", "label": "Ev3"},
+                                {"value": "vA", "label": "A"},
+                                {"value": "vD", "label": "D"},
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )),
-                    vol.Required("max_charge_power", default=2500):
-                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
-                    vol.Required("max_discharge_power", default=2500):
-                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                }
+            ),
+            errors=errors,
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
+    async def async_step_battery_limits(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 3b: Power and SOC limits for the current battery."""
+        battery_num = self.battery_index + 1
+        battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+        max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
+
+        if user_input is not None:
+            merged = dict(self._current_battery_data)
+            merged["max_charge_power"] = int(user_input["max_charge_power"])
+            merged["max_discharge_power"] = int(user_input["max_discharge_power"])
+            merged["max_soc"] = int(user_input["max_soc"])
+            merged["min_soc"] = int(user_input["min_soc"])
+            merged["enable_charge_hysteresis"] = user_input["enable_charge_hysteresis"]
+            merged["charge_hysteresis_percent"] = int(user_input.get("charge_hysteresis_percent", 5))
+            self.battery_configs.append(merged)
+            self.battery_index += 1
+
+            if self.battery_index >= self.config_data["num_batteries"]:
+                self.config_data["batteries"] = self.battery_configs
+                return await self.async_step_time_slots()
+            return await self.async_step_battery_connection()
+
+        return self.async_show_form(
+            step_id="battery_limits",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("max_charge_power", default=max_power):
+                        NumberSelector(NumberSelectorConfig(min=100, max=max_power, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                    vol.Required("max_discharge_power", default=max_power):
+                        NumberSelector(NumberSelectorConfig(min=100, max=max_power, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
                     vol.Required("max_soc", default=100):
                         NumberSelector(NumberSelectorConfig(min=80, max=100, step=1, mode=NumberSelectorMode.SLIDER)),
                     vol.Required("min_soc", default=12):
@@ -231,7 +262,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                         NumberSelector(NumberSelectorConfig(min=5, max=20, step=1, mode=NumberSelectorMode.SLIDER)),
                 }
             ),
-            errors=errors,
             description_placeholders={"battery_num": str(battery_num)},
         )
 
@@ -545,6 +575,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Weekly full charge disabled
                 self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = False
                 self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = "sun"
+                self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = False
                 return self.async_create_entry(
                     title="Marstek Venus Energy Manager", data=self.config_data
                 )
@@ -565,34 +596,71 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Step 12: Configure weekly full charge details."""
+        errors = {}
         if user_input is not None:
             # Save weekly full charge configuration
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
 
-            return self.async_create_entry(
-                title="Marstek Venus Energy Manager", data=self.config_data
+            # Save delay configuration
+            enable_delay = user_input.get("enable_weekly_full_charge_delay", False)
+            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = enable_delay
+            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(user_input.get("delay_safety_margin_min", DEFAULT_DELAY_SAFETY_MARGIN_MIN))
+
+            if enable_delay:
+                # Check if solar forecast sensor already configured from predictive charging
+                existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
+                if existing_forecast:
+                    # Reuse the existing sensor
+                    _LOGGER.debug("Weekly Full Charge Delay: Reusing solar forecast sensor from predictive charging: %s", existing_forecast)
+                else:
+                    # Validate the user-provided sensor
+                    forecast_sensor = user_input.get("solar_forecast_sensor")
+                    if not forecast_sensor:
+                        errors["solar_forecast_sensor"] = "sensor_not_found"
+                    else:
+                        state = self.hass.states.get(forecast_sensor)
+                        if state is None:
+                            errors["solar_forecast_sensor"] = "sensor_not_found"
+                        else:
+                            self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+
+            if not errors:
+                return self.async_create_entry(
+                    title="Marstek Venus Energy Manager", data=self.config_data
+                )
+
+        # Build schema dynamically
+        has_forecast_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
+        schema_dict = {
+            vol.Required("weekly_full_charge_day", default="sun"):
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                        translation_key="weekday",
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            vol.Optional("enable_weekly_full_charge_delay", default=False): bool,
+            vol.Optional("delay_safety_margin_min", default=DEFAULT_DELAY_SAFETY_MARGIN_MIN):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=10, max=120, step=5,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="min",
+                    )
+                ),
+        }
+        # Only show solar forecast selector if not already configured via predictive charging
+        if not has_forecast_sensor:
+            schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
+                EntitySelectorConfig(domain="sensor")
             )
 
-        # Show form
         return self.async_show_form(
             step_id="weekly_full_charge_config",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("weekly_full_charge_day", default="sun"):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                                translation_key="weekday",
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                }
-            ),
-            description_placeholders={
-                "description": "Select the day when batteries should charge to 100% for cell balancing. "
-                              "After reaching 100%, the system reverts to your configured maximum charge limit."
-            },
+            data_schema=vol.Schema(schema_dict),
+            errors=errors,
         )
 
     @staticmethod
@@ -611,6 +679,7 @@ class OptionsFlowHandler(OptionsFlow):
         self.battery_index = 0
         self.time_slots = []
         self.excluded_devices = []
+        self._current_battery_data = {}  # Stores connection data between battery steps
         _LOGGER.info("OptionsFlowHandler initialized successfully for entry: %s", config_entry.entry_id)
 
     async def _test_connection(self, host: str, port: int, version: str = "v2") -> bool:
@@ -722,7 +791,7 @@ class OptionsFlowHandler(OptionsFlow):
         try:
             if user_input is not None:
                 self.config_data["num_batteries"] = int(user_input["num_batteries"])
-                return await self.async_step_battery_config()
+                return await self.async_step_battery_connection()
 
             # Load current number of batteries with defensive handling
             batteries = self.config_entry.data.get("batteries", [])
@@ -745,75 +814,53 @@ class OptionsFlowHandler(OptionsFlow):
             ),
         )
 
-    async def async_step_battery_config(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Configure each battery."""
+    async def async_step_battery_connection(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Configure connection details and battery model for each battery."""
         errors = {}
 
         try:
-            if user_input is not None:
-                # Get version for connection test
-                battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+            battery_num = self.battery_index + 1
+            current_batteries = self.config_entry.data.get("batteries", [])
 
+            if user_input is not None:
+                battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
                 connection_result = await self._test_connection(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
-                    battery_version
+                    battery_version,
                 )
-
                 if not connection_result:
                     errors["base"] = "cannot_connect"
                 else:
-                    # Store version
-                    user_input[CONF_BATTERY_VERSION] = battery_version
-                    # Convert power values from string to int
-                    user_input["max_charge_power"] = int(user_input["max_charge_power"])
-                    user_input["max_discharge_power"] = int(user_input["max_discharge_power"])
-                    self.battery_configs.append(user_input)
-                    self.battery_index += 1
+                    self._current_battery_data = {
+                        CONF_NAME: user_input[CONF_NAME],
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                        CONF_BATTERY_VERSION: battery_version,
+                    }
+                    return await self.async_step_battery_limits()
 
-            # Defensive access to config_data
-            num_batteries = self.config_data.get("num_batteries", 1)
-            if not errors and self.battery_index >= num_batteries:
-                self.config_data["batteries"] = self.battery_configs
-                return await self.async_step_time_slots()
-
-            # Load current battery config if available with defensive handling
-            current_batteries = self.config_entry.data.get("batteries", [])
+            if self.battery_index < len(current_batteries):
+                current_battery = current_batteries[self.battery_index]
+                defaults = {
+                    CONF_NAME: current_battery.get(CONF_NAME, f"Marstek Venus {battery_num}"),
+                    CONF_HOST: current_battery.get(CONF_HOST, ""),
+                    CONF_PORT: current_battery.get(CONF_PORT, 502),
+                    CONF_BATTERY_VERSION: current_battery.get(CONF_BATTERY_VERSION, DEFAULT_VERSION),
+                }
+            else:
+                defaults = {
+                    CONF_NAME: f"Marstek Venus {battery_num}",
+                    CONF_HOST: "",
+                    CONF_PORT: 502,
+                    CONF_BATTERY_VERSION: DEFAULT_VERSION,
+                }
         except Exception as e:
-            _LOGGER.error("Error in options flow battery_config step: %s", e, exc_info=True)
+            _LOGGER.error("Error in options flow battery_connection step: %s", e, exc_info=True)
             return self.async_abort(reason="unknown_error")
-        battery_num = self.battery_index + 1
-
-        if self.battery_index < len(current_batteries):
-            current_battery = current_batteries[self.battery_index]
-            defaults = {
-                CONF_NAME: current_battery.get(CONF_NAME, f"Marstek Venus {battery_num}"),
-                CONF_HOST: current_battery.get(CONF_HOST, ""),
-                CONF_PORT: current_battery.get(CONF_PORT, 502),
-                CONF_BATTERY_VERSION: current_battery.get(CONF_BATTERY_VERSION, DEFAULT_VERSION),
-                "max_charge_power": current_battery.get("max_charge_power", 2500),
-                "max_discharge_power": current_battery.get("max_discharge_power", 2500),
-                "max_soc": current_battery.get("max_soc", 100),
-                "min_soc": current_battery.get("min_soc", 12),
-                "enable_charge_hysteresis": current_battery.get("enable_charge_hysteresis", False),
-                "charge_hysteresis_percent": current_battery.get("charge_hysteresis_percent", 5),
-            }
-        else:
-            defaults = {
-                CONF_NAME: f"Marstek Venus {battery_num}",
-                CONF_HOST: "",
-                CONF_PORT: 502,
-                CONF_BATTERY_VERSION: DEFAULT_VERSION,
-                "max_charge_power": 2500,
-                "max_discharge_power": 2500,
-                "max_soc": 100,
-                "min_soc": 12,
-                "enable_charge_hysteresis": False,
-                "charge_hysteresis_percent": 5,
-            }
 
         return self.async_show_form(
-            step_id="battery_config",
+            step_id="battery_connection",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
@@ -822,15 +869,75 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required(CONF_BATTERY_VERSION, default=defaults[CONF_BATTERY_VERSION]):
                         SelectSelector(SelectSelectorConfig(
                             options=[
-                                {"value": "v2", "label": "v1/v2"},
-                                {"value": "v3", "label": "v3"},
+                                {"value": "v2", "label": "Ev2"},
+                                {"value": "v3", "label": "Ev3"},
+                                {"value": "vA", "label": "A"},
+                                {"value": "vD", "label": "D"},
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )),
+                }
+            ),
+            errors=errors,
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
+    async def async_step_battery_limits(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Configure power and SOC limits for the current battery."""
+        try:
+            battery_num = self.battery_index + 1
+            battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+            max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
+            current_batteries = self.config_entry.data.get("batteries", [])
+
+            if user_input is not None:
+                merged = dict(self._current_battery_data)
+                merged["max_charge_power"] = int(user_input["max_charge_power"])
+                merged["max_discharge_power"] = int(user_input["max_discharge_power"])
+                merged["max_soc"] = int(user_input["max_soc"])
+                merged["min_soc"] = int(user_input["min_soc"])
+                merged["enable_charge_hysteresis"] = user_input["enable_charge_hysteresis"]
+                merged["charge_hysteresis_percent"] = int(user_input.get("charge_hysteresis_percent", 5))
+                self.battery_configs.append(merged)
+                self.battery_index += 1
+
+                num_batteries = self.config_data.get("num_batteries", 1)
+                if self.battery_index >= num_batteries:
+                    self.config_data["batteries"] = self.battery_configs
+                    return await self.async_step_time_slots()
+                return await self.async_step_battery_connection()
+
+            if self.battery_index < len(current_batteries):
+                current_battery = current_batteries[self.battery_index]
+                defaults = {
+                    "max_charge_power": min(current_battery.get("max_charge_power", max_power), max_power),
+                    "max_discharge_power": min(current_battery.get("max_discharge_power", max_power), max_power),
+                    "max_soc": current_battery.get("max_soc", 100),
+                    "min_soc": current_battery.get("min_soc", 12),
+                    "enable_charge_hysteresis": current_battery.get("enable_charge_hysteresis", False),
+                    "charge_hysteresis_percent": current_battery.get("charge_hysteresis_percent", 5),
+                }
+            else:
+                defaults = {
+                    "max_charge_power": max_power,
+                    "max_discharge_power": max_power,
+                    "max_soc": 100,
+                    "min_soc": 12,
+                    "enable_charge_hysteresis": False,
+                    "charge_hysteresis_percent": 5,
+                }
+        except Exception as e:
+            _LOGGER.error("Error in options flow battery_limits step: %s", e, exc_info=True)
+            return self.async_abort(reason="unknown_error")
+
+        return self.async_show_form(
+            step_id="battery_limits",
+            data_schema=vol.Schema(
+                {
                     vol.Required("max_charge_power", default=defaults["max_charge_power"]):
-                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                        NumberSelector(NumberSelectorConfig(min=100, max=max_power, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
                     vol.Required("max_discharge_power", default=defaults["max_discharge_power"]):
-                        NumberSelector(NumberSelectorConfig(min=800, max=2500, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
+                        NumberSelector(NumberSelectorConfig(min=100, max=max_power, step=50, unit_of_measurement="W", mode=NumberSelectorMode.SLIDER)),
                     vol.Required("max_soc", default=defaults["max_soc"]):
                         NumberSelector(NumberSelectorConfig(min=80, max=100, step=1, mode=NumberSelectorMode.SLIDER)),
                     vol.Required("min_soc", default=defaults["min_soc"]):
@@ -840,7 +947,6 @@ class OptionsFlowHandler(OptionsFlow):
                         NumberSelector(NumberSelectorConfig(min=5, max=20, step=1, mode=NumberSelectorMode.SLIDER)),
                 }
             ),
-            errors=errors,
             description_placeholders={"battery_num": str(battery_num)},
         )
 
@@ -1221,6 +1327,7 @@ class OptionsFlowHandler(OptionsFlow):
                 # Weekly full charge disabled
                 self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = False
                 self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = "sun"
+                self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = False
 
                 # Continue to PD controller advanced settings
                 return await self.async_step_pd_advanced()
@@ -1244,37 +1351,71 @@ class OptionsFlowHandler(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure weekly full charge details in options flow."""
-        # Load existing configuration
         existing_config = self.config_entry.data
         current_day = existing_config.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
+        current_delay = existing_config.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
+        current_margin = existing_config.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN)
+        errors = {}
 
         if user_input is not None:
             # Save weekly full charge configuration
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
 
-            # Continue to PD controller advanced settings
-            return await self.async_step_pd_advanced()
+            # Save delay configuration
+            enable_delay = user_input.get("enable_weekly_full_charge_delay", False)
+            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = enable_delay
+            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(user_input.get("delay_safety_margin_min", DEFAULT_DELAY_SAFETY_MARGIN_MIN))
 
-        # Show form
+            if enable_delay:
+                # Check if solar forecast sensor already configured from predictive charging
+                existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
+                if existing_forecast:
+                    _LOGGER.debug("Weekly Full Charge Delay: Reusing solar forecast sensor from predictive charging: %s", existing_forecast)
+                else:
+                    forecast_sensor = user_input.get("solar_forecast_sensor")
+                    if not forecast_sensor:
+                        errors["solar_forecast_sensor"] = "sensor_not_found"
+                    else:
+                        state = self.hass.states.get(forecast_sensor)
+                        if state is None:
+                            errors["solar_forecast_sensor"] = "sensor_not_found"
+                        else:
+                            self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+
+            if not errors:
+                return await self.async_step_pd_advanced()
+
+        # Build schema dynamically
+        has_forecast_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
+        schema_dict = {
+            vol.Required("weekly_full_charge_day", default=current_day):
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                        translation_key="weekday",
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            vol.Optional("enable_weekly_full_charge_delay", default=current_delay): bool,
+            vol.Optional("delay_safety_margin_min", default=current_margin):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=10, max=120, step=5,
+                        mode=NumberSelectorMode.BOX,
+                        unit_of_measurement="min",
+                    )
+                ),
+        }
+        if not has_forecast_sensor:
+            schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            )
+
         return self.async_show_form(
             step_id="weekly_full_charge_config",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("weekly_full_charge_day", default=current_day):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                                translation_key="weekday",
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                }
-            ),
-            description_placeholders={
-                "description": "Select the day when batteries should charge to 100% for cell balancing. "
-                              "After reaching 100%, the system reverts to your configured maximum charge limit."
-            },
+            data_schema=vol.Schema(schema_dict),
+            errors=errors,
         )
 
     async def async_step_pd_advanced(

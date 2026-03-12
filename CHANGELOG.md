@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.0] - 2026-03-12
+
+### Added
+- **Venus A and Venus D battery support**: New battery models `A` (Venus A, max 1200W) and `D` (Venus D, max 2200W) for hybrid inverter setups. Both models share the same Modbus register map and include MPPT power sensors (mppt1–mppt4, enabled by default) for monitoring solar input channels.
+- **Dynamic power slider limits in config flow**: The battery configuration wizard now adapts the charge/discharge power sliders to the selected model's maximum (Ev2/Ev3: 2500W, A: 1200W, D: 2200W). The battery setup step has been split into two screens: connection details (name, IP, port, model) and power limits.
+- **Battery model version labels updated**: Version labels in the configuration flow now read `Ev2`, `Ev3`, `A`, and `D` for clarity.
+- **Weekly Full Charge Delay (Solar-Aware)**: New optional feature that delays the weekly 100% charge until solar production is forecast to be insufficient. Instead of charging to 100% from midnight, the system evaluates the solar forecast and only unlocks the full charge when remaining solar energy won't cover household consumption plus the energy needed to reach 100%. Uses a sinusoidal solar production model with T_start detection from actual battery charging data and solar noon calculated from Home Assistant's configured longitude. Includes configurable safety margins and automatic fallback for days with no forecast data.
+- **Solar forecast capture for delay feature**: When the delay feature is enabled, the integration captures the next-day solar forecast at 23:00 and persists it across restarts using HA Store, ensuring the forecast is available on the target day.
+- **Weekly Full Charge diagnostic sensor**: New `Weekly Full Charge` diagnostic sensor on the Marstek Venus System device showing the current charge status (`Idle`, `Waiting for solar`, `Delayed (HH:MM est.)`, `Charging to 100%`, `Complete`). Attributes expose full calculation details: forecast kWh, solar T_start/T_end, energy needed, remaining solar/consumption, net solar, charge time estimate, estimated unlock time, and unlock reason.
+- **Force Full Charge button**: New button on the Marstek Venus System device to trigger an immediate 100% charge on any day, bypassing the weekly schedule and delay logic. Resets automatically on day change.
+- **Configurable safety margin for delay feature**: The delay safety margin (time buffer before estimated end of solar production) is now configurable in both config and options flow (10-120 minutes, default 40 min). Previously hardcoded at 40 minutes.
+
+### Changed
+- **System Charge/Discharge Power uses AC power**: The `System Charge Power` and `System Discharge Power` aggregate sensors now read from each battery's `AC Power` register instead of `Battery Power`, reflecting the actual AC-side power flow.
+- **V3 Battery SOC register upgraded**: V3 batteries now read SOC from register 34002 (scale 0.1, precision 2 decimals) instead of 37005 (scale 1, precision 1 decimal), providing higher resolution readings.
+- **Removed unused Charge to SOC entity**: The `charge_to_soc` number entity (register 42011) was not used by any integration logic and has been removed from both V2 and V3 definitions.
+- **Translation files completed**: Added missing `apply_to_charge` field translations to EN, DE, FR and NL. Added missing `enable_weekly_full_charge_delay`, `solar_forecast_sensor` and `delay_safety_margin_min` translations to DE, FR and NL (both config and options flow).
+
+### Fixed
+- **RS485 control mode not re-enabled after reconnection**: When a battery's TCP connection was lost and re-established (e.g., WiFi drop, options flow reload), RS485 control mode was not re-enabled. The battery silently ignored all power commands until a manual restart. `async_reconnect_fresh()` now automatically re-enables RS485 after every successful reconnection, with a user-override flag to respect manual RS485 disabling via the switch entity.
+- **First battery RS485 disabled after options flow reload**: On reload, the first battery attempted to reconnect before the V3 firmware released the previous TCP slot, causing the initial connection to fail. RS485 was only enabled on successful connection, leaving the first battery uncontrolled until health monitoring reconnected (without re-enabling RS485). Added a 1-second retry delay for failed initial connections.
+- **Individual battery Stored Energy sensor not visible**: The `MarstekVenusStoredEnergySensor` entities were created but immediately discarded due to a `lambda entities: None` callback. Sensors are now properly registered through the sensor platform setup.
+- **Consumption history not populated without predictive charging**: The daily consumption capture (needed for the delay feature's average calculation) was only scheduled when predictive charging was enabled. Now also scheduled when the weekly full charge delay is enabled.
+- **Grid charging falsely triggering solar T_start detection**: `total_daily_charging_energy` includes grid charging energy, which could falsely indicate solar production start. T_start detection now only activates after 07:00 to avoid overnight grid charging interference.
+
 ## [1.2.1] - 2026-03-06
 
 ### Fixed

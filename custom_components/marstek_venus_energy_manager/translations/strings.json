@@ -18,14 +18,26 @@
           "num_batteries": "Número de baterías"
         }
       },
-      "battery_config": {
-        "title": "Configurar batería {battery_num}",
-        "description": "Introduce los datos de conexión y límites de la batería {battery_num}.",
+      "battery_connection": {
+        "title": "Configurar batería {battery_num} — Conexión",
+        "description": "Introduce los datos de conexión y el modelo de la batería {battery_num}.",
         "data": {
           "name": "Nombre",
           "host": "Dirección IP",
           "port": "Puerto Modbus",
-          "battery_version": "Modelo de batería",
+          "battery_version": "Modelo de batería"
+        },
+        "data_description": {
+          "name": "Nombre descriptivo para identificar esta batería",
+          "host": "Dirección IP de la batería en tu red local",
+          "port": "Puerto Modbus (normalmente 502)",
+          "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
+        }
+      },
+      "battery_limits": {
+        "title": "Configurar batería {battery_num} — Límites",
+        "description": "Introduce los límites de potencia y SOC de la batería {battery_num}.",
+        "data": {
           "max_charge_power": "Potencia máxima de carga",
           "max_discharge_power": "Potencia máxima de descarga",
           "max_soc": "SOC máximo (%)",
@@ -34,12 +46,8 @@
           "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
         },
         "data_description": {
-          "name": "Nombre descriptivo para identificar esta batería",
-          "host": "Dirección IP de la batería en tu red local",
-          "port": "Puerto Modbus (normalmente 502)",
-          "battery_version": "Selecciona la versión del modelo de tu batería. v1/v2 para modelos antiguos, v3 para modelos nuevos con mapa de registros actualizado",
-          "max_charge_power": "Potencia máxima permitida para cargar la batería (800W o 2500W)",
-          "max_discharge_power": "Potencia máxima permitida para descargar la batería (800W o 2500W)",
+          "max_charge_power": "Potencia máxima permitida para cargar la batería",
+          "max_discharge_power": "Potencia máxima permitida para descargar la batería",
           "max_soc": "Estado de carga máximo (80-100%) - la batería no cargará por encima de este valor",
           "min_soc": "Estado de carga mínimo para descarga (12-30%) - la batería no descargará por debajo de este valor",
           "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",
@@ -180,14 +188,26 @@
           "num_batteries": "Número de baterías"
         }
       },
-      "battery_config": {
-        "title": "Configurar batería {battery_num}",
-        "description": "Modifica los datos de la batería {battery_num}.",
+      "battery_connection": {
+        "title": "Configurar batería {battery_num} — Conexión",
+        "description": "Modifica los datos de conexión y el modelo de la batería {battery_num}.",
         "data": {
           "name": "Nombre",
           "host": "Dirección IP",
           "port": "Puerto Modbus",
-          "battery_version": "Modelo de batería",
+          "battery_version": "Modelo de batería"
+        },
+        "data_description": {
+          "name": "Nombre descriptivo para identificar esta batería",
+          "host": "Dirección IP de la batería en tu red local",
+          "port": "Puerto Modbus (normalmente 502)",
+          "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
+        }
+      },
+      "battery_limits": {
+        "title": "Configurar batería {battery_num} — Límites",
+        "description": "Modifica los límites de potencia y SOC de la batería {battery_num}.",
+        "data": {
           "max_charge_power": "Potencia máxima de carga",
           "max_discharge_power": "Potencia máxima de descarga",
           "max_soc": "SOC máximo (%)",
@@ -196,12 +216,8 @@
           "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
         },
         "data_description": {
-          "name": "Nombre descriptivo para identificar esta batería",
-          "host": "Dirección IP de la batería en tu red local",
-          "port": "Puerto Modbus (normalmente 502)",
-          "battery_version": "Selecciona la versión del modelo de tu batería. v1/v2 para modelos antiguos, v3 para modelos nuevos con mapa de registros actualizado",
-          "max_charge_power": "Potencia máxima permitida para cargar la batería (800W o 2500W)",
-          "max_discharge_power": "Potencia máxima permitida para descargar la batería (800W o 2500W)",
+          "max_charge_power": "Potencia máxima permitida para cargar la batería",
+          "max_discharge_power": "Potencia máxima permitida para descargar la batería",
           "max_soc": "Estado de carga máximo (80-100%)",
           "min_soc": "Estado de carga mínimo para descarga (12-30%)",
           "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",

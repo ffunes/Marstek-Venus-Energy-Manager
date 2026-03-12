@@ -18,14 +18,26 @@
           "num_batteries": "Nombre de batteries"
         }
       },
-      "battery_config": {
-        "title": "Configurer la batterie {battery_num}",
-        "description": "Entrez les détails de connexion et les limites pour la batterie {battery_num}.",
+      "battery_connection": {
+        "title": "Configurer la batterie {battery_num} — Connexion",
+        "description": "Entrez les détails de connexion et le modèle pour la batterie {battery_num}.",
         "data": {
           "name": "Nom",
           "host": "Adresse IP",
           "port": "Port Modbus",
-          "battery_version": "Modèle de batterie",
+          "battery_version": "Modèle de batterie"
+        },
+        "data_description": {
+          "name": "Nom descriptif pour identifier cette batterie",
+          "host": "Adresse IP de la batterie sur votre réseau local",
+          "port": "Port Modbus (généralement 502)",
+          "battery_version": "Sélectionnez la version du modèle de votre batterie. Ev2 pour les anciens modèles, Ev3 pour les nouveaux modèles avec cartographie mise à jour, A (Venus A) ou D (Venus D) pour les onduleurs hybrides"
+        }
+      },
+      "battery_limits": {
+        "title": "Configurer la batterie {battery_num} — Limites",
+        "description": "Entrez les limites de puissance et de SOC pour la batterie {battery_num}.",
+        "data": {
           "max_charge_power": "Puissance de charge maximale (W)",
           "max_discharge_power": "Puissance de décharge maximale (W)",
           "max_soc": "SOC maximum (%)",
@@ -34,10 +46,6 @@
           "charge_hysteresis_percent": "Pourcentage d'hystérésis (%)"
         },
         "data_description": {
-          "name": "Nom descriptif pour identifier cette batterie",
-          "host": "Adresse IP de la batterie sur votre réseau local",
-          "port": "Port Modbus (généralement 502)",
-          "battery_version": "Sélectionnez la version du modèle de votre batterie. v1/v2 pour les anciens modèles, v3 pour les nouveaux modèles avec cartographie de registres mise à jour",
           "max_charge_power": "Puissance maximale autorisée pour charger la batterie",
           "max_discharge_power": "Puissance maximale autorisée pour décharger la batterie",
           "max_soc": "État de charge maximum - la batterie ne se chargera pas au-dessus de cette valeur",
@@ -60,12 +68,14 @@
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
           "days": "Jours de la semaine",
+          "apply_to_charge": "Appliquer aussi à la charge",
           "target_grid_power": "Puissance réseau cible (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
           "days": "Jours où cette plage s'applique",
+          "apply_to_charge": "Si coché, la plage limitera également la charge (la batterie ne se chargera que pendant cette plage)",
           "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée."
         }
       },
@@ -140,10 +150,16 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine"
+          "weekly_full_charge_day": "Jour de la semaine",
+          "enable_weekly_full_charge_delay": "Retarder la charge à 100% jusqu'à l'après-midi",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "delay_safety_margin_min": "Marge de sécurité (minutes)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
+          "enable_weekly_full_charge_delay": "Maintient les batteries au SOC maximum configuré le matin et ne déverrouille 100% que lorsque l'énergie solaire restante est tout juste suffisante pour compléter la charge. Protège les batteries des températures élevées à pleine charge et priorise l'autoconsommation solaire.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh. Requis si le retard est activé et que la charge prédictive n'est pas configurée.",
+          "delay_safety_margin_min": "Tampon de temps avant le coucher du soleil. Le système déverrouille la charge ce nombre de minutes avant la fin estimée de la production solaire pour assurer suffisamment de temps pour compléter la charge."
         }
       }
     },
@@ -178,14 +194,26 @@
           "num_batteries": "Nombre de batteries"
         }
       },
-      "battery_config": {
-        "title": "Configurer la batterie {battery_num}",
-        "description": "Modifiez les détails pour la batterie {battery_num}.",
+      "battery_connection": {
+        "title": "Configurer la batterie {battery_num} — Connexion",
+        "description": "Modifiez les détails de connexion et le modèle pour la batterie {battery_num}.",
         "data": {
           "name": "Nom",
           "host": "Adresse IP",
           "port": "Port Modbus",
-          "battery_version": "Modèle de batterie",
+          "battery_version": "Modèle de batterie"
+        },
+        "data_description": {
+          "name": "Nom descriptif pour identifier cette batterie",
+          "host": "Adresse IP de la batterie sur votre réseau local",
+          "port": "Port Modbus (généralement 502)",
+          "battery_version": "Sélectionnez la version du modèle de votre batterie. Ev2 pour les anciens modèles, Ev3 pour les nouveaux modèles avec cartographie mise à jour, A (Venus A) ou D (Venus D) pour les onduleurs hybrides"
+        }
+      },
+      "battery_limits": {
+        "title": "Configurer la batterie {battery_num} — Limites",
+        "description": "Modifiez les limites de puissance et de SOC pour la batterie {battery_num}.",
+        "data": {
           "max_charge_power": "Puissance de charge maximale (W)",
           "max_discharge_power": "Puissance de décharge maximale (W)",
           "max_soc": "SOC maximum (%)",
@@ -194,10 +222,6 @@
           "charge_hysteresis_percent": "Pourcentage d'hystérésis (%)"
         },
         "data_description": {
-          "name": "Nom descriptif pour identifier cette batterie",
-          "host": "Adresse IP de la batterie sur votre réseau local",
-          "port": "Port Modbus (généralement 502)",
-          "battery_version": "Sélectionnez la version du modèle de votre batterie. v1/v2 pour les anciens modèles, v3 pour les nouveaux modèles avec cartographie de registres mise à jour",
           "max_charge_power": "Puissance maximale autorisée pour charger la batterie",
           "max_discharge_power": "Puissance maximale autorisée pour décharger la batterie",
           "max_soc": "État de charge maximum",
@@ -220,12 +244,14 @@
           "start_time": "Heure de début",
           "end_time": "Heure de fin",
           "days": "Jours de la semaine",
+          "apply_to_charge": "Appliquer aussi à la charge",
           "target_grid_power": "Puissance réseau cible (W)"
         },
         "data_description": {
           "start_time": "Heure de début de la plage (format 24h)",
           "end_time": "Heure de fin de la plage (format 24h)",
           "days": "Jours où cette plage s'applique",
+          "apply_to_charge": "Si coché, la plage limitera également la charge (la batterie ne se chargera que pendant cette plage)",
           "target_grid_power": "Puissance réseau vers laquelle le contrôleur régule pendant cette plage. 0W = flux réseau nul (par défaut). Négatif = légère exportation (ex : -150W). Positif = légère importation autorisée."
         }
       },
@@ -300,10 +326,16 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine"
+          "weekly_full_charge_day": "Jour de la semaine",
+          "enable_weekly_full_charge_delay": "Retarder la charge à 100% jusqu'à l'après-midi",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "delay_safety_margin_min": "Marge de sécurité (minutes)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
+          "enable_weekly_full_charge_delay": "Maintient les batteries au SOC maximum configuré le matin et ne déverrouille 100% que lorsque l'énergie solaire restante est tout juste suffisante pour compléter la charge. Protège les batteries des températures élevées à pleine charge et priorise l'autoconsommation solaire.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh. Requis si le retard est activé et que la charge prédictive n'est pas configurée.",
+          "delay_safety_margin_min": "Tampon de temps avant le coucher du soleil. Le système déverrouille la charge ce nombre de minutes avant la fin estimée de la production solaire pour assurer suffisamment de temps pour compléter la charge."
         }
       },
       "pd_advanced": {

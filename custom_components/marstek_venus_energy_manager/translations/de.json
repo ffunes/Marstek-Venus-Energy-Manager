@@ -18,14 +18,26 @@
           "num_batteries": "Anzahl der Batterien"
         }
       },
-      "battery_config": {
-        "title": "Batterie {battery_num} konfigurieren",
-        "description": "Geben Sie Verbindungsdetails und Grenzwerte für Batterie {battery_num} ein.",
+      "battery_connection": {
+        "title": "Batterie {battery_num} konfigurieren — Verbindung",
+        "description": "Geben Sie Verbindungsdetails und Batteriemodell für Batterie {battery_num} ein.",
         "data": {
           "name": "Name",
           "host": "IP-Adresse",
           "port": "Modbus-Port",
-          "battery_version": "Batteriemodell",
+          "battery_version": "Batteriemodell"
+        },
+        "data_description": {
+          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
+          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
+          "port": "Modbus-Port (normalerweise 502)",
+          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. Ev2 für ältere Modelle, Ev3 für neuere Modelle mit aktualisierter Registerkarte, A (Venus A) oder D (Venus D) für Hybrid-Wechselrichter-Modelle"
+        }
+      },
+      "battery_limits": {
+        "title": "Batterie {battery_num} konfigurieren — Grenzwerte",
+        "description": "Geben Sie Leistungs- und SOC-Grenzwerte für Batterie {battery_num} ein.",
+        "data": {
           "max_charge_power": "Maximale Ladeleistung (W)",
           "max_discharge_power": "Maximale Entladeleistung (W)",
           "max_soc": "Maximaler SOC (%)",
@@ -34,10 +46,6 @@
           "charge_hysteresis_percent": "Hysterese-Prozentsatz (%)"
         },
         "data_description": {
-          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
-          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
-          "port": "Modbus-Port (normalerweise 502)",
-          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. v1/v2 für ältere Modelle, v3 für neuere Modelle mit aktualisierter Registerkarte",
           "max_charge_power": "Maximal zulässige Leistung zum Laden der Batterie",
           "max_discharge_power": "Maximal zulässige Leistung zum Entladen der Batterie",
           "max_soc": "Maximaler Ladezustand - Batterie lädt nicht über diesen Wert",
@@ -60,12 +68,14 @@
           "start_time": "Startzeit",
           "end_time": "Endzeit",
           "days": "Wochentage",
+          "apply_to_charge": "Auch auf Laden anwenden",
           "target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
           "days": "Tage, an denen dieses Zeitfenster gilt",
+          "apply_to_charge": "Wenn aktiviert, schränkt das Zeitfenster auch das Laden ein (Batterie lädt nur während dieses Zeitfensters)",
           "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt."
         }
       },
@@ -140,10 +150,16 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag"
+          "weekly_full_charge_day": "Wochentag",
+          "enable_weekly_full_charge_delay": "100%-Ladung auf den Nachmittag verzögern",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "delay_safety_margin_min": "Sicherheitspuffer (Minuten)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
+          "enable_weekly_full_charge_delay": "Hält die Batterien während des Morgens beim konfigurierten maximalen SOC und entsperrt 100% erst, wenn die verbleibende Solarenergie gerade ausreicht, um die Ladung zu vervollständigen. Schützt die Batterien vor hohen Temperaturen bei voller Ladung und priorisiert die solare Eigenverbrauchsoptimierung.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert. Erforderlich, wenn die Verzögerung aktiviert ist und die prädiktive Ladung nicht konfiguriert ist.",
+          "delay_safety_margin_min": "Zeitpuffer vor Sonnenuntergang. Das System entsperrt das Laden diese Minuten vor dem geschätzten Ende der Solarproduktion, um genügend Zeit für den Abschluss der Ladung zu gewährleisten."
         }
       }
     },
@@ -178,14 +194,26 @@
           "num_batteries": "Anzahl der Batterien"
         }
       },
-      "battery_config": {
-        "title": "Batterie {battery_num} konfigurieren",
-        "description": "Ändern Sie die Details für Batterie {battery_num}.",
+      "battery_connection": {
+        "title": "Batterie {battery_num} konfigurieren — Verbindung",
+        "description": "Ändern Sie Verbindungsdetails und Batteriemodell für Batterie {battery_num}.",
         "data": {
           "name": "Name",
           "host": "IP-Adresse",
           "port": "Modbus-Port",
-          "battery_version": "Batteriemodell",
+          "battery_version": "Batteriemodell"
+        },
+        "data_description": {
+          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
+          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
+          "port": "Modbus-Port (normalerweise 502)",
+          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. Ev2 für ältere Modelle, Ev3 für neuere Modelle mit aktualisierter Registerkarte, A (Venus A) oder D (Venus D) für Hybrid-Wechselrichter-Modelle"
+        }
+      },
+      "battery_limits": {
+        "title": "Batterie {battery_num} konfigurieren — Grenzwerte",
+        "description": "Ändern Sie Leistungs- und SOC-Grenzwerte für Batterie {battery_num}.",
+        "data": {
           "max_charge_power": "Maximale Ladeleistung (W)",
           "max_discharge_power": "Maximale Entladeleistung (W)",
           "max_soc": "Maximaler SOC (%)",
@@ -194,10 +222,6 @@
           "charge_hysteresis_percent": "Hysterese-Prozentsatz (%)"
         },
         "data_description": {
-          "name": "Beschreibender Name zur Identifizierung dieser Batterie",
-          "host": "IP-Adresse der Batterie in Ihrem lokalen Netzwerk",
-          "port": "Modbus-Port (normalerweise 502)",
-          "battery_version": "Wählen Sie die Modellversion Ihrer Batterie. v1/v2 für ältere Modelle, v3 für neuere Modelle mit aktualisierter Registerkarte",
           "max_charge_power": "Maximal zulässige Leistung zum Laden der Batterie",
           "max_discharge_power": "Maximal zulässige Leistung zum Entladen der Batterie",
           "max_soc": "Maximaler Ladezustand",
@@ -220,12 +244,14 @@
           "start_time": "Startzeit",
           "end_time": "Endzeit",
           "days": "Wochentage",
+          "apply_to_charge": "Auch auf Laden anwenden",
           "target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "start_time": "Startzeit des Zeitfensters (24h-Format)",
           "end_time": "Endzeit des Zeitfensters (24h-Format)",
           "days": "Tage, an denen dieses Zeitfenster gilt",
+          "apply_to_charge": "Wenn aktiviert, schränkt das Zeitfenster auch das Laden ein (Batterie lädt nur während dieses Zeitfensters)",
           "target_grid_power": "Netzleistung, auf die der Regler während dieses Zeitfensters reguliert. 0W = kein Netzfluss (Standard). Negativ = leichter Export (z.B. -150W). Positiv = leichter Import erlaubt."
         }
       },
@@ -300,10 +326,16 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag"
+          "weekly_full_charge_day": "Wochentag",
+          "enable_weekly_full_charge_delay": "100%-Ladung auf den Nachmittag verzögern",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "delay_safety_margin_min": "Sicherheitspuffer (Minuten)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
+          "enable_weekly_full_charge_delay": "Hält die Batterien während des Morgens beim konfigurierten maximalen SOC und entsperrt 100% erst, wenn die verbleibende Solarenergie gerade ausreicht, um die Ladung zu vervollständigen. Schützt die Batterien vor hohen Temperaturen bei voller Ladung und priorisiert die solare Eigenverbrauchsoptimierung.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert. Erforderlich, wenn die Verzögerung aktiviert ist und die prädiktive Ladung nicht konfiguriert ist.",
+          "delay_safety_margin_min": "Zeitpuffer vor Sonnenuntergang. Das System entsperrt das Laden diese Minuten vor dem geschätzten Ende der Solarproduktion, um genügend Zeit für den Abschluss der Ladung zu gewährleisten."
         }
       },
       "pd_advanced": {

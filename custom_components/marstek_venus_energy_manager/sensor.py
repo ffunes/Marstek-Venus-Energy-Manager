@@ -10,9 +10,10 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor
+from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +48,13 @@ async def async_setup_entry(
         for definition in AGGREGATE_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusAggregateSensor(coordinators, definition, entry, hass))
 
+    # Add calculated sensors (efficiency and stored energy) per battery
+    for coordinator in coordinators:
+        for definition in EFFICIENCY_SENSOR_DEFINITIONS:
+            entities.append(MarstekVenusEfficiencySensor(coordinator, definition))
+        for definition in STORED_ENERGY_SENSOR_DEFINITIONS:
+            entities.append(MarstekVenusStoredEnergySensor(coordinator, definition))
+
     # Add excluded devices diagnostic sensor
     excluded_devices = entry.data.get("excluded_devices", [])
     if excluded_devices:
@@ -59,6 +67,10 @@ async def async_setup_entry(
     controller = hass.data[DOMAIN][entry.entry_id].get("controller")
     if controller and len(coordinators) > 1:
         entities.append(ActiveBatteriesSensor(hass, entry, controller, coordinators))
+
+    # Add weekly full charge status sensor (when weekly charge is enabled)
+    if controller and controller.weekly_full_charge_enabled:
+        entities.append(WeeklyFullChargeSensor(hass, entry, controller))
 
     async_add_entities(entities)
 
@@ -321,6 +333,60 @@ class ActiveBatteriesSensor(SensorEntity):
                 attrs[f"{c.name}_soc"] = f"{soc}%"
                 attrs[f"{c.name}_total_discharged"] = f"{discharge_kwh} kWh"
                 attrs[f"{c.name}_total_charged"] = f"{charge_kwh} kWh"
+
+        return attrs
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class WeeklyFullChargeSensor(SensorEntity):
+    """Diagnostic sensor showing weekly full charge status and delay calculations."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the weekly full charge sensor."""
+        self.hass = hass
+        self.entry = entry
+        self._controller = controller
+
+        self._attr_name = "Weekly Full Charge"
+        self._attr_unique_id = f"{entry.entry_id}_weekly_full_charge_status"
+        self._attr_icon = "mdi:battery-clock"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_should_poll = True
+
+    @property
+    def native_value(self) -> str:
+        """Return the current weekly charge status."""
+        return self._controller._weekly_charge_status.get("state", "Idle")
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return calculation details as attributes."""
+        status = self._controller._weekly_charge_status
+        attrs = {
+            "weekly_charge_day": self._controller.weekly_full_charge_day,
+            "delay_enabled": self._controller.enable_weekly_full_charge_delay,
+            "safety_margin_min": status.get("safety_margin_min"),
+        }
+
+        # Only include calculation details when relevant
+        for key in (
+            "forecast_kwh", "solar_t_start", "solar_t_end",
+            "energy_needed_kwh", "remaining_solar_kwh",
+            "remaining_consumption_kwh", "net_solar_kwh",
+            "charge_time_h", "estimated_unlock_time", "unlock_reason",
+        ):
+            value = status.get(key)
+            if value is not None:
+                attrs[key] = value
 
         return attrs
 

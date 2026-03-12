@@ -18,14 +18,26 @@
           "num_batteries": "Aantal batterijen"
         }
       },
-      "battery_config": {
-        "title": "Batterij {battery_num} configureren",
-        "description": "Voer verbindingsgegevens en limieten in voor batterij {battery_num}.",
+      "battery_connection": {
+        "title": "Batterij {battery_num} configureren — Verbinding",
+        "description": "Voer verbindingsgegevens en batterijmodel in voor batterij {battery_num}.",
         "data": {
           "name": "Naam",
           "host": "IP-adres",
           "port": "Modbus-poort",
-          "battery_version": "Batterijmodel",
+          "battery_version": "Batterijmodel"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de batterij op uw lokale netwerk",
+          "port": "Modbus-poort (meestal 502)",
+          "battery_version": "Selecteer de modelversie van uw batterij. Ev2 voor oudere modellen, Ev3 voor nieuwere modellen met bijgewerkte registerkaart, A (Venus A) of D (Venus D) voor hybride omvormermodellen"
+        }
+      },
+      "battery_limits": {
+        "title": "Batterij {battery_num} configureren — Limieten",
+        "description": "Voer vermogen- en SOC-limieten in voor batterij {battery_num}.",
+        "data": {
           "max_charge_power": "Maximaal laadvermogen (W)",
           "max_discharge_power": "Maximaal ontlaadvermogen (W)",
           "max_soc": "Maximale SOC (%)",
@@ -34,10 +46,6 @@
           "charge_hysteresis_percent": "Hysterese percentage (%)"
         },
         "data_description": {
-          "name": "Beschrijvende naam om deze batterij te identificeren",
-          "host": "IP-adres van de batterij op uw lokale netwerk",
-          "port": "Modbus-poort (meestal 502)",
-          "battery_version": "Selecteer de modelversie van uw batterij. v1/v2 voor oudere modellen, v3 voor nieuwere modellen met bijgewerkte registerkaart",
           "max_charge_power": "Maximaal toegestaan vermogen om de batterij op te laden",
           "max_discharge_power": "Maximaal toegestaan vermogen om de batterij te ontladen",
           "max_soc": "Maximale laadtoestand - batterij laadt niet boven deze waarde",
@@ -60,12 +68,14 @@
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
           "days": "Dagen van de week",
+          "apply_to_charge": "Ook toepassen op laden",
           "target_grid_power": "Doelvermogen netwerk (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
           "days": "Dagen waarop dit tijdslot van toepassing is",
+          "apply_to_charge": "Indien aangevinkt, beperkt het tijdslot ook het laden (batterij laadt alleen tijdens dit tijdslot)",
           "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan."
         }
       },
@@ -140,10 +150,16 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week"
+          "weekly_full_charge_day": "Dag van de week",
+          "enable_weekly_full_charge_delay": "100% lading uitstellen tot de middag",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "delay_safety_margin_min": "Veiligheidsmarge (minuten)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
+          "enable_weekly_full_charge_delay": "Houdt batterijen op de geconfigureerde maximale SOC tijdens de ochtend en ontgrendelt 100% pas wanneer de resterende zonne-energie net genoeg is om de lading te voltooien. Beschermt batterijen tegen hoge temperaturen bij volledige lading en geeft prioriteit aan zonne-eigenverbruik.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert. Vereist als de vertraging is ingeschakeld en voorspellend laden niet is geconfigureerd.",
+          "delay_safety_margin_min": "Tijdbuffer voor zonsondergang. Het systeem ontgrendelt het laden dit aantal minuten voor het geschatte einde van de zonneproductie om genoeg tijd te garanderen voor het voltooien van de lading."
         }
       }
     },
@@ -178,14 +194,26 @@
           "num_batteries": "Aantal batterijen"
         }
       },
-      "battery_config": {
-        "title": "Batterij {battery_num} configureren",
-        "description": "Wijzig de details voor batterij {battery_num}.",
+      "battery_connection": {
+        "title": "Batterij {battery_num} configureren — Verbinding",
+        "description": "Wijzig verbindingsgegevens en batterijmodel voor batterij {battery_num}.",
         "data": {
           "name": "Naam",
           "host": "IP-adres",
           "port": "Modbus-poort",
-          "battery_version": "Batterijmodel",
+          "battery_version": "Batterijmodel"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de batterij op uw lokale netwerk",
+          "port": "Modbus-poort (meestal 502)",
+          "battery_version": "Selecteer de modelversie van uw batterij. Ev2 voor oudere modellen, Ev3 voor nieuwere modellen met bijgewerkte registerkaart, A (Venus A) of D (Venus D) voor hybride omvormermodellen"
+        }
+      },
+      "battery_limits": {
+        "title": "Batterij {battery_num} configureren — Limieten",
+        "description": "Wijzig vermogen- en SOC-limieten voor batterij {battery_num}.",
+        "data": {
           "max_charge_power": "Maximaal laadvermogen (W)",
           "max_discharge_power": "Maximaal ontlaadvermogen (W)",
           "max_soc": "Maximale SOC (%)",
@@ -194,10 +222,6 @@
           "charge_hysteresis_percent": "Hysterese percentage (%)"
         },
         "data_description": {
-          "name": "Beschrijvende naam om deze batterij te identificeren",
-          "host": "IP-adres van de batterij op uw lokale netwerk",
-          "port": "Modbus-poort (meestal 502)",
-          "battery_version": "Selecteer de modelversie van uw batterij. v1/v2 voor oudere modellen, v3 voor nieuwere modellen met bijgewerkte registerkaart",
           "max_charge_power": "Maximaal toegestaan vermogen om de batterij op te laden",
           "max_discharge_power": "Maximaal toegestaan vermogen om de batterij te ontladen",
           "max_soc": "Maximale laadtoestand",
@@ -220,12 +244,14 @@
           "start_time": "Starttijd",
           "end_time": "Eindtijd",
           "days": "Dagen van de week",
+          "apply_to_charge": "Ook toepassen op laden",
           "target_grid_power": "Doelvermogen netwerk (W)"
         },
         "data_description": {
           "start_time": "Starttijd van het tijdslot (24u-formaat)",
           "end_time": "Eindtijd van het tijdslot (24u-formaat)",
           "days": "Dagen waarop dit tijdslot van toepassing is",
+          "apply_to_charge": "Indien aangevinkt, beperkt het tijdslot ook het laden (batterij laadt alleen tijdens dit tijdslot)",
           "target_grid_power": "Netwerkvermogen waarop de regelaar reguleert tijdens dit tijdslot. 0W = geen netstroom (standaard). Negatief = lichte export (bijv. -150W). Positief = lichte import toegestaan."
         }
       },
@@ -300,10 +326,16 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week"
+          "weekly_full_charge_day": "Dag van de week",
+          "enable_weekly_full_charge_delay": "100% lading uitstellen tot de middag",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "delay_safety_margin_min": "Veiligheidsmarge (minuten)"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
+          "enable_weekly_full_charge_delay": "Houdt batterijen op de geconfigureerde maximale SOC tijdens de ochtend en ontgrendelt 100% pas wanneer de resterende zonne-energie net genoeg is om de lading te voltooien. Beschermt batterijen tegen hoge temperaturen bij volledige lading en geeft prioriteit aan zonne-eigenverbruik.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert. Vereist als de vertraging is ingeschakeld en voorspellend laden niet is geconfigureerd.",
+          "delay_safety_margin_min": "Tijdbuffer voor zonsondergang. Het systeem ontgrendelt het laden dit aantal minuten voor het geschatte einde van de zonneproductie om genoeg tijd te garanderen voor het voltooien van de lading."
         }
       },
       "pd_advanced": {

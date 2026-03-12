@@ -55,7 +55,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Create Modbus client with version-specific timing and packet correction
         wait_ms = MESSAGE_WAIT_MS.get(self.battery_version, 50)
-        is_v3 = (self.battery_version == "v3")
+        is_v3 = self.battery_version in ("v3", "vA", "vD")
         self.client = MarstekModbusClient(host, port, message_wait_ms=wait_ms, is_v3=is_v3)
 
         self.max_charge_power = max_charge_power
@@ -79,6 +79,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Timestamp-based update tracking
         self._last_update_times = {}
         self._entity_registry = None
+        self.rs485_user_disabled = False  # Set by RS485 switch when user explicitly disables
 
         # Load version-specific definitions
         if self.battery_version == "v3":
@@ -100,6 +101,33 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                 SENSOR_DEFINITIONS_V3 +
                 NUMBER_DEFINITIONS_V3 +
                 SELECT_DEFINITIONS_V3 +
+                SWITCH_DEFINITIONS_V3 +
+                BINARY_SENSOR_DEFINITIONS_V3
+            )
+        elif self.battery_version in ("vA", "vD"):
+            from .const import (
+                SENSOR_DEFINITIONS_VA,
+                NUMBER_DEFINITIONS_VA,
+                NUMBER_DEFINITIONS_VD,
+                SELECT_DEFINITIONS_VA,
+                SELECT_DEFINITIONS_VD,
+                SWITCH_DEFINITIONS_V3,
+                BINARY_SENSOR_DEFINITIONS_V3,
+                BUTTON_DEFINITIONS_V3,
+            )
+            sensor_defs = SENSOR_DEFINITIONS_VA  # identical for vA and vD
+            number_defs = NUMBER_DEFINITIONS_VA if self.battery_version == "vA" else NUMBER_DEFINITIONS_VD
+            select_defs = SELECT_DEFINITIONS_VA if self.battery_version == "vA" else SELECT_DEFINITIONS_VD
+            self.sensor_definitions = sensor_defs
+            self.number_definitions = number_defs
+            self.select_definitions = select_defs
+            self.switch_definitions = SWITCH_DEFINITIONS_V3
+            self.binary_sensor_definitions = BINARY_SENSOR_DEFINITIONS_V3
+            self.button_definitions = BUTTON_DEFINITIONS_V3
+            self._all_definitions = (
+                sensor_defs +
+                number_defs +
+                select_defs +
                 SWITCH_DEFINITIONS_V3 +
                 BINARY_SENSOR_DEFINITIONS_V3
             )
@@ -163,6 +191,20 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                 self._is_connected = True
                 self._suspension_reset_time = None
                 _LOGGER.info("[%s] Fresh reconnection successful", self.name)
+
+                # Re-enable RS485 control mode after reconnection.
+                # A new TCP connection may reset the battery's RS485 state,
+                # causing commands to be silently ignored.
+                # Skip if the user explicitly disabled RS485 via the switch.
+                if not self.rs485_user_disabled:
+                    rs485_reg = self.get_register("rs485_control")
+                    if rs485_reg:
+                        self.client.unit_id = 1
+                        ok = await self.client.async_write_register(rs485_reg, 21930)  # 0x55AA
+                        if ok:
+                            _LOGGER.info("[%s] RS485 control mode re-enabled after reconnection", self.name)
+                        else:
+                            _LOGGER.warning("[%s] Failed to re-enable RS485 after reconnection", self.name)
             else:
                 self._is_connected = False
                 _LOGGER.warning("[%s] Fresh reconnection failed", self.name)
@@ -477,7 +519,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     return None
 
                 # Use version-specific data type for battery power
-                power_dtype = "int16" if self.battery_version == "v3" else "int32"
+                power_dtype = "int16" if self.battery_version in ("v3", "vA", "vD") else "int32"
 
                 # Read the registers we just wrote + actual power
                 force_mode = await self.client.async_read_register(force_mode_reg, "uint16")
@@ -551,7 +593,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                 await asyncio.sleep(0.2)
 
                 # Read feedback within same lock (no interleaving)
-                power_dtype = "int16" if self.battery_version == "v3" else "int32"
+                power_dtype = "int16" if self.battery_version in ("v3", "vA", "vD") else "int32"
                 force_fb = await self.client.async_read_register(force_reg, "uint16")
                 charge_fb = await self.client.async_read_register(charge_reg, "uint16")
                 discharge_fb = await self.client.async_read_register(discharge_reg, "uint16")

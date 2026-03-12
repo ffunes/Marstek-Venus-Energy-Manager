@@ -11,7 +11,15 @@ SCAN_INTERVAL = {
 
 # Battery version support
 CONF_BATTERY_VERSION = "battery_version"
-SUPPORTED_VERSIONS = ["v2", "v3"]
+SUPPORTED_VERSIONS = ["v2", "v3", "vA", "vD"]
+
+# Maximum power (W) per battery version — used by config_flow to set slider limits
+MAX_POWER_BY_VERSION = {
+    "v2": 2500,
+    "v3": 2500,
+    "vA": 1200,
+    "vD": 2200,
+}
 DEFAULT_VERSION = "v2"
 
 # Version-specific register map for control operations
@@ -39,16 +47,44 @@ REGISTER_MAP = {
         "discharging_cutoff_capacity": None,    # NOT AVAILABLE - software enforcement
         "max_charge_power": 44002,
         "max_discharge_power": 44003,
-        "battery_soc": 37005,
+        "battery_soc": 34002,
         "battery_power": 30001,
         "user_work_mode": None,
-    }
+    },
+    "vA": {
+        "rs485_control": 42000,
+        "force_mode": 42010,
+        "set_charge_power": 42020,
+        "set_discharge_power": 42021,
+        "charging_cutoff_capacity": None,       # NOT AVAILABLE - software enforcement
+        "discharging_cutoff_capacity": None,    # NOT AVAILABLE - software enforcement
+        "max_charge_power": 44002,
+        "max_discharge_power": 44003,
+        "battery_soc": 32104,
+        "battery_power": 30001,
+        "user_work_mode": 43000,
+    },
+    "vD": {
+        "rs485_control": 42000,
+        "force_mode": 42010,
+        "set_charge_power": 42020,
+        "set_discharge_power": 42021,
+        "charging_cutoff_capacity": None,       # NOT AVAILABLE - software enforcement
+        "discharging_cutoff_capacity": None,    # NOT AVAILABLE - software enforcement
+        "max_charge_power": 44002,
+        "max_discharge_power": 44003,
+        "battery_soc": 32104,
+        "battery_power": 30001,
+        "user_work_mode": 43000,
+    },
 }
 
 # Version-specific Modbus timing (ms between messages)
 MESSAGE_WAIT_MS = {
     "v2": 50,
     "v3": 150,  # Firmware v3 requires minimum 150ms between messages
+    "vA": 150,
+    "vD": 150,
 }
 
 SENSOR_DEFINITIONS = [
@@ -477,21 +513,6 @@ NUMBER_DEFINITIONS = [
         "data_type": "uint16",
         "scan_interval": "medium"
     },
-    {
-        # charge or discharge to SOC as a percentage of total battery capacity
-        "name": "Charge to SOC",
-        "register": 42011,
-        "key": "charge_to_soc",
-        "enabled_by_default": True,
-        "icon": "mdi:battery-sync-outline",
-        "min": 10,
-        "max": 100, 
-        "step": 1,
-        "unit": "%",
-        "scale": 1,       
-        "data_type": "uint16",        
-        "scan_interval": "medium"
-    }  
 ]
 
 # Definitions for button actions (one-time triggers)
@@ -547,8 +568,8 @@ STORED_ENERGY_SENSOR_DEFINITIONS = [
 
 SENSOR_DEFINITIONS_V3 = [
     {
-        "register": 37005,
-        "scale": 1,
+        "register": 34002,
+        "scale": 0.1,
         "unit": "%",
         "device_class": "battery",
         "state_class": "measurement",
@@ -556,7 +577,7 @@ SENSOR_DEFINITIONS_V3 = [
         "key": "battery_soc",
         "enabled_by_default": True,
         "data_type": "uint16",
-        "precision": 1,
+        "precision": 2,
         "scan_interval": "medium",
     },
     {
@@ -798,9 +819,350 @@ NUMBER_DEFINITIONS_V3 = [
         "data_type": "uint16",
         "scan_interval": "high",
     },
+]
+
+BUTTON_DEFINITIONS_V3 = [
+    {
+        "register": 41000,
+        "command": 21930,
+        "icon": "mdi:restart",
+        "category": "diagnostic",
+        "name": "Reset Device",
+        "key": "reset_device",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+    },
+]
+
+# ============================================================================
+# VENUS A BATTERY DEFINITIONS
+# WARNING: Venus A registers are UNTESTED
+# ============================================================================
+
+SENSOR_DEFINITIONS_VA = [
+    {
+        "register": 32104,
+        "scale": 1,
+        "unit": "%",
+        "device_class": "battery",
+        "state_class": "measurement",
+        "name": "Battery SOC",
+        "key": "battery_soc",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "medium",
+    },
+    {
+        "register": 32105,
+        "scale": 0.001,
+        "unit": "kWh",
+        "device_class": "energy",
+        "state_class": "total",
+        "name": "Battery Total Energy",
+        "key": "battery_total_energy",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 3,
+        "scan_interval": "low",
+    },
+    {
+        "register": 30100,
+        "scale": 0.01,
+        "unit": "V",
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "name": "Battery Voltage",
+        "key": "battery_voltage",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "medium",
+    },
+    {
+        "register": 30001,
+        "count": 1,
+        "scale": 1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "Battery Power",
+        "key": "battery_power",
+        "enabled_by_default": True,
+        "data_type": "int16",
+        "precision": 1,
+        "scan_interval": "high",
+        "force_update": True,
+    },
+    {
+        "register": 35000,
+        "scale": 0.1,
+        "unit": "°C",
+        "device_class": "temperature",
+        "state_class": "measurement",
+        "name": "Internal Temperature",
+        "key": "internal_temperature",
+        "enabled_by_default": True,
+        "data_type": "int16",
+        "precision": 2,
+        "scan_interval": "medium",
+    },
+    {
+        "register": 30006,
+        "count": 1,
+        "scale": 1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "AC Power",
+        "key": "ac_power",
+        "enabled_by_default": True,
+        "data_type": "int16",
+        "precision": 0,
+        "scan_interval": "high",
+        "force_update": True,
+    },
+    {
+        "register": 33000,
+        "count": 2,
+        "scale": 0.01,
+        "unit": "kWh",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "name": "Total Charging Energy",
+        "key": "total_charging_energy",
+        "enabled_by_default": True,
+        "data_type": "uint32",
+        "precision": 2,
+        "scan_interval": "low",
+    },
+    {
+        "register": 33002,
+        "count": 2,
+        "scale": 0.01,
+        "unit": "kWh",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "name": "Total Discharging Energy",
+        "key": "total_discharging_energy",
+        "enabled_by_default": True,
+        "data_type": "int32",
+        "precision": 2,
+        "scan_interval": "low",
+    },
+    {
+        "register": 33004,
+        "count": 2,
+        "scale": 0.01,
+        "unit": "kWh",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "name": "Total Daily Charging Energy",
+        "key": "total_daily_charging_energy",
+        "enabled_by_default": True,
+        "data_type": "uint32",
+        "precision": 2,
+        "scan_interval": "low",
+    },
+    {
+        "register": 33006,
+        "count": 2,
+        "scale": 0.01,
+        "unit": "kWh",
+        "device_class": "energy",
+        "state_class": "total_increasing",
+        "name": "Total Daily Discharging Energy",
+        "key": "total_daily_discharging_energy",
+        "enabled_by_default": True,
+        "data_type": "int32",
+        "precision": 2,
+        "scan_interval": "low",
+    },
+    {
+        "register": 35100,
+        "scale": 1,
+        "unit": None,
+        "icon": "mdi:state-machine",
+        "name": "Inverter State",
+        "key": "inverter_state",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "states": {
+            0: "Sleep",
+            1: "Standby",
+            2: "Charge",
+            3: "Discharge",
+            4: "Backup Mode",
+            5: "OTA Upgrade",
+            6: "Bypass",
+        },
+        "scan_interval": "high",
+    },
+    {
+        "register": 30037,
+        "scale": 0.1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "MPPT1 Power",
+        "key": "mppt1_power",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "high",
+    },
+    {
+        "register": 30038,
+        "scale": 0.1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "MPPT2 Power",
+        "key": "mppt2_power",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "high",
+    },
+    {
+        "register": 30039,
+        "scale": 0.1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "MPPT3 Power",
+        "key": "mppt3_power",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "high",
+    },
+    {
+        "register": 30040,
+        "scale": 0.1,
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "name": "MPPT4 Power",
+        "key": "mppt4_power",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 1,
+        "scan_interval": "high",
+    },
+]
+
+# Venus D has the same sensor registers as Venus A
+SENSOR_DEFINITIONS_VD = SENSOR_DEFINITIONS_VA
+
+BINARY_SENSOR_DEFINITIONS_VA = []
+BINARY_SENSOR_DEFINITIONS_VD = []
+
+SELECT_DEFINITIONS_VA = [
+    {
+        "register": 43000,
+        "name": "User Work Mode",
+        "key": "user_work_mode",
+        "enabled_by_default": True,
+        "scan_interval": "high",
+        "data_type": "uint16",
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
+    },
+    {
+        "register": 42010,
+        "name": "Force Mode",
+        "key": "force_mode",
+        "enabled_by_default": False,
+        "scan_interval": "high",
+        "data_type": "uint16",
+        "options": {"stop": 0, "charge": 1, "discharge": 2},
+    },
+]
+
+SELECT_DEFINITIONS_VD = [
+    {
+        "register": 43000,
+        "name": "User Work Mode",
+        "key": "user_work_mode",
+        "enabled_by_default": True,
+        "scan_interval": "high",
+        "data_type": "uint16",
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
+    },
+    {
+        "register": 42010,
+        "name": "Force Mode",
+        "key": "force_mode",
+        "enabled_by_default": False,
+        "scan_interval": "high",
+        "data_type": "uint16",
+        "options": {"standby": 0, "charge": 1, "discharge": 2},
+    },
+]
+
+# Venus A/D share the same switch and button registers as V3
+SWITCH_DEFINITIONS_VA = SWITCH_DEFINITIONS_V3
+SWITCH_DEFINITIONS_VD = SWITCH_DEFINITIONS_V3
+BUTTON_DEFINITIONS_VA = BUTTON_DEFINITIONS_V3
+BUTTON_DEFINITIONS_VD = BUTTON_DEFINITIONS_V3
+
+NUMBER_DEFINITIONS_VA = [
+    {
+        "register": 42020,
+        "name": "Set Charge Power",
+        "key": "set_charge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-up-outline",
+        "min": 0,
+        "max": 1200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 42021,
+        "name": "Set Discharge Power",
+        "key": "set_discharge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-down-outline",
+        "min": 0,
+        "max": 1200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 44002,
+        "name": "Max Charge Power",
+        "key": "max_charge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-up-outline",
+        "min": 0,
+        "max": 1200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 44003,
+        "name": "Max Discharge Power",
+        "key": "max_discharge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-down-outline",
+        "min": 0,
+        "max": 1200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
     {
         "register": 42011,
-        "name": "Charge to SOC",
+        "name": "Charge To SOC",
         "key": "charge_to_soc",
         "enabled_by_default": False,
         "icon": "mdi:battery-sync-outline",
@@ -814,16 +1176,72 @@ NUMBER_DEFINITIONS_V3 = [
     },
 ]
 
-BUTTON_DEFINITIONS_V3 = [
+NUMBER_DEFINITIONS_VD = [
     {
-        "register": 41000,
-        "command": 21930,
-        "icon": "mdi:restart",
-        "category": "diagnostic",
-        "name": "Reset Device",
-        "key": "reset_device",
+        "register": 42020,
+        "name": "Set Charge Power",
+        "key": "set_charge_power",
         "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-up-outline",
+        "min": 0,
+        "max": 2200,
+        "step": 50,
+        "unit": "W",
         "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 42021,
+        "name": "Set Discharge Power",
+        "key": "set_discharge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-down-outline",
+        "min": 0,
+        "max": 2200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 44002,
+        "name": "Max Charge Power",
+        "key": "max_charge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-up-outline",
+        "min": 0,
+        "max": 2200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 44003,
+        "name": "Max Discharge Power",
+        "key": "max_discharge_power",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-arrow-down-outline",
+        "min": 0,
+        "max": 2200,
+        "step": 50,
+        "unit": "W",
+        "data_type": "uint16",
+        "scan_interval": "high",
+    },
+    {
+        "register": 42011,
+        "name": "Charge To SOC",
+        "key": "charge_to_soc",
+        "enabled_by_default": False,
+        "icon": "mdi:battery-sync-outline",
+        "min": 10,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "scale": 1,
+        "data_type": "uint16",
+        "scan_interval": "high",
     },
 ]
 
@@ -870,6 +1288,16 @@ SOC_REEVALUATION_THRESHOLD = 30  # Re-evaluate every 30% SOC drop
 # Weekly Full Charge Configuration
 CONF_ENABLE_WEEKLY_FULL_CHARGE = "enable_weekly_full_charge"
 CONF_WEEKLY_FULL_CHARGE_DAY = "weekly_full_charge_day"
+CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
+CONF_DELAY_SAFETY_MARGIN_MIN = "delay_safety_margin_min"
+DEFAULT_DELAY_SAFETY_MARGIN_MIN = 40
+
+# Weekly Full Charge Delay Constants
+CHARGE_EFFICIENCY = 0.85  # Conservative factor for charge power estimation
+DELAY_SAFETY_FACTOR = 1.3  # 30% margin on energy balance
+LOW_FORECAST_THRESHOLD_FACTOR = 1.5  # forecast < 1.5 × capacity → bad solar day
+T_START_THRESHOLD_KWH = 0.1  # Threshold to detect solar production start
+T_START_FALLBACK_HOUR = 11  # If no T_start by 11:00, unlock immediately
 
 # Weekday mapping (mon=0, sun=6, matches datetime.weekday())
 WEEKDAY_MAP = {

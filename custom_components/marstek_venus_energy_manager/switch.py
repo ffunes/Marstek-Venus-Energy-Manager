@@ -77,10 +77,14 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
+        if self.definition["key"] == "rs485_control_mode":
+            self.coordinator.rs485_user_disabled = False
         await self.coordinator.write_register(self._register, self._command_on, do_refresh=True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
+        if self.definition["key"] == "rs485_control_mode":
+            self.coordinator.rs485_user_disabled = True
         await self.coordinator.write_register(self._register, self._command_off, do_refresh=True)
 
     @property

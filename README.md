@@ -1,7 +1,7 @@
-# Marstek Venus Energy Manager
+# Marstek Venus Energy Manager for Home Assistant
 
 
-The **Marstek Venus Energy Manager** is a comprehensive Home Assistant integration designed to monitor and control Marstek Venus E series batteries (v2 and v3) via Modbus TCP. It provides advanced energy management features including predictive grid charging, customizable time slots for discharge control, and device load exclusion logic.
+The **Marstek Venus Energy Manager** is a comprehensive Home Assistant integration designed to monitor and control Marstek Venus E series batteries (v2 and v3) and Venus D and Venus A series batteries via Modbus TCP. It provides advanced energy management features including predictive grid charging, customizable time slots for discharge control, and device load exclusion logic.
 
 > [!CAUTION]
 > **LIABILITY DISCLAIMER:**
@@ -57,7 +57,7 @@ This is the primary operating mode of the integration, designed to maximize self
 ## Requirements
 
 *   **Hardware:** 
-    *   Marstek Venus E v2/v3 Battery.
+    *   Marstek Venus E v2/v3, Venus A or Venus D Battery.
     *   **Modbus to WiFi Converter:** A device to bridge the battery's RS485 Modbus to your network via TCP. (e.g., **Elfin-EW11**).
     *   **Grid Consumption Sensor:** A Home Assistant sensor tracking your home's total grid consumption (e.g., from a Shelly EM3, Neural, or smart meter integration).
 *   **Network:** The battery must be on the same network as Home Assistant or reachable via IP.
@@ -138,6 +138,10 @@ Automatically charge the battery from the grid during a specific window if tomor
 LFP batteries need to hit 100% periodically to balance individual cells.
 *   **Enable**: Check "Configure weekly full charge".
 *   **Day**: Select the day of the week (e.g., `Sunday`) to force a charge to 100%, overriding any other limits.
+*   **Delay until needed (Solar-Aware)**: Optional. When enabled, the system delays the 100% charge instead of starting at midnight. It evaluates the solar forecast and only unlocks the full charge when remaining solar production won't be enough to cover household consumption plus the energy needed to reach 100%. This maximizes solar self-consumption on the balancing day.
+    *   **Solar Forecast Sensor**: Required if not already configured in Predictive Charging. Provides the next-day solar production estimate (kWh).
+    *   **How it works**: The system captures the solar forecast the night before (23:00), then on the balancing day uses a sinusoidal model to estimate remaining solar energy at any given time. If `remaining_solar < (consumption_until_sunset + energy_to_100%) × safety_factor`, the 100% charge is unlocked.
+    *   **Fallback**: If no forecast is available or forecast is very low, the charge unlocks immediately at midnight (safe default).
 
 ### 8. Advanced PD Controller (Expert Mode)
 > [!WARNING] 
