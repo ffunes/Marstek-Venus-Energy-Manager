@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.1] - 2026-03-12
+
+### Fixed
+- **System SOC decimal precision for v3 batteries**: The `System SOC` aggregate sensor now displays one decimal place when any battery in the system is a v3/vA/vD model, matching the higher-resolution SOC readings provided by those batteries.
+
 ## [1.3.0] - 2026-03-12
 
 ### Added

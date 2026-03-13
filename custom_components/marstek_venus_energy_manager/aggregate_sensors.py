@@ -141,12 +141,17 @@ class MarstekVenusAggregateSensor(SensorEntity):
                 soc = coordinator.data.get("battery_soc")
                 if soc is not None:
                     soc_values.append(soc)
-        
+
         if not soc_values:
             return None
-        
+
         avg_soc = sum(soc_values) / len(soc_values)
-        return round(avg_soc, self.definition.get("precision", 0))
+        has_v3 = any(
+            getattr(c, "battery_version", "v2") in ("v3", "vA", "vD")
+            for c in self.coordinators
+        )
+        precision = 1 if has_v3 else self.definition.get("precision", 0)
+        return round(avg_soc, precision)
 
     def _calculate_total_charge_power(self) -> float | None:
         """Calculate total charge power across all batteries.
