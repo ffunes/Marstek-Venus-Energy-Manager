@@ -1,12 +1,14 @@
 # Changelog
 
-## [1.3.2] - 2026-03-17
-
-### Changed
-- **Min charge/discharge power slider range increased**: The maximum value for `Min Charge Power` and `Min Discharge Power` in both the PD Advanced options flow and the number entities has been raised from 500W to 2000W, allowing higher idle thresholds for systems with larger batteries.
+## [1.3.3] - 2026-03-17
 
 ### Fixed
 - **Hassfest manifest validation**: Removed unsupported `icon` field from `manifest.json` and added `recorder` to `after_dependencies` to declare the integration's usage of the recorder component.
+
+## [1.3.2] - 2026-03-17
+
+### Changed
+- **Min charge/discharge power slider range increased**: The maximum value for `Min Charge Power` and `Min Discharge Power` in both the PD Advanced options flow and the number entities has been raised from 500W to 2000W, allowing higher idle thresholds for systems with large PV Systems.
 
 ## [1.3.1] - 2026-03-12
 
