@@ -1535,7 +1535,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional("pd_min_charge_power", default=current_min_charge):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=0, max=500, step=10,
+                                min=0, max=2000, step=10,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="W",
                             )
@@ -1543,7 +1543,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional("pd_min_discharge_power", default=current_min_discharge):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=0, max=500, step=10,
+                                min=0, max=2000, step=10,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="W",
                             )

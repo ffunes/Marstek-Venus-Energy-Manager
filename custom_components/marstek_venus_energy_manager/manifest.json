@@ -8,7 +8,7 @@
   "documentation": "https://github.com/ffunes/marstek-venus-energy-manager",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/ffunes/marstek-venus-energy-manager/issues",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "requirements": [
     "pymodbus>=3.5.0"
   ],
@@ -16,5 +16,7 @@
     "_modbus._tcp.local."
   ],
   "integration_type": "device",
-  "icon": "mdi:battery-heart"
+  "after_dependencies": [
+    "recorder"
+  ]
 }
