@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, BINARY_SENSOR_DEFINITIONS
+from .const import DOMAIN, BINARY_SENSOR_DEFINITIONS, CONF_CAPACITY_PROTECTION_ENABLED
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,6 +39,10 @@ async def async_setup_entry(
     # Add predictive charging status sensor (system-level)
     if controller and controller.predictive_charging_enabled:
         entities.append(PredictiveChargingStatusSensor(hass, entry, controller))
+
+    # Add capacity protection status sensor (system-level, when configured, regardless of enabled state)
+    if controller and CONF_CAPACITY_PROTECTION_ENABLED in entry.data:
+        entities.append(CapacityProtectionStatusSensor(hass, entry, controller))
 
     async_add_entities(entities)
 
@@ -150,6 +154,54 @@ class ChargeHysteresisActiveSensor(RestoreEntity, BinarySensorEntity):
         }
 
 
+class CapacityProtectionStatusSensor(BinarySensorEntity):
+    """Binary sensor indicating if capacity protection is currently intervening."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the status sensor."""
+        self.hass = hass
+        self.entry = entry
+        self.controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "capacity_protection_active"
+        self._attr_unique_id = f"{entry.entry_id}_capacity_protection_active"
+        self._attr_device_class = "running"
+        self._attr_icon = "mdi:shield-alert"
+        self._attr_should_poll = True
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def is_on(self):
+        """Return true if capacity protection is actively intervening."""
+        return self.controller._capacity_protection_active
+
+    @property
+    def extra_state_attributes(self):
+        """Return diagnostic attributes about the protection state."""
+        status = self.controller._capacity_protection_status
+        return {
+            "enabled": self.controller.capacity_protection_enabled,
+            "avg_soc": status.get("avg_soc"),
+            "soc_threshold": status.get("soc_threshold"),
+            "peak_limit_w": status.get("peak_limit"),
+            "estimated_house_load_w": status.get("estimated_house_load"),
+            "action": status.get("action"),
+            "original_target_w": status.get("original_target"),
+            "adjusted_target_w": status.get("adjusted_target"),
+        }
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
 class PredictiveChargingStatusSensor(BinarySensorEntity):
     """Binary sensor indicating if predictive grid charging is currently active."""
 
@@ -158,8 +210,9 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
         self.hass = hass
         self.entry = entry
         self.controller = controller
-        
-        self._attr_name = "Predictive Charging Active"
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "predictive_charging_active"
         self._attr_unique_id = f"{entry.entry_id}_predictive_charging_active"
         self._attr_device_class = "running"
         self._attr_icon = "mdi:battery-charging-wireless"

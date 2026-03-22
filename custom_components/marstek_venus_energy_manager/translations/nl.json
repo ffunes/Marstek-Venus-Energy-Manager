@@ -3,12 +3,14 @@
     "step": {
       "user": {
         "title": "Marstek Venus Energy Manager configureren",
-        "description": "Selecteer de sensor die het netimport/-exportvermogen meet.",
+        "description": "Selecteer de sensor die het netimport/-exportvermogen meet. Optioneel kunt u de zonne-voorspellingssensor configureren voor geavanceerde functies.",
         "data": {
-          "consumption_sensor": "Netverbruikssensor"
+          "consumption_sensor": "Netverbruikssensor",
+          "solar_forecast_sensor": "Zonne-voorspellingssensor (optioneel)"
         },
         "data_description": {
-          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft. De controller past de batterijen aan om deze waarde dicht bij 0W te houden."
+          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft. De controller past de batterijen aan om deze waarde dicht bij 0W te houden.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Indien hier geconfigureerd, wordt deze automatisch gebruikt voor voorspellend laden en zonne-oplaadvertraging."
         }
       },
       "batteries": {
@@ -150,16 +152,48 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week",
-          "enable_weekly_full_charge_delay": "100% lading uitstellen tot de middag",
-          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
-          "delay_safety_margin_min": "Veiligheidsmarge (minuten)"
+          "weekly_full_charge_day": "Dag van de week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "enable_weekly_full_charge_delay": "Houdt batterijen op de geconfigureerde maximale SOC tijdens de ochtend en ontgrendelt 100% pas wanneer de resterende zonne-energie net genoeg is om de lading te voltooien. Beschermt batterijen tegen hoge temperaturen bij volledige lading en geeft prioriteit aan zonne-eigenverbruik.",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert. Vereist als de vertraging is ingeschakeld en voorspellend laden niet is geconfigureerd.",
-          "delay_safety_margin_min": "Tijdbuffer voor zonsondergang. Het systeem ontgrendelt het laden dit aantal minuten voor het geschatte einde van de zonneproductie om genoeg tijd te garanderen voor het voltooien van de lading."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+        }
+      },
+      "charge_delay": {
+        "title": "Zonne-oplaadvertraging",
+        "description": "Zonne-oplaadvertraging inschakelen? Deze functie vertraagt het laden van de batterijen totdat de zonne-energiebalans aangeeft dat het nodig is, en exporteert overtollige zonne-energie naar het net in de tussentijd.",
+        "data": {
+          "configure_charge_delay": "Oplaadvertraging configureren"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Configuratie oplaadvertraging",
+        "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
+        "data": {
+          "delay_safety_margin_h": "Veiligheidsmarge (uren)",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Vereist als deze niet in de eerste stap is geconfigureerd."
+        }
+      },
+      "capacity_protection": {
+        "title": "Capaciteitsbeschermingsmodus",
+        "description": "Indien ingeschakeld, als de batterij-SOC onder een drempel daalt, spaart het systeem energie door alleen te ontladen om verbruik boven een pieklimiet te compenseren.",
+        "data": {
+          "configure_capacity_protection": "Capaciteitsbescherming inschakelen"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Capaciteitsbescherming configuratie",
+        "description": "Configureer de SOC-drempel waaronder de bescherming activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
+        "data": {
+          "capacity_protection_soc_threshold": "SOC-drempel (%)",
+          "capacity_protection_limit": "Pieklimiet (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de capaciteitsbescherming geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
+          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de bescherming actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
         }
       }
     },
@@ -181,10 +215,12 @@
         "title": "Marstek Venus Energy Manager opnieuw configureren",
         "description": "Wijzig de integratieconfiguratie. Wijzigingen worden toegepast bij het herstarten van de integratie.",
         "data": {
-          "consumption_sensor": "Netverbruikssensor"
+          "consumption_sensor": "Netverbruikssensor",
+          "solar_forecast_sensor": "Zonne-voorspellingssensor (optioneel)"
         },
         "data_description": {
-          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft."
+          "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Indien hier geconfigureerd, wordt deze automatisch gebruikt voor voorspellend laden en zonne-oplaadvertraging."
         }
       },
       "batteries": {
@@ -326,16 +362,48 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week",
-          "enable_weekly_full_charge_delay": "100% lading uitstellen tot de middag",
-          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
-          "delay_safety_margin_min": "Veiligheidsmarge (minuten)"
+          "weekly_full_charge_day": "Dag van de week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "enable_weekly_full_charge_delay": "Houdt batterijen op de geconfigureerde maximale SOC tijdens de ochtend en ontgrendelt 100% pas wanneer de resterende zonne-energie net genoeg is om de lading te voltooien. Beschermt batterijen tegen hoge temperaturen bij volledige lading en geeft prioriteit aan zonne-eigenverbruik.",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert. Vereist als de vertraging is ingeschakeld en voorspellend laden niet is geconfigureerd.",
-          "delay_safety_margin_min": "Tijdbuffer voor zonsondergang. Het systeem ontgrendelt het laden dit aantal minuten voor het geschatte einde van de zonneproductie om genoeg tijd te garanderen voor het voltooien van de lading."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+        }
+      },
+      "charge_delay": {
+        "title": "Zonne-oplaadvertraging",
+        "description": "Zonne-oplaadvertraging inschakelen? Deze functie vertraagt het laden van de batterijen totdat de zonne-energiebalans aangeeft dat het nodig is, en exporteert overtollige zonne-energie naar het net in de tussentijd.",
+        "data": {
+          "configure_charge_delay": "Oplaadvertraging configureren"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Configuratie oplaadvertraging",
+        "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
+        "data": {
+          "delay_safety_margin_h": "Veiligheidsmarge (uren)",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Vereist als deze niet in de eerste stap is geconfigureerd."
+        }
+      },
+      "capacity_protection": {
+        "title": "Capaciteitsbeschermingsmodus",
+        "description": "Indien ingeschakeld, als de batterij-SOC onder een drempel daalt, spaart het systeem energie door alleen te ontladen om verbruik boven een pieklimiet te compenseren.",
+        "data": {
+          "configure_capacity_protection": "Capaciteitsbescherming inschakelen"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Capaciteitsbescherming configuratie",
+        "description": "Configureer de SOC-drempel waaronder de bescherming activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
+        "data": {
+          "capacity_protection_soc_threshold": "SOC-drempel (%)",
+          "capacity_protection_limit": "Pieklimiet (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de capaciteitsbescherming geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
+          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de bescherming actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
         }
       },
       "pd_advanced": {
@@ -388,6 +456,119 @@
         "sat": "Zaterdag",
         "sun": "Zondag"
       }
+    }
+  },
+  "entity": {
+    "switch": {
+      "manual_mode": { "name": "Handmatige Modus" },
+      "predictive_charging": { "name": "Voorspellend Laden" },
+      "charge_delay": { "name": "Laadvertraging" },
+      "capacity_protection": { "name": "Capaciteitsbescherming" },
+      "backup_function": { "name": "Back-upfunctie" },
+      "rs485_control_mode": { "name": "RS485-besturingsmodus" }
+    },
+    "sensor": {
+      "excluded_devices": { "name": "Uitgesloten Apparaten" },
+      "discharge_window": {
+        "name": "Ontlaadvenster",
+        "state": {
+          "no_slots": "Geen tijdslots",
+          "inactive": "Inactief",
+          "active": "Actief"
+        }
+      },
+      "active_batteries": { "name": "Actieve Batterijen" },
+      "weekly_full_charge": {
+        "name": "Wekelijkse Volledige Lading",
+        "state": {
+          "idle": "Inactief",
+          "disabled": "Uitgeschakeld",
+          "charging": "Laden naar 100%",
+          "complete": "Voltooid"
+        }
+      },
+      "charge_delay_status": {
+        "name": "Laadvertraging",
+        "state": {
+          "idle": "Inactief",
+          "disabled": "Uitgeschakeld",
+          "waiting_for_solar": "Wachten op zon",
+          "delayed": "Vertraagd",
+          "charging_allowed": "Laden toegestaan"
+        }
+      },
+      "battery_soc": { "name": "Batterij SOC" },
+      "battery_total_energy": { "name": "Totale Batterijenergie" },
+      "battery_power": { "name": "Batterijvermogen" },
+      "internal_temperature": { "name": "Interne Temperatuur" },
+      "ac_power": { "name": "AC-Vermogen" },
+      "total_charging_energy": { "name": "Totale Laadenergie" },
+      "total_discharging_energy": { "name": "Totale Ontlaadenergie" },
+      "total_daily_charging_energy": { "name": "Dagelijkse Laadenergie" },
+      "total_daily_discharging_energy": { "name": "Dagelijkse Ontlaadenergie" },
+      "inverter_state": { "name": "Omvormerstatus" },
+      "battery_voltage": { "name": "Batterijspanning" },
+      "max_cell_voltage": { "name": "Maximale Celspanning" },
+      "min_cell_voltage": { "name": "Minimale Celspanning" },
+      "fault_status": { "name": "Foutstatus" },
+      "alarm_status": { "name": "Alarmstatus" },
+      "ac_offgrid_power": { "name": "AC Off-grid Vermogen" },
+      "mppt1_power": { "name": "MPPT1-Vermogen" },
+      "mppt2_power": { "name": "MPPT2-Vermogen" },
+      "mppt3_power": { "name": "MPPT3-Vermogen" },
+      "mppt4_power": { "name": "MPPT4-Vermogen" },
+      "round_trip_efficiency_total": { "name": "Totaal Rendement" },
+      "stored_energy": { "name": "Opgeslagen Energie" },
+      "system_soc": { "name": "Systeem SOC" },
+      "system_charge_power": { "name": "Systeem Laadvermogen" },
+      "system_discharge_power": { "name": "Systeem Ontlaadvermogen" },
+      "system_total_energy": { "name": "Systeem Totale Energie" },
+      "system_stored_energy": { "name": "Systeem Opgeslagen Energie" },
+      "system_daily_charging_energy": { "name": "Dagelijkse Systeem Laadenergie" },
+      "system_daily_discharging_energy": { "name": "Dagelijkse Systeem Ontlaadenergie" }
+    },
+    "binary_sensor": {
+      "capacity_protection_active": { "name": "Capaciteitsbescherming Actief" },
+      "predictive_charging_active": { "name": "Voorspellend Laden Actief" }
+    },
+    "select": {
+      "force_mode": { "name": "Geforceerde Modus" },
+      "user_work_mode": { "name": "Werkmodus" },
+      "weekly_full_charge_day": {
+        "name": "Dag voor Wekelijkse Volledige Lading",
+        "state": {
+          "Monday": "Maandag",
+          "Tuesday": "Dinsdag",
+          "Wednesday": "Woensdag",
+          "Thursday": "Donderdag",
+          "Friday": "Vrijdag",
+          "Saturday": "Zaterdag",
+          "Sunday": "Zondag"
+        }
+      }
+    },
+    "number": {
+      "set_charge_power": { "name": "Laadvermogen" },
+      "set_discharge_power": { "name": "Ontlaadvermogen" },
+      "max_charge_power": { "name": "Max. Laadvermogen" },
+      "max_discharge_power": { "name": "Max. Ontlaadvermogen" },
+      "charging_cutoff_capacity": { "name": "SOC Laadgrens" },
+      "discharging_cutoff_capacity": { "name": "SOC Ontlaadgrens" },
+      "charge_to_soc": { "name": "Laden tot SOC" },
+      "pd_controller_kp": { "name": "PD Kp" },
+      "pd_controller_kd": { "name": "PD Kd" },
+      "pd_controller_deadband": { "name": "PD Dode Zone" },
+      "pd_controller_max_power_change": { "name": "PD Max. Vermogenswijziging" },
+      "pd_controller_direction_hysteresis": { "name": "PD Richtingshysterese" },
+      "pd_min_charge_power": { "name": "PD Min. Laadvermogen" },
+      "pd_min_discharge_power": { "name": "PD Min. Ontlaadvermogen" },
+      "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
+      "capacity_protection_soc_threshold": { "name": "SOC Drempel Capaciteitsbeveiliging" },
+      "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
+      "capacity_protection_limit": { "name": "Piekgrens Beveiliging" }
+    },
+    "button": {
+      "reset_device": { "name": "Apparaat Resetten" }
     }
   }
 }

@@ -36,8 +36,9 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, SensorEntity):
         """Initialize the efficiency sensor."""
         super().__init__(coordinator)
         self.definition = definition
-        
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
@@ -51,16 +52,16 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, SensorEntity):
         """Return the state of the efficiency sensor."""
         if self.coordinator.data is None:
             return None
-            
+
         charge_key = self._dependency_keys["charge"]
         discharge_key = self._dependency_keys["discharge"]
-        
+
         charge_energy = self.coordinator.data.get(charge_key, 0)
         discharge_energy = self.coordinator.data.get(discharge_key, 0)
-        
+
         if charge_energy <= 0:
             return None
-            
+
         efficiency = (discharge_energy / charge_energy) * 100
         return round(efficiency, 2)
 
@@ -84,8 +85,9 @@ class MarstekVenusStoredEnergySensor(CoordinatorEntity, SensorEntity):
         """Initialize the stored energy sensor."""
         super().__init__(coordinator)
         self.definition = definition
-        
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
@@ -99,16 +101,16 @@ class MarstekVenusStoredEnergySensor(CoordinatorEntity, SensorEntity):
         """Return the state of the stored energy sensor."""
         if self.coordinator.data is None:
             return None
-            
+
         soc_key = self._dependency_keys["soc"]
         capacity_key = self._dependency_keys["capacity"]
-        
+
         soc = self.coordinator.data.get(soc_key, 0)
         capacity = self.coordinator.data.get(capacity_key, 0)
-        
+
         if capacity <= 0:
             return None
-            
+
         stored_energy = (soc / 100) * capacity
         return round(stored_energy, 3)
 

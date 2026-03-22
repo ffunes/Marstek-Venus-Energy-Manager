@@ -50,7 +50,8 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         super().__init__(coordinator)
         self.definition = definition
         
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_options = list(definition["options"].keys())
         self._attr_should_poll = False
@@ -101,7 +102,8 @@ class WeeklyFullChargeDaySelect(SelectEntity):
         self.hass = hass
         self.entry = entry
 
-        self._attr_name = "Weekly Full Charge Day"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "weekly_full_charge_day"
         self._attr_unique_id = f"{entry.entry_id}_weekly_full_charge_day"
         self._attr_icon = "mdi:calendar-week"
         self._attr_options = WEEKDAY_OPTIONS

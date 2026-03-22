@@ -95,7 +95,8 @@ class MarstekVenusAggregateSensor(SensorEntity):
         self.hass = hass
 
         # Set entity attributes
-        self._attr_name = f"Marstek Venus {definition['name']}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"marstek_venus_system_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")

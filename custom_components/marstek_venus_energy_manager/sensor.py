@@ -10,7 +10,13 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS
+from .const import (
+    DOMAIN,
+    EFFICIENCY_SENSOR_DEFINITIONS,
+    STORED_ENERGY_SENSOR_DEFINITIONS,
+    CONF_ENABLE_CHARGE_DELAY,
+    CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
+)
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor
 from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor
@@ -72,6 +78,14 @@ async def async_setup_entry(
     if controller and controller.weekly_full_charge_enabled:
         entities.append(WeeklyFullChargeSensor(hass, entry, controller))
 
+    # Add charge delay sensor (when charge delay is configured, regardless of enabled state)
+    has_charge_delay_config = (
+        CONF_ENABLE_CHARGE_DELAY in entry.data
+        or CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY in entry.data
+    )
+    if controller and has_charge_delay_config:
+        entities.append(ChargeDelaySensor(hass, entry, controller))
+
     async_add_entities(entities)
 
 
@@ -86,7 +100,8 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
         self.definition = definition
         
         # Set entity attributes
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
@@ -147,7 +162,8 @@ class ExcludedDevicesConfigSensor(SensorEntity):
         self.hass = hass
         self.entry = entry
 
-        self._attr_name = "Excluded Devices"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "excluded_devices"
         self._attr_unique_id = f"{entry.entry_id}_config_excluded_devices"
         self._attr_icon = "mdi:devices"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -189,7 +205,8 @@ class DischargeWindowSensor(SensorEntity):
         self.hass = hass
         self.entry = entry
 
-        self._attr_name = "Discharge Window"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "discharge_window"
         self._attr_unique_id = f"{entry.entry_id}_discharge_window"
         self._attr_icon = "mdi:clock-check-outline"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -204,7 +221,7 @@ class DischargeWindowSensor(SensorEntity):
         enabled_slots = [s for s in all_slots if s.get("enabled", True)]
 
         if not enabled_slots:
-            return "No slots"
+            return "no_slots"
 
         now = datetime.now()
         current_time = now.time()
@@ -219,9 +236,9 @@ class DischargeWindowSensor(SensorEntity):
             except Exception:
                 continue
             if start_time <= current_time <= end_time:
-                return f"Active (Slot {i + 1})"
+                return "active"
 
-        return "Inactive"
+        return "inactive"
 
     @property
     def extra_state_attributes(self) -> dict:
@@ -289,7 +306,8 @@ class ActiveBatteriesSensor(SensorEntity):
         self.controller = controller
         self._coordinators = coordinators
 
-        self._attr_name = "Active Batteries"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "active_batteries"
         self._attr_unique_id = f"{entry.entry_id}_active_batteries"
         self._attr_icon = "mdi:battery-sync"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -356,7 +374,8 @@ class WeeklyFullChargeSensor(SensorEntity):
         self.entry = entry
         self._controller = controller
 
-        self._attr_name = "Weekly Full Charge"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "weekly_full_charge"
         self._attr_unique_id = f"{entry.entry_id}_weekly_full_charge_status"
         self._attr_icon = "mdi:battery-clock"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -364,20 +383,82 @@ class WeeklyFullChargeSensor(SensorEntity):
 
     @property
     def native_value(self) -> str:
-        """Return the current weekly charge status."""
-        return self._controller._weekly_charge_status.get("state", "Idle")
+        """Return the current weekly charge status as a translation key."""
+        state = self._controller._weekly_charge_status.get("state", "Idle")
+        return {
+            "Idle": "idle",
+            "Disabled": "disabled",
+            "Charging to 100%": "charging",
+            "Complete": "complete",
+        }.get(state, "idle")
 
     @property
     def extra_state_attributes(self) -> dict:
-        """Return calculation details as attributes."""
-        status = self._controller._weekly_charge_status
+        """Return weekly charge details as attributes."""
         attrs = {
             "weekly_charge_day": self._controller.weekly_full_charge_day,
-            "delay_enabled": self._controller.enable_weekly_full_charge_delay,
+            "charge_delay_enabled": self._controller.charge_delay_enabled,
+        }
+        return attrs
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class ChargeDelaySensor(SensorEntity):
+    """Sensor showing estimated charge start time for the unified charge delay.
+
+    Shows the estimated unlock time as HH:MM or current delay status.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the charge delay sensor."""
+        self.hass = hass
+        self.entry = entry
+        self._controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "charge_delay_status"
+        self._attr_unique_id = f"{entry.entry_id}_charge_delay_status"
+        self._attr_icon = "mdi:clock-alert-outline"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_should_poll = True
+
+    @property
+    def native_value(self) -> str:
+        """Return the charge delay state as a translation key."""
+        status = self._controller._charge_delay_status
+        state = status.get("state", "Idle")
+
+        if state.startswith("Delayed"):
+            return "delayed"
+
+        if state.startswith("Waiting"):
+            return "waiting_for_solar"
+
+        if state.startswith("Unlocking") or state == "Charging allowed":
+            return "charging_allowed"
+
+        return state.lower()  # "idle", "disabled"
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return delay calculation details."""
+        status = self._controller._charge_delay_status
+
+        attrs = {
+            "state": status.get("state", "Idle"),
+            "target_soc": status.get("target_soc"),
             "safety_margin_min": status.get("safety_margin_min"),
         }
 
-        # Only include calculation details when relevant
         for key in (
             "forecast_kwh", "solar_t_start", "solar_t_end",
             "energy_needed_kwh", "remaining_solar_kwh",

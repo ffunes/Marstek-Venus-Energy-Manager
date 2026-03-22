@@ -447,6 +447,18 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Update the coordinator's data
         self.data.update(updated_data)
 
+        # Sync control attributes from polled register values so that changes made
+        # via the UI (number entities) survive HA restarts. The hardware register is
+        # the source of truth; config_entry.data holds only the initial defaults.
+        if "charging_cutoff_capacity" in self.data:
+            self.max_soc = int(self.data["charging_cutoff_capacity"])
+        if "discharging_cutoff_capacity" in self.data:
+            self.min_soc = int(self.data["discharging_cutoff_capacity"])
+        if "max_charge_power" in self.data:
+            self.max_charge_power = int(self.data["max_charge_power"])
+        if "max_discharge_power" in self.data:
+            self.max_discharge_power = int(self.data["max_discharge_power"])
+
         # Log updates for debugging
         if updated_data:
             _LOGGER.debug("[%s] Updated %d sensors: %s", self.name, len(updated_data), list(updated_data.keys()))
