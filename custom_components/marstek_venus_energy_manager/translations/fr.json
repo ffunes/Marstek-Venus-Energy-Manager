@@ -3,12 +3,14 @@
     "step": {
       "user": {
         "title": "Configurer Marstek Venus Energy Manager",
-        "description": "Sélectionnez le capteur qui mesure l'importation/exportation du réseau électrique.",
+        "description": "Sélectionnez le capteur qui mesure l'importation/exportation du réseau électrique. Optionnellement, configurez le capteur de prévision solaire pour les fonctionnalités avancées.",
         "data": {
-          "consumption_sensor": "Capteur de consommation réseau"
+          "consumption_sensor": "Capteur de consommation réseau",
+          "solar_forecast_sensor": "Capteur de prévision solaire (optionnel)"
         },
         "data_description": {
-          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau. Le contrôleur ajustera les batteries pour maintenir cette valeur proche de 0W."
+          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau. Le contrôleur ajustera les batteries pour maintenir cette valeur proche de 0W.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). S'il est configuré ici, il sera utilisé automatiquement pour la charge prédictive et le retard de charge solaire."
         }
       },
       "batteries": {
@@ -150,16 +152,48 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine",
-          "enable_weekly_full_charge_delay": "Retarder la charge à 100% jusqu'à l'après-midi",
-          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
-          "delay_safety_margin_min": "Marge de sécurité (minutes)"
+          "weekly_full_charge_day": "Jour de la semaine"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "enable_weekly_full_charge_delay": "Maintient les batteries au SOC maximum configuré le matin et ne déverrouille 100% que lorsque l'énergie solaire restante est tout juste suffisante pour compléter la charge. Protège les batteries des températures élevées à pleine charge et priorise l'autoconsommation solaire.",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh. Requis si le retard est activé et que la charge prédictive n'est pas configurée.",
-          "delay_safety_margin_min": "Tampon de temps avant le coucher du soleil. Le système déverrouille la charge ce nombre de minutes avant la fin estimée de la production solaire pour assurer suffisamment de temps pour compléter la charge."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+        }
+      },
+      "charge_delay": {
+        "title": "Retard de charge solaire",
+        "description": "Activer le retard de charge solaire ? Cette fonction retarde la charge des batteries jusqu'à ce que le bilan d'énergie solaire indique que c'est nécessaire, en exportant l'excédent solaire vers le réseau en attendant.",
+        "data": {
+          "configure_charge_delay": "Configurer le retard de charge"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Configuration du retard de charge",
+        "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
+        "data": {
+          "delay_safety_margin_h": "Marge de sécurité (heures)",
+          "solar_forecast_sensor": "Capteur de prévision solaire"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Requis s'il n'a pas été configuré à l'étape initiale."
+        }
+      },
+      "capacity_protection": {
+        "title": "Mode de protection de capacité",
+        "description": "Si activé, lorsque le SOC de la batterie descend en dessous d'un seuil, le système économise l'énergie en ne déchargeant que pour compenser la consommation dépassant une limite de pointe.",
+        "data": {
+          "configure_capacity_protection": "Activer la protection de capacité"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Configuration de la protection de capacité",
+        "description": "Configurez le seuil de SOC en dessous duquel la protection s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
+        "data": {
+          "capacity_protection_soc_threshold": "Seuil de SOC (%)",
+          "capacity_protection_limit": "Limite de pointe (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, la protection de capacité s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
+          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que la protection est active, la batterie ne décharge que l'excès au-dessus de cette limite."
         }
       }
     },
@@ -181,10 +215,12 @@
         "title": "Reconfigurer Marstek Venus Energy Manager",
         "description": "Modifiez la configuration de l'intégration. Les modifications seront appliquées lors du redémarrage de l'intégration.",
         "data": {
-          "consumption_sensor": "Capteur de consommation réseau"
+          "consumption_sensor": "Capteur de consommation réseau",
+          "solar_forecast_sensor": "Capteur de prévision solaire (optionnel)"
         },
         "data_description": {
-          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau."
+          "consumption_sensor": "Capteur qui indique la puissance importée (+) ou exportée (-) vers le réseau.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). S'il est configuré ici, il sera utilisé automatiquement pour la charge prédictive et le retard de charge solaire."
         }
       },
       "batteries": {
@@ -326,16 +362,48 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine",
-          "enable_weekly_full_charge_delay": "Retarder la charge à 100% jusqu'à l'après-midi",
-          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
-          "delay_safety_margin_min": "Marge de sécurité (minutes)"
+          "weekly_full_charge_day": "Jour de la semaine"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "enable_weekly_full_charge_delay": "Maintient les batteries au SOC maximum configuré le matin et ne déverrouille 100% que lorsque l'énergie solaire restante est tout juste suffisante pour compléter la charge. Protège les batteries des températures élevées à pleine charge et priorise l'autoconsommation solaire.",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh. Requis si le retard est activé et que la charge prédictive n'est pas configurée.",
-          "delay_safety_margin_min": "Tampon de temps avant le coucher du soleil. Le système déverrouille la charge ce nombre de minutes avant la fin estimée de la production solaire pour assurer suffisamment de temps pour compléter la charge."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+        }
+      },
+      "charge_delay": {
+        "title": "Retard de charge solaire",
+        "description": "Activer le retard de charge solaire ? Cette fonction retarde la charge des batteries jusqu'à ce que le bilan d'énergie solaire indique que c'est nécessaire, en exportant l'excédent solaire vers le réseau en attendant.",
+        "data": {
+          "configure_charge_delay": "Configurer le retard de charge"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Configuration du retard de charge",
+        "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
+        "data": {
+          "delay_safety_margin_h": "Marge de sécurité (heures)",
+          "solar_forecast_sensor": "Capteur de prévision solaire"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Requis s'il n'a pas été configuré à l'étape initiale."
+        }
+      },
+      "capacity_protection": {
+        "title": "Mode de protection de capacité",
+        "description": "Si activé, lorsque le SOC de la batterie descend en dessous d'un seuil, le système économise l'énergie en ne déchargeant que pour compenser la consommation dépassant une limite de pointe.",
+        "data": {
+          "configure_capacity_protection": "Activer la protection de capacité"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Configuration de la protection de capacité",
+        "description": "Configurez le seuil de SOC en dessous duquel la protection s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
+        "data": {
+          "capacity_protection_soc_threshold": "Seuil de SOC (%)",
+          "capacity_protection_limit": "Limite de pointe (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, la protection de capacité s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
+          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que la protection est active, la batterie ne décharge que l'excès au-dessus de cette limite."
         }
       },
       "pd_advanced": {
@@ -388,6 +456,119 @@
         "sat": "Samedi",
         "sun": "Dimanche"
       }
+    }
+  },
+  "entity": {
+    "switch": {
+      "manual_mode": { "name": "Mode Manuel" },
+      "predictive_charging": { "name": "Charge Prédictive" },
+      "charge_delay": { "name": "Délai de Charge" },
+      "capacity_protection": { "name": "Protection de Capacité" },
+      "backup_function": { "name": "Fonction de Secours" },
+      "rs485_control_mode": { "name": "Mode de Contrôle RS485" }
+    },
+    "sensor": {
+      "excluded_devices": { "name": "Appareils Exclus" },
+      "discharge_window": {
+        "name": "Fenêtre de Décharge",
+        "state": {
+          "no_slots": "Aucun créneau",
+          "inactive": "Inactif",
+          "active": "Actif"
+        }
+      },
+      "active_batteries": { "name": "Batteries Actives" },
+      "weekly_full_charge": {
+        "name": "Charge Complète Hebdomadaire",
+        "state": {
+          "idle": "Inactif",
+          "disabled": "Désactivé",
+          "charging": "Charge à 100%",
+          "complete": "Terminé"
+        }
+      },
+      "charge_delay_status": {
+        "name": "Délai de Charge",
+        "state": {
+          "idle": "Inactif",
+          "disabled": "Désactivé",
+          "waiting_for_solar": "En attente du solaire",
+          "delayed": "Retardé",
+          "charging_allowed": "Charge autorisée"
+        }
+      },
+      "battery_soc": { "name": "SOC Batterie" },
+      "battery_total_energy": { "name": "Énergie Totale Batterie" },
+      "battery_power": { "name": "Puissance Batterie" },
+      "internal_temperature": { "name": "Température Interne" },
+      "ac_power": { "name": "Puissance CA" },
+      "total_charging_energy": { "name": "Énergie de Charge Totale" },
+      "total_discharging_energy": { "name": "Énergie de Décharge Totale" },
+      "total_daily_charging_energy": { "name": "Énergie de Charge Journalière" },
+      "total_daily_discharging_energy": { "name": "Énergie de Décharge Journalière" },
+      "inverter_state": { "name": "État de l'Onduleur" },
+      "battery_voltage": { "name": "Tension Batterie" },
+      "max_cell_voltage": { "name": "Tension Maximale de Cellule" },
+      "min_cell_voltage": { "name": "Tension Minimale de Cellule" },
+      "fault_status": { "name": "État de Défaut" },
+      "alarm_status": { "name": "État d'Alarme" },
+      "ac_offgrid_power": { "name": "Puissance CA Hors Réseau" },
+      "mppt1_power": { "name": "Puissance MPPT1" },
+      "mppt2_power": { "name": "Puissance MPPT2" },
+      "mppt3_power": { "name": "Puissance MPPT3" },
+      "mppt4_power": { "name": "Puissance MPPT4" },
+      "round_trip_efficiency_total": { "name": "Rendement Total Aller-Retour" },
+      "stored_energy": { "name": "Énergie Stockée" },
+      "system_soc": { "name": "SOC du Système" },
+      "system_charge_power": { "name": "Puissance de Charge du Système" },
+      "system_discharge_power": { "name": "Puissance de Décharge du Système" },
+      "system_total_energy": { "name": "Énergie Totale du Système" },
+      "system_stored_energy": { "name": "Énergie Stockée du Système" },
+      "system_daily_charging_energy": { "name": "Énergie de Charge Journalière du Système" },
+      "system_daily_discharging_energy": { "name": "Énergie de Décharge Journalière du Système" }
+    },
+    "binary_sensor": {
+      "capacity_protection_active": { "name": "Protection de Capacité Active" },
+      "predictive_charging_active": { "name": "Charge Prédictive Active" }
+    },
+    "select": {
+      "force_mode": { "name": "Mode Forcé" },
+      "user_work_mode": { "name": "Mode de Fonctionnement" },
+      "weekly_full_charge_day": {
+        "name": "Jour de Charge Complète Hebdomadaire",
+        "state": {
+          "monday": "Lundi",
+          "tuesday": "Mardi",
+          "wednesday": "Mercredi",
+          "thursday": "Jeudi",
+          "friday": "Vendredi",
+          "saturday": "Samedi",
+          "sunday": "Dimanche"
+        }
+      }
+    },
+    "number": {
+      "set_charge_power": { "name": "Puissance de Charge" },
+      "set_discharge_power": { "name": "Puissance de Décharge" },
+      "max_charge_power": { "name": "Puissance de Charge Max." },
+      "max_discharge_power": { "name": "Puissance de Décharge Max." },
+      "charging_cutoff_capacity": { "name": "SOC Limite de Charge" },
+      "discharging_cutoff_capacity": { "name": "SOC Limite de Décharge" },
+      "charge_to_soc": { "name": "Charger jusqu'à SOC" },
+      "pd_controller_kp": { "name": "PD Kp" },
+      "pd_controller_kd": { "name": "PD Kd" },
+      "pd_controller_deadband": { "name": "Bande Morte PD" },
+      "pd_controller_max_power_change": { "name": "Changement de Puissance Max. PD" },
+      "pd_controller_direction_hysteresis": { "name": "Hystérésis de Direction PD" },
+      "pd_min_charge_power": { "name": "Puissance Min. de Charge PD" },
+      "pd_min_discharge_power": { "name": "Puissance Min. de Décharge PD" },
+      "max_contracted_power": { "name": "Puissance Contractuelle Max." },
+      "capacity_protection_soc_threshold": { "name": "Seuil SOC Protection Capacité" },
+      "delay_safety_margin_min": { "name": "Marge Retard de Charge" },
+      "capacity_protection_limit": { "name": "Limite de Crête Protection" }
+    },
+    "button": {
+      "reset_device": { "name": "Réinitialiser l'Appareil" }
     }
   }
 }

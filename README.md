@@ -52,6 +52,8 @@ This is the primary operating mode of the integration, designed to maximize self
 *   **Multi-Battery Support**: Seamlessly manage up to 4 batteries as a single aggregated system.
 *   **Discharge Time Slots**: Allow the battery to discharge during specific times (e.g., peak grid rates). Each slot supports configurable **target grid power**, **minimum charge power**, and **minimum discharge power**.
 *   **Weekly Full Charge**: Option to force a full charge once a week for cell balancing.
+*   **Solar-Aware Charge Delay**: Delays morning charging (or the weekly 100% charge) while solar production can still cover the required energy. Uses a sinusoidal solar model and a stored nightly forecast so the battery only starts charging from grid when solar won't be sufficient.
+*   **Capacity Protection (Peak Shaving)**: Conserves battery energy when SOC drops below a configurable threshold. Instead of covering all household consumption, the battery only discharges to offset loads that exceed a configurable peak power limit.
 *   **Load Exclusion**: "Hide" specific heavy loads (like EV chargers) from the battery to prevent rapid draining.
 
 ## Requirements
@@ -90,6 +92,7 @@ This integration is configured entirely via the Home Assistant UI.
 
 ### 2. Main Household Sensor
 *   **Consumption Sensor**: Select the sensor that measures your home's total grid consumption (W or kW). This is critical for the integration to calculate load and managing battery behavior relative to the grid.
+*   **Solar Forecast Sensor** *(Optional)*: Select the sensor that provides tomorrow's solar energy production estimate (in **kWh** or **Wh**). Configuring it here makes it available to both the **Predictive Grid Charging** (step 6) and **Charge Delay** (step 8) features. You can skip this now and configure it later in those individual steps if preferred.
 
 ### 3. Battery Setup
 *   **Number of Batteries**: Select how many Marstek Venus units you have (1-4).
@@ -138,12 +141,26 @@ Automatically charge the battery from the grid during a specific window if tomor
 LFP batteries need to hit 100% periodically to balance individual cells.
 *   **Enable**: Check "Configure weekly full charge".
 *   **Day**: Select the day of the week (e.g., `Sunday`) to force a charge to 100%, overriding any other limits.
-*   **Delay until needed (Solar-Aware)**: Optional. When enabled, the system delays the 100% charge instead of starting at midnight. It evaluates the solar forecast and only unlocks the full charge when remaining solar production won't be enough to cover household consumption plus the energy needed to reach 100%. This maximizes solar self-consumption on the balancing day.
-    *   **Solar Forecast Sensor**: Required if not already configured in Predictive Charging. Provides the next-day solar production estimate (kWh).
-    *   **How it works**: The system captures the solar forecast the night before (23:00), then on the balancing day uses a sinusoidal model to estimate remaining solar energy at any given time. If `remaining_solar < (consumption_until_sunset + energy_to_100%) × safety_factor`, the 100% charge is unlocked.
-    *   **Fallback**: If no forecast is available or forecast is very low, the charge unlocks immediately at midnight (safe default).
 
-### 8. Advanced PD Controller (Expert Mode)
+### 8. Charge Delay (Optional)
+Solar-aware charge delay that applies **every day**, not just on the weekly full charge day.
+*   **Enable**: Check "Configure charge delay".
+*   **How it works**: The system captures the solar forecast every night at 23:00. On the following day, it uses a sinusoidal solar production model to estimate remaining solar energy in real time. Charging is held back while solar can still cover the required energy, and unlocked automatically once the energy balance tips. On the weekly full charge day the target SOC is 100%; on all other days it targets the configured `max_soc`.
+*   **Settings** (shown after enabling):
+    *   **Solar Forecast Sensor**: Required if not already configured in Predictive Charging. Provides the next-day solar production estimate (kWh).
+    *   **Safety Margin**: Minutes before sunset by which charging must be complete (30–180 min, default 180 min). Higher values unlock grid charging earlier in the day. This ensures charging finishes with enough buffer before sunset even if solar production slightly underperforms.
+*   **Fallback**: If no forecast is available or the forecast is very low, the charge unlocks immediately at midnight (safe default).
+*   **Runtime toggle**: The `Charge Delay` switch on the Marstek Venus System device lets you enable/disable the feature without reconfiguring the integration.
+
+### 9. Capacity Protection (Optional)
+Conserves battery energy during high-SOC periods to avoid unnecessary discharge when house loads spike.
+*   **Enable**: Check "Configure capacity protection" in the options flow.
+*   **Settings**:
+    *   **SOC Threshold**: Below this SOC (default 30%), protection is active. Above it, the battery operates normally.
+    *   **Peak Limit**: Maximum house load (W) the battery will cover. Consumption above this threshold is left to the grid; the battery only offsets the excess.
+*   **Runtime toggle**: The `Capacity Protection` switch lets you enable/disable the feature without reconfiguring. Number entities for SOC threshold and peak limit allow in-place tuning.
+
+### 10. Advanced PD Controller (Expert Mode)
 > [!WARNING] 
 > **EXPERT SETTINGS ONLY:** Do NOT modify these values unless you fully understand PID control theory and how it interacts with battery inverter response times. Incorrect tuning can cause power oscillations or unstable behavior.
 
@@ -162,18 +179,18 @@ The integration uses a PD (Proportional-Derivative) controller to manage battery
 ### System-Wide Entities
 These controls affect the entire system or aggregate data from all batteries.
 
-  - **Controls**: Manual Mode, Predictive Charging (inverted logic), Time Slot switches, Weekly Full Charge Day select — all without `EntityCategory` so they appear in the Controls section.
-     **Manual Mode (Switch)**:
-    *   **Action**: Pauses the automatic PD controller and predictive logic. Sets all batteries to an idle state (0W).
-    *   **Use Case**: Enable this when you want to manually control charge/discharge rates using the slider controls on individual batteries.
-*   **Predictive Charging (Switch)**:
-    *   **Action**: Manually stops or prevents the predictive grid charging logic from running, even if the schedule and forecast conditions are met.
-    *   **Use Case**: Skip a scheduled night charge if you know you won't need it.
+  - **Controls**: Manual Mode, Predictive Charging, Charge Delay, Capacity Protection, Time Slot switches, Weekly Full Charge Day select — all without `EntityCategory` so they appear in the Controls section.
+    *   **Manual Mode (Switch)**: Pauses the automatic PD controller and predictive logic. Sets all batteries to an idle state (0W). Use this when you want to manually control charge/discharge rates via the slider controls on individual batteries.
+    *   **Predictive Charging (Switch)**: Manually stops or prevents the predictive grid charging logic from running, even if the schedule and forecast conditions are met. Use this to skip a scheduled night charge.
+    *   **Charge Delay (Switch)**: Enables or disables the solar-aware charge delay at runtime. Only visible when charge delay is configured. Toggling this off bypasses the delay and allows charging immediately.
+    *   **Capacity Protection (Switch)**: Enables or disables capacity protection (peak shaving) at runtime. Only visible when the feature is configured.
     *   **Time Slot switches**: Enable/disable individual no-discharge time slots on the fly.
     *   **Weekly Full Charge Day select entity**: Pick the balancing day directly from the UI.
-  - **Sensors**: Aggregated sensors for the whole battery bank.    
-  - **Configuration**: Kp, Kd, deadband, max power change, direction hysteresis, min charge/discharge power — all hot-reloadable without integration restart.
-  - **Diagnostic**: Discharge Window sensor (new), Predictive Charging Active binary sensor.
+  - **Sensors**: Aggregated sensors for the whole battery bank.
+  - **Configuration**: Kp, Kd, deadband, max power change, direction hysteresis, min charge/discharge power — all hot-reloadable without integration restart. Also: `Capacity Protection SOC Threshold` and `Capacity Protection Peak Limit` number entities (only visible when the feature is enabled).
+  - **Diagnostic**: Discharge Window sensor, Predictive Charging Active binary sensor, Charge Delay Status sensor, Capacity Protection Active binary sensor.
+    *   **Charge Delay Status sensor**: Shows the current state of the charge delay logic (`Idle`, `Waiting for solar`, `Delayed (~HH:MM est.)`, `Charging allowed`, or `Disabled`). Attributes expose forecast data, solar window, energy calculations, estimated unlock time, and unlock reason.
+    *   **Capacity Protection Active binary sensor**: Turns ON when protection is actively intervening (SOC below threshold). Attributes expose `avg_soc`, `soc_threshold`, `peak_limit_w`, `estimated_house_load_w`, `action`, `original_target_w`, and `adjusted_target_w`.
     *   **Excluded Devices Config sensor**: Read-only diagnostic showing the number of excluded devices, with per-device details (sensor entity, included_in_consumption, allow_solar_surplus) as attributes.
     *   **Discharge Window diagnostic sensor**: Real-time sensor showing whether the system is currently inside an allowed discharge time slot. Displays "Active (Slot N)", "Inactive", or "No slots". Attributes include all slot configuration details (schedule, days, enabled, apply_to_charge, target_grid_power).
     *   **Active Batteries diagnostic sensor**: Real-time sensor showing which batteries are currently active in load sharing. Displays "Discharging: Venus 1", "Charging: Venus 2", or "Idle". Attributes include per-battery SOC, lifetime discharged/charged energy, and active battery counts. Only created for multi-battery setups.

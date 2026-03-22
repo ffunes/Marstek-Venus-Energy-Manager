@@ -32,9 +32,9 @@ async def async_setup_entry(
 
     # Add config numbers (system-level, PD parameters)
     for definition in CONFIG_NUMBER_DEFINITIONS:
-        # Skip conditional entities if their feature is disabled
+        # Skip conditional entities if their feature has never been configured
         condition = definition.get("condition")
-        if condition and not entry.data.get(condition, False):
+        if condition and condition not in entry.data:
             continue
         entities.append(MarstekConfigNumberEntity(hass, entry, definition))
 
@@ -51,7 +51,8 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         self.definition = definition
         
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_icon = definition.get("icon")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -144,7 +145,8 @@ class MarstekConfigNumberEntity(NumberEntity):
         self._definition = definition
         self._key = definition["key"]
 
-        self._attr_name = definition["name"]
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{entry.entry_id}_{definition['key']}"
         self._attr_icon = definition.get("icon")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -153,16 +155,18 @@ class MarstekConfigNumberEntity(NumberEntity):
         self._attr_native_step = definition["step"]
         self._attr_entity_category = EntityCategory.CONFIG
         self._attr_should_poll = False
+        self._scale = definition.get("scale", 1)
 
     @property
     def native_value(self):
-        """Return the current value from config_entry.data."""
-        return self.entry.data.get(self._key, self._definition["default"])
+        """Return the current value from config_entry.data, converted to display units."""
+        raw = self.entry.data.get(self._key, self._definition["default"])
+        return raw / self._scale
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the value in config_entry.data and hot-reload controller."""
         new_data = dict(self.entry.data)
-        new_data[self._key] = value
+        new_data[self._key] = int(value * self._scale) if self._scale != 1 else value
         self.hass.config_entries.async_update_entry(self.entry, data=new_data)
 
         # Hot-reload PD params in the controller without restarting the integration

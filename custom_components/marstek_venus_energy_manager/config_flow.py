@@ -32,6 +32,7 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
+    CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
     CONF_BATTERY_VERSION,
@@ -52,6 +53,11 @@ from .const import (
     DEFAULT_PD_DIRECTION_HYSTERESIS,
     DEFAULT_PD_MIN_CHARGE_POWER,
     DEFAULT_PD_MIN_DISCHARGE_POWER,
+    CONF_CAPACITY_PROTECTION_ENABLED,
+    CONF_CAPACITY_PROTECTION_SOC_THRESHOLD,
+    CONF_CAPACITY_PROTECTION_LIMIT,
+    DEFAULT_CAPACITY_PROTECTION_SOC,
+    DEFAULT_CAPACITY_PROTECTION_LIMIT,
 )
 from .modbus_client import MarstekModbusClient
 
@@ -136,10 +142,25 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 1: Ask for the consumption sensor."""
+        """Step 1: Ask for the consumption sensor and optional solar forecast sensor."""
+        errors = {}
+
         if user_input is not None:
-            self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
-            return await self.async_step_batteries()
+            # Validate solar forecast sensor if provided
+            forecast_sensor = user_input.get(CONF_SOLAR_FORECAST_SENSOR)
+            if forecast_sensor:
+                forecast_state = self.hass.states.get(forecast_sensor)
+                if forecast_state is None:
+                    errors["solar_forecast_sensor"] = "sensor_not_found"
+                else:
+                    unit = forecast_state.attributes.get("unit_of_measurement", "")
+                    if unit not in ["kWh", "Wh"]:
+                        errors["solar_forecast_sensor"] = "invalid_unit"
+
+            if not errors:
+                self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
+                self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                return await self.async_step_batteries()
 
         return self.async_show_form(
             step_id="user",
@@ -147,8 +168,11 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required("consumption_sensor"):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
+                    vol.Optional(CONF_SOLAR_FORECAST_SENSOR):
+                        EntitySelector(EntitySelectorConfig(domain="sensor")),
                 }
             ),
+            errors=errors if errors else None,
         )
 
     async def async_step_batteries(
@@ -297,29 +321,30 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            # Save the time slot
-            time_slot = {
-                "start_time": user_input["start_time"],
-                "end_time": user_input["end_time"],
-                "days": user_input["days"],
-                "apply_to_charge": user_input.get("apply_to_charge", False),
-                "target_grid_power": user_input.get("target_grid_power", 0),
-            }
+            if not errors:
+                # Save the time slot
+                time_slot = {
+                    "start_time": user_input["start_time"],
+                    "end_time": user_input["end_time"],
+                    "days": user_input["days"],
+                    "apply_to_charge": user_input.get("apply_to_charge", False),
+                    "target_grid_power": user_input.get("target_grid_power", 0),
+                }
 
-            if user_input["start_time"] >= user_input["end_time"]:
-                errors["base"] = "midnight_crossing"
-            elif _slots_overlap(time_slot, self.time_slots):
-                errors["base"] = "overlapping_slots"
-            else:
-                self.time_slots.append(time_slot)
-
-                # Check if user wants to add more slots (max 4)
-                if len(self.time_slots) < 4:
-                    return await self.async_step_add_more_slots()
+                if user_input["start_time"] >= user_input["end_time"]:
+                    errors["base"] = "midnight_crossing"
+                elif _slots_overlap(time_slot, self.time_slots):
+                    errors["base"] = "overlapping_slots"
                 else:
-                    # Max slots reached, move to excluded devices
-                    self.config_data["no_discharge_time_slots"] = self.time_slots
-                    return await self.async_step_excluded_devices()
+                    self.time_slots.append(time_slot)
+
+                    # Check if user wants to add more slots (max 4)
+                    if len(self.time_slots) < 4:
+                        return await self.async_step_add_more_slots()
+                    else:
+                        # Max slots reached, move to excluded devices
+                        self.config_data["no_discharge_time_slots"] = self.time_slots
+                        return await self.async_step_excluded_devices()
 
         defaults = {
             "start_time": user_input["start_time"] if user_input else None,
@@ -483,10 +508,11 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             if user_input.get("configure_predictive_charging", False):
                 return await self.async_step_predictive_charging_config()
             else:
-                # Predictive charging disabled
+                # Predictive charging disabled - preserve global sensor if set in step 1
                 self.config_data["enable_predictive_charging"] = False
                 self.config_data["charging_time_slot"] = None
-                self.config_data["solar_forecast_sensor"] = None
+                if not self.config_data.get(CONF_SOLAR_FORECAST_SENSOR):
+                    self.config_data[CONF_SOLAR_FORECAST_SENSOR] = None
                 self.config_data["max_contracted_power"] = 7000
                 return await self.async_step_weekly_full_charge()
         
@@ -504,20 +530,25 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Step 11: Configure predictive grid charging details."""
         errors = {}
-        
+        # Check if solar forecast sensor was already configured in step 1
+        has_global_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
+
         if user_input is not None:
                 # Validate configuration
                 try:
-                    # Check solar forecast sensor exists and has valid unit
-                    forecast_sensor = user_input.get("solar_forecast_sensor")
-                    if forecast_sensor:
-                        forecast_state = self.hass.states.get(forecast_sensor)
-                        if forecast_state is None:
-                            errors["solar_forecast_sensor"] = "sensor_not_found"
-                        else:
-                            unit = forecast_state.attributes.get("unit_of_measurement", "")
-                            if unit not in ["kWh", "Wh"]:
-                                errors["solar_forecast_sensor"] = "invalid_unit"
+                    # Use global sensor if available, otherwise validate the one from this form
+                    if has_global_sensor:
+                        forecast_sensor = self.config_data[CONF_SOLAR_FORECAST_SENSOR]
+                    else:
+                        forecast_sensor = user_input.get("solar_forecast_sensor")
+                        if forecast_sensor:
+                            forecast_state = self.hass.states.get(forecast_sensor)
+                            if forecast_state is None:
+                                errors["solar_forecast_sensor"] = "sensor_not_found"
+                            else:
+                                unit = forecast_state.attributes.get("unit_of_measurement", "")
+                                if unit not in ["kWh", "Wh"]:
+                                    errors["solar_forecast_sensor"] = "invalid_unit"
 
                     if not errors:
                         # Save predictive charging configuration
@@ -527,40 +558,42 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                             "end_time": user_input["end_time"],
                             "days": user_input["days"],
                         }
-                        self.config_data["solar_forecast_sensor"] = user_input["solar_forecast_sensor"]
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                         self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
 
                         return await self.async_step_weekly_full_charge()
                 except Exception as e:
                     _LOGGER.error("Error validating predictive charging config: %s", e)
                     errors["base"] = "unknown"
-        
+
+        # Build schema - only show solar forecast sensor if not already configured globally
+        schema_dict = {
+            vol.Required("start_time"): TimeSelector(),
+            vol.Required("end_time"): TimeSelector(),
+            vol.Optional("days", default=["mon", "tue", "wed", "thu", "fri", "sat", "sun"]):
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                        translation_key="weekday",
+                        multiple=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+        }
+        if not has_global_sensor:
+            schema_dict[vol.Required("solar_forecast_sensor")] = EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            )
+        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
+            NumberSelectorConfig(
+                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+            )
+        )
+
         # Show form
         return self.async_show_form(
             step_id="predictive_charging_config",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("start_time"): TimeSelector(),
-                    vol.Required("end_time"): TimeSelector(),
-                    vol.Optional("days", default=["mon", "tue", "wed", "thu", "fri", "sat", "sun"]):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                                translation_key="weekday",
-                                multiple=True,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    vol.Required("solar_forecast_sensor"):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Required("max_contracted_power", default=7000):
-                        NumberSelector(
-                            NumberSelectorConfig(
-                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
-                            )
-                        ),
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
             errors=errors,
         )
 
@@ -575,10 +608,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Weekly full charge disabled
                 self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = False
                 self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = "sun"
-                self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = False
-                return self.async_create_entry(
-                    title="Marstek Venus Energy Manager", data=self.config_data
-                )
+                return await self.async_step_charge_delay()
 
         return self.async_show_form(
             step_id="weekly_full_charge",
@@ -595,72 +625,153 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_weekly_full_charge_config(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 12: Configure weekly full charge details."""
-        errors = {}
+        """Step 12: Configure weekly full charge day."""
         if user_input is not None:
-            # Save weekly full charge configuration
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
+            return await self.async_step_charge_delay()
 
-            # Save delay configuration
-            enable_delay = user_input.get("enable_weekly_full_charge_delay", False)
-            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = enable_delay
-            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(user_input.get("delay_safety_margin_min", DEFAULT_DELAY_SAFETY_MARGIN_MIN))
+        return self.async_show_form(
+            step_id="weekly_full_charge_config",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("weekly_full_charge_day", default="sun"):
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                                translation_key="weekday",
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                }
+            ),
+        )
 
-            if enable_delay:
-                # Check if solar forecast sensor already configured from predictive charging
-                existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
-                if existing_forecast:
-                    # Reuse the existing sensor
-                    _LOGGER.debug("Weekly Full Charge Delay: Reusing solar forecast sensor from predictive charging: %s", existing_forecast)
+    async def async_step_charge_delay(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 13: Ask if user wants to enable solar charge delay."""
+        if user_input is not None:
+            if user_input.get("configure_charge_delay", False):
+                return await self.async_step_charge_delay_config()
+            else:
+                self.config_data[CONF_ENABLE_CHARGE_DELAY] = False
+                return await self.async_step_capacity_protection()
+
+        return self.async_show_form(
+            step_id="charge_delay",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("configure_charge_delay", default=False): bool,
+                }
+            ),
+        )
+
+    async def async_step_charge_delay_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 14: Configure charge delay details."""
+        errors = {}
+        if user_input is not None:
+            self.config_data[CONF_ENABLE_CHARGE_DELAY] = True
+            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(
+                user_input.get("delay_safety_margin_h", DEFAULT_DELAY_SAFETY_MARGIN_MIN / 60) * 60
+            )
+
+            # Check if solar forecast sensor already configured
+            existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
+            if not existing_forecast:
+                forecast_sensor = user_input.get("solar_forecast_sensor")
+                if not forecast_sensor:
+                    errors["solar_forecast_sensor"] = "sensor_not_found"
                 else:
-                    # Validate the user-provided sensor
-                    forecast_sensor = user_input.get("solar_forecast_sensor")
-                    if not forecast_sensor:
+                    state = self.hass.states.get(forecast_sensor)
+                    if state is None:
                         errors["solar_forecast_sensor"] = "sensor_not_found"
                     else:
-                        state = self.hass.states.get(forecast_sensor)
-                        if state is None:
-                            errors["solar_forecast_sensor"] = "sensor_not_found"
-                        else:
-                            self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
 
             if not errors:
-                return self.async_create_entry(
-                    title="Marstek Venus Energy Manager", data=self.config_data
-                )
+                return await self.async_step_capacity_protection()
 
-        # Build schema dynamically
         has_forecast_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
         schema_dict = {
-            vol.Required("weekly_full_charge_day", default="sun"):
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                        translation_key="weekday",
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-            vol.Optional("enable_weekly_full_charge_delay", default=False): bool,
-            vol.Optional("delay_safety_margin_min", default=DEFAULT_DELAY_SAFETY_MARGIN_MIN):
+            vol.Optional("delay_safety_margin_h", default=DEFAULT_DELAY_SAFETY_MARGIN_MIN / 60):
                 NumberSelector(
                     NumberSelectorConfig(
-                        min=10, max=120, step=5,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="min",
+                        min=1, max=6, step=0.5,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="h",
                     )
                 ),
         }
-        # Only show solar forecast selector if not already configured via predictive charging
         if not has_forecast_sensor:
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
 
         return self.async_show_form(
-            step_id="weekly_full_charge_config",
+            step_id="charge_delay_config",
             data_schema=vol.Schema(schema_dict),
             errors=errors,
+        )
+
+    async def async_step_capacity_protection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask if user wants to enable capacity protection mode."""
+        if user_input is not None:
+            if user_input.get("configure_capacity_protection", False):
+                return await self.async_step_capacity_protection_config()
+            else:
+                self.config_data[CONF_CAPACITY_PROTECTION_ENABLED] = False
+                return self.async_create_entry(
+                    title="Marstek Venus Energy Manager", data=self.config_data
+                )
+
+        return self.async_show_form(
+            step_id="capacity_protection",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("configure_capacity_protection", default=False): bool,
+                }
+            ),
+        )
+
+    async def async_step_capacity_protection_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure capacity protection parameters."""
+        if user_input is not None:
+            self.config_data[CONF_CAPACITY_PROTECTION_ENABLED] = True
+            self.config_data[CONF_CAPACITY_PROTECTION_SOC_THRESHOLD] = int(user_input["capacity_protection_soc_threshold"])
+            self.config_data[CONF_CAPACITY_PROTECTION_LIMIT] = int(user_input["capacity_protection_limit"])
+            return self.async_create_entry(
+                title="Marstek Venus Energy Manager", data=self.config_data
+            )
+
+        return self.async_show_form(
+            step_id="capacity_protection_config",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("capacity_protection_soc_threshold", default=DEFAULT_CAPACITY_PROTECTION_SOC):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=30, max=100, step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="%",
+                            )
+                        ),
+                    vol.Required("capacity_protection_limit", default=DEFAULT_CAPACITY_PROTECTION_LIMIT):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=2500, max=8000, step=100,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
+                }
+            ),
         )
 
     @staticmethod
@@ -764,14 +875,29 @@ class OptionsFlowHandler(OptionsFlow):
                 return False
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Start the options flow - ask for consumption sensor."""
+        """Start the options flow - ask for consumption sensor and optional solar forecast sensor."""
+        errors = {}
         try:
             if user_input is not None:
-                self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
-                return await self.async_step_batteries()
+                # Validate solar forecast sensor if provided
+                forecast_sensor = user_input.get(CONF_SOLAR_FORECAST_SENSOR)
+                if forecast_sensor:
+                    forecast_state = self.hass.states.get(forecast_sensor)
+                    if forecast_state is None:
+                        errors["solar_forecast_sensor"] = "sensor_not_found"
+                    else:
+                        unit = forecast_state.attributes.get("unit_of_measurement", "")
+                        if unit not in ["kWh", "Wh"]:
+                            errors["solar_forecast_sensor"] = "invalid_unit"
+
+                if not errors:
+                    self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
+                    self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                    return await self.async_step_batteries()
 
             # Load current configuration with defensive defaults
             current_sensor = self.config_entry.data.get("consumption_sensor", "")
+            current_forecast = self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, "")
         except Exception as e:
             _LOGGER.error("Error in options flow init: %s", e, exc_info=True)
             return self.async_abort(reason="unknown_error")
@@ -782,8 +908,11 @@ class OptionsFlowHandler(OptionsFlow):
                 {
                     vol.Required("consumption_sensor", default=current_sensor):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
+                    vol.Optional(CONF_SOLAR_FORECAST_SENSOR, default=current_forecast if current_forecast else vol.UNDEFINED):
+                        EntitySelector(EntitySelectorConfig(domain="sensor")),
                 }
             ),
+            errors=errors if errors else None,
         )
 
     async def async_step_batteries(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -979,26 +1108,27 @@ class OptionsFlowHandler(OptionsFlow):
         errors = {}
 
         if user_input is not None:
-            time_slot = {
-                "start_time": user_input["start_time"],
-                "end_time": user_input["end_time"],
-                "days": user_input["days"],
-                "apply_to_charge": user_input.get("apply_to_charge", False),
-                "target_grid_power": user_input.get("target_grid_power", 0),
-            }
+            if not errors:
+                time_slot = {
+                    "start_time": user_input["start_time"],
+                    "end_time": user_input["end_time"],
+                    "days": user_input["days"],
+                    "apply_to_charge": user_input.get("apply_to_charge", False),
+                    "target_grid_power": user_input.get("target_grid_power", 0),
+                }
 
-            if user_input["start_time"] >= user_input["end_time"]:
-                errors["base"] = "midnight_crossing"
-            elif _slots_overlap(time_slot, self.time_slots):
-                errors["base"] = "overlapping_slots"
-            else:
-                self.time_slots.append(time_slot)
-
-                if len(self.time_slots) < 4:
-                    return await self.async_step_add_more_slots()
+                if user_input["start_time"] >= user_input["end_time"]:
+                    errors["base"] = "midnight_crossing"
+                elif _slots_overlap(time_slot, self.time_slots):
+                    errors["base"] = "overlapping_slots"
                 else:
-                    self.config_data["no_discharge_time_slots"] = self.time_slots
-                    return await self.async_step_excluded_devices()
+                    self.time_slots.append(time_slot)
+
+                    if len(self.time_slots) < 4:
+                        return await self.async_step_add_more_slots()
+                    else:
+                        self.config_data["no_discharge_time_slots"] = self.time_slots
+                        return await self.async_step_excluded_devices()
 
         # Load defaults from existing slots or user_input (on error re-show)
         if user_input:
@@ -1207,10 +1337,11 @@ class OptionsFlowHandler(OptionsFlow):
             if user_input.get("configure_predictive_charging", False):
                 return await self.async_step_predictive_charging_config()
             else:
-                # Predictive charging disabled
+                # Predictive charging disabled - preserve global sensor if set in init
                 self.config_data["enable_predictive_charging"] = False
                 self.config_data["charging_time_slot"] = None
-                self.config_data["solar_forecast_sensor"] = None
+                if not self.config_data.get(CONF_SOLAR_FORECAST_SENSOR):
+                    self.config_data[CONF_SOLAR_FORECAST_SENSOR] = None
                 self.config_data["max_contracted_power"] = 7000
 
                 return await self.async_step_weekly_full_charge()
@@ -1232,26 +1363,32 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> FlowResult:
         """Configure predictive grid charging details in options flow."""
         errors = {}
-        
+
         # Load existing configuration
         existing_config = self.config_entry.data
         time_slot_current = existing_config.get("charging_time_slot", {})
         forecast_sensor_current = existing_config.get("solar_forecast_sensor", "")
         max_power_current = existing_config.get("max_contracted_power", 7000)
-        
+
+        # Check if solar forecast sensor was already configured in init step
+        has_global_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
+
         if user_input is not None:
                 # Validate configuration
                 try:
-                    # Check solar forecast sensor exists and has valid unit
-                    forecast_sensor = user_input.get("solar_forecast_sensor")
-                    if forecast_sensor:
-                        forecast_state = self.hass.states.get(forecast_sensor)
-                        if forecast_state is None:
-                            errors["solar_forecast_sensor"] = "sensor_not_found"
-                        else:
-                            unit = forecast_state.attributes.get("unit_of_measurement", "")
-                            if unit not in ["kWh", "Wh"]:
-                                errors["solar_forecast_sensor"] = "invalid_unit"
+                    # Use global sensor if available, otherwise validate the one from this form
+                    if has_global_sensor:
+                        forecast_sensor = self.config_data[CONF_SOLAR_FORECAST_SENSOR]
+                    else:
+                        forecast_sensor = user_input.get("solar_forecast_sensor")
+                        if forecast_sensor:
+                            forecast_state = self.hass.states.get(forecast_sensor)
+                            if forecast_state is None:
+                                errors["solar_forecast_sensor"] = "sensor_not_found"
+                            else:
+                                unit = forecast_state.attributes.get("unit_of_measurement", "")
+                                if unit not in ["kWh", "Wh"]:
+                                    errors["solar_forecast_sensor"] = "invalid_unit"
 
                     if not errors:
                         # Save predictive charging configuration
@@ -1261,14 +1398,14 @@ class OptionsFlowHandler(OptionsFlow):
                             "end_time": user_input["end_time"],
                             "days": user_input["days"],
                         }
-                        self.config_data["solar_forecast_sensor"] = user_input["solar_forecast_sensor"]
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                         self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
 
                         return await self.async_step_weekly_full_charge()
                 except Exception as e:
                     _LOGGER.error("Error validating predictive charging config: %s", e)
                     errors["base"] = "unknown"
-        
+
         # Prepare defaults from existing config
         if time_slot_current:
             defaults = {
@@ -1286,33 +1423,35 @@ class OptionsFlowHandler(OptionsFlow):
                 "sensor": "",
                 "power": 7000,
             }
-        
+
+        # Build schema - only show solar forecast sensor if not already configured globally
+        schema_dict = {
+            vol.Required("start_time", default=defaults["start_time"]): TimeSelector(),
+            vol.Required("end_time", default=defaults["end_time"]): TimeSelector(),
+            vol.Required("days", default=defaults["days"]):
+                SelectSelector(
+                    SelectSelectorConfig(
+                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                        translation_key="weekday",
+                        multiple=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+        }
+        if not has_global_sensor:
+            schema_dict[vol.Required("solar_forecast_sensor", default=defaults["sensor"])] = EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            )
+        schema_dict[vol.Required("max_contracted_power", default=defaults["power"])] = NumberSelector(
+            NumberSelectorConfig(
+                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+            )
+        )
+
         # Show form
         return self.async_show_form(
             step_id="predictive_charging_config",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("start_time", default=defaults["start_time"]): TimeSelector(),
-                    vol.Required("end_time", default=defaults["end_time"]): TimeSelector(),
-                    vol.Required("days", default=defaults["days"]):
-                        SelectSelector(
-                            SelectSelectorConfig(
-                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                                translation_key="weekday",
-                                multiple=True,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        ),
-                    vol.Required("solar_forecast_sensor", default=defaults["sensor"]):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Required("max_contracted_power", default=defaults["power"]):
-                        NumberSelector(
-                            NumberSelectorConfig(
-                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
-                            )
-                        ),
-                }
-            ),
+            data_schema=vol.Schema(schema_dict),
             errors=errors,
         )
 
@@ -1324,15 +1463,10 @@ class OptionsFlowHandler(OptionsFlow):
             if user_input.get("configure_weekly_full_charge", False):
                 return await self.async_step_weekly_full_charge_config()
             else:
-                # Weekly full charge disabled
                 self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = False
                 self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = "sun"
-                self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = False
+                return await self.async_step_charge_delay()
 
-                # Continue to PD controller advanced settings
-                return await self.async_step_pd_advanced()
-
-        # Check if weekly full charge was previously enabled
         is_weekly_full_charge_enabled = self.config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False)
 
         return self.async_show_form(
@@ -1350,60 +1484,94 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_weekly_full_charge_config(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Configure weekly full charge details in options flow."""
+        """Configure weekly full charge day in options flow."""
         existing_config = self.config_entry.data
         current_day = existing_config.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
-        current_delay = existing_config.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
+
+        if user_input is not None:
+            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
+            self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
+            return await self.async_step_charge_delay()
+
+        return self.async_show_form(
+            step_id="weekly_full_charge_config",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("weekly_full_charge_day", default=current_day):
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+                                translation_key="weekday",
+                                mode=SelectSelectorMode.DROPDOWN,
+                            )
+                        ),
+                }
+            ),
+        )
+
+    async def async_step_charge_delay(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask if user wants to enable solar charge delay in options flow."""
+        if user_input is not None:
+            if user_input.get("configure_charge_delay", False):
+                return await self.async_step_charge_delay_config()
+            else:
+                self.config_data[CONF_ENABLE_CHARGE_DELAY] = False
+                return await self.async_step_capacity_protection()
+
+        # Backward compat: check old key too
+        is_delay_enabled = self.config_entry.data.get(
+            CONF_ENABLE_CHARGE_DELAY,
+            self.config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
+        )
+
+        return self.async_show_form(
+            step_id="charge_delay",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("configure_charge_delay", default=is_delay_enabled): bool,
+                }
+            ),
+        )
+
+    async def async_step_charge_delay_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure charge delay details in options flow."""
+        existing_config = self.config_entry.data
         current_margin = existing_config.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN)
         errors = {}
 
         if user_input is not None:
-            # Save weekly full charge configuration
-            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
-            self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
+            self.config_data[CONF_ENABLE_CHARGE_DELAY] = True
+            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(
+                user_input.get("delay_safety_margin_h", current_margin / 60) * 60
+            )
 
-            # Save delay configuration
-            enable_delay = user_input.get("enable_weekly_full_charge_delay", False)
-            self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY] = enable_delay
-            self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(user_input.get("delay_safety_margin_min", DEFAULT_DELAY_SAFETY_MARGIN_MIN))
-
-            if enable_delay:
-                # Check if solar forecast sensor already configured from predictive charging
-                existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
-                if existing_forecast:
-                    _LOGGER.debug("Weekly Full Charge Delay: Reusing solar forecast sensor from predictive charging: %s", existing_forecast)
+            existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
+            if not existing_forecast:
+                forecast_sensor = user_input.get("solar_forecast_sensor")
+                if not forecast_sensor:
+                    errors["solar_forecast_sensor"] = "sensor_not_found"
                 else:
-                    forecast_sensor = user_input.get("solar_forecast_sensor")
-                    if not forecast_sensor:
+                    state = self.hass.states.get(forecast_sensor)
+                    if state is None:
                         errors["solar_forecast_sensor"] = "sensor_not_found"
                     else:
-                        state = self.hass.states.get(forecast_sensor)
-                        if state is None:
-                            errors["solar_forecast_sensor"] = "sensor_not_found"
-                        else:
-                            self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
 
             if not errors:
-                return await self.async_step_pd_advanced()
+                return await self.async_step_capacity_protection()
 
-        # Build schema dynamically
         has_forecast_sensor = bool(self.config_data.get(CONF_SOLAR_FORECAST_SENSOR))
         schema_dict = {
-            vol.Required("weekly_full_charge_day", default=current_day):
-                SelectSelector(
-                    SelectSelectorConfig(
-                        options=["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
-                        translation_key="weekday",
-                        mode=SelectSelectorMode.DROPDOWN,
-                    )
-                ),
-            vol.Optional("enable_weekly_full_charge_delay", default=current_delay): bool,
-            vol.Optional("delay_safety_margin_min", default=current_margin):
+            vol.Optional("delay_safety_margin_h", default=current_margin / 60):
                 NumberSelector(
                     NumberSelectorConfig(
-                        min=10, max=120, step=5,
-                        mode=NumberSelectorMode.BOX,
-                        unit_of_measurement="min",
+                        min=1, max=6, step=0.5,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="h",
                     )
                 ),
         }
@@ -1413,9 +1581,69 @@ class OptionsFlowHandler(OptionsFlow):
             )
 
         return self.async_show_form(
-            step_id="weekly_full_charge_config",
+            step_id="charge_delay_config",
             data_schema=vol.Schema(schema_dict),
             errors=errors,
+        )
+
+    async def async_step_capacity_protection(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Ask if user wants to enable capacity protection mode."""
+        if user_input is not None:
+            if user_input.get("configure_capacity_protection", False):
+                return await self.async_step_capacity_protection_config()
+            else:
+                self.config_data[CONF_CAPACITY_PROTECTION_ENABLED] = False
+                return await self.async_step_pd_advanced()
+
+        is_enabled = self.config_entry.data.get(CONF_CAPACITY_PROTECTION_ENABLED, False)
+
+        return self.async_show_form(
+            step_id="capacity_protection",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("configure_capacity_protection", default=is_enabled): bool,
+                }
+            ),
+        )
+
+    async def async_step_capacity_protection_config(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Configure capacity protection parameters."""
+        existing_config = self.config_entry.data
+        current_soc = existing_config.get(CONF_CAPACITY_PROTECTION_SOC_THRESHOLD, DEFAULT_CAPACITY_PROTECTION_SOC)
+        current_limit = existing_config.get(CONF_CAPACITY_PROTECTION_LIMIT, DEFAULT_CAPACITY_PROTECTION_LIMIT)
+
+        if user_input is not None:
+            self.config_data[CONF_CAPACITY_PROTECTION_ENABLED] = True
+            self.config_data[CONF_CAPACITY_PROTECTION_SOC_THRESHOLD] = int(user_input["capacity_protection_soc_threshold"])
+            self.config_data[CONF_CAPACITY_PROTECTION_LIMIT] = int(user_input["capacity_protection_limit"])
+            return await self.async_step_pd_advanced()
+
+        return self.async_show_form(
+            step_id="capacity_protection_config",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("capacity_protection_soc_threshold", default=current_soc):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=30, max=100, step=1,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="%",
+                            )
+                        ),
+                    vol.Required("capacity_protection_limit", default=current_limit):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=2500, max=8000, step=100,
+                                mode=NumberSelectorMode.SLIDER,
+                                unit_of_measurement="W",
+                            )
+                        ),
+                }
+            ),
         )
 
     async def async_step_pd_advanced(

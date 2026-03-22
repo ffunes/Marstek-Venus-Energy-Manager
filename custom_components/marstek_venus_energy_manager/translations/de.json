@@ -3,12 +3,14 @@
     "step": {
       "user": {
         "title": "Marstek Venus Energy Manager konfigurieren",
-        "description": "Wählen Sie den Sensor aus, der die Netzimport-/Exportleistung misst.",
+        "description": "Wählen Sie den Sensor aus, der die Netzimport-/Exportleistung misst. Optional können Sie den Solarprognose-Sensor für erweiterte Funktionen konfigurieren.",
         "data": {
-          "consumption_sensor": "Netzverbrauchssensor"
+          "consumption_sensor": "Netzverbrauchssensor",
+          "solar_forecast_sensor": "Solarprognose-Sensor (optional)"
         },
         "data_description": {
-          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt. Der Controller passt die Batterien an, um diesen Wert nahe 0W zu halten."
+          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt. Der Controller passt die Batterien an, um diesen Wert nahe 0W zu halten.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet."
         }
       },
       "batteries": {
@@ -150,16 +152,48 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag",
-          "enable_weekly_full_charge_delay": "100%-Ladung auf den Nachmittag verzögern",
-          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "delay_safety_margin_min": "Sicherheitspuffer (Minuten)"
+          "weekly_full_charge_day": "Wochentag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "enable_weekly_full_charge_delay": "Hält die Batterien während des Morgens beim konfigurierten maximalen SOC und entsperrt 100% erst, wenn die verbleibende Solarenergie gerade ausreicht, um die Ladung zu vervollständigen. Schützt die Batterien vor hohen Temperaturen bei voller Ladung und priorisiert die solare Eigenverbrauchsoptimierung.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert. Erforderlich, wenn die Verzögerung aktiviert ist und die prädiktive Ladung nicht konfiguriert ist.",
-          "delay_safety_margin_min": "Zeitpuffer vor Sonnenuntergang. Das System entsperrt das Laden diese Minuten vor dem geschätzten Ende der Solarproduktion, um genügend Zeit für den Abschluss der Ladung zu gewährleisten."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+        }
+      },
+      "charge_delay": {
+        "title": "Solarladungsverzögerung",
+        "description": "Solarladungsverzögerung aktivieren? Diese Funktion verzögert das Laden der Batterien, bis die Solarenergiebilanz anzeigt, dass es nötig ist, und exportiert überschüssige Solarenergie ins Netz in der Zwischenzeit.",
+        "data": {
+          "configure_charge_delay": "Ladungsverzögerung konfigurieren"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Konfiguration der Ladungsverzögerung",
+        "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
+        "data": {
+          "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
+          "solar_forecast_sensor": "Solarprognose-Sensor"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+        }
+      },
+      "capacity_protection": {
+        "title": "Kapazitätsschutzmodus",
+        "description": "Wenn aktiviert, wird das System bei niedrigem Batterie-SOC Energie sparen und nur entladen, um Verbrauch über einem Spitzenlimit auszugleichen.",
+        "data": {
+          "configure_capacity_protection": "Kapazitätsschutz aktivieren"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Kapazitätsschutz-Konfiguration",
+        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem der Schutz aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
+        "data": {
+          "capacity_protection_soc_threshold": "SOC-Schwellenwert (%)",
+          "capacity_protection_limit": "Spitzenlimit (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird der Kapazitätsschutz aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
+          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und der Schutz aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
         }
       }
     },
@@ -181,10 +215,12 @@
         "title": "Marstek Venus Energy Manager neu konfigurieren",
         "description": "Ändern Sie die Integrationskonfiguration. Änderungen werden beim Neustart der Integration angewendet.",
         "data": {
-          "consumption_sensor": "Netzverbrauchssensor"
+          "consumption_sensor": "Netzverbrauchssensor",
+          "solar_forecast_sensor": "Solarprognose-Sensor (optional)"
         },
         "data_description": {
-          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt."
+          "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet."
         }
       },
       "batteries": {
@@ -326,16 +362,48 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag",
-          "enable_weekly_full_charge_delay": "100%-Ladung auf den Nachmittag verzögern",
-          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "delay_safety_margin_min": "Sicherheitspuffer (Minuten)"
+          "weekly_full_charge_day": "Wochentag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "enable_weekly_full_charge_delay": "Hält die Batterien während des Morgens beim konfigurierten maximalen SOC und entsperrt 100% erst, wenn die verbleibende Solarenergie gerade ausreicht, um die Ladung zu vervollständigen. Schützt die Batterien vor hohen Temperaturen bei voller Ladung und priorisiert die solare Eigenverbrauchsoptimierung.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert. Erforderlich, wenn die Verzögerung aktiviert ist und die prädiktive Ladung nicht konfiguriert ist.",
-          "delay_safety_margin_min": "Zeitpuffer vor Sonnenuntergang. Das System entsperrt das Laden diese Minuten vor dem geschätzten Ende der Solarproduktion, um genügend Zeit für den Abschluss der Ladung zu gewährleisten."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+        }
+      },
+      "charge_delay": {
+        "title": "Solarladungsverzögerung",
+        "description": "Solarladungsverzögerung aktivieren? Diese Funktion verzögert das Laden der Batterien, bis die Solarenergiebilanz anzeigt, dass es nötig ist, und exportiert überschüssige Solarenergie ins Netz in der Zwischenzeit.",
+        "data": {
+          "configure_charge_delay": "Ladungsverzögerung konfigurieren"
+        }
+      },
+      "charge_delay_config": {
+        "title": "Konfiguration der Ladungsverzögerung",
+        "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
+        "data": {
+          "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
+          "solar_forecast_sensor": "Solarprognose-Sensor"
+        },
+        "data_description": {
+          "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+        }
+      },
+      "capacity_protection": {
+        "title": "Kapazitätsschutzmodus",
+        "description": "Wenn aktiviert, wird das System bei niedrigem Batterie-SOC Energie sparen und nur entladen, um Verbrauch über einem Spitzenlimit auszugleichen.",
+        "data": {
+          "configure_capacity_protection": "Kapazitätsschutz aktivieren"
+        }
+      },
+      "capacity_protection_config": {
+        "title": "Kapazitätsschutz-Konfiguration",
+        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem der Schutz aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
+        "data": {
+          "capacity_protection_soc_threshold": "SOC-Schwellenwert (%)",
+          "capacity_protection_limit": "Spitzenlimit (W)"
+        },
+        "data_description": {
+          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird der Kapazitätsschutz aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
+          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und der Schutz aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
         }
       },
       "pd_advanced": {
@@ -388,6 +456,119 @@
         "sat": "Samstag",
         "sun": "Sonntag"
       }
+    }
+  },
+  "entity": {
+    "switch": {
+      "manual_mode": { "name": "Manueller Modus" },
+      "predictive_charging": { "name": "Prädiktives Laden" },
+      "charge_delay": { "name": "Ladeverzögerung" },
+      "capacity_protection": { "name": "Kapazitätsschutz" },
+      "backup_function": { "name": "Backup-Funktion" },
+      "rs485_control_mode": { "name": "RS485-Steuermodus" }
+    },
+    "sensor": {
+      "excluded_devices": { "name": "Ausgeschlossene Geräte" },
+      "discharge_window": {
+        "name": "Entladefenster",
+        "state": {
+          "no_slots": "Keine Zeitfenster",
+          "inactive": "Inaktiv",
+          "active": "Aktiv"
+        }
+      },
+      "active_batteries": { "name": "Aktive Batterien" },
+      "weekly_full_charge": {
+        "name": "Wöchentliche Vollladung",
+        "state": {
+          "idle": "Bereit",
+          "disabled": "Deaktiviert",
+          "charging": "Lädt auf 100%",
+          "complete": "Abgeschlossen"
+        }
+      },
+      "charge_delay_status": {
+        "name": "Ladeverzögerung",
+        "state": {
+          "idle": "Bereit",
+          "disabled": "Deaktiviert",
+          "waiting_for_solar": "Warte auf Solar",
+          "delayed": "Verzögert",
+          "charging_allowed": "Laden erlaubt"
+        }
+      },
+      "battery_soc": { "name": "Batterie-SOC" },
+      "battery_total_energy": { "name": "Batteriegesamtenergie" },
+      "battery_power": { "name": "Batterieleistung" },
+      "internal_temperature": { "name": "Innentemperatur" },
+      "ac_power": { "name": "AC-Leistung" },
+      "total_charging_energy": { "name": "Gesamte Ladeenergie" },
+      "total_discharging_energy": { "name": "Gesamte Entladeenergie" },
+      "total_daily_charging_energy": { "name": "Tägliche Ladeenergie" },
+      "total_daily_discharging_energy": { "name": "Tägliche Entladeenergie" },
+      "inverter_state": { "name": "Wechselrichterstatus" },
+      "battery_voltage": { "name": "Batteriespannung" },
+      "max_cell_voltage": { "name": "Maximale Zellenspannung" },
+      "min_cell_voltage": { "name": "Minimale Zellenspannung" },
+      "fault_status": { "name": "Fehlerstatus" },
+      "alarm_status": { "name": "Alarmstatus" },
+      "ac_offgrid_power": { "name": "AC-Offgrid-Leistung" },
+      "mppt1_power": { "name": "MPPT1-Leistung" },
+      "mppt2_power": { "name": "MPPT2-Leistung" },
+      "mppt3_power": { "name": "MPPT3-Leistung" },
+      "mppt4_power": { "name": "MPPT4-Leistung" },
+      "round_trip_efficiency_total": { "name": "Gesamte Hin- und Rückfahreffizienz" },
+      "stored_energy": { "name": "Gespeicherte Energie" },
+      "system_soc": { "name": "System-SOC" },
+      "system_charge_power": { "name": "System-Ladeleistung" },
+      "system_discharge_power": { "name": "System-Entladeleistung" },
+      "system_total_energy": { "name": "System-Gesamtenergie" },
+      "system_stored_energy": { "name": "System-Gespeicherte Energie" },
+      "system_daily_charging_energy": { "name": "Tägliche System-Ladeenergie" },
+      "system_daily_discharging_energy": { "name": "Tägliche System-Entladeenergie" }
+    },
+    "binary_sensor": {
+      "capacity_protection_active": { "name": "Kapazitätsschutz Aktiv" },
+      "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" }
+    },
+    "select": {
+      "force_mode": { "name": "Betriebsmodus erzwingen" },
+      "user_work_mode": { "name": "Arbeitsmodus" },
+      "weekly_full_charge_day": {
+        "name": "Tag der wöchentlichen Vollladung",
+        "state": {
+          "monday": "Montag",
+          "tuesday": "Dienstag",
+          "wednesday": "Mittwoch",
+          "thursday": "Donnerstag",
+          "friday": "Freitag",
+          "saturday": "Samstag",
+          "sunday": "Sonntag"
+        }
+      }
+    },
+    "number": {
+      "set_charge_power": { "name": "Ladeleistung" },
+      "set_discharge_power": { "name": "Entladeleistung" },
+      "max_charge_power": { "name": "Max. Ladeleistung" },
+      "max_discharge_power": { "name": "Max. Entladeleistung" },
+      "charging_cutoff_capacity": { "name": "Lade-SOC-Grenzwert" },
+      "discharging_cutoff_capacity": { "name": "Entlade-SOC-Grenzwert" },
+      "charge_to_soc": { "name": "Laden bis SOC" },
+      "pd_controller_kp": { "name": "PD Kp" },
+      "pd_controller_kd": { "name": "PD Kd" },
+      "pd_controller_deadband": { "name": "PD Totband" },
+      "pd_controller_max_power_change": { "name": "PD Max. Leistungsänderung" },
+      "pd_controller_direction_hysteresis": { "name": "PD Richtungshysterese" },
+      "pd_min_charge_power": { "name": "PD Min. Ladeleistung" },
+      "pd_min_discharge_power": { "name": "PD Min. Entladeleistung" },
+      "max_contracted_power": { "name": "Max. Vertragsleistung" },
+      "capacity_protection_soc_threshold": { "name": "Kapazitätsschutz SOC-Schwelle" },
+      "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
+      "capacity_protection_limit": { "name": "Spitzenlimit Schutz" }
+    },
+    "button": {
+      "reset_device": { "name": "Gerät zurücksetzen" }
     }
   }
 }

@@ -50,7 +50,8 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         super().__init__(coordinator)
         self.definition = definition
         
-        self._attr_name = f"{coordinator.name} {definition['name']}"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_options = list(definition["options"].keys())
         self._attr_should_poll = False
@@ -84,11 +85,11 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         }
 
 
-WEEKDAY_OPTIONS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+WEEKDAY_OPTIONS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 # Map full names to internal short codes used in config_entry.data and WEEKDAY_MAP
 WEEKDAY_TO_CODE = {
-    "Monday": "mon", "Tuesday": "tue", "Wednesday": "wed", "Thursday": "thu",
-    "Friday": "fri", "Saturday": "sat", "Sunday": "sun",
+    "monday": "mon", "tuesday": "tue", "wednesday": "wed", "thursday": "thu",
+    "friday": "fri", "saturday": "sat", "sunday": "sun",
 }
 CODE_TO_WEEKDAY = {v: k for k, v in WEEKDAY_TO_CODE.items()}
 
@@ -101,7 +102,8 @@ class WeeklyFullChargeDaySelect(SelectEntity):
         self.hass = hass
         self.entry = entry
 
-        self._attr_name = "Weekly Full Charge Day"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "weekly_full_charge_day"
         self._attr_unique_id = f"{entry.entry_id}_weekly_full_charge_day"
         self._attr_icon = "mdi:calendar-week"
         self._attr_options = WEEKDAY_OPTIONS
@@ -111,7 +113,7 @@ class WeeklyFullChargeDaySelect(SelectEntity):
     def current_option(self) -> str:
         """Return the currently selected day as full name."""
         code = self.entry.data.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
-        return CODE_TO_WEEKDAY.get(code, "Sunday")
+        return CODE_TO_WEEKDAY.get(code, "sunday")
 
     async def async_select_option(self, option: str) -> None:
         """Update the selected day in config_entry.data."""

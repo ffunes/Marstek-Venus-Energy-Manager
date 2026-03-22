@@ -47,7 +47,7 @@ REGISTER_MAP = {
         "discharging_cutoff_capacity": None,    # NOT AVAILABLE - software enforcement
         "max_charge_power": 44002,
         "max_discharge_power": 44003,
-        "battery_soc": 34002,
+        "battery_soc": 37005,
         "battery_power": 30001,
         "user_work_mode": None,
     },
@@ -568,8 +568,8 @@ STORED_ENERGY_SENSOR_DEFINITIONS = [
 
 SENSOR_DEFINITIONS_V3 = [
     {
-        "register": 34002,
-        "scale": 0.1,
+        "register": 37005,
+        "scale": 1,
         "unit": "%",
         "device_class": "battery",
         "state_class": "measurement",
@@ -577,7 +577,7 @@ SENSOR_DEFINITIONS_V3 = [
         "key": "battery_soc",
         "enabled_by_default": True,
         "data_type": "uint16",
-        "precision": 2,
+        "precision": 1,
         "scan_interval": "medium",
     },
     {
@@ -1287,10 +1287,13 @@ SOC_REEVALUATION_THRESHOLD = 30  # Re-evaluate every 30% SOC drop
 
 # Weekly Full Charge Configuration
 CONF_ENABLE_WEEKLY_FULL_CHARGE = "enable_weekly_full_charge"
+CONF_MANUAL_MODE_ENABLED = "manual_mode_enabled"
+CONF_PREDICTIVE_CHARGING_OVERRIDDEN = "predictive_charging_overridden"
 CONF_WEEKLY_FULL_CHARGE_DAY = "weekly_full_charge_day"
 CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
+CONF_ENABLE_CHARGE_DELAY = "enable_charge_delay"
 CONF_DELAY_SAFETY_MARGIN_MIN = "delay_safety_margin_min"
-DEFAULT_DELAY_SAFETY_MARGIN_MIN = 40
+DEFAULT_DELAY_SAFETY_MARGIN_MIN = 60
 
 # Weekly Full Charge Delay Constants
 CHARGE_EFFICIENCY = 0.85  # Conservative factor for charge power estimation
@@ -1304,6 +1307,14 @@ WEEKDAY_MAP = {
     "mon": 0, "tue": 1, "wed": 2, "thu": 3,
     "fri": 4, "sat": 5, "sun": 6
 }
+
+# Capacity Protection Mode Configuration
+CONF_CAPACITY_PROTECTION_ENABLED = "capacity_protection_enabled"
+CONF_CAPACITY_PROTECTION_SOC_THRESHOLD = "capacity_protection_soc_threshold"
+CONF_CAPACITY_PROTECTION_LIMIT = "capacity_protection_limit"
+
+DEFAULT_CAPACITY_PROTECTION_SOC = 30
+DEFAULT_CAPACITY_PROTECTION_LIMIT = 2500
 
 # PD Controller Advanced Configuration Keys
 CONF_PD_KP = "pd_controller_kp"
@@ -1406,5 +1417,39 @@ CONFIG_NUMBER_DEFINITIONS = [
         "default": 7000,
         "icon": "mdi:transmission-tower",
         "condition": CONF_ENABLE_PREDICTIVE_CHARGING,
+    },
+    {
+        "key": CONF_DELAY_SAFETY_MARGIN_MIN,
+        "name": "Charge Delay Safety Margin",
+        "min": 1,
+        "max": 6,
+        "step": 0.5,
+        "unit": "h",
+        "scale": 60,
+        "default": DEFAULT_DELAY_SAFETY_MARGIN_MIN,
+        "icon": "mdi:timer-sand",
+        "condition": CONF_ENABLE_CHARGE_DELAY,
+    },
+    {
+        "key": CONF_CAPACITY_PROTECTION_SOC_THRESHOLD,
+        "name": "Capacity Protection SOC Threshold",
+        "min": 30,
+        "max": 100,
+        "step": 1,
+        "unit": "%",
+        "default": DEFAULT_CAPACITY_PROTECTION_SOC,
+        "icon": "mdi:battery-alert-variant-outline",
+        "condition": CONF_CAPACITY_PROTECTION_ENABLED,
+    },
+    {
+        "key": CONF_CAPACITY_PROTECTION_LIMIT,
+        "name": "Capacity Protection Peak Limit",
+        "min": 2500,
+        "max": 8000,
+        "step": 100,
+        "unit": "W",
+        "default": DEFAULT_CAPACITY_PROTECTION_LIMIT,
+        "icon": "mdi:flash-alert",
+        "condition": CONF_CAPACITY_PROTECTION_ENABLED,
     },
 ]
