@@ -478,6 +478,7 @@
         }
       },
       "active_batteries": { "name": "Actieve Batterijen" },
+      "non_responsive_batteries": { "name": "Niet-reagerende Batterijen" },
       "weekly_full_charge": {
         "name": "Wekelijkse Volledige Lading",
         "state": {

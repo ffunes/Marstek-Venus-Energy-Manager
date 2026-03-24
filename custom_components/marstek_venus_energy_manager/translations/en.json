@@ -478,6 +478,7 @@
         }
       },
       "active_batteries": { "name": "Active Batteries" },
+      "non_responsive_batteries": { "name": "Non-Responsive Batteries" },
       "weekly_full_charge": {
         "name": "Weekly Full Charge",
         "state": {

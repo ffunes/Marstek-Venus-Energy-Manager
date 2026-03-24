@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1] - 2026-03-24
+
+### Added
+- **Support for up to 6 batteries**: The battery count slider in both the initial setup and options flow now allows selecting 1–6 batteries (previously capped at 4). No architectural changes were required as the control loop and power distribution are fully dynamic.
+- **Non-responsive battery detection**: The control loop now detects when a battery acknowledges a discharge command (registers written correctly) but fails to deliver power. After 3 consecutive cycles with actual output below 10% of the commanded value, the battery is excluded from the active pool with a warning log entry. It is automatically retried after a cooldown period that doubles on each repeated failure (5 → 10 → 20 → 30 min cap) and resets to 5 min after a successful delivery cycle. This prevents a single non-responsive battery from destabilising the PD controller and causing the remaining batteries to oscillate.
+- **Non-Responsive Batteries diagnostic sensor**: New sensor on the Marstek Venus System device showing which batteries are currently excluded due to non-responsive behaviour. State is `None` when all batteries are healthy, or a comma-separated list of excluded battery names. Attributes expose per-battery details: exclusion status, cooldown duration, and remaining cooldown minutes. Available in EN, ES, DE, FR, NL.
+
 ## [1.4.0] - 2026-03-21
 
 ### Added

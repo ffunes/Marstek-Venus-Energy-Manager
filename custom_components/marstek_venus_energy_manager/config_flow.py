@@ -190,7 +190,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required("num_batteries", default=1):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=1, max=4, mode=NumberSelectorMode.SLIDER
+                                min=1, max=6, mode=NumberSelectorMode.SLIDER
                             )
                         ),
                 }
@@ -936,7 +936,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required("num_batteries", default=current_batteries):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=1, max=4, mode=NumberSelectorMode.SLIDER
+                                min=1, max=6, mode=NumberSelectorMode.SLIDER
                             )
                         ),
                 }

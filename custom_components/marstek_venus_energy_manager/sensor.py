@@ -86,6 +86,10 @@ async def async_setup_entry(
     if controller and has_charge_delay_config:
         entities.append(ChargeDelaySensor(hass, entry, controller))
 
+    # Add non-responsive batteries sensor (always, when controller is present)
+    if controller:
+        entities.append(NonResponsiveBatteriesSensor(hass, entry, controller, coordinators))
+
     async_add_entities(entities)
 
 
@@ -469,6 +473,65 @@ class ChargeDelaySensor(SensorEntity):
             if value is not None:
                 attrs[key] = value
 
+        return attrs
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class NonResponsiveBatteriesSensor(SensorEntity):
+    """Diagnostic sensor showing batteries excluded due to non-responsive behavior."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, controller, coordinators: list
+    ) -> None:
+        """Initialize the non-responsive batteries sensor."""
+        self.hass = hass
+        self.entry = entry
+        self._controller = controller
+        self._coordinators = coordinators
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "non_responsive_batteries"
+        self._attr_unique_id = f"{entry.entry_id}_non_responsive_batteries"
+        self._attr_icon = "mdi:battery-alert"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_should_poll = True
+
+    @property
+    def native_value(self) -> str:
+        """Return names of excluded batteries, or 'None' if all are healthy."""
+        names = self._controller.non_responsive_battery_names
+        return ", ".join(names) if names else "None"
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return per-battery non-responsive state details."""
+        from homeassistant.util import dt as dt_util
+        now = dt_util.utcnow()
+        attrs = {}
+        for coordinator in self._coordinators:
+            info = self._controller._non_responsive_batteries.get(coordinator)
+            if info and info.get("excluded_at") is not None:
+                elapsed_min = (now - info["excluded_at"]).total_seconds() / 60
+                remaining_min = max(0.0, info["cooldown_minutes"] - elapsed_min)
+                attrs[coordinator.name] = {
+                    "excluded": True,
+                    "cooldown_minutes": info["cooldown_minutes"],
+                    "remaining_minutes": round(remaining_min, 1),
+                }
+            else:
+                attrs[coordinator.name] = {
+                    "excluded": False,
+                    "fail_count": info["fail_count"] if info else 0,
+                }
         return attrs
 
     @property
