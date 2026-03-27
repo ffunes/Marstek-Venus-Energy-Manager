@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, BINARY_SENSOR_DEFINITIONS, CONF_CAPACITY_PROTECTION_ENABLED
+from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ async def async_setup_entry(
     controller = hass.data[DOMAIN][entry.entry_id].get("controller")
     entities = []
 
-    # Add regular battery binary sensors
+    # Add regular battery binary sensors (version-specific)
     for coordinator in coordinators:
-        for definition in BINARY_SENSOR_DEFINITIONS:
+        for definition in coordinator.binary_sensor_definitions:
             entities.append(MarstekVenusBinarySensor(coordinator, definition))
 
         # Add charge hysteresis sensor for batteries with hysteresis enabled
@@ -263,6 +263,26 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
                 "solar_forecast_kwh": decision.get("solar_forecast_kwh"),
                 "decision_reason": decision.get("reason"),
             })
+
+        # Dynamic pricing attributes
+        attrs["pricing_mode"] = self.controller.predictive_charging_mode
+        if self.controller.predictive_charging_mode == "dynamic_pricing":
+            attrs["price_data_status"] = getattr(self.controller, "_price_data_status", "not_evaluated")
+
+        if self.controller._dynamic_pricing_schedule:
+            schedule = self.controller._dynamic_pricing_schedule
+            attrs["charging_needed"] = schedule.charging_needed
+            attrs["hours_needed"] = schedule.hours_needed
+            attrs["selected_hours"] = [
+                {"start": s.start.isoformat(), "end": s.end.isoformat(), "price": s.price}
+                for s in schedule.selected_slots
+            ]
+            attrs["average_price"] = schedule.average_price
+            attrs["estimated_cost"] = schedule.estimated_cost
+            attrs["in_cheap_slot"] = self.controller._is_in_dynamic_pricing_slot()
+            attrs["max_price_threshold"] = self.controller.max_price_threshold
+            attrs["evaluation_time"] = schedule.evaluation_time.isoformat()
+            attrs["price_integration_type"] = self.controller.price_integration_type
 
         return attrs
 

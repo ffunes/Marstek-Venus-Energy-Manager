@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS
+from .const import DOMAIN, EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS, CYCLE_SENSOR_DEFINITIONS
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 
@@ -24,6 +24,8 @@ async def async_setup_entry(
             entities.append(MarstekVenusEfficiencySensor(coordinator, definition))
         for definition in STORED_ENERGY_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusStoredEnergySensor(coordinator, definition))
+        for definition in CYCLE_SENSOR_DEFINITIONS:
+            entities.append(MarstekVenusCycleSensor(coordinator, definition))
     async_add_entities(entities)
 
 
@@ -113,6 +115,50 @@ class MarstekVenusStoredEnergySensor(CoordinatorEntity, SensorEntity):
 
         stored_energy = (soc / 100) * capacity
         return round(stored_energy, 3)
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "name": self.coordinator.name,
+            "manufacturer": "Marstek",
+            "model": "Venus",
+        }
+
+
+class MarstekVenusCycleSensor(CoordinatorEntity, SensorEntity):
+    """Calculated battery cycle count: total_discharge / battery_capacity."""
+
+    def __init__(
+        self, coordinator: MarstekVenusDataUpdateCoordinator, definition: dict
+    ) -> None:
+        """Initialize the cycle count sensor."""
+        super().__init__(coordinator)
+        self.definition = definition
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
+        self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
+        self._attr_state_class = definition.get("state_class")
+        self._attr_icon = definition.get("icon")
+        self._attr_should_poll = False
+        self._dependency_keys = definition["dependency_keys"]
+
+    @property
+    def native_value(self):
+        """Return calculated cycle count: (discharge + charge) / 2 / capacity."""
+        if self.coordinator.data is None:
+            return None
+
+        discharge = self.coordinator.data.get(self._dependency_keys["discharge"], 0)
+        charge = self.coordinator.data.get(self._dependency_keys["charge"], 0)
+        capacity = self.coordinator.data.get(self._dependency_keys["capacity"], 0)
+
+        if not capacity or capacity <= 0:
+            return None
+
+        return round((discharge + charge) / 2 / capacity, 1)
 
     @property
     def device_info(self):

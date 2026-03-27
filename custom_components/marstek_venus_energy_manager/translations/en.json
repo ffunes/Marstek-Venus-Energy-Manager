@@ -123,8 +123,18 @@
           "configure_predictive_charging": "Configure predictive charging"
         }
       },
+      "predictive_charging_mode": {
+        "title": "Predictive Charging Mode",
+        "description": "Select how the system decides when to charge from the grid.",
+        "data": {
+          "predictive_charging_mode": "Charging mode"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor."
+        }
+      },
       "predictive_charging_config": {
-        "title": "Predictive Charging Configuration",
+        "title": "Predictive Charging — Time Slot",
         "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
         "data": {
           "start_time": "Start time (off-peak tariff)",
@@ -137,7 +147,25 @@
           "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
-          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh (e.g., Solcast)",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Predictive Charging — Dynamic Pricing",
+        "description": "Configure the electricity price sensor and parameters for automatic cheap-hour selection.",
+        "data": {
+          "price_integration_type": "Price integration",
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Select your electricity price provider integration",
+          "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
+          "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -201,9 +229,9 @@
       "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
       "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
       "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
-      "too_low": "Contracted power must be greater than total battery charging capacity.",
       "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
-      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00)."
+      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00).",
+      "no_price_data": "Selected sensor does not have the expected price attributes. Nordpool: needs `raw_today` attribute. PVPC: needs `price_00h` … `price_23h` attributes. CKW: needs `prices` attribute with a list of slots."
     },
     "abort": {
       "already_configured": "This integration is already configured."
@@ -333,8 +361,18 @@
           "configure_predictive_charging": "Configure predictive charging"
         }
       },
+      "predictive_charging_mode": {
+        "title": "Predictive Charging Mode",
+        "description": "Select how the system decides when to charge from the grid.",
+        "data": {
+          "predictive_charging_mode": "Charging mode"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor."
+        }
+      },
       "predictive_charging_config": {
-        "title": "Predictive Charging Configuration",
+        "title": "Predictive Charging — Time Slot",
         "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
         "data": {
           "start_time": "Start time (off-peak tariff)",
@@ -347,7 +385,25 @@
           "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
-          "solar_forecast_sensor": "Sensor providing next day's solar production forecast in kWh (e.g., Solcast)",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Predictive Charging — Dynamic Pricing",
+        "description": "Configure the electricity price sensor and parameters for automatic cheap-hour selection.",
+        "data": {
+          "price_integration_type": "Price integration",
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Select your electricity price provider integration",
+          "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
+          "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -440,7 +496,6 @@
       "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
       "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
       "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
-      "too_low": "Contracted power must be greater than total battery charging capacity.",
       "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
       "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00)."
     }
@@ -455,6 +510,19 @@
         "fri": "Friday",
         "sat": "Saturday",
         "sun": "Sunday"
+      }
+    },
+    "predictive_charging_mode": {
+      "options": {
+        "time_slot": "Time Slot (fixed nightly window)",
+        "dynamic_pricing": "Dynamic Pricing (cheapest hours)"
+      }
+    },
+    "price_integration_type": {
+      "options": {
+        "nordpool": "Nordpool",
+        "pvpc": "PVPC (Spain – ESIOS REE)",
+        "ckw": "CKW (Switzerland)"
       }
     }
   },
@@ -526,11 +594,23 @@
       "system_total_energy": { "name": "System Total Energy" },
       "system_stored_energy": { "name": "System Stored Energy" },
       "system_daily_charging_energy": { "name": "System Daily Charging Energy" },
-      "system_daily_discharging_energy": { "name": "System Daily Discharging Energy" }
+      "system_daily_discharging_energy": { "name": "System Daily Discharging Energy" },
+      "device_name": { "name": "Device Name" },
+      "sn_code": { "name": "Serial Number" },
+      "software_version": { "name": "Software Version" },
+      "bms_version": { "name": "BMS Version" },
+      "ems_version": { "name": "EMS Version" },
+      "vms_version": { "name": "VMS Version" },
+      "comm_module_firmware": { "name": "Comm Module Firmware" },
+      "mac_address": { "name": "MAC Address" },
+      "battery_cycle_count": { "name": "Battery Cycle Count" },
+      "battery_cycle_count_calc": { "name": "Battery Cycle Count (Calc)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Capacity Protection Active" },
-      "predictive_charging_active": { "name": "Predictive Charging Active" }
+      "predictive_charging_active": { "name": "Predictive Charging Active" },
+      "wifi_status": { "name": "WiFi Status" },
+      "cloud_status": { "name": "Cloud Status" }
     },
     "select": {
       "force_mode": { "name": "Force Mode" },

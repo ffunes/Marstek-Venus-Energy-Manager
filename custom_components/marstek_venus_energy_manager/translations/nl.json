@@ -137,7 +137,33 @@
           "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
           "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
           "days": "Dagen waarop netladen is toegestaan",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert (bijv. Solcast)",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag.",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Laadmodus selecteren",
+        "description": "Selecteer de modus voor voorspellend netladen. Tijdslot gebruikt een vast nachtelijk laadvenster; Dynamische prijs selecteert automatisch de goedkoopste uren op basis van realtime stroomprijzen.",
+        "data": {
+          "predictive_charging_mode": "Laadmodus"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Configuratie dynamische prijslading",
+        "description": "Configureer dynamische prijslading. Het systeem leest uurlijkse stroomprijzen en selecteert automatisch de goedkoopste uren om te laden.",
+        "data": {
+          "price_integration_type": "Prijsintegratie",
+          "price_sensor": "Prijssensor",
+          "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
+          "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
+          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -201,9 +227,9 @@
       "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
       "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
       "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
-      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen.",
       "overlapping_slots": "Dit tijdslot overlapt met een bestaand tijdslot. Pas de tijden of dagen aan.",
-      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00)."
+      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00).",
+      "no_price_data": "De geselecteerde sensor heeft niet de verwachte prijsattributen. Nordpool: heeft `raw_today` nodig. PVPC: heeft `price_00h` … `price_23h` nodig. CKW: heeft het attribuut `prices` met een lijst van slots nodig."
     },
     "abort": {
       "already_configured": "Deze integratie is al geconfigureerd."
@@ -347,7 +373,33 @@
           "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
           "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
           "days": "Dagen waarop netladen is toegestaan",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling voor de volgende dag in kWh levert (bijv. Solcast)",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag.",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Laadmodus selecteren",
+        "description": "Selecteer de modus voor voorspellend netladen. Tijdslot gebruikt een vast nachtelijk laadvenster; Dynamische prijs selecteert automatisch de goedkoopste uren op basis van realtime stroomprijzen.",
+        "data": {
+          "predictive_charging_mode": "Laadmodus"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Configuratie dynamische prijslading",
+        "description": "Configureer dynamische prijslading. Het systeem leest uurlijkse stroomprijzen en selecteert automatisch de goedkoopste uren om te laden.",
+        "data": {
+          "price_integration_type": "Prijsintegratie",
+          "price_sensor": "Prijssensor",
+          "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
+          "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
+          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -440,9 +492,9 @@
       "cannot_connect": "Kan geen verbinding maken met de batterij. Controleer het IP-adres en of de batterij toegankelijk is op het netwerk.",
       "sensor_not_found": "Zonnevoorspellingssensor bestaat niet. Controleer of de sensor beschikbaar is.",
       "invalid_unit": "Zonnevoorspellingssensor moet 'kWh' of 'Wh' als eenheid hebben.",
-      "too_low": "Het gecontracteerde vermogen moet groter zijn dan de totale laadcapaciteit van de batterijen.",
       "overlapping_slots": "Dit tijdslot overlapt met een bestaand tijdslot. Pas de tijden of dagen aan.",
-      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00)."
+      "midnight_crossing": "De starttijd moet vóór de eindtijd liggen. Maak voor nachtperiodes twee aparte tijdslots aan (bijv. 22:00-23:59 en 00:00-06:00).",
+      "no_price_data": "De geselecteerde sensor heeft niet de verwachte prijsattributen. Nordpool: heeft `raw_today` nodig. PVPC: heeft `price_00h` … `price_23h` nodig. CKW: heeft het attribuut `prices` met een lijst van slots nodig."
     }
   },
   "selector": {
@@ -455,6 +507,19 @@
         "fri": "Vrijdag",
         "sat": "Zaterdag",
         "sun": "Zondag"
+      }
+    },
+    "predictive_charging_mode": {
+      "options": {
+        "time_slot": "Tijdslot",
+        "dynamic_pricing": "Dynamische prijs"
+      }
+    },
+    "price_integration_type": {
+      "options": {
+        "nordpool": "Nordpool",
+        "pvpc": "PVPC (Spanje – ESIOS REE)",
+        "ckw": "CKW (Zwitserland)"
       }
     }
   },
@@ -526,11 +591,23 @@
       "system_total_energy": { "name": "Systeem Totale Energie" },
       "system_stored_energy": { "name": "Systeem Opgeslagen Energie" },
       "system_daily_charging_energy": { "name": "Dagelijkse Systeem Laadenergie" },
-      "system_daily_discharging_energy": { "name": "Dagelijkse Systeem Ontlaadenergie" }
+      "system_daily_discharging_energy": { "name": "Dagelijkse Systeem Ontlaadenergie" },
+      "device_name": { "name": "Apparaatnaam" },
+      "sn_code": { "name": "Serienummer" },
+      "software_version": { "name": "Softwareversie" },
+      "bms_version": { "name": "BMS-versie" },
+      "ems_version": { "name": "EMS-versie" },
+      "vms_version": { "name": "VMS-versie" },
+      "comm_module_firmware": { "name": "Firmware Communicatiemodule" },
+      "mac_address": { "name": "MAC-adres" },
+      "battery_cycle_count": { "name": "Batterijcycli" },
+      "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Capaciteitsbescherming Actief" },
-      "predictive_charging_active": { "name": "Voorspellend Laden Actief" }
+      "predictive_charging_active": { "name": "Voorspellend Laden Actief" },
+      "wifi_status": { "name": "WiFi-status" },
+      "cloud_status": { "name": "Cloudstatus" }
     },
     "select": {
       "force_mode": { "name": "Geforceerde Modus" },

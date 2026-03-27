@@ -137,7 +137,33 @@
           "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
           "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
           "days": "Jours où la charge depuis le réseau est autorisée",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh (ex : Solcast)",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée.",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Sélectionner le mode de charge",
+        "description": "Sélectionnez le mode de charge prédictive depuis le réseau. Plage horaire utilise une fenêtre de charge nocturne fixe ; Prix dynamique sélectionne automatiquement les heures les moins chères en fonction des prix d'électricité en temps réel.",
+        "data": {
+          "predictive_charging_mode": "Mode de charge"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Configuration de la charge à prix dynamique",
+        "description": "Configurez la charge à prix dynamique. Le système lira les prix horaires de l'électricité et sélectionnera automatiquement les heures les moins chères pour charger.",
+        "data": {
+          "price_integration_type": "Type d'intégration de prix",
+          "price_sensor": "Capteur de prix",
+          "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
+          "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
+          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -201,9 +227,9 @@
       "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
       "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
       "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
-      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries.",
       "overlapping_slots": "Ce créneau horaire chevauche un créneau existant. Ajustez les horaires ou les jours.",
-      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00)."
+      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00).",
+      "no_price_data": "Le capteur sélectionné ne possède pas les attributs de prix attendus. Nordpool : nécessite `raw_today`. PVPC : nécessite `price_00h` … `price_23h`. CKW : nécessite l'attribut `prices` avec une liste de créneaux."
     },
     "abort": {
       "already_configured": "Cette intégration est déjà configurée."
@@ -347,7 +373,33 @@
           "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
           "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
           "days": "Jours où la charge depuis le réseau est autorisée",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire du lendemain en kWh (ex : Solcast)",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée.",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Sélectionner le mode de charge",
+        "description": "Sélectionnez le mode de charge prédictive depuis le réseau. Plage horaire utilise une fenêtre de charge nocturne fixe ; Prix dynamique sélectionne automatiquement les heures les moins chères en fonction des prix d'électricité en temps réel.",
+        "data": {
+          "predictive_charging_mode": "Mode de charge"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Configuration de la charge à prix dynamique",
+        "description": "Configurez la charge à prix dynamique. Le système lira les prix horaires de l'électricité et sélectionnera automatiquement les heures les moins chères pour charger.",
+        "data": {
+          "price_integration_type": "Type d'intégration de prix",
+          "price_sensor": "Capteur de prix",
+          "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
+          "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
+          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -440,9 +492,9 @@
       "cannot_connect": "Impossible de se connecter à la batterie. Vérifiez l'adresse IP et que la batterie est accessible sur le réseau.",
       "sensor_not_found": "Le capteur de prévision solaire n'existe pas. Vérifiez que le capteur est disponible.",
       "invalid_unit": "Le capteur de prévision solaire doit avoir 'kWh' ou 'Wh' comme unité.",
-      "too_low": "La puissance souscrite doit être supérieure à la capacité totale de charge des batteries.",
       "overlapping_slots": "Ce créneau horaire chevauche un créneau existant. Ajustez les horaires ou les jours.",
-      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00)."
+      "midnight_crossing": "L'heure de début doit être antérieure à l'heure de fin. Pour les périodes nocturnes, créez deux créneaux séparés (ex: 22:00-23:59 et 00:00-06:00).",
+      "no_price_data": "Le capteur sélectionné ne possède pas les attributs de prix attendus. Nordpool : nécessite `raw_today`. PVPC : nécessite `price_00h` … `price_23h`. CKW : nécessite l'attribut `prices` avec une liste de créneaux."
     }
   },
   "selector": {
@@ -455,6 +507,19 @@
         "fri": "Vendredi",
         "sat": "Samedi",
         "sun": "Dimanche"
+      }
+    },
+    "predictive_charging_mode": {
+      "options": {
+        "time_slot": "Plage horaire",
+        "dynamic_pricing": "Prix dynamique"
+      }
+    },
+    "price_integration_type": {
+      "options": {
+        "nordpool": "Nordpool",
+        "pvpc": "PVPC (Espagne – ESIOS REE)",
+        "ckw": "CKW (Suisse)"
       }
     }
   },
@@ -526,11 +591,23 @@
       "system_total_energy": { "name": "Énergie Totale du Système" },
       "system_stored_energy": { "name": "Énergie Stockée du Système" },
       "system_daily_charging_energy": { "name": "Énergie de Charge Journalière du Système" },
-      "system_daily_discharging_energy": { "name": "Énergie de Décharge Journalière du Système" }
+      "system_daily_discharging_energy": { "name": "Énergie de Décharge Journalière du Système" },
+      "device_name": { "name": "Nom du Dispositif" },
+      "sn_code": { "name": "Numéro de Série" },
+      "software_version": { "name": "Version Logiciel" },
+      "bms_version": { "name": "Version BMS" },
+      "ems_version": { "name": "Version EMS" },
+      "vms_version": { "name": "Version VMS" },
+      "comm_module_firmware": { "name": "Firmware Module Communication" },
+      "mac_address": { "name": "Adresse MAC" },
+      "battery_cycle_count": { "name": "Cycles Batterie" },
+      "battery_cycle_count_calc": { "name": "Cycles Batterie (Calculé)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Protection de Capacité Active" },
-      "predictive_charging_active": { "name": "Charge Prédictive Active" }
+      "predictive_charging_active": { "name": "Charge Prédictive Active" },
+      "wifi_status": { "name": "État WiFi" },
+      "cloud_status": { "name": "État Cloud" }
     },
     "select": {
       "force_mode": { "name": "Mode Forcé" },

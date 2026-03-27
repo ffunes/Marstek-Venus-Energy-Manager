@@ -127,15 +127,42 @@ This feature allows you to "mask" high-power devices so the battery doesn't try 
     *   **Allow Solar Surplus**: If checked, the battery will not charge to compensate for this device's consumption when the system is running on solar surplus.
 
 ### 6. Predictive Charging (Optional)
-Automatically charge the battery from the grid during a specific window if tomorrow's solar forecast is low.
-*   **Enable**: Check "Configure predictive charging".
+Automatically charge the battery from the grid when tomorrow's solar forecast is insufficient to cover expected consumption. Two modes are available:
+
+#### Mode A — Time Slot
+Charges during a fixed time window (e.g. overnight off-peak hours).
+*   **Enable**: Check "Configure predictive charging" and select **Time Slot**.
 *   **Settings**:
-    *   **Time Window**: When effectively to charge from grid (usually night time/off-peak, e.g., `02:00` - `05:00`).
-    *   **Solar Forecast Sensor**: A sensor providing tomorrow's energy production estimate in **kWh** (e.g., from Solcast or Forecast.Solar).
-    *   **Max Contracted Power**: The limit of your grid connection (W). The system ensures charging + house load doesn't trip your main breaker.
+    *   **Time Window**: When to charge from the grid (e.g., `02:00` – `05:00`).
+    *   **Solar Forecast Sensor** *(Optional)*: Sensor providing the next day's solar production in **kWh** (e.g. Solcast, Forecast.Solar). Leave empty if you have no solar panels — the system will charge whenever battery energy alone is insufficient.
+    *   **Max Contracted Power**: Your grid connection limit (W). The system ensures charging + house load doesn't trip your main breaker.
 
 > [!NOTE]
-> **Notification**: The system will send a Home Assistant notification **one hour before** the configured start time. This notification details the calculated required charge and whether grid charging will be activated. This gives you sufficient time to use the **Override Predictive Charging** switch if you disagree with the decision.
+> **Notification**: A Home Assistant notification is sent **one hour before** the configured start time with the calculated energy balance and the charging decision. Use the **Override Predictive Charging** switch to cancel if needed.
+
+#### Mode B — Dynamic Pricing
+Instead of a fixed window, the system evaluates electricity prices for the day and automatically selects the **cheapest available hours** to cover the energy deficit.
+
+*   **Enable**: Check "Configure predictive charging" and select **Dynamic Pricing**.
+*   **Settings**:
+    *   **Price integration**: Choose your electricity price provider:
+        *   **Nordpool / Energi Data Service** (HACS Nordpool integration - https://github.com/custom-components/nordpool) — prices in **ct/kWh**. Supports 15-minute and hourly slots.
+        *   **PVPC (Spain / ESIOS REE)** (https://github.com/oscarrgarciia/HA-PVPC-Updated) — prices in **€/kWh**.
+        *   **CKW (Switzerland)** (https://github.com/trolli-ch/hass-ckw-dynamic-pricing) — prices in **Rp/kWh** (Swiss Rappen).
+    *   **Price sensor**: The HA sensor entity that exposes the price data from the selected integration.
+    *   **Maximum price threshold** *(Optional)*: Slots above this price are excluded even if they are the cheapest available. Use the same unit as the sensor (`ct/kWh` for Nordpool, `€/kWh` for PVPC, `Rp/kWh` for CKW). Leave empty to allow all slots.
+    *   **Solar Forecast Sensor** *(Optional)*: Same as Time Slot mode — leave empty if no solar panels.
+    *   **Max Contracted Power**: Same as Time Slot mode.
+
+*   **How it works**:
+    1.  Every day at **00:05** the system calculates the energy deficit: `usable battery energy + solar forecast − expected consumption`.
+    2.  If a deficit exists, it picks the cheapest hours from the price data to cover it, respecting the max price threshold.
+    3.  If no deficit exists, it still selects the equivalent cheapest hours as an **informational reference** (no grid charging will activate).
+    4.  If HA or the integration restarts after 00:05 and no evaluation has been done yet, a **startup evaluation** runs automatically (15 s after startup) using the remaining slots of the current day only — tomorrow's slots are reserved for the next 00:05 run.
+    5.  If price data is not yet available at 00:05, the system retries every 15 minutes until 01:00.
+
+> [!NOTE]
+> **Notification**: Sent at **00:05** (or on startup) with the full energy balance, selected hours, average price, and estimated cost. When no charging is needed, the notification is clearly labelled as informational. Use the **Override Predictive Charging** switch to cancel an active charge session.
 
 ### 7. Weekly Full Charge (Optional)
 LFP batteries need to hit 100% periodically to balance individual cells.

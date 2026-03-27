@@ -123,8 +123,18 @@
           "configure_predictive_charging": "Configurar carga predictiva"
         }
       },
+      "predictive_charging_mode": {
+        "title": "Modo de carga predictiva",
+        "description": "Selecciona cómo el sistema decide cuándo cargar desde la red.",
+        "data": {
+          "predictive_charging_mode": "Modo de carga"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+        }
+      },
       "predictive_charging_config": {
-        "title": "Configuración de carga predictiva",
+        "title": "Carga predictiva — Franja horaria",
         "description": "Configura cuándo y cómo cargar las baterías desde la red eléctrica basándose en la predicción solar.",
         "data": {
           "start_time": "Hora de inicio (tarifa valle)",
@@ -137,7 +147,25 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día siguiente en kWh (ej: Solcast)",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Carga predictiva — Precio dinámico",
+        "description": "Configura el sensor de precio eléctrico y los parámetros para la selección automática de horas baratas.",
+        "data": {
+          "price_integration_type": "Integración de precios",
+          "price_sensor": "Sensor de precio eléctrico",
+          "max_price_threshold": "Precio máximo (opcional)",
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Selecciona tu integración de precios de electricidad",
+          "price_sensor": "Sensor que proporciona precios horarios de electricidad",
+          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -201,9 +229,9 @@
       "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
       "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
       "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías.",
       "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
-      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00)."
+      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00).",
+      "no_price_data": "El sensor seleccionado no tiene los atributos de precio esperados. Nordpool: necesita `raw_today`. PVPC: necesita `price_00h` … `price_23h`. CKW: necesita el atributo `prices` con una lista de franjas."
     },
     "abort": {
       "already_configured": "Esta integración ya está configurada."
@@ -333,8 +361,18 @@
           "configure_predictive_charging": "Configurar carga predictiva"
         }
       },
+      "predictive_charging_mode": {
+        "title": "Modo de carga predictiva",
+        "description": "Selecciona cómo el sistema decide cuándo cargar desde la red.",
+        "data": {
+          "predictive_charging_mode": "Modo de carga"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+        }
+      },
       "predictive_charging_config": {
-        "title": "Configuración de carga predictiva",
+        "title": "Carga predictiva — Franja horaria",
         "description": "Configura cuándo y cómo cargar las baterías desde la red eléctrica basándose en la predicción solar.",
         "data": {
           "start_time": "Hora de inicio (tarifa valle)",
@@ -347,7 +385,25 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día siguiente en kWh (ej: Solcast)",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Carga predictiva — Precio dinámico",
+        "description": "Configura el sensor de precio eléctrico y los parámetros para la selección automática de horas baratas.",
+        "data": {
+          "price_integration_type": "Integración de precios",
+          "price_sensor": "Sensor de precio eléctrico",
+          "max_price_threshold": "Precio máximo (opcional)",
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Selecciona tu integración de precios de electricidad",
+          "price_sensor": "Sensor que proporciona precios horarios de electricidad",
+          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -440,9 +496,9 @@
       "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
       "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
       "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "too_low": "La potencia contratada debe ser mayor que la capacidad total de carga de las baterías.",
       "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
-      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00)."
+      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00).",
+      "no_price_data": "El sensor seleccionado no tiene los atributos de precio esperados. Nordpool: necesita `raw_today`. PVPC: necesita `price_00h` … `price_23h`. CKW: necesita el atributo `prices` con una lista de franjas."
     }
   },
   "selector": {
@@ -455,6 +511,19 @@
         "fri": "Viernes",
         "sat": "Sábado",
         "sun": "Domingo"
+      }
+    },
+    "predictive_charging_mode": {
+      "options": {
+        "time_slot": "Franja horaria (ventana nocturna fija)",
+        "dynamic_pricing": "Precio dinámico (horas más baratas)"
+      }
+    },
+    "price_integration_type": {
+      "options": {
+        "nordpool": "Nordpool",
+        "pvpc": "PVPC (España – ESIOS REE)",
+        "ckw": "CKW (Suiza)"
       }
     }
   },
@@ -526,11 +595,23 @@
       "system_total_energy": { "name": "Energía Total del Sistema" },
       "system_stored_energy": { "name": "Energía Almacenada del Sistema" },
       "system_daily_charging_energy": { "name": "Energía de Carga Diaria del Sistema" },
-      "system_daily_discharging_energy": { "name": "Energía de Descarga Diaria del Sistema" }
+      "system_daily_discharging_energy": { "name": "Energía de Descarga Diaria del Sistema" },
+      "device_name": { "name": "Nombre del Dispositivo" },
+      "sn_code": { "name": "Número de Serie" },
+      "software_version": { "name": "Versión de Software" },
+      "bms_version": { "name": "Versión BMS" },
+      "ems_version": { "name": "Versión EMS" },
+      "vms_version": { "name": "Versión VMS" },
+      "comm_module_firmware": { "name": "Firmware Módulo Comunicación" },
+      "mac_address": { "name": "Dirección MAC" },
+      "battery_cycle_count": { "name": "Ciclos de la Batería" },
+      "battery_cycle_count_calc": { "name": "Ciclos de la Batería (Calculado)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Protección de Capacidad Activa" },
-      "predictive_charging_active": { "name": "Carga Predictiva Activa" }
+      "predictive_charging_active": { "name": "Carga Predictiva Activa" },
+      "wifi_status": { "name": "Estado WiFi" },
+      "cloud_status": { "name": "Estado Cloud" }
     },
     "select": {
       "force_mode": { "name": "Modo Forzado" },
