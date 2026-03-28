@@ -184,6 +184,7 @@ class ChargeDischargeController:
         self._dynamic_pricing_evaluated_date = None
         self._current_price_slot_active = False
         self._dp_eval_retry_count = 0  # Retry counter if tomorrow prices not available at 23:00
+        self._dp_pre_evaluated_slots: dict = {}  # slot.start (datetime) → should_charge (bool)
         self._price_data_status = "not_evaluated"
 
         # Consumption history for dynamic base consumption (7-day rolling average)
@@ -3176,6 +3177,93 @@ class ChargeDischargeController:
             },
         )
 
+    async def _check_dp_pre_slot_reevaluation(self) -> None:
+        """Re-evaluate energy balance 1 hour before each upcoming dynamic pricing slot.
+
+        If the system already charged in an earlier slot and the battery is now
+        sufficiently charged (solar + current SOC covers consumption), marks the
+        next slot as skippable so it does not activate unnecessarily.
+        Called every 2.5 s from the dynamic pricing control loop handler.
+        """
+        if not self._dynamic_pricing_schedule or not self._dynamic_pricing_schedule.charging_needed:
+            return
+
+        now = datetime.now()
+        upcoming = [s for s in self._dynamic_pricing_schedule.selected_slots if s.start > now]
+        if not upcoming:
+            return  # No future slots left
+
+        next_slot = upcoming[0]
+
+        # Only act during the ±5-minute window that is exactly 1 hour before the slot
+        pre_eval_time = next_slot.start - timedelta(hours=1)
+        if abs((now - pre_eval_time).total_seconds()) > 5 * 60:
+            return
+
+        # Already evaluated this slot → nothing to do
+        if next_slot.start in self._dp_pre_evaluated_slots:
+            return
+
+        # Skip re-evaluation if we're currently charging — the battery hasn't
+        # benefited from the ongoing charge yet, so the result would be the same
+        # as the original 00:05 evaluation (misleading and noisy).
+        # This covers back-to-back slots where the pre-eval window of slot B
+        # coincides with the active charging window of slot A.
+        if self._current_price_slot_active:
+            return
+
+        _LOGGER.info(
+            "Dynamic pricing: running pre-slot re-evaluation for slot at %s",
+            next_slot.start.strftime("%H:%M")
+        )
+        decision = await self._should_activate_grid_charging()
+        should_charge = decision["should_charge"]
+        self._dp_pre_evaluated_slots[next_slot.start] = should_charge
+
+        if should_charge:
+            await self._send_dp_pre_slot_reevaluation_notification(next_slot, decision)
+
+    async def _send_dp_pre_slot_reevaluation_notification(
+        self, slot: PriceSlot, decision: dict
+    ) -> None:
+        """Send notification when a pre-slot re-evaluation confirms charging is still needed.
+
+        Only called when should_charge=True. Skipped slots are logged silently.
+        """
+        avg_soc = decision.get("avg_soc", 0)
+        usable_energy = decision.get("usable_energy_kwh", 0)
+        solar_forecast = decision.get("solar_forecast_kwh")
+        avg_consumption = decision.get("avg_consumption_kwh", 0)
+        energy_deficit = decision.get("energy_deficit_kwh", 0)
+        days_in_history = decision.get("days_in_history", 0)
+        unit = self._get_price_unit()
+
+        solar_str = f"{solar_forecast:.2f} kWh" if solar_forecast is not None else "N/A"
+        consumption_str = (
+            f"{avg_consumption:.2f} kWh ({days_in_history}-day avg)"
+            if days_in_history > 0 else f"{avg_consumption:.2f} kWh (default)"
+        )
+
+        title = f"Predictive Charging: slot {slot.start.strftime('%H:%M')} confirmed — charging needed"
+        message = (
+            f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
+            f"☀️ Solar forecast: {solar_str}\n"
+            f"📊 Consumption: {consumption_str}\n"
+            f"⚡ Energy deficit: {energy_deficit:.2f} kWh\n\n"
+            f"Slot: {slot.start.strftime('%H:%M')}–{slot.end.strftime('%H:%M')} "
+            f"@ {slot.price:.4f} {unit}\n"
+            f"→ Charging will activate at {slot.start.strftime('%H:%M')}"
+        )
+        await self.hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "title": title,
+                "message": message,
+                "notification_id": "predictive_charging_evaluation",
+            },
+        )
+
     # =========================================================================
     # DYNAMIC PRICING: Control loop handler
     # =========================================================================
@@ -3204,6 +3292,9 @@ class ChargeDischargeController:
                 await self._evaluate_dynamic_pricing()
                 return
 
+        # Phase 2.5: Pre-slot re-evaluation (1h before each upcoming slot)
+        await self._check_dp_pre_slot_reevaluation()
+
         # Phase 3: Daily reset at midnight
         today = now.date()
         if self._dynamic_pricing_evaluated_date is not None:
@@ -3213,6 +3304,7 @@ class ChargeDischargeController:
                 self._dynamic_pricing_evaluated_date = None
                 self._current_price_slot_active = False
                 self._dp_eval_retry_count = 0
+                self._dp_pre_evaluated_slots = {}
 
         # Phase 4: Check if we're in a selected cheap slot
         if self._dynamic_pricing_schedule and not self.predictive_charging_overridden:
@@ -3234,15 +3326,24 @@ class ChargeDischargeController:
                     )
                     return
 
-                # Entering a cheap slot
-                self._current_price_slot_active = True
-                self._grid_charging_initialized = False
-                self.grid_charging_active = True
-                # Find which slot we're entering for the notification
+                # Find which slot we're entering
                 current_slot = next(
                     (s for s in self._dynamic_pricing_schedule.selected_slots if s.start <= now < s.end),
                     None
                 )
+
+                # Skip if pre-evaluation decided charging is no longer needed for this slot
+                if current_slot and self._dp_pre_evaluated_slots.get(current_slot.start) is False:
+                    _LOGGER.info(
+                        "Dynamic pricing: skipping slot %s — pre-evaluation found sufficient energy",
+                        current_slot.start.strftime("%H:%M")
+                    )
+                    return
+
+                # Entering a cheap slot
+                self._current_price_slot_active = True
+                self._grid_charging_initialized = False
+                self.grid_charging_active = True
                 if current_slot:
                     await self._send_dynamic_pricing_slot_start_notification(current_slot)
                 _LOGGER.info(

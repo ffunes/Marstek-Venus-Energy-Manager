@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.1] - 2026-03-28
+
+### Added
+- **Mid-day re-evaluation for dynamic pricing slots**: When multiple cheap slots are selected at 00:05, the system now re-evaluates 1 hour before each subsequent slot whether charging is still needed. If the battery is sufficiently charged (solar + current SOC covers expected consumption), the slot is silently skipped. If charging is still needed, a notification is sent confirming the slot will activate. Re-evaluations are skipped automatically when a previous slot is still actively charging (back-to-back slots), and the per-day state is reset at midnight alongside the main schedule.
+
+### Fixed
+- **Dynamic pricing notification shows wrong hour count for 15-minute slots**: The title showed the number of slots selected (e.g. "6 cheapest hour(s)") instead of the actual hours. For sub-hourly providers (CKW, Nordpool 15-min regions), the title now correctly shows the duration in hours followed by the slot count in parentheses (e.g. "1.5h cheapest (6 slots)"). Hourly providers (PVPC, standard Nordpool) are unaffected.
+
+### Changed
+- **Block-based slot selection for 15-minute price sensors**: Sub-hourly price providers (CKW, Nordpool in 15-min regions) now use a block selection strategy instead of picking the cheapest individual 15-minute slots scattered throughout the day. Consecutive 1-hour blocks (4 × 15-min slots) are selected by average block price, minimising charging fragmentation. Any remainder (e.g. 0.5 h) is filled with the cheapest consecutive sub-block from the remaining slots. Hourly providers are unaffected.
+
 ## [1.5.0] - 2026-03-27
 
 ### Added
