@@ -2981,7 +2981,9 @@ class ChargeDischargeController:
         else:
             hours_needed = schedule.hours_needed
             n_slots = len(schedule.selected_slots)
-            title = f"Predictive Charging: Price Optimization - {n_slots} hour(s) selected"
+            slots_label = f"{n_slots} slot{'s' if n_slots != 1 else ''}" if n_slots != int(hours_needed) else ""
+            hours_label = f"{hours_needed:.1f}h" + (f" ({slots_label})" if slots_label else "")
+            title = f"Predictive Charging: Price Optimization - {hours_label} selected"
 
             unit = self._get_price_unit()
             cost_unit = unit.split("/")[0]  # "€/kWh" → "€", "CHF" → "CHF"
@@ -2994,7 +2996,7 @@ class ChargeDischargeController:
                 if self.max_price_threshold is not None else ""
             )
             if not schedule.charging_needed:
-                title = f"Predictive Charging: Price Info - {n_slots} cheapest hour(s)"
+                title = f"Predictive Charging: Price Info - {hours_label} cheapest"
                 message = (
                     f"✓ No grid charging needed today\n\n"
                     f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
