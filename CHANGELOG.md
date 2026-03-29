@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.5.1] - 2026-03-28
+## [1.5.1] - 2026-03-29
 
 ### Added
 - **Improved daily consumption estimate when battery reaches min SOC**: The system now tracks grid energy imported during periods when all batteries are at minimum SOC and the battery would otherwise be discharging (within a configured discharge slot, or always if no slots are defined). This unmet demand is accumulated in a new sensor (`Grid at Min SOC`, kWh, resets at midnight) and added to the battery discharge when capturing the daily consumption figure used by predictive charging. This prevents the 7-day rolling average from underestimating consumption on days where the battery ran out before midnight, which previously caused the system to charge less than needed the following day. Grid import during intentional grid charging (predictive/dynamic pricing) is excluded from the accumulator.
