@@ -1517,7 +1517,7 @@ class ChargeDischargeController:
                     "Could not query grid-at-min-soc history for %s: %s", target_date, grid_err
                 )
 
-            total_value = max_value + grid_min_soc_value
+            total_value = round(max_value + grid_min_soc_value, 2)
             if grid_min_soc_value > 0:
                 _LOGGER.debug(
                     "Backfill grid-at-min-soc for %s: +%.3f kWh → total=%.3f kWh",
@@ -1627,10 +1627,10 @@ class ChargeDischargeController:
 
         coordinators_with_data = [c for c in self.coordinators if c.data]
         if coordinators_with_data:
-            today_value = sum(
+            today_value = round(sum(
                 c.data.get("total_daily_discharging_energy", 0)
                 for c in coordinators_with_data
-            ) + self._daily_grid_at_min_soc_kwh
+            ) + self._daily_grid_at_min_soc_kwh, 2)
             if today_value >= 1.5:
                 # Replace today's default with current running total
                 for i, (d, c) in enumerate(self._daily_consumption_history):
@@ -1658,7 +1658,7 @@ class ChargeDischargeController:
         # DEFAULT_BASE_CONSUMPTION_KWH only if there are no real entries at all.
         real_values = [c for _, c in self._daily_consumption_history if c != DEFAULT_BASE_CONSUMPTION_KWH]
         gap_value = (
-            sum(real_values) / len(real_values) if real_values
+            round(sum(real_values) / len(real_values), 2) if real_values
             else DEFAULT_BASE_CONSUMPTION_KWH
         )
         existing_dates = {d for d, _ in self._daily_consumption_history}
@@ -1741,10 +1741,10 @@ class ChargeDischargeController:
             return
 
         try:
-            current_value = sum(
+            current_value = round(sum(
                 c.data.get("total_daily_discharging_energy", 0)
                 for c in coordinators_with_data
-            ) + self._daily_grid_at_min_soc_kwh
+            ) + self._daily_grid_at_min_soc_kwh, 2)
 
             # Only capture if we have meaningful data (>= 1.5 kWh)
             if current_value < 1.5:
