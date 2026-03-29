@@ -137,7 +137,7 @@
           "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
           "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
           "days": "Dagen waarop netladen is toegestaan",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -158,12 +158,14 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -200,7 +202,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Vereist als deze niet in de eerste stap is geconfigureerd."
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },
       "capacity_protection": {
@@ -373,7 +375,7 @@
           "start_time": "Starttijd van het laadvenster (bijv. 01:00, daltarief)",
           "end_time": "Eindtijd van het laadvenster (bijv. 06:00)",
           "days": "Dagen waarop netladen is toegestaan",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -394,12 +396,14 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -436,7 +440,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
-          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Vereist als deze niet in de eerste stap is geconfigureerd."
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },
       "capacity_protection": {

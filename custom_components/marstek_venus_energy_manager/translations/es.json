@@ -147,7 +147,7 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -165,7 +165,7 @@
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -202,7 +202,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Necesario si no se configuró en el paso inicial."
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
       "capacity_protection": {
@@ -385,7 +385,7 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -403,7 +403,7 @@
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -440,7 +440,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Necesario si no se configuró en el paso inicial."
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
       "capacity_protection": {

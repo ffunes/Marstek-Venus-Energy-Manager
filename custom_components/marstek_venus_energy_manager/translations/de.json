@@ -137,7 +137,7 @@
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -158,12 +158,14 @@
           "price_integration_type": "Preisintegration",
           "price_sensor": "Preissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
           "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -200,7 +202,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
       "capacity_protection": {
@@ -373,7 +375,7 @@
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -394,12 +396,14 @@
           "price_integration_type": "Preisintegration",
           "price_sensor": "Preissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
           "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -436,7 +440,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
       "capacity_protection": {

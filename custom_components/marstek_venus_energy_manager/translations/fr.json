@@ -137,7 +137,7 @@
           "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
           "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
           "days": "Jours où la charge depuis le réseau est autorisée",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -158,12 +158,14 @@
           "price_integration_type": "Type d'intégration de prix",
           "price_sensor": "Capteur de prix",
           "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
           "max_contracted_power": "Puissance maximale souscrite ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
           "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -200,7 +202,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Requis s'il n'a pas été configuré à l'étape initiale."
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },
       "capacity_protection": {
@@ -373,7 +375,7 @@
           "start_time": "Heure de début de la fenêtre de charge (ex : 01:00, tarif heures creuses)",
           "end_time": "Heure de fin de la fenêtre de charge (ex : 06:00)",
           "days": "Jours où la charge depuis le réseau est autorisée",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -394,12 +396,14 @@
           "price_integration_type": "Type d'intégration de prix",
           "price_sensor": "Capteur de prix",
           "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
           "max_contracted_power": "Puissance maximale souscrite ICP (W)"
         },
         "data_description": {
           "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
           "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -436,7 +440,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
-          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Requis s'il n'a pas été configuré à l'étape initiale."
+          "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },
       "capacity_protection": {

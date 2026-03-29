@@ -10,6 +10,7 @@
 - **Dynamic pricing notification shows wrong hour count for 15-minute slots**: The title showed the number of slots selected (e.g. "6 cheapest hour(s)") instead of the actual hours. For sub-hourly providers (CKW, Nordpool 15-min regions), the title now correctly shows the duration in hours followed by the slot count in parentheses (e.g. "1.5h cheapest (6 slots)"). Hourly providers (PVPC, standard Nordpool) are unaffected.
 
 ### Changed
+- **Clarifying note on solar forecast sensor in secondary configuration steps**: In the Time Slot, Dynamic Pricing, and Charge Delay configuration steps, the solar forecast sensor field now includes a note explaining that it is not required if the sensor was already configured in the initial setup step — it will be used automatically. The German, French, and Dutch translations of the Dynamic Pricing step were also missing this field entirely; it has been added.
 - **Block-based slot selection for 15-minute price sensors**: Sub-hourly price providers (CKW, Nordpool in 15-min regions) now use a block selection strategy instead of picking the cheapest individual 15-minute slots scattered throughout the day. Consecutive 1-hour blocks (4 × 15-min slots) are selected by average block price, minimising charging fragmentation. Any remainder (e.g. 0.5 h) is filled with the cheapest consecutive sub-block from the remaining slots. Hourly providers are unaffected.
 
 ## [1.5.0] - 2026-03-27

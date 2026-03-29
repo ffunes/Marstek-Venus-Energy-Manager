@@ -147,7 +147,7 @@
           "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
-          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -165,7 +165,7 @@
           "price_integration_type": "Select your electricity price provider integration",
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
           "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
-          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -202,7 +202,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
-          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Required if not configured in the initial step."
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
       "capacity_protection": {
@@ -385,7 +385,7 @@
           "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
-          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -403,7 +403,7 @@
           "price_integration_type": "Select your electricity price provider integration",
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
           "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
-          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -440,7 +440,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
-          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Required if not configured in the initial step."
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
       "capacity_protection": {
