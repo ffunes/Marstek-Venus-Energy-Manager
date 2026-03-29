@@ -222,8 +222,9 @@ class MarstekModbusClient:
             # This avoids problems with incorrect connection state reporting
 
             try:
-                result = await self.client.read_holding_registers(
-                    address=register, count=count
+                result = await asyncio.wait_for(
+                    self.client.read_holding_registers(address=register, count=count),
+                    timeout=self._timeout,
                 )
                 if result.isError():
                     if not self._is_shutting_down:
@@ -324,7 +325,7 @@ class MarstekModbusClient:
                     else:
                         raise ValueError(f"Unsupported data_type: {data_type}")
 
-            except (ConnectionException, ModbusIOException):
+            except (ConnectionException, ModbusIOException, asyncio.TimeoutError):
                 if self._is_shutting_down:
                     return None
                 # Connection is dead or unresponsive — try to create a fresh connection
@@ -381,12 +382,13 @@ class MarstekModbusClient:
 
             try:
                 _LOGGER.debug("Writing value %s to register %d (0x%04X)", value, register, register)
-                result = await self.client.write_register(
-                    address=register, value=value
+                result = await asyncio.wait_for(
+                    self.client.write_register(address=register, value=value),
+                    timeout=self._timeout,
                 )
                 return not result.isError()
 
-            except (ConnectionException, ModbusIOException):
+            except (ConnectionException, ModbusIOException, asyncio.TimeoutError):
                 if self._is_shutting_down:
                     return False
                 # Connection is dead or unresponsive — try to create a fresh connection
