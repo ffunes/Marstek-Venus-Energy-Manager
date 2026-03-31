@@ -560,10 +560,10 @@
       "capacity_protection": { "name": "Protection de Capacité" },
       "backup_function": { "name": "Fonction de Secours" },
       "rs485_control_mode": { "name": "Mode de Contrôle RS485" },
-      "automation_charging_active": { "name": "Charge Automatique Active" }
+      "automation_charging_active": { "name": "Charge par Prix Externe" }
     },
     "time": {
-      "automation_charging_end_time": { "name": "Fin du Slot de Charge" }
+      "automation_charging_end_time": { "name": "Fin de Charge Externe" }
     },
     "sensor": {
       "excluded_devices": { "name": "Appareils Exclus" },

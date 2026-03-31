@@ -1,0 +1,135 @@
+blueprint:
+  name: "Marstek – Dynamic Price Charging"
+  description: >
+    Activates Marstek battery charging when the current electricity price is
+    below the configured threshold. Works with any price sensor that exposes
+    the current period price as its state.
+
+    Requires the Marstek Venus Energy Manager integration to be configured
+    in "Automation Slot (external price sensor)" mode.
+  domain: automation
+  source_url: https://github.com/ffunes/marstek-venus-energy-manager/blob/main/blueprints/automation/marstek_venus_energy_manager/marstek_dynamic_price_charging.yaml
+  input:
+    charge_switch_entity:
+      name: Marstek Automation Charging Switch
+      description: >
+        Select the switch entity for activating the automation charging slot.
+        It is named "Automation Charging Active" (or its translation) in your
+        Marstek Venus System device.
+      selector:
+        entity:
+          domain: switch
+          integration: marstek_venus_energy_manager
+
+    charge_end_time_entity:
+      name: Marstek Charging End Time
+      description: >
+        Select the time entity that controls when the charging slot ends.
+        It is named "Automation Charging End Time" (or its translation) in
+        your Marstek Venus System device.
+      selector:
+        entity:
+          domain: time
+          integration: marstek_venus_energy_manager
+
+    price_sensor:
+      name: Price Sensor
+      description: >
+        Sensor whose state is the current electricity price (e.g. in €/kWh or
+        ct/kWh). Works with any price integration that exposes the current
+        period price as the sensor state.
+      selector:
+        entity:
+          domain: sensor
+
+    slot_type:
+      name: Price slot duration
+      description: >
+        Duration of your electricity provider's price intervals.
+        Use "1 hour" for hourly pricing (e.g. PVPC Spain) and "15 minutes"
+        for quarter-hourly pricing. The charging end time will be aligned
+        automatically to the next slot boundary (:00 for 1h, :00/:15/:30/:45
+        for 15min).
+      default: "1h"
+      selector:
+        select:
+          options:
+            - label: "1 hour (e.g. PVPC)"
+              value: "1h"
+            - label: "15 minutes"
+              value: "15min"
+
+    max_price_threshold:
+      name: Maximum price threshold
+      description: >
+        Charging activates when the current price is at or below this value.
+        Use the same unit as your price sensor. Ignored if a daily average
+        price sensor is configured below.
+      default: 0.08
+      selector:
+        number:
+          min: 0.0
+          max: 5.0
+          step: 0.001
+          mode: box
+
+    average_price_sensor:
+      name: Daily average price sensor (optional)
+      description: >
+        If provided, this sensor's state is used as the charging threshold
+        instead of the fixed value above. Useful when your price integration
+        already exposes a daily average price entity — the battery will then
+        charge whenever the current price is at or below today's average,
+        without you having to guess a fixed threshold.
+        Leave blank to use the fixed threshold.
+      default: []
+      selector:
+        entity:
+          domain: sensor
+
+# Fires every 15 minutes (:00, :15, :30, :45).
+# For 1h slots the condition below restricts execution to :00.
+trigger:
+  - platform: time_pattern
+    minutes: "/15"
+
+variables:
+  _price_sensor: !input price_sensor
+  _average_price_sensor: !input average_price_sensor
+  _max_price_threshold: !input max_price_threshold
+  _slot_type: !input slot_type
+  current_price: "{{ states(_price_sensor) | float(-1) }}"
+  threshold: >
+    {% set avg = states(_average_price_sensor) | float(-1)
+       if _average_price_sensor not in (none, [], '') else -1 %}
+    {{ avg if avg >= 0 else _max_price_threshold | float }}
+  slot_end: >
+    {% set end1h = now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1) %}
+    {% set q = ((now().minute // 15) + 1) * 15 %}
+    {% set end15 = now().replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+       if q >= 60
+       else now().replace(minute=q, second=0, microsecond=0) %}
+    {% set boundary = end1h if _slot_type == '1h' else end15 %}
+    {{ (boundary + timedelta(minutes=1)).strftime('%H:%M:%S') }}
+
+condition:
+  - condition: template
+    value_template: >
+      {% set is_manual = trigger is none or trigger.platform != 'time' %}
+      {% set on_boundary = _slot_type == '15min' or now().minute == 0 %}
+      {{ current_price >= 0
+         and current_price <= threshold
+         and (is_manual or on_boundary) }}
+
+action:
+  - service: time.set_value
+    target:
+      entity_id: !input charge_end_time_entity
+    data:
+      time: "{{ slot_end }}"
+  - service: switch.turn_on
+    target:
+      entity_id: !input charge_switch_entity
+
+mode: single
+max_exceeded: silent

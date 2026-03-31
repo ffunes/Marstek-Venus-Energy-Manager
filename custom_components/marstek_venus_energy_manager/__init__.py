@@ -3531,7 +3531,11 @@ class ChargeDischargeController:
 
         # First cycle of a new slot activation — evaluate and notify
         if not self._automation_slot_notified:
+            self._grid_charging_initialized = False
+            current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self.coordinators if c.data) / len(self.coordinators)
             decision_data = await self._should_activate_grid_charging()
+            self.grid_charging_active = decision_data["should_charge"]
+            self.last_evaluation_soc = current_avg_soc
             self._last_decision_data = decision_data
             await self._send_predictive_charging_notification(
                 is_pre_evaluation=False,
@@ -3539,9 +3543,20 @@ class ChargeDischargeController:
             )
             self._automation_slot_notified = True
 
-        # Slot is active — delegate to the shared PD grid-charging controller
-        # (same logic as time_slot mode, including solar forecast evaluation)
-        await self._handle_predictive_grid_charging()
+        # Re-evaluate if SOC has changed significantly since last evaluation
+        current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self.coordinators if c.data) / len(self.coordinators)
+        if (self.last_evaluation_soc is not None and
+                abs(current_avg_soc - self.last_evaluation_soc) >= SOC_REEVALUATION_THRESHOLD):
+            _LOGGER.info("RE-EVALUATING automation slot charging due to SOC change (%.1f%% -> %.1f%%)",
+                         self.last_evaluation_soc, current_avg_soc)
+            decision_data = await self._should_activate_grid_charging()
+            self.grid_charging_active = decision_data["should_charge"]
+            self.last_evaluation_soc = current_avg_soc
+            self._last_decision_data = decision_data
+
+        # Slot is active — charge if decision says so, otherwise fall through to normal PD control
+        if self.grid_charging_active:
+            await self._handle_predictive_grid_charging()
 
     # =========================================================================
     # TIME SLOT: extracted handler

@@ -560,10 +560,10 @@
       "capacity_protection": { "name": "Capaciteitsbescherming" },
       "backup_function": { "name": "Back-upfunctie" },
       "rs485_control_mode": { "name": "RS485-besturingsmodus" },
-      "automation_charging_active": { "name": "Automatisch Laden Actief" }
+      "automation_charging_active": { "name": "Laden op Externe Prijs" }
     },
     "time": {
-      "automation_charging_end_time": { "name": "Einde Laadslot" }
+      "automation_charging_end_time": { "name": "Einde Extern Laden" }
     },
     "sensor": {
       "excluded_devices": { "name": "Uitgesloten Apparaten" },

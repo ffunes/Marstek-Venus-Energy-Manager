@@ -127,7 +127,7 @@ This feature allows you to "mask" high-power devices so the battery doesn't try 
     *   **Allow Solar Surplus**: If checked, the battery will not charge to compensate for this device's consumption when the system is running on solar surplus.
 
 ### 6. Predictive Charging (Optional)
-Automatically charge the battery from the grid when tomorrow's solar forecast is insufficient to cover expected consumption. Two modes are available:
+Automatically charge the battery from the grid when tomorrow's solar forecast is insufficient to cover expected consumption. Three modes are available:
 
 #### Mode A — Time Slot
 Charges during a fixed time window (e.g. overnight off-peak hours).
@@ -163,6 +163,36 @@ Instead of a fixed window, the system evaluates electricity prices for the day a
 
 > [!NOTE]
 > **Notification**: Sent at **00:05** (or on startup) with the full energy balance, selected hours, average price, and estimated cost. When no charging is needed, the notification is clearly labelled as informational. Use the **Override Predictive Charging** switch to cancel an active charge session.
+
+#### Mode C — Automation Slot (External Price Sensor)
+Instead of the integration deciding when to charge, an **external HA automation controls the charging slot in real time**. The integration exposes a switch (`Automation Charging Active`) and a time entity (`Automation Charging End Time`); any automation that sets these two entities can activate grid charging.
+
+This mode is ideal for dynamic pricing scenarios where you want full control over the triggering logic — for example, charging only during the cheapest hours of the day without pre-computing a schedule overnight.
+
+*   **Enable**: Check "Configure predictive charging" and select **Automation Slot (external price sensor)**.
+*   **No additional settings**: The integration does not evaluate prices itself. All logic lives in the external automation.
+
+*   **How it works**:
+    1.  An external automation (e.g. the **Dynamic Price Charging** blueprint below) evaluates the current price at regular intervals.
+    2.  When the price is cheap, the automation writes a future timestamp to `Automation Charging End Time` and turns on `Automation Charging Active`.
+    3.  The integration's controller detects the active slot and starts grid charging immediately.
+    4.  When `Automation Charging End Time` is reached, the controller automatically turns off the switch and returns to normal PD control.
+    5.  If the next slot is also cheap, the automation renews the end time before expiry — charging continues uninterrupted.
+
+> [!NOTE]
+> A daily notification is sent at **23:00** with an energy balance assessment for the next day, so you know in advance whether the blueprint is likely to activate charging overnight.
+
+## Blueprints
+
+Ready-made automations to extend the integration's functionality.
+
+### Dynamic Price Charging
+
+Activates battery charging automatically when the current electricity price falls below a configurable threshold. Works with any HA price sensor (PVPC, Nordpool, Energi Data Service, etc.). Supports hourly and 15-minute price slots, a daily average threshold, and manual triggering.
+
+Requires the integration to be configured in **Mode C — Automation Slot** (step 6 of the configuration wizard).
+
+[![Import Blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fraw.githubusercontent.com%2Fffunes%2Fmarstek-venus-energy-manager%2Fmain%2Fblueprints%2Fautomation%2Fmarstek_venus_energy_manager%2Fmarstek_dynamic_price_charging.yaml)
 
 ### 7. Weekly Full Charge (Optional)
 LFP batteries need to hit 100% periodically to balance individual cells.
