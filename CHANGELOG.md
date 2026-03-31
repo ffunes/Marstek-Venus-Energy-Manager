@@ -2,6 +2,9 @@
 
 ## [1.5.1-b2] - Unreleased
 
+### Fixed
+- **Battery SOC hidden by efficiency sensor in device card**: The Round-Trip Efficiency sensor shared the `battery` device class with the Battery SOC sensor, causing Home Assistant to display the efficiency percentage instead of the SOC in the top-right corner of the device card. The device class has been removed from the efficiency sensor.
+
 ### Added
 - **Custom provider grid charging via rolling slot + blueprint**: Users whose dynamic pricing source is not natively supported (only Nordpool, PVPC, and CKW are built-in) can now control grid charging through a two-part mechanism. The integration exposes a `switch` and a `time` entity that together define an open-ended "charge until X" slot: the PD controller charges from the grid while the switch is on and the current time has not passed the configured end time. A Home Assistant automation blueprint (`marstek_dynamic_price_charging.yaml`) is distributed alongside the integration; the user imports it, selects their price sensor and a price threshold, and the blueprint manages the slot automatically — no further manual intervention required. Every 15 minutes the blueprint checks the current price: if it is below the threshold and within the allowed charging window, it extends the end time and activates the switch. The controller stops charging naturally once the end time expires without being renewed.
 
