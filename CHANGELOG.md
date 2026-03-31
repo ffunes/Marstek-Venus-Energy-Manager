@@ -4,6 +4,7 @@
 
 ### Fixed
 - **Daily consumption history values stored with excessive decimal places**: Values in the 7-day rolling average could be stored with 15+ decimal digits (e.g. `1.6099999999999999`) due to floating-point accumulation in the grid-at-min-SOC counter and integer division when computing the gap-fill average. All values written to the history are now rounded to 2 decimal places, consistent with the other daily energy sensors.
+- **Modbus read/write operations now time out on half-open sockets**: `async_read_register` and `async_write_register` now wrap their underlying pymodbus calls in `asyncio.wait_for(timeout=...)` using the client's configured timeout (default 10 s). Previously, a hung write or read on a half-open socket would block indefinitely, preventing the coordinator from recovering after a TCP connection drop. `asyncio.TimeoutError` is now treated the same as `ConnectionException`, triggering the existing reconnect-and-retry path.
 
 ## [1.5.1-b1] - 2026-03-29
 
