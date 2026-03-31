@@ -130,7 +130,7 @@
           "predictive_charging_mode": "Charging mode"
         },
         "data_description": {
-          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor."
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor. Automation Slot: activate charging from your own automations using any price sensor."
         }
       },
       "predictive_charging_config": {
@@ -166,6 +166,18 @@
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
           "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Predictive Charging — Automation Slot",
+        "description": "Configure parameters for automation-driven charging. Use the included blueprint with any price sensor — the blueprint automatically activates charging whenever prices are below your threshold.",
+        "data": {
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -368,7 +380,7 @@
           "predictive_charging_mode": "Charging mode"
         },
         "data_description": {
-          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor."
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor. Automation Slot: activate charging from your own automations using any price sensor."
         }
       },
       "predictive_charging_config": {
@@ -404,6 +416,18 @@
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
           "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Predictive Charging — Automation Slot",
+        "description": "Configure parameters for automation-driven charging. Use the included blueprint with any price sensor — the blueprint automatically activates charging whenever prices are below your threshold.",
+        "data": {
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
@@ -515,7 +539,8 @@
     "predictive_charging_mode": {
       "options": {
         "time_slot": "Time Slot (fixed nightly window)",
-        "dynamic_pricing": "Dynamic Pricing (cheapest hours)"
+        "dynamic_pricing": "Dynamic Pricing (cheapest hours)",
+        "automation_slots": "Automation Slot (external price sensor)"
       }
     },
     "price_integration_type": {
@@ -533,7 +558,11 @@
       "charge_delay": { "name": "Charge Delay" },
       "capacity_protection": { "name": "Capacity Protection" },
       "backup_function": { "name": "Backup Function" },
-      "rs485_control_mode": { "name": "RS485 Control Mode" }
+      "rs485_control_mode": { "name": "RS485 Control Mode" },
+      "automation_charging_active": { "name": "Automation Charging Active" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "Charging Slot End Time" }
     },
     "sensor": {
       "excluded_devices": { "name": "Excluded Devices" },

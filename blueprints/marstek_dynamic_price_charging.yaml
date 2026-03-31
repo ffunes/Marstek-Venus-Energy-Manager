@@ -1,0 +1,118 @@
+blueprint:
+  name: "Marstek – Dynamic Price Charging"
+  description: >
+    Activates Marstek battery charging when the current electricity price is
+    below the configured threshold. Works with any price sensor that exposes
+    the current period price as its state.
+
+    Requires the Marstek Venus Energy Manager integration to be configured
+    in "Automation Slot (external price sensor)" mode.
+  domain: automation
+  source_url: https://github.com/ffunes/marstek-venus-energy-manager
+  input:
+    marstek_device:
+      name: Marstek Device
+      description: >
+        Select the Marstek Venus device configured in "Automation Slot" mode.
+        The control entities are resolved automatically from this device.
+      selector:
+        device:
+          integration: marstek_venus_energy_manager
+
+    price_sensor:
+      name: Price Sensor
+      description: >
+        Sensor whose state is the current electricity price (e.g. in €/kWh or
+        ct/kWh). Works with any price integration that exposes the current
+        period price as the sensor state.
+      selector:
+        entity:
+          domain: sensor
+
+    max_price_threshold:
+      name: Maximum price threshold
+      description: >
+        Charging activates when the current price is at or below this value.
+        Use the same unit as your price sensor. Ignored if a daily average
+        price sensor is configured below.
+      default: 0.08
+      selector:
+        number:
+          min: 0.0
+          max: 5.0
+          step: 0.001
+          mode: box
+
+    average_price_sensor:
+      name: Daily average price sensor (optional)
+      description: >
+        If provided, this sensor's state is used as the charging threshold
+        instead of the fixed value above. Useful when your price integration
+        already exposes a daily average price entity — the battery will then
+        charge whenever the current price is at or below today's average,
+        without you having to guess a fixed threshold.
+        Leave blank to use the fixed threshold.
+      default: ""
+      selector:
+        entity:
+          domain: sensor
+
+    slot_extension_minutes:
+      name: Slot duration (minutes)
+      description: >
+        Each time the price is cheap, charging is extended this many minutes
+        from the current moment. Must be greater than or equal to the check
+        interval (15 min) to keep charging continuous while the price remains
+        low.
+      default: 30
+      selector:
+        number:
+          min: 15
+          max: 120
+          step: 15
+          unit_of_measurement: "min"
+          mode: slider
+
+trigger:
+  - platform: time_pattern
+    minutes: "/15"
+
+variables:
+  # Resolve entity IDs automatically from the selected device
+  charge_switch: >
+    {{ device_entities(marstek_device)
+       | select('match', 'switch\\..*automation_charging_active')
+       | list | first | default('') }}
+  charge_end_time: >
+    {{ device_entities(marstek_device)
+       | select('match', 'time\\..*automation_charging_end_time')
+       | list | first | default('') }}
+  current_price: "{{ states(price_sensor) | float(-1) }}"
+  threshold: >
+    {% set avg = states(average_price_sensor) | float(-1)
+       if average_price_sensor != '' else -1 %}
+    {{ avg if avg >= 0 else max_price_threshold | float }}
+  slot_end: >
+    {{ (now() + timedelta(minutes=slot_extension_minutes | int))
+       .strftime('%H:%M:%S') }}
+
+condition:
+  - condition: template
+    value_template: >
+      {{ charge_switch != ''
+         and charge_end_time != ''
+         and current_price >= 0
+         and current_price <= threshold }}
+
+action:
+  - service: time.set_value
+    target:
+      entity_id: "{{ charge_end_time }}"
+    data:
+      time: "{{ slot_end }}"
+  - service: switch.turn_on
+    target:
+      entity_id: "{{ charge_switch }}"
+
+mode: single
+max_exceeded: silent

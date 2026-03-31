@@ -148,7 +148,7 @@
           "predictive_charging_mode": "Laadmodus"
         },
         "data_description": {
-          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen."
+          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen. Automatiseringsslot: Laadactivering vanuit eigen automatiseringen met elke prijssensor."
         }
       },
       "dynamic_pricing_config": {
@@ -166,6 +166,18 @@
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Voorspellend laden — Automatiseringsslot",
+        "description": "Parameters configureren voor automatiseringsgestuurd laden. Gebruik de meegeleverde blueprint met elke prijssensor — de blueprint activeert het laden automatisch wanneer de prijzen onder uw drempelwaarde liggen.",
+        "data": {
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -386,7 +398,7 @@
           "predictive_charging_mode": "Laadmodus"
         },
         "data_description": {
-          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen."
+          "predictive_charging_mode": "Tijdslot: Laden tijdens een vast daltariefvenster. Dynamische prijs: Dagelijkse selectie van de goedkoopste uren op basis van Nordpool/ENTSO-e prijzen. Automatiseringsslot: Laadactivering vanuit eigen automatiseringen met elke prijssensor."
         }
       },
       "dynamic_pricing_config": {
@@ -404,6 +416,18 @@
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
+          "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Voorspellend laden — Automatiseringsslot",
+        "description": "Parameters configureren voor automatiseringsgestuurd laden. Gebruik de meegeleverde blueprint met elke prijssensor — de blueprint activeert het laden automatisch wanneer de prijzen onder uw drempelwaarde liggen.",
+        "data": {
+          "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
+          "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
       },
@@ -516,7 +540,8 @@
     "predictive_charging_mode": {
       "options": {
         "time_slot": "Tijdslot",
-        "dynamic_pricing": "Dynamische prijs"
+        "dynamic_pricing": "Dynamische prijs",
+        "automation_slots": "Automatiseringsslot (externe prijssensor)"
       }
     },
     "price_integration_type": {
@@ -534,7 +559,11 @@
       "charge_delay": { "name": "Laadvertraging" },
       "capacity_protection": { "name": "Capaciteitsbescherming" },
       "backup_function": { "name": "Back-upfunctie" },
-      "rs485_control_mode": { "name": "RS485-besturingsmodus" }
+      "rs485_control_mode": { "name": "RS485-besturingsmodus" },
+      "automation_charging_active": { "name": "Automatisch Laden Actief" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "Einde Laadslot" }
     },
     "sensor": {
       "excluded_devices": { "name": "Uitgesloten Apparaten" },

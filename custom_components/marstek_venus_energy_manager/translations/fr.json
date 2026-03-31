@@ -148,7 +148,7 @@
           "predictive_charging_mode": "Mode de charge"
         },
         "data_description": {
-          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e."
+          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e. Slot automatique : Activation de la charge depuis vos propres automatisations avec n'importe quel capteur de prix."
         }
       },
       "dynamic_pricing_config": {
@@ -166,6 +166,18 @@
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
           "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Charge prédictive — Slot automatique",
+        "description": "Configurez les paramètres pour la charge pilotée par des automatisations externes. Utilisez le blueprint inclus avec n'importe quel capteur de prix — le blueprint active la charge automatiquement lorsque les prix sont en dessous de votre seuil.",
+        "data": {
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Capteur fournissant les prévisions de production solaire en kWh. Non requis si vous avez déjà configuré ce capteur à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -386,7 +398,7 @@
           "predictive_charging_mode": "Mode de charge"
         },
         "data_description": {
-          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e."
+          "predictive_charging_mode": "Plage horaire : Charge pendant une fenêtre à tarif heures creuses fixe. Prix dynamique : Sélection quotidienne des heures les moins chères basée sur les prix Nordpool/ENTSO-e. Slot automatique : Activation de la charge depuis vos propres automatisations avec n'importe quel capteur de prix."
         }
       },
       "dynamic_pricing_config": {
@@ -404,6 +416,18 @@
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
           "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Utiliser la même unité que le capteur : ct/kWh pour Nordpool, €/kWh pour PVPC, Rp/kWh pour CKW. Laisser vide pour utiliser tous les créneaux.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
+          "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Charge prédictive — Slot automatique",
+        "description": "Configurez les paramètres pour la charge pilotée par des automatisations externes. Utilisez le blueprint inclus avec n'importe quel capteur de prix — le blueprint active la charge automatiquement lorsque les prix sont en dessous de votre seuil.",
+        "data": {
+          "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
+          "max_contracted_power": "Puissance maximale souscrite ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Capteur fournissant les prévisions de production solaire en kWh. Non requis si vous avez déjà configuré ce capteur à l'étape initiale — il sera utilisé automatiquement.",
           "max_contracted_power": "Puissance totale souscrite (ICP) en watts. Le système ne dépassera pas cette limite lors de la charge pour éviter de déclencher le disjoncteur"
         }
       },
@@ -516,7 +540,8 @@
     "predictive_charging_mode": {
       "options": {
         "time_slot": "Plage horaire",
-        "dynamic_pricing": "Prix dynamique"
+        "dynamic_pricing": "Prix dynamique",
+        "automation_slots": "Slot automatique (capteur de prix externe)"
       }
     },
     "price_integration_type": {
@@ -534,7 +559,11 @@
       "charge_delay": { "name": "Délai de Charge" },
       "capacity_protection": { "name": "Protection de Capacité" },
       "backup_function": { "name": "Fonction de Secours" },
-      "rs485_control_mode": { "name": "Mode de Contrôle RS485" }
+      "rs485_control_mode": { "name": "Mode de Contrôle RS485" },
+      "automation_charging_active": { "name": "Charge Automatique Active" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "Fin du Slot de Charge" }
     },
     "sensor": {
       "excluded_devices": { "name": "Appareils Exclus" },

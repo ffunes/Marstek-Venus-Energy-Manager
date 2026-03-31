@@ -67,6 +67,7 @@ from .const import (
     CONF_MAX_PRICE_THRESHOLD,
     PREDICTIVE_MODE_TIME_SLOT,
     PREDICTIVE_MODE_DYNAMIC_PRICING,
+    PREDICTIVE_MODE_AUTOMATION_SLOTS,
     PRICE_INTEGRATION_NORDPOOL,
     PRICE_INTEGRATION_PVPC,
     PRICE_INTEGRATION_CKW,
@@ -99,6 +100,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.BUTTON,
+    Platform.TIME,
 ]
 
 
@@ -174,6 +176,12 @@ class ChargeDischargeController:
         self.predictive_charging_overridden = config_entry.data.get(CONF_PREDICTIVE_CHARGING_OVERRIDDEN, False)
         self._grid_charging_initialized = False  # Flag for initialization
         self._last_decision_data = None  # Store last decision for diagnostics
+
+        # Automation Slots Mode state (rolling slot driven by external automations)
+        self.automation_slot_active: bool = False
+        self.automation_slot_end_time = None  # dt_time or None; written by AutomationChargingEndTimeEntity
+        self._automation_slot_notified: bool = False  # True once notification sent for current slot activation
+        self._automation_slot_evaluated_date = None  # date of last daily pre-evaluation notification
 
         # Dynamic Pricing Mode state
         self.predictive_charging_mode = config_entry.data.get(CONF_PREDICTIVE_CHARGING_MODE, PREDICTIVE_MODE_TIME_SLOT)
@@ -2926,7 +2934,8 @@ class ChargeDischargeController:
     def _format_predictive_notification_message(
         self,
         decision_data: dict,
-        is_pre_evaluation: bool
+        is_pre_evaluation: bool,
+        is_daily_evaluation: bool = False,
     ) -> tuple[str, str]:
         """Format notification title and message from decision data.
 
@@ -2991,14 +3000,18 @@ class ChargeDischargeController:
             slot_str = None
 
         if is_pre_evaluation:
-            title = (
-                f"Predictive Charging: Activates at {start_time.strftime('%H:%M')}"
-                if slot_str else "Predictive Charging: Will activate"
-            )
-            timing_line = (
-                f"⏰ Charging window: {slot_str} (starts in ~1 hour)\n"
-                if slot_str else "⏰ Charging will start in ~1 hour\n"
-            )
+            if is_daily_evaluation:
+                title = "Predictive Charging: Expected tomorrow"
+                timing_line = "⏰ Charging will activate when prices are low\n"
+            else:
+                title = (
+                    f"Predictive Charging: Activates at {start_time.strftime('%H:%M')}"
+                    if slot_str else "Predictive Charging: Will activate"
+                )
+                timing_line = (
+                    f"⏰ Charging window: {slot_str} (starts in ~1 hour)\n"
+                    if slot_str else "⏰ Charging will start in ~1 hour\n"
+                )
         else:
             title = "Predictive Charging: STARTED"
             timing_line = (
@@ -3434,6 +3447,103 @@ class ChargeDischargeController:
         # Not in a cheap slot — fall through to normal PD control (no return here)
 
     # =========================================================================
+    # AUTOMATION SLOTS: rolling slot driven by external automations / blueprint
+    # =========================================================================
+
+    def _is_in_automation_slot(self) -> bool:
+        """Return True if the rolling automation slot is active and end_time has not expired."""
+        if not self.automation_slot_active:
+            return False
+        if self.automation_slot_end_time is None:
+            return False
+        return datetime.now().time() <= self.automation_slot_end_time
+
+    def _is_automation_slots_daily_evaluation_time(self) -> bool:
+        """Return True if it's 23:00 ±5 min and we haven't evaluated today."""
+        now = datetime.now()
+        today = now.date()
+
+        if self._automation_slot_evaluated_date == today:
+            return False
+
+        eval_time = now.replace(hour=23, minute=0, second=0, microsecond=0)
+        return abs((now - eval_time).total_seconds()) <= 300  # ±5 minutes
+
+    async def _run_automation_slots_daily_evaluation(self) -> None:
+        """Daily evaluation at 23:00: assess energy balance and notify the user.
+
+        Unlike time_slot mode (which has a known slot start), this mode cannot
+        anticipate when cheap hours will occur. Instead, a daily snapshot at 23:00
+        tells the user whether grid charging is expected to be needed the next day,
+        so they know the blueprint will (or won't) activate charging.
+        """
+        now = datetime.now()
+        _LOGGER.info("Automation slots: running daily evaluation at %s", now.strftime("%H:%M"))
+
+        decision_data = await self._should_activate_grid_charging()
+        self._last_decision_data = decision_data
+        self._automation_slot_evaluated_date = now.date()
+
+        # Forward-looking assessment: tells the user whether charging is expected
+        # to be needed, so they know if the blueprint will activate tonight.
+        await self._send_predictive_charging_notification(
+            is_pre_evaluation=True,
+            decision_data=decision_data,
+            is_daily_evaluation=True,
+        )
+
+    async def _handle_automation_slots_predictive_charging(self) -> None:
+        """Handle predictive charging in automation_slots mode (called every 2.5s).
+
+        The external automation (or blueprint) turns on the switch and sets end_time.
+        This handler activates the PD grid-charging controller while the slot is active,
+        and automatically turns off the switch when end_time expires.
+        """
+        # Daily evaluation at 23:00 — notify user whether charging will be needed
+        if self._is_automation_slots_daily_evaluation_time():
+            await self._run_automation_slots_daily_evaluation()
+
+        if not self._is_in_automation_slot():
+            if self.automation_slot_active:
+                # end_time has expired — turn off the switch from the controller side
+                switch = self.hass.data[DOMAIN][self.config_entry.entry_id].get(
+                    "automation_charging_switch"
+                )
+                if switch:
+                    switch.set_off_from_controller()
+                _LOGGER.info(
+                    "Automation charging slot end_time reached, deactivating"
+                )
+            if self.grid_charging_active or self._grid_charging_initialized:
+                _LOGGER.info("Exiting automation charging slot - returning to normal mode")
+                self.grid_charging_active = False
+                self._grid_charging_initialized = False
+                self.previous_power = 0
+                self.previous_error = 0
+            if self._automation_slot_notified:
+                await self.hass.services.async_call(
+                    "persistent_notification",
+                    "dismiss",
+                    {"notification_id": "predictive_charging_evaluation"},
+                )
+                self._automation_slot_notified = False
+            return
+
+        # First cycle of a new slot activation — evaluate and notify
+        if not self._automation_slot_notified:
+            decision_data = await self._should_activate_grid_charging()
+            self._last_decision_data = decision_data
+            await self._send_predictive_charging_notification(
+                is_pre_evaluation=False,
+                decision_data=decision_data,
+            )
+            self._automation_slot_notified = True
+
+        # Slot is active — delegate to the shared PD grid-charging controller
+        # (same logic as time_slot mode, including solar forecast evaluation)
+        await self._handle_predictive_grid_charging()
+
+    # =========================================================================
     # TIME SLOT: extracted handler
     # =========================================================================
 
@@ -3556,16 +3666,20 @@ class ChargeDischargeController:
     async def _send_predictive_charging_notification(
         self,
         is_pre_evaluation: bool,
-        decision_data: dict
+        decision_data: dict,
+        is_daily_evaluation: bool = False,
     ):
         """Send notification about predictive charging evaluation result.
 
         Args:
             is_pre_evaluation: True if pre-evaluation (1 hour before), False if initial
             decision_data: Dict from _should_activate_grid_charging() with decision factors
+            is_daily_evaluation: True when called from the daily 23:00 assessment in automation_slots mode
         """
         # Format the notification using the helper method
-        title, message = self._format_predictive_notification_message(decision_data, is_pre_evaluation)
+        title, message = self._format_predictive_notification_message(
+            decision_data, is_pre_evaluation, is_daily_evaluation
+        )
 
         # Send the notification
         await self.hass.services.async_call(
@@ -3634,6 +3748,10 @@ class ChargeDischargeController:
                 # Dynamic pricing falls through to normal PD control when not in a slot;
                 # it only returns early when actively charging or overridden.
                 if self.grid_charging_active or self.predictive_charging_overridden:
+                    return
+            elif self.predictive_charging_mode == PREDICTIVE_MODE_AUTOMATION_SLOTS:
+                await self._handle_automation_slots_predictive_charging()
+                if self.grid_charging_active:
                     return
             else:
                 # Default: time slot mode

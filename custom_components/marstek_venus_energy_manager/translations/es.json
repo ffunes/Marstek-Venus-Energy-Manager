@@ -130,7 +130,7 @@
           "predictive_charging_mode": "Modo de carga"
         },
         "data_description": {
-          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios. Slot automático: activa la carga desde tus propias automatizaciones con cualquier sensor de precio."
         }
       },
       "predictive_charging_config": {
@@ -166,6 +166,18 @@
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Carga predictiva — Slot automático",
+        "description": "Configura los parámetros del modo de carga con slot controlado por automatizaciones externas. Usa el blueprint incluido con cualquier sensor de precio — el blueprint activa la carga automáticamente cuando los precios están por debajo de tu umbral.",
+        "data": {
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -368,7 +380,7 @@
           "predictive_charging_mode": "Modo de carga"
         },
         "data_description": {
-          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios. Slot automático: activa la carga desde tus propias automatizaciones con cualquier sensor de precio."
         }
       },
       "predictive_charging_config": {
@@ -404,6 +416,18 @@
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Carga predictiva — Slot automático",
+        "description": "Configura los parámetros del modo de carga con slot controlado por automatizaciones externas. Usa el blueprint incluido con cualquier sensor de precio — el blueprint activa la carga automáticamente cuando los precios están por debajo de tu umbral.",
+        "data": {
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -516,7 +540,8 @@
     "predictive_charging_mode": {
       "options": {
         "time_slot": "Franja horaria (ventana nocturna fija)",
-        "dynamic_pricing": "Precio dinámico (horas más baratas)"
+        "dynamic_pricing": "Precio dinámico (horas más baratas)",
+        "automation_slots": "Slot automático (sensor de precio externo)"
       }
     },
     "price_integration_type": {
@@ -534,7 +559,11 @@
       "charge_delay": { "name": "Retraso de Carga" },
       "capacity_protection": { "name": "Protección de Capacidad" },
       "backup_function": { "name": "Función de Respaldo" },
-      "rs485_control_mode": { "name": "Modo de Control RS485" }
+      "rs485_control_mode": { "name": "Modo de Control RS485" },
+      "automation_charging_active": { "name": "Carga Automática Activa" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "Fin de Slot de Carga" }
     },
     "sensor": {
       "excluded_devices": { "name": "Dispositivos Excluidos" },

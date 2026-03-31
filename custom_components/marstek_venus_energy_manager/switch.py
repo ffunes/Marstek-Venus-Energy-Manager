@@ -7,9 +7,10 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED, CONF_ENABLE_CHARGE_DELAY, CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, CONF_MANUAL_MODE_ENABLED, CONF_PREDICTIVE_CHARGING_OVERRIDDEN
+from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED, CONF_ENABLE_CHARGE_DELAY, CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, CONF_MANUAL_MODE_ENABLED, CONF_PREDICTIVE_CHARGING_OVERRIDDEN, CONF_PREDICTIVE_CHARGING_MODE, PREDICTIVE_MODE_AUTOMATION_SLOTS
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +55,12 @@ async def async_setup_entry(
     time_slots = entry.data.get("no_discharge_time_slots", [])
     for index in range(len(time_slots)):
         entities.append(TimeSlotSwitch(hass, entry, index))
+
+    # Add automation charging switch (rolling slot mode)
+    if controller and entry.data.get(CONF_PREDICTIVE_CHARGING_MODE) == PREDICTIVE_MODE_AUTOMATION_SLOTS:
+        sw = AutomationChargingSwitch(hass, entry, controller)
+        entities.append(sw)
+        hass.data[DOMAIN][entry.entry_id]["automation_charging_switch"] = sw
 
     async_add_entities(entities)
 
@@ -440,6 +447,73 @@ class ManualModeSwitch(SwitchEntity):
             {"notification_id": "manual_mode_active"},
         )
         self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class AutomationChargingSwitch(SwitchEntity, RestoreEntity):
+    """Switch to activate the rolling automation charging slot.
+
+    Automations (or the included blueprint) turn this switch ON when prices
+    are cheap, and set the end_time entity to control when charging stops.
+    The controller automatically turns this switch OFF when end_time expires.
+
+    The switch does NOT restore its ON state after a HA restart to avoid
+    unexpected charging. The blueprint resumes control at the next 15-min cycle.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the automation charging switch."""
+        self.hass = hass
+        self._entry = entry
+        self.controller = controller
+        self._active = False
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "automation_charging_active"
+        self._attr_icon = "mdi:lightning-bolt-circle"
+        self._attr_unique_id = f"{entry.entry_id}_automation_charging_active"
+        self._attr_should_poll = False
+
+    async def async_added_to_hass(self) -> None:
+        """Do NOT restore ON state — avoid unexpected charging after restart."""
+        await super().async_added_to_hass()
+        self._active = False
+        self.controller.automation_slot_active = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the automation charging slot is active."""
+        return self._active
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Activate the automation charging slot."""
+        self._active = True
+        self.controller.automation_slot_active = True
+        _LOGGER.info("Automation charging slot activated")
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Deactivate the automation charging slot."""
+        self._active = False
+        self.controller.automation_slot_active = False
+        _LOGGER.info("Automation charging slot deactivated")
+        self.async_write_ha_state()
+
+    def set_off_from_controller(self) -> None:
+        """Turn switch off when the controller detects end_time has expired."""
+        self._active = False
+        self.controller.automation_slot_active = False
+        _LOGGER.info("Automation charging slot expired, switch turned off by controller")
+        self.schedule_update_ha_state()
 
     @property
     def device_info(self):

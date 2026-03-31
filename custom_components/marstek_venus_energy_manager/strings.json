@@ -139,6 +139,18 @@
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
+      "automation_slots_config": {
+        "title": "Carga predictiva — Slot automático",
+        "description": "Configura los parámetros del modo de carga con slot controlado por automatizaciones externas. Usa el blueprint incluido con cualquier sensor de precio.",
+        "data": {
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh. No es necesario si ya configuraste este sensor en el paso inicial.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
       "weekly_full_charge": {
         "title": "Carga semanal completa",
         "description": "¿Deseas activar la carga semanal al 100%? Esto ayuda a equilibrar las celdas de la batería.",
@@ -314,6 +326,18 @@
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día siguiente en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
+          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+        }
+      },
+      "automation_slots_config": {
+        "title": "Carga predictiva — Slot automático",
+        "description": "Configura los parámetros del modo de carga con slot controlado por automatizaciones externas. Usa el blueprint incluido con cualquier sensor de precio.",
+        "data": {
+          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
+          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+        },
+        "data_description": {
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh. No es necesario si ya configuraste este sensor en el paso inicial.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
