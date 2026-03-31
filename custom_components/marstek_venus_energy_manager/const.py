@@ -645,7 +645,6 @@ EFFICIENCY_SENSOR_DEFINITIONS = [
         "key": "round_trip_efficiency_total",
         "name": "Round-Trip Efficiency Total",
         "unit": "%",
-        "device_class": "battery",
         "state_class": "measurement",
         "dependency_keys": {
             "charge": "total_charging_energy",            
@@ -1618,7 +1617,6 @@ EFFICIENCY_SENSOR_DEFINITIONS_V3 = [
         "key": "round_trip_efficiency_total",
         "name": "Round-Trip Efficiency Total",
         "unit": "%",
-        "device_class": "battery",
         "state_class": "measurement",
         "dependency_keys": {
             "charge": "total_charging_energy",
