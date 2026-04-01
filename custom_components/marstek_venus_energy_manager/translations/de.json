@@ -160,6 +160,7 @@
           "price_integration_type": "Preisintegration",
           "price_sensor": "Preissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "dp_price_discharge_control": "Nur entladen wenn Preis über Tagesdurchschnitt",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
@@ -167,6 +168,7 @@
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
           "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "dp_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Tagesdurchschnittspreis übersteigt (automatisch aus dem Preissensor berechnet). Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
@@ -178,6 +180,7 @@
           "price_sensor": "Strompreissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (optional)",
           "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
+          "rt_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
@@ -185,6 +188,7 @@
           "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
           "max_price_threshold": "Laden wird aktiviert, wenn der aktuelle Preis diesen Wert nicht übersteigt. Gleiche Einheit wie der Sensor verwenden. Leer lassen, wenn der Tagesdurchschnittssensor verwendet wird.",
           "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
+          "rt_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Schwellenwert übersteigt. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
@@ -418,6 +422,7 @@
           "price_integration_type": "Preisintegration",
           "price_sensor": "Preissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "dp_price_discharge_control": "Nur entladen wenn Preis über Tagesdurchschnitt",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
@@ -425,6 +430,7 @@
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
           "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "dp_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Tagesdurchschnittspreis übersteigt (automatisch aus dem Preissensor berechnet). Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
@@ -436,6 +442,7 @@
           "price_sensor": "Strompreissensor",
           "max_price_threshold": "Maximaler Preisschwellenwert (optional)",
           "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
+          "rt_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
           "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
         },
@@ -443,6 +450,7 @@
           "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
           "max_price_threshold": "Laden wird aktiviert, wenn der aktuelle Preis diesen Wert nicht übersteigt. Gleiche Einheit wie der Sensor verwenden. Leer lassen, wenn der Tagesdurchschnittssensor verwendet wird.",
           "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
+          "rt_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Schwellenwert übersteigt. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }

@@ -64,6 +64,8 @@ from .const import (
     CONF_PRICE_INTEGRATION_TYPE,
     CONF_MAX_PRICE_THRESHOLD,
     CONF_AVERAGE_PRICE_SENSOR,
+    CONF_DP_PRICE_DISCHARGE_CONTROL,
+    CONF_RT_PRICE_DISCHARGE_CONTROL,
     PREDICTIVE_MODE_TIME_SLOT,
     PREDICTIVE_MODE_DYNAMIC_PRICING,
     PREDICTIVE_MODE_REALTIME_PRICE,
@@ -696,6 +698,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
+                    self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
                     self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
@@ -724,6 +727,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 NumberSelector(
                     NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
                 ),
+            vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=False): bool,
         }
         if not has_global_sensor:
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
@@ -776,6 +780,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
+                    self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
                     self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
@@ -794,6 +799,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
             vol.Optional(CONF_AVERAGE_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
+            vol.Required(CONF_RT_PRICE_DISCHARGE_CONTROL, default=False): bool,
         }
         if not has_global_sensor:
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
@@ -1746,6 +1752,7 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
+                    self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
                     self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
@@ -1759,6 +1766,7 @@ class OptionsFlowHandler(OptionsFlow):
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
         default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
+        default_dp_discharge_control = existing_config.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
 
         schema_dict: dict = {
             vol.Required(CONF_PRICE_INTEGRATION_TYPE, default=default_integration):
@@ -1782,6 +1790,7 @@ class OptionsFlowHandler(OptionsFlow):
                 NumberSelector(
                     NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
                 ),
+            vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=default_dp_discharge_control): bool,
         }
         if not has_global_sensor:
             schema_dict[vol.Optional(
@@ -1836,6 +1845,7 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
+                    self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
                     self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
@@ -1847,6 +1857,7 @@ class OptionsFlowHandler(OptionsFlow):
         default_sensor = existing_config.get(CONF_PRICE_SENSOR, "")
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
         default_avg_sensor = existing_config.get(CONF_AVERAGE_PRICE_SENSOR, "")
+        default_rt_discharge_control = existing_config.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
         default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
 
@@ -1865,6 +1876,7 @@ class OptionsFlowHandler(OptionsFlow):
                 default=default_avg_sensor if default_avg_sensor else vol.UNDEFINED
             ):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
+            vol.Required(CONF_RT_PRICE_DISCHARGE_CONTROL, default=default_rt_discharge_control): bool,
         }
         if not has_global_sensor:
             schema_dict[vol.Optional(

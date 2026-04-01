@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.1] - 2026-04-01
+
+### Added
+- **Price-based discharge control for Dynamic Pricing and Real-Time Price modes**: New optional checkbox in both pricing mode configurations that restricts battery discharge to periods when the current electricity price exceeds a configurable threshold. When enabled, the battery only discharges if the live price is strictly above the threshold (fixed `max_price_threshold` or a daily average price sensor). If discharge time slots are also configured, both conditions must be met — the price check acts as an additional gate on top of the existing time window restriction. Dynamic Pricing mode gains a new optional `dp_average_price_sensor` field (equivalent to the existing `average_price_sensor` in Real-Time Price mode) to support a dynamic discharge threshold.
+
 ## [1.5.0] - 2026-04-01
 
 ### Added

@@ -160,6 +160,7 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "dp_price_discharge_control": "Alleen ontladen als prijs boven daggemiddelde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
@@ -167,6 +168,7 @@
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
+          "dp_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteits prijs de daggemiddelde prijs overschrijdt (automatisch berekend uit de prijssensor). Valt terug op de vaste maximale prijsdrempel als de dagelijkse evaluatie nog niet is uitgevoerd. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
@@ -178,6 +180,7 @@
           "price_sensor": "Elektriciteitsprijssensor",
           "max_price_threshold": "Maximale prijsdrempel (optioneel)",
           "average_price_sensor": "Daggemiddelde prijssensor (optioneel)",
+          "rt_price_discharge_control": "Alleen ontladen als prijs boven drempelwaarde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
@@ -185,6 +188,7 @@
           "price_sensor": "Sensor waarvan de toestand de huidige elektriciteits prijs is. Elke sensor die de huidige periodenprijs als toestand weergeeft, werkt.",
           "max_price_threshold": "Laden wordt geactiveerd wanneer de huidige prijs gelijk is aan of lager is dan deze waarde. Gebruik dezelfde eenheid als uw sensor. Leeg laten als u de daggemiddelde sensor gebruikt.",
           "average_price_sensor": "Indien opgegeven, wordt deze waarde gebruikt als drempel in plaats van de vaste waarde — handig als uw prijsintegratie al een daggemiddelde blootstelt. Leeg laten voor de vaste drempel.",
+          "rt_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteits prijs de drempelwaarde overschrijdt. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
@@ -418,6 +422,7 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "dp_price_discharge_control": "Alleen ontladen als prijs boven daggemiddelde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
@@ -425,6 +430,7 @@
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
           "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Gebruik dezelfde eenheid als de sensor: ct/kWh voor Nordpool, €/kWh voor PVPC, Rp/kWh voor CKW. Leeg laten om alle slots te gebruiken.",
+          "dp_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteits prijs de daggemiddelde prijs overschrijdt (automatisch berekend uit de prijssensor). Valt terug op de vaste maximale prijsdrempel als de dagelijkse evaluatie nog niet is uitgevoerd. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
@@ -436,6 +442,7 @@
           "price_sensor": "Elektriciteitsprijssensor",
           "max_price_threshold": "Maximale prijsdrempel (optioneel)",
           "average_price_sensor": "Daggemiddelde prijssensor (optioneel)",
+          "rt_price_discharge_control": "Alleen ontladen als prijs boven drempelwaarde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "max_contracted_power": "Maximaal gecontracteerd vermogen ICP (W)"
         },
@@ -443,6 +450,7 @@
           "price_sensor": "Sensor waarvan de toestand de huidige elektriciteits prijs is. Elke sensor die de huidige periodenprijs als toestand weergeeft, werkt.",
           "max_price_threshold": "Laden wordt geactiveerd wanneer de huidige prijs gelijk is aan of lager is dan deze waarde. Gebruik dezelfde eenheid als uw sensor. Leeg laten als u de daggemiddelde sensor gebruikt.",
           "average_price_sensor": "Indien opgegeven, wordt deze waarde gebruikt als drempel in plaats van de vaste waarde — handig als uw prijsintegratie al een daggemiddelde blootstelt. Leeg laten voor de vaste drempel.",
+          "rt_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteits prijs de drempelwaarde overschrijdt. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "max_contracted_power": "Totaal gecontracteerd vermogen (ICP) in watt. Het systeem overschrijdt deze limiet niet bij het laden om het uitvallen van de zekering te voorkomen"
         }
