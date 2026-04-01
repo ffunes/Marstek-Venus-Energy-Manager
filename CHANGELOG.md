@@ -4,6 +4,7 @@
 
 ### Added
 - **Price-based discharge control for Dynamic Pricing and Real-Time Price modes**: New optional checkbox in both pricing mode configurations that restricts battery discharge to periods when the current electricity price exceeds a configurable threshold. When enabled, the battery only discharges if the live price is strictly above the threshold (fixed `max_price_threshold` or a daily average price sensor). If discharge time slots are also configured, both conditions must be met — the price check acts as an additional gate on top of the existing time window restriction. Dynamic Pricing mode gains a new optional `dp_average_price_sensor` field (equivalent to the existing `average_price_sensor` in Real-Time Price mode) to support a dynamic discharge threshold.
+- **Grid meter kW auto-detection and inverted sign support**: The controller now automatically detects if the grid meter sensor reports in kW (via its `unit_of_measurement` attribute) and converts to Watts internally — no user action required. A new **"Inverted meter sign"** toggle has been added to the initial setup and options flow for meters that use the opposite sign convention (positive = export, negative = import).
 
 ## [1.5.0] - 2026-04-01
 
