@@ -69,9 +69,10 @@ This is the primary operating mode of the integration, designed to maximize self
 ## Installation
 
 1.  **HACS (Recommended)**:
-    *   Add this repository as a **Custom Repository** in HACS:
-        *   Url: `https://github.com/ffunes/Marstek-Venus-Energy-Manager`
-        *   Category: **Integration**
+    *   Click the button below to add this repository directly to HACS:
+
+        [![Open your Home Assistant instance and add a custom repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ffunes&repository=Marstek-Venus-Energy-Manager&category=integration)
+
     *   Search for "Marstek Venus Energy Manager" and install.
     *   Restart Home Assistant.
 
