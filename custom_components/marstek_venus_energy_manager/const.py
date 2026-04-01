@@ -6,7 +6,7 @@ SCAN_INTERVAL = {
     "high": 2,       # fast-changing sensors, e.g., power, alarms
     "medium": 5,     # moderately changing sensors, e.g., voltage, current
     "low": 30,        # slow-changing sensors, e.g., cumulative energy counters
-    "very_low": 300   # rarely changing info, e.g., device info, firmware versions
+    "very_low": 600   # rarely changing info, e.g., device info, firmware versions
 }
 
 # Battery version support
@@ -62,7 +62,7 @@ REGISTER_MAP = {
         "max_discharge_power": 44003,
         "battery_soc": 32104,
         "battery_power": 30001,
-        "user_work_mode": 43000,
+        "user_work_mode": None,
     },
     "vD": {
         "rs485_control": 42000,
@@ -75,7 +75,7 @@ REGISTER_MAP = {
         "max_discharge_power": 44003,
         "battery_soc": 32104,
         "battery_power": 30001,
-        "user_work_mode": 43000,
+        "user_work_mode": None,
     },
 }
 
@@ -367,14 +367,123 @@ SENSOR_DEFINITIONS = [
         "data_type": "int32",
         "precision": 0,
         "scan_interval": "high"
-    }
+    },
+    {
+        "name": "Device Name",
+        "register": 31000,
+        "count": 10,
+        "data_type": "char",
+        "unit": None,
+        "icon": "mdi:package-variant-closed",
+        "key": "device_name",
+        "enabled_by_default": True,
+        "scan_interval": "very_low",
+        "precision": 0,
+    },
+    {
+        "name": "SN Code",
+        "register": 31200,
+        "count": 10,
+        "data_type": "char",
+        "unit": None,
+        "key": "sn_code",
+        "enabled_by_default": False,
+        "scan_interval": "very_low",
+        "precision": 0,
+    },
+    {
+        "name": "Software Version",
+        "register": 31100,
+        "scale": 0.01,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "software_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 2,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "BMS Version",
+        "register": 31102,
+        "unit": None,
+        "icon": "mdi:battery-check-outline",
+        "category": "diagnostic",
+        "key": "bms_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "EMS Version",
+        "register": 31101,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "ems_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "scale": 1,
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "Comm Module Firmware",
+        "register": 30800,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "comm_module_firmware",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "MAC Address",
+        "register": 30402,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ethernet",
+        "key": "mac_address",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
 
 ]
 
 # Definitions for binary sensors that represent on/off states
 # Each binary sensor includes the Modbus register and bit position
 BINARY_SENSOR_DEFINITIONS = [
-    # Empty - binary sensors for battery state will be added here if needed
+    {
+        "name": "WiFi Status",
+        "register": 30300,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:check-network-outline",
+        "key": "wifi_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
+    {
+        "name": "Cloud Status",
+        "register": 30302,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:cloud-outline",
+        "key": "cloud_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
 ]
 
 # Definitions for selectable options (e.g. operating modes)
@@ -536,7 +645,6 @@ EFFICIENCY_SENSOR_DEFINITIONS = [
         "key": "round_trip_efficiency_total",
         "name": "Round-Trip Efficiency Total",
         "unit": "%",
-        "device_class": "battery",
         "state_class": "measurement",
         "dependency_keys": {
             "charge": "total_charging_energy",            
@@ -726,9 +834,147 @@ SENSOR_DEFINITIONS_V3 = [
         },
         "scan_interval": "high",
     },
+    {
+        "name": "Max Cell Voltage",
+        "register": 37007,
+        "scale": 0.001,
+        "unit": "V",
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "key": "max_cell_voltage",
+        "enabled_by_default": False,
+        "data_type": "int16",
+        "precision": 3,
+        "scan_interval": "medium",
+    },
+    {
+        "name": "Min Cell Voltage",
+        "register": 37008,
+        "scale": 0.001,
+        "unit": "V",
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "key": "min_cell_voltage",
+        "enabled_by_default": False,
+        "data_type": "int16",
+        "precision": 3,
+        "scan_interval": "medium",
+    },
+    {
+        "name": "Battery Cycle Count",
+        "register": 34003,
+        "scale": 1,
+        "icon": "mdi:counter",
+        "state_class": "total_increasing",
+        "category": "diagnostic",
+        "key": "battery_cycle_count",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "low",
+    },
+    {
+        "name": "Device Name",
+        "register": 31000,
+        "count": 10,
+        "data_type": "char",
+        "unit": None,
+        "icon": "mdi:package-variant-closed",
+        "key": "device_name",
+        "enabled_by_default": True,
+        "scan_interval": "very_low",
+        "precision": 0,
+    },
+    {
+        "name": "BMS Version",
+        "register": 30204,
+        "unit": None,
+        "icon": "mdi:battery-check-outline",
+        "category": "diagnostic",
+        "key": "bms_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "VMS Version",
+        "register": 30202,
+        "unit": None,
+        "icon": "mdi:battery-check-outline",
+        "category": "diagnostic",
+        "key": "vms_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "EMS Version",
+        "register": 30200,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "ems_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "scale": 1,
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "Comm Module Firmware",
+        "register": 30350,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "comm_module_firmware",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "MAC Address",
+        "register": 30304,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ethernet",
+        "key": "mac_address",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
 ]
 
-BINARY_SENSOR_DEFINITIONS_V3 = []
+BINARY_SENSOR_DEFINITIONS_V3 = [
+    {
+        "name": "WiFi Status",
+        "register": 30300,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:check-network-outline",
+        "key": "wifi_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
+    {
+        "name": "Cloud Status",
+        "register": 30302,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:cloud-outline",
+        "key": "cloud_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
+]
 
 SELECT_DEFINITIONS_V3 = [
     {
@@ -1051,24 +1297,154 @@ SENSOR_DEFINITIONS_VA = [
         "precision": 1,
         "scan_interval": "high",
     },
+    {
+        "name": "Device Name",
+        "register": 31000,
+        "count": 10,
+        "data_type": "char",
+        "unit": None,
+        "icon": "mdi:package-variant-closed",
+        "key": "device_name",
+        "enabled_by_default": True,
+        "scan_interval": "very_low",
+        "precision": 0,
+    },
+    {
+        "name": "BMS Version",
+        "register": 30204,
+        "unit": None,
+        "icon": "mdi:battery-check-outline",
+        "category": "diagnostic",
+        "key": "bms_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "VMS Version",
+        "register": 30202,
+        "unit": None,
+        "icon": "mdi:battery-check-outline",
+        "category": "diagnostic",
+        "key": "vms_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "EMS Version",
+        "register": 30200,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "ems_version",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "scale": 1,
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "Comm Module Firmware",
+        "register": 30350,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ticket-confirmation-outline",
+        "category": "diagnostic",
+        "key": "comm_module_firmware",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "MAC Address",
+        "register": 30304,
+        "count": 6,
+        "unit": None,
+        "icon": "mdi:ethernet",
+        "key": "mac_address",
+        "enabled_by_default": True,
+        "data_type": "char",
+        "precision": 0,
+        "scan_interval": "very_low",
+    },
+    {
+        "name": "Battery Cycle Count",
+        "register": 34003,
+        "scale": 1,
+        "icon": "mdi:counter",
+        "state_class": "total_increasing",
+        "category": "diagnostic",
+        "key": "battery_cycle_count",
+        "enabled_by_default": True,
+        "data_type": "uint16",
+        "precision": 0,
+        "scan_interval": "low",
+    },
+    {
+        "name": "Max Cell Voltage",
+        "register": 37007,
+        "scale": 0.001,
+        "unit": "V",
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "key": "max_cell_voltage",
+        "enabled_by_default": False,
+        "data_type": "int16",
+        "precision": 3,
+        "scan_interval": "medium",
+    },
+    {
+        "name": "Min Cell Voltage",
+        "register": 37008,
+        "scale": 0.001,
+        "unit": "V",
+        "device_class": "voltage",
+        "state_class": "measurement",
+        "key": "min_cell_voltage",
+        "enabled_by_default": False,
+        "data_type": "int16",
+        "precision": 3,
+        "scan_interval": "medium",
+    },
 ]
 
 # Venus D has the same sensor registers as Venus A
 SENSOR_DEFINITIONS_VD = SENSOR_DEFINITIONS_VA
 
-BINARY_SENSOR_DEFINITIONS_VA = []
-BINARY_SENSOR_DEFINITIONS_VD = []
+_WIFI_CLOUD_BINARY_SENSORS = [
+    {
+        "name": "WiFi Status",
+        "register": 30300,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:check-network-outline",
+        "key": "wifi_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
+    {
+        "name": "Cloud Status",
+        "register": 30302,
+        "data_type": "uint16",
+        "unit": None,
+        "category": "diagnostic",
+        "device_class": "connectivity",
+        "icon": "mdi:cloud-outline",
+        "key": "cloud_status",
+        "enabled_by_default": False,
+        "scan_interval": "low",
+    },
+]
+BINARY_SENSOR_DEFINITIONS_VA = _WIFI_CLOUD_BINARY_SENSORS
+BINARY_SENSOR_DEFINITIONS_VD = _WIFI_CLOUD_BINARY_SENSORS
 
 SELECT_DEFINITIONS_VA = [
-    {
-        "register": 43000,
-        "name": "User Work Mode",
-        "key": "user_work_mode",
-        "enabled_by_default": True,
-        "scan_interval": "high",
-        "data_type": "uint16",
-        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
-    },
     {
         "register": 42010,
         "name": "Force Mode",
@@ -1081,15 +1457,6 @@ SELECT_DEFINITIONS_VA = [
 ]
 
 SELECT_DEFINITIONS_VD = [
-    {
-        "register": 43000,
-        "name": "User Work Mode",
-        "key": "user_work_mode",
-        "enabled_by_default": True,
-        "scan_interval": "high",
-        "data_type": "uint16",
-        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
-    },
     {
         "register": 42010,
         "name": "Force Mode",
@@ -1250,7 +1617,6 @@ EFFICIENCY_SENSOR_DEFINITIONS_V3 = [
         "key": "round_trip_efficiency_total",
         "name": "Round-Trip Efficiency Total",
         "unit": "%",
-        "device_class": "battery",
         "state_class": "measurement",
         "dependency_keys": {
             "charge": "total_charging_energy",
@@ -1269,6 +1635,22 @@ STORED_ENERGY_SENSOR_DEFINITIONS_V3 = [
         "dependency_keys": {
             "soc": "battery_soc",
             "capacity": "battery_total_energy"
+        },
+    }
+]
+
+# Calculated cycle count sensor (all versions):
+# cycles = (total_discharge + total_charge) / 2 / battery_capacity
+CYCLE_SENSOR_DEFINITIONS = [
+    {
+        "key": "battery_cycle_count_calc",
+        "name": "Battery Cycle Count Calc",
+        "icon": "mdi:counter",
+        "state_class": "measurement",
+        "dependency_keys": {
+            "discharge": "total_discharging_energy",
+            "charge": "total_charging_energy",
+            "capacity": "battery_total_energy",
         },
     }
 ]
@@ -1336,6 +1718,22 @@ DEFAULT_PD_MIN_DISCHARGE_POWER = 0    # Minimum discharge power (0 = disabled)
 
 # Default target grid power per time slot (0W = regulate to zero grid flow)
 DEFAULT_SLOT_TARGET_GRID_POWER = 0
+
+# Dynamic Pricing Mode Configuration
+CONF_PREDICTIVE_CHARGING_MODE = "predictive_charging_mode"
+CONF_PRICE_SENSOR = "price_sensor"
+CONF_PRICE_INTEGRATION_TYPE = "price_integration_type"
+CONF_MAX_PRICE_THRESHOLD = "max_price_threshold"
+
+PREDICTIVE_MODE_TIME_SLOT = "time_slot"
+PREDICTIVE_MODE_DYNAMIC_PRICING = "dynamic_pricing"
+PREDICTIVE_MODE_REALTIME_PRICE = "realtime_price"
+
+CONF_AVERAGE_PRICE_SENSOR = "average_price_sensor"
+
+PRICE_INTEGRATION_NORDPOOL = "nordpool"
+PRICE_INTEGRATION_PVPC = "pvpc"
+PRICE_INTEGRATION_CKW = "ckw"
 
 # Configuration Number Definitions (for config entities exposed in the UI)
 CONFIG_NUMBER_DEFINITIONS = [

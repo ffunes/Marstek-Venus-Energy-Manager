@@ -137,7 +137,53 @@
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert (z.B. Solcast)",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Lademodus auswählen",
+        "description": "Wählen Sie den Modus für die prädiktive Netzladung. Zeitfenster verwendet ein festes nächtliches Ladefenster; Dynamischer Preis wählt automatisch die günstigsten Stunden basierend auf Echtzeit-Strompreisen.",
+        "data": {
+          "predictive_charging_mode": "Lademodus"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Zeitfenster: Laden während eines festen Niedrigtarifzeitfensters. Dynamischer Preis: Tägliche Auswahl der günstigsten Stunden basierend auf Nordpool/ENTSO-e Preisen. Echtzeit-Preis: Sofortige Aktivierung der Ladung wenn der Preis unter den Schwellenwert fällt."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Konfiguration dynamischer Preisladung",
+        "description": "Konfigurieren Sie dynamische Preisladung. Das System liest stündliche Strompreise und wählt automatisch die günstigsten Stunden zum Laden aus.",
+        "data": {
+          "price_integration_type": "Preisintegration",
+          "price_sensor": "Preissensor",
+          "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
+          "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
+          "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "realtime_price_config": {
+        "title": "Prädiktives Laden — Echtzeit-Preis",
+        "description": "Preissensor und Schwellenwert konfigurieren. Das System liest den aktuellen Preis alle paar Sekunden und startet oder stoppt das Netzladen sofort — ohne tägliche Planung.",
+        "data": {
+          "price_sensor": "Strompreissensor",
+          "max_price_threshold": "Maximaler Preisschwellenwert (optional)",
+          "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
+          "max_price_threshold": "Laden wird aktiviert, wenn der aktuelle Preis diesen Wert nicht übersteigt. Gleiche Einheit wie der Sensor verwenden. Leer lassen, wenn der Tagesdurchschnittssensor verwendet wird.",
+          "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -174,7 +220,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
       "capacity_protection": {
@@ -201,9 +247,9 @@
       "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
       "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
       "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
-      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien.",
       "overlapping_slots": "Dieses Zeitfenster überschneidet sich mit einem bestehenden. Passen Sie die Zeiten oder Tage an.",
-      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00)."
+      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00).",
+      "no_price_data": "Keine Preisdaten vom Sensor verfügbar. Nordpool: benötigt `raw_today`. PVPC: benötigt `price_00h` … `price_23h`. CKW: benötigt das Attribut `prices` mit einer Slot-Liste."
     },
     "abort": {
       "already_configured": "Diese Integration ist bereits konfiguriert."
@@ -347,7 +393,53 @@
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose für den nächsten Tag in kWh liefert (z.B. Solcast)",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "predictive_charging_mode": {
+        "title": "Lademodus auswählen",
+        "description": "Wählen Sie den Modus für die prädiktive Netzladung. Zeitfenster verwendet ein festes nächtliches Ladefenster; Dynamischer Preis wählt automatisch die günstigsten Stunden basierend auf Echtzeit-Strompreisen.",
+        "data": {
+          "predictive_charging_mode": "Lademodus"
+        },
+        "data_description": {
+          "predictive_charging_mode": "Zeitfenster: Laden während eines festen Niedrigtarifzeitfensters. Dynamischer Preis: Tägliche Auswahl der günstigsten Stunden basierend auf Nordpool/ENTSO-e Preisen. Echtzeit-Preis: Sofortige Aktivierung der Ladung wenn der Preis unter den Schwellenwert fällt."
+        }
+      },
+      "dynamic_pricing_config": {
+        "title": "Konfiguration dynamischer Preisladung",
+        "description": "Konfigurieren Sie dynamische Preisladung. Das System liest stündliche Strompreise und wählt automatisch die günstigsten Stunden zum Laden aus.",
+        "data": {
+          "price_integration_type": "Preisintegration",
+          "price_sensor": "Preissensor",
+          "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
+          "price_sensor": "Sensor, der stündliche Strompreise enthält (z.B. sensor.nordpool_kwh_de_eur_3_10_025)",
+          "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Gleiche Einheit wie der Sensor verwenden: ct/kWh für Nordpool, €/kWh für PVPC, Rp/kWh für CKW. Leer lassen, um alle Stunden zu verwenden.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
+          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
+        }
+      },
+      "realtime_price_config": {
+        "title": "Prädiktives Laden — Echtzeit-Preis",
+        "description": "Preissensor und Schwellenwert konfigurieren. Das System liest den aktuellen Preis alle paar Sekunden und startet oder stoppt das Netzladen sofort — ohne tägliche Planung.",
+        "data": {
+          "price_sensor": "Strompreissensor",
+          "max_price_threshold": "Maximaler Preisschwellenwert (optional)",
+          "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
+          "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
+          "max_contracted_power": "Maximale Vertragsleistung ICP (W)"
+        },
+        "data_description": {
+          "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
+          "max_price_threshold": "Laden wird aktiviert, wenn der aktuelle Preis diesen Wert nicht übersteigt. Gleiche Einheit wie der Sensor verwenden. Leer lassen, wenn der Tagesdurchschnittssensor verwendet wird.",
+          "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
           "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
@@ -384,7 +476,7 @@
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Erforderlich, wenn er im ersten Schritt nicht konfiguriert wurde."
+          "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
       "capacity_protection": {
@@ -440,9 +532,9 @@
       "cannot_connect": "Verbindung zur Batterie nicht möglich. Überprüfen Sie die IP-Adresse und dass die Batterie im Netzwerk erreichbar ist.",
       "sensor_not_found": "Solarprognose-Sensor existiert nicht. Überprüfen Sie, dass der Sensor verfügbar ist.",
       "invalid_unit": "Solarprognose-Sensor muss 'kWh' oder 'Wh' als Einheit haben.",
-      "too_low": "Die Vertragsleistung muss größer sein als die Gesamtladekapazität der Batterien.",
       "overlapping_slots": "Dieses Zeitfenster überschneidet sich mit einem bestehenden. Passen Sie die Zeiten oder Tage an.",
-      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00)."
+      "midnight_crossing": "Die Startzeit muss vor der Endzeit liegen. Für Nachtperioden erstellen Sie zwei separate Zeitfenster (z.B. 22:00-23:59 und 00:00-06:00).",
+      "no_price_data": "Keine Preisdaten vom Sensor verfügbar. Nordpool: benötigt `raw_today`. PVPC: benötigt `price_00h` … `price_23h`. CKW: benötigt das Attribut `prices` mit einer Slot-Liste."
     }
   },
   "selector": {
@@ -456,6 +548,20 @@
         "sat": "Samstag",
         "sun": "Sonntag"
       }
+    },
+    "predictive_charging_mode": {
+      "options": {
+        "time_slot": "Zeitfenster",
+        "dynamic_pricing": "Dynamischer Preis",
+        "realtime_price": "Echtzeit-Preis (sofortiger Schwellenwert)"
+      }
+    },
+    "price_integration_type": {
+      "options": {
+        "nordpool": "Nordpool",
+        "pvpc": "PVPC (Spanien – ESIOS REE)",
+        "ckw": "CKW (Schweiz)"
+      }
     }
   },
   "entity": {
@@ -465,7 +571,11 @@
       "charge_delay": { "name": "Ladeverzögerung" },
       "capacity_protection": { "name": "Kapazitätsschutz" },
       "backup_function": { "name": "Backup-Funktion" },
-      "rs485_control_mode": { "name": "RS485-Steuermodus" }
+      "rs485_control_mode": { "name": "RS485-Steuermodus" },
+      "automation_charging_active": { "name": "Laden nach externem Preis" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "Ende Externes Laden" }
     },
     "sensor": {
       "excluded_devices": { "name": "Ausgeschlossene Geräte" },
@@ -526,11 +636,24 @@
       "system_total_energy": { "name": "System-Gesamtenergie" },
       "system_stored_energy": { "name": "System-Gespeicherte Energie" },
       "system_daily_charging_energy": { "name": "Tägliche System-Ladeenergie" },
-      "system_daily_discharging_energy": { "name": "Tägliche System-Entladeenergie" }
+      "system_daily_discharging_energy": { "name": "Tägliche System-Entladeenergie" },
+      "system_daily_grid_at_min_soc_energy": { "name": "Netz bei Min. SOC" },
+      "device_name": { "name": "Gerätename" },
+      "sn_code": { "name": "Seriennummer" },
+      "software_version": { "name": "Softwareversion" },
+      "bms_version": { "name": "BMS-Version" },
+      "ems_version": { "name": "EMS-Version" },
+      "vms_version": { "name": "VMS-Version" },
+      "comm_module_firmware": { "name": "Kommunikationsmodul-Firmware" },
+      "mac_address": { "name": "MAC-Adresse" },
+      "battery_cycle_count": { "name": "Batteriezyklen" },
+      "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Kapazitätsschutz Aktiv" },
-      "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" }
+      "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" },
+      "wifi_status": { "name": "WLAN-Status" },
+      "cloud_status": { "name": "Cloud-Status" }
     },
     "select": {
       "force_mode": { "name": "Betriebsmodus erzwingen" },

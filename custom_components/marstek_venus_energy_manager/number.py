@@ -93,7 +93,8 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
         if self.definition['key'] == 'charging_cutoff_capacity':
             old_max_soc = self.coordinator.max_soc
             self.coordinator.max_soc = value
-            
+            self.coordinator.persist_battery_config("max_soc", int(value))
+
             # RESET HYSTERESIS when max_soc changes
             if self.coordinator.enable_charge_hysteresis:
                 # If increasing max_soc and battery is below new limit, clear hysteresis
@@ -102,25 +103,28 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
                     self.coordinator._hysteresis_active = False
                     _LOGGER.info("%s: Hysteresis reset (max_soc %.1f%% → %.1f%%, SOC=%.1f%%)",
                                 self.coordinator.name, old_max_soc, value, current_soc)
-            
-            _LOGGER.info("%s: Updated max_soc %.1f%% → %.1f%% (immediate sync)", 
+
+            _LOGGER.info("%s: Updated max_soc %.1f%% → %.1f%% (immediate sync)",
                          self.coordinator.name, old_max_soc, value)
-        
+
         elif self.definition['key'] == 'discharging_cutoff_capacity':
             old_min_soc = self.coordinator.min_soc
             self.coordinator.min_soc = value
+            self.coordinator.persist_battery_config("min_soc", int(value))
             _LOGGER.info("%s: Updated min_soc %.1f%% → %.1f%% (immediate sync)",
                          self.coordinator.name, old_min_soc, value)
 
         elif self.definition['key'] == 'max_charge_power':
             old_value = self.coordinator.max_charge_power
             self.coordinator.max_charge_power = int(value)
+            self.coordinator.persist_battery_config("max_charge_power", int(value))
             _LOGGER.info("%s: Updated max_charge_power %dW → %dW (immediate sync)",
                          self.coordinator.name, old_value, int(value))
 
         elif self.definition['key'] == 'max_discharge_power':
             old_value = self.coordinator.max_discharge_power
             self.coordinator.max_discharge_power = int(value)
+            self.coordinator.persist_battery_config("max_discharge_power", int(value))
             _LOGGER.info("%s: Updated max_discharge_power %dW → %dW (immediate sync)",
                          self.coordinator.name, old_value, int(value))
 

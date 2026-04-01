@@ -7,6 +7,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED, CONF_ENABLE_CHARGE_DELAY, CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, CONF_MANUAL_MODE_ENABLED, CONF_PREDICTIVE_CHARGING_OVERRIDDEN
@@ -91,13 +92,13 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         if self.definition["key"] == "rs485_control_mode":
-            self.coordinator.rs485_user_disabled = False
+            self.coordinator.set_rs485_user_disabled(False)
         await self.coordinator.write_register(self._register, self._command_on, do_refresh=True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         if self.definition["key"] == "rs485_control_mode":
-            self.coordinator.rs485_user_disabled = True
+            self.coordinator.set_rs485_user_disabled(True)
         await self.coordinator.write_register(self._register, self._command_off, do_refresh=True)
 
     @property
@@ -450,3 +451,5 @@ class ManualModeSwitch(SwitchEntity):
             "manufacturer": "Marstek",
             "model": "Venus Multi-Battery System",
         }
+
+

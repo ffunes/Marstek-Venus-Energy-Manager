@@ -14,12 +14,13 @@ from .const import (
     DOMAIN,
     EFFICIENCY_SENSOR_DEFINITIONS,
     STORED_ENERGY_SENSOR_DEFINITIONS,
+    CYCLE_SENSOR_DEFINITIONS,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
-from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor
-from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor
+from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor, DailyGridAtMinSocSensor
+from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor, MarstekVenusCycleSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ async def async_setup_entry(
             and "min" not in d           # Exclude NUMBER_DEFINITIONS
             and "command_on" not in d    # Exclude SWITCH_DEFINITIONS
             and "options" not in d       # Exclude SELECT_DEFINITIONS
+            and d not in coordinator.binary_sensor_definitions  # Exclude BINARY_SENSOR_DEFINITIONS
         ]
 
         for definition in sensor_defs:
@@ -54,12 +56,14 @@ async def async_setup_entry(
         for definition in AGGREGATE_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusAggregateSensor(coordinators, definition, entry, hass))
 
-    # Add calculated sensors (efficiency and stored energy) per battery
+    # Add calculated sensors (efficiency, stored energy, cycle count) per battery
     for coordinator in coordinators:
         for definition in EFFICIENCY_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusEfficiencySensor(coordinator, definition))
         for definition in STORED_ENERGY_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusStoredEnergySensor(coordinator, definition))
+        for definition in CYCLE_SENSOR_DEFINITIONS:
+            entities.append(MarstekVenusCycleSensor(coordinator, definition))
 
     # Add excluded devices diagnostic sensor
     excluded_devices = entry.data.get("excluded_devices", [])
@@ -89,6 +93,10 @@ async def async_setup_entry(
     # Add non-responsive batteries sensor (always, when controller is present)
     if controller:
         entities.append(NonResponsiveBatteriesSensor(hass, entry, controller, coordinators))
+
+    # Add daily grid-at-min-soc energy sensor (feeds into consumption estimation)
+    if controller:
+        entities.append(DailyGridAtMinSocSensor(controller))
 
     async_add_entities(entities)
 

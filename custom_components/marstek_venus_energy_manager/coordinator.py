@@ -80,6 +80,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self._last_update_times = {}
         self._entity_registry = None
         self.rs485_user_disabled = False  # Set by RS485 switch when user explicitly disables
+        self._config_entry = None  # Set after creation to allow persisting rs485_user_disabled
 
         # Load version-specific definitions
         if self.battery_version == "v3":
@@ -222,6 +223,33 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self._is_shutting_down = value
         self.client.set_shutting_down(value)
 
+    def set_rs485_user_disabled(self, value: bool) -> None:
+        """Set rs485_user_disabled and persist the value to config entry data."""
+        self.rs485_user_disabled = value
+        if self._config_entry is None:
+            return
+        new_data = dict(self._config_entry.data)
+        batteries = [dict(b) for b in new_data.get("batteries", [])]
+        for battery in batteries:
+            if battery.get("host") == self.host:
+                battery["rs485_user_disabled"] = value
+                break
+        new_data["batteries"] = batteries
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
+
+    def persist_battery_config(self, key: str, value) -> None:
+        """Persist a per-battery config value to config_entry.data so it survives restarts."""
+        if self._config_entry is None:
+            return
+        new_data = dict(self._config_entry.data)
+        batteries = [dict(b) for b in new_data.get("batteries", [])]
+        for battery in batteries:
+            if battery.get("host") == self.host:
+                battery[key] = value
+                break
+        new_data["batteries"] = batteries
+        self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
+
     def get_register(self, key: str) -> int | None:
         """Get register address for this battery's version.
 
@@ -282,8 +310,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             self._entity_registry = er.async_get(self.hass)
 
         # Collect all dependency keys from calculated sensors
-        from .const import EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS
-        all_definitions_for_deps = EFFICIENCY_SENSOR_DEFINITIONS + STORED_ENERGY_SENSOR_DEFINITIONS
+        from .const import EFFICIENCY_SENSOR_DEFINITIONS, STORED_ENERGY_SENSOR_DEFINITIONS, CYCLE_SENSOR_DEFINITIONS
+        all_definitions_for_deps = EFFICIENCY_SENSOR_DEFINITIONS + STORED_ENERGY_SENSOR_DEFINITIONS + CYCLE_SENSOR_DEFINITIONS
         dependency_keys_set = {dep_key for defn in all_definitions_for_deps
                             for dep_key in defn.get("dependency_keys", {}).values()
                             if dep_key}
@@ -330,7 +358,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.debug("[%s] Fetching disabled dependency key '%s'", self.name, key)
                 else:
                     _LOGGER.debug("[%s] Skipping disabled entity '%s'", self.name, sensor.get("name", key))
-                continue
+                    continue
 
             # Determine polling interval for this sensor
             interval_name = sensor.get("scan_interval")
@@ -374,13 +402,12 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
 
                 if value is not None:
                     sensors_succeeded += 1
-                    # Apply scaling if defined
-                    if "scale" in sensor:
-                        value *= sensor["scale"]
-                    
-                    # Apply rounding if precision is defined
-                    if "precision" in sensor:
-                        value = round(value, sensor["precision"])
+                    # Apply scaling and rounding (not applicable to char/string sensors)
+                    if sensor.get("data_type") != "char":
+                        if "scale" in sensor:
+                            value *= sensor["scale"]
+                        if "precision" in sensor:
+                            value = round(value, sensor["precision"])
                     
                     updated_data[key] = value
                     self._last_update_times[key] = now
@@ -585,12 +612,14 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     _LOGGER.error("[%s] Missing required registers for atomic power write", self.name)
                 return None
 
+            inter_write_delay = MESSAGE_WAIT_MS.get(self.battery_version, 50) / 1000.0
+
             try:
                 # Write all 3 registers without releasing lock
                 ok1 = await self.client.async_write_register(discharge_reg, discharge_power)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(inter_write_delay)
                 ok2 = await self.client.async_write_register(charge_reg, charge_power)
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(inter_write_delay)
                 ok3 = await self.client.async_write_register(force_reg, force_mode)
 
                 if not (ok1 and ok2 and ok3):

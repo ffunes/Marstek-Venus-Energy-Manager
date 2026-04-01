@@ -82,6 +82,47 @@ AGGREGATE_SENSOR_DEFINITIONS = [
 ]
 
 
+class DailyGridAtMinSocSensor(SensorEntity):
+    """Tracks daily grid energy imported when all batteries are at min SOC during a discharge window.
+
+    This energy represents household demand that the battery could not cover.
+    It is accumulated in real-time by the ChargeDischargeController and resets at midnight.
+    """
+
+    def __init__(self, controller) -> None:
+        """Initialize the sensor."""
+        self._controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_unique_id = "marstek_venus_system_daily_grid_at_min_soc_energy"
+        self._attr_translation_key = "system_daily_grid_at_min_soc_energy"
+        self._attr_native_unit_of_measurement = "kWh"
+        self._attr_device_class = SensorDeviceClass.ENERGY
+        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
+        self._attr_suggested_display_precision = 2
+        self._attr_icon = "mdi:transmission-tower-import"
+        self._attr_should_poll = False
+
+    async def async_added_to_hass(self) -> None:
+        """Register with controller once entity is added to HA."""
+        self._controller._grid_at_min_soc_sensor = self
+
+    @property
+    def native_value(self) -> float:
+        """Return accumulated daily grid import at min SOC."""
+        return round(self._controller._daily_grid_at_min_soc_kwh, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
 class MarstekVenusAggregateSensor(SensorEntity):
     """Representation of an aggregate sensor combining all batteries."""
 
