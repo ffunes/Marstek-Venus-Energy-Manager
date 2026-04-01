@@ -151,6 +151,8 @@ Instead of a fixed window, the system evaluates electricity prices for the day a
         *   **CKW (Switzerland)** (https://github.com/trolli-ch/hass-ckw-dynamic-pricing) — prices in **Rp/kWh** (Swiss Rappen).
     *   **Price sensor**: The HA sensor entity that exposes the price data from the selected integration.
     *   **Maximum price threshold** *(Optional)*: Slots above this price are excluded even if they are the cheapest available. Use the same unit as the sensor (`ct/kWh` for Nordpool, `€/kWh` for PVPC, `Rp/kWh` for CKW). Leave empty to allow all slots.
+    *   **Daily average price sensor for discharge** *(Optional)*: If provided, its value is used as the discharge threshold instead of the fixed maximum price above. Useful when your price integration already exposes a daily average.
+    *   **Only discharge when price is above threshold**: When enabled, the battery only discharges if the current electricity price is strictly above the threshold (fixed or daily average). If [discharge time slots](#4-time-slots-optional) are also configured, both conditions must be met. Disabled by default.
     *   **Solar Forecast Sensor** *(Optional)*: Same as Time Slot mode — leave empty if no solar panels.
     *   **Max Contracted Power**: Same as Time Slot mode.
 
@@ -172,6 +174,7 @@ Instead of pre-selecting hours the night before, the integration reads the curre
     *   **Price sensor**: Any HA sensor whose state is the current electricity price (PVPC, Nordpool, CKW, or any other integration).
     *   **Maximum price threshold** *(Optional)*: Charging activates when the current price is at or below this value. Use the same unit as your sensor.
     *   **Daily average price sensor** *(Optional)*: If provided, the sensor's value is used as the threshold instead of the fixed value above — useful when your price integration already exposes a daily average, so charging happens whenever the current price is cheaper than today's average.
+    *   **Only discharge when price is above threshold**: When enabled, the battery only discharges if the current electricity price is strictly above the threshold (fixed or daily average). If [discharge time slots](#4-time-slots-optional) are also configured, both conditions must be met. Disabled by default.
     *   **Solar Forecast Sensor** *(Optional)*: Same as other modes — leave empty if no solar panels.
     *   **Max Contracted Power**: Same as other modes.
 

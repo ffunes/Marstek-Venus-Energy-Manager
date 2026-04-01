@@ -158,6 +158,7 @@
           "price_integration_type": "Integración de precios",
           "price_sensor": "Sensor de precio eléctrico",
           "max_price_threshold": "Precio máximo (opcional)",
+          "dp_price_discharge_control": "Descargar solo cuando el precio supere la media diaria",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
           "max_contracted_power": "Potencia máxima contratada ICP (W)"
         },
@@ -165,6 +166,7 @@
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad (ej: sensor.nordpool_kwh_se3_sek_3_10_025)",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
+          "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio medio del día (calculado automáticamente a partir del sensor de precios). Si aún no se ha ejecutado la evaluación diaria, se usa el precio máximo configurado como umbral. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
@@ -396,6 +398,7 @@
           "price_integration_type": "Integración de precios",
           "price_sensor": "Sensor de precio eléctrico",
           "max_price_threshold": "Precio máximo (opcional)",
+          "dp_price_discharge_control": "Descargar solo cuando el precio supere la media diaria",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
           "max_contracted_power": "Potencia máxima contratada ICP (W)"
         },
@@ -403,6 +406,7 @@
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
+          "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio medio del día (calculado automáticamente a partir del sensor de precios). Si aún no se ha ejecutado la evaluación diaria, se usa el precio máximo configurado como umbral. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }

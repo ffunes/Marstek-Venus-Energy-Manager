@@ -66,6 +66,8 @@ from .const import (
     CONF_PRICE_INTEGRATION_TYPE,
     CONF_MAX_PRICE_THRESHOLD,
     CONF_AVERAGE_PRICE_SENSOR,
+    CONF_DP_PRICE_DISCHARGE_CONTROL,
+    CONF_RT_PRICE_DISCHARGE_CONTROL,
     PREDICTIVE_MODE_TIME_SLOT,
     PREDICTIVE_MODE_DYNAMIC_PRICING,
     PREDICTIVE_MODE_REALTIME_PRICE,
@@ -180,12 +182,18 @@ class ChargeDischargeController:
         # Real-time Price Mode state
         self.average_price_sensor = config_entry.data.get(CONF_AVERAGE_PRICE_SENSOR, None)
         self._realtime_price_charging: bool = False  # True while actively charging in this mode
+        self.rt_price_discharge_control: bool = config_entry.data.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
 
         # Dynamic Pricing Mode state
         self.predictive_charging_mode = config_entry.data.get(CONF_PREDICTIVE_CHARGING_MODE, PREDICTIVE_MODE_TIME_SLOT)
         self.price_sensor = config_entry.data.get(CONF_PRICE_SENSOR, None)
         self.price_integration_type = config_entry.data.get(CONF_PRICE_INTEGRATION_TYPE, PRICE_INTEGRATION_NORDPOOL)
         self.max_price_threshold = config_entry.data.get(CONF_MAX_PRICE_THRESHOLD, None)
+        self.dp_price_discharge_control: bool = config_entry.data.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
+        self._dp_daily_avg_price: Optional[float] = None  # Computed from price slots in _evaluate_dynamic_pricing
+
+        # Price-based discharge control flag (set each cycle by pricing handlers, consumed by PD section)
+        self._price_based_discharge_blocked: bool = False
         self._dynamic_pricing_schedule: Optional[DynamicPricingSchedule] = None
         self._dynamic_pricing_evaluated_date = None
         self._current_price_slot_active = False
@@ -3041,6 +3049,9 @@ class ChargeDischargeController:
 
         # Step 2: Parse price data (always, even without deficit — for diagnostics)
         slots = self._parse_price_data()
+        if slots:
+            self._dp_daily_avg_price = sum(s.price for s in slots) / len(slots)
+            _LOGGER.debug("Dynamic pricing: daily average price %.4f from %d slots", self._dp_daily_avg_price, len(slots))
         if not slots:
             if not charging_needed:
                 # No deficit + no price data: nothing to evaluate
@@ -3371,6 +3382,7 @@ class ChargeDischargeController:
                 self._current_price_slot_active = False
                 self._dp_eval_retry_count = 0
                 self._dp_pre_evaluated_slots = {}
+                self._dp_daily_avg_price = None
 
         # Phase 4: Check if we're in a selected cheap slot
         if self._dynamic_pricing_schedule and not self.predictive_charging_overridden:
@@ -3438,6 +3450,24 @@ class ChargeDischargeController:
 
         # Not in a cheap slot — fall through to normal PD control (no return here)
 
+        # Price-based discharge control: block discharge when current price is not above threshold
+        # Threshold = daily average price computed at 00:05 evaluation; fallback to max_price_threshold
+        if self.dp_price_discharge_control and not self.grid_charging_active and self.price_sensor:
+            price_state = self.hass.states.get(self.price_sensor)
+            if price_state is not None:
+                try:
+                    dp_current_price = float(price_state.state)
+                    dp_threshold = self._dp_daily_avg_price if self._dp_daily_avg_price is not None else self.max_price_threshold
+                    if dp_threshold is not None:
+                        self._price_based_discharge_blocked = not (dp_current_price > dp_threshold)
+                        if self._price_based_discharge_blocked:
+                            _LOGGER.debug(
+                                "Dynamic pricing: discharge BLOCKED by price control (%.4f <= threshold %.4f)",
+                                dp_current_price, dp_threshold,
+                            )
+                except (ValueError, TypeError):
+                    pass  # Cannot parse price → allow discharge (safe default)
+
     # =========================================================================
     # REAL-TIME PRICE: reactive charging based on current price every cycle
     # =========================================================================
@@ -3488,6 +3518,14 @@ class ChargeDischargeController:
             "Real-time price: current=%.4f threshold=%.4f cheap=%s charging=%s",
             current_price, threshold, price_is_cheap, self._realtime_price_charging,
         )
+
+        if self.rt_price_discharge_control and not self.grid_charging_active:
+            self._price_based_discharge_blocked = not (current_price > threshold)
+            if self._price_based_discharge_blocked:
+                _LOGGER.debug(
+                    "Real-time price: discharge BLOCKED by price control (%.4f <= %.4f)",
+                    current_price, threshold,
+                )
 
         if price_is_cheap and not self._realtime_price_charging:
             # Evaluate whether charging is actually needed before starting
@@ -3717,6 +3755,9 @@ class ChargeDischargeController:
             self._detect_solar_t_start()
             # Proactively evaluate delay to keep ChargeDelaySensor populated
             self._is_charge_delayed()
+
+        # Reset price-based discharge block flag at start of each cycle
+        self._price_based_discharge_blocked = False
 
         # === Predictive Grid Charging Logic (mode dispatch) ===
         if self.predictive_charging_enabled:
@@ -4133,6 +4174,14 @@ class ChargeDischargeController:
             is_charging = False  # Reset since we're forcing to 0
             self._active_discharge_batteries = []
             self._active_charge_batteries = []
+
+        # Check price-based discharge control (set each cycle by pricing mode handlers)
+        if not operation_restricted and self._price_based_discharge_blocked and not is_charging:
+            _LOGGER.info("ChargeDischargeController: Discharging NOT ALLOWED by price-based control - controller paused")
+            new_power = 0
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            operation_restricted = True  # Freeze PD state downstream (same as timeslot restriction)
 
         # Get available batteries (after checking restrictions to determine correct operation mode)
         available_batteries = self._get_available_batteries(is_charging)
