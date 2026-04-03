@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/changelog/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/changelog/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/changelog/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/installation/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/installation/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/troubleshooting/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/troubleshooting/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/advanced/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/advanced/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/advanced/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/batteries/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/batteries/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/batteries/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/excluded-devices/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/excluded-devices/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/excluded-devices/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/main-sensor/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/main-sensor/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/main-sensor/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/time-slots/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/time-slots/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/time-slots/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/dynamic-pricing/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/dynamic-pricing/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/dynamic-pricing/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/real-time-price/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/real-time-price/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/real-time-price/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/time-slot/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/time-slot/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/time-slot/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/consumption-estimate/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/consumption-estimate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/consumption-estimate/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/load-exclusion/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/load-exclusion/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/load-exclusion/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/multi-battery/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/multi-battery/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/multi-battery/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/pd-controller/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/pd-controller/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/pd-controller/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/peak-shaving/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/peak-shaving/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/peak-shaving/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/solar-charge-delay/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/solar-charge-delay/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/solar-charge-delay/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/weekly-full-charge/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/weekly-full-charge/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/weekly-full-charge/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/architecture/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/architecture/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/entities/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/entities/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/entities/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/modbus-registers/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/modbus-registers/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/modbus-registers/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/registers/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/registers/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/registers/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/changelog/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/changelog/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/changelog/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/installation/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/installation/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/installation/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/troubleshooting/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/troubleshooting/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/advanced/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/advanced/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/advanced/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/batteries/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/batteries/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/batteries/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/excluded-devices/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/excluded-devices/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/excluded-devices/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/main-sensor/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/main-sensor/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/main-sensor/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/time-slots/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/time-slots/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/time-slots/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/dynamic-pricing/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/dynamic-pricing/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/dynamic-pricing/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/real-time-price/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/real-time-price/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/real-time-price/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/time-slot/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/configuration/predictive-charging/time-slot/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/configuration/predictive-charging/time-slot/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/consumption-estimate/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/consumption-estimate/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/consumption-estimate/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/load-exclusion/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/load-exclusion/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/load-exclusion/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/multi-battery/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/multi-battery/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/multi-battery/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/pd-controller/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/pd-controller/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/pd-controller/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/peak-shaving/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/peak-shaving/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/peak-shaving/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/solar-charge-delay/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/solar-charge-delay/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/solar-charge-delay/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/weekly-full-charge/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/features/weekly-full-charge/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/weekly-full-charge/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/architecture/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/architecture/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/entities/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/entities/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/entities/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/modbus-registers/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/modbus-registers/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/modbus-registers/"/>
+    </url>
+    <url>
+        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/registers/</loc>
+        <lastmod>2026-04-03</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/en/reference/registers/"/>
+        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/reference/registers/"/>
+    </url>
+</urlset>
