@@ -1,0 +1,24 @@
+# Load exclusion
+
+See [Excluded devices](../configuration/excluded-devices.md) for configuration.
+
+## How it works internally
+
+When an excluded device is active, the controller subtracts its power from the grid consumption before computing the PD controller adjustment:
+
+```
+effective_consumption = grid_consumption - excluded_power
+error = effective_consumption - target_grid_power
+```
+
+This causes the battery to "ignore" that load and not try to compensate it.
+
+### If the device is NOT included in the main sensor
+
+The integration **adds** the excluded device's power to the measured grid consumption (because the main sensor does not see it) and then subtracts it, resulting in the same net effective consumption.
+
+## "Allow solar surplus" option
+
+When active, if the system is operating on solar surplus (battery is charging from surplus), the exclusion does not apply to the charging side. In other words: the battery will not charge to compensate this device's consumption when solar surplus is already available.
+
+![Excluded device power sensor in HA](../assets/screenshots/features/load-exclusion-entities.png){ width="700"  style="display: block; margin: 0 auto;"}

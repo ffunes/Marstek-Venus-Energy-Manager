@@ -1,0 +1,148 @@
+site_name: Marstek Venus Energy Manager
+site_description: Home Assistant custom integration for Marstek Venus battery systems
+site_author: ffunes
+site_url: https://ffunes.github.io/Marstek-Venus-Energy-Manager/
+repo_url: https://github.com/ffunes/Marstek-Venus-Energy-Manager
+repo_name: ffunes/Marstek-Venus-Energy-Manager
+edit_uri: edit/main/site-docs/
+
+docs_dir: site-docs
+site_dir: _site
+
+theme:
+  name: material
+  language: es
+  logo: assets/logo.png
+  favicon: assets/logo.png
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/weather-night
+        name: Cambiar a modo oscuro / Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: green
+      toggle:
+        icon: material/weather-sunny
+        name: Cambiar a modo claro / Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotate
+    - content.code.copy
+    - content.action.edit
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: es
+          default: true
+          name: Español
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            Inicio: Home
+            Instalación: Installation
+            Configuración: Configuration
+            Resumen: Overview
+            Sensor principal: Main sensor
+            Baterías: Batteries
+            Franjas horarias: Time slots
+            Dispositivos excluidos: Excluded devices
+            Carga predictiva: Predictive charging
+            Modo Franja Horaria: Time Slot mode
+            Modo Precio Dinámico: Dynamic Pricing mode
+            Modo Precio en Tiempo Real: Real-Time Price mode
+            Opciones avanzadas: Advanced options
+            Funcionalidades: Features
+            Controlador PD: PD Controller
+            Gestión multi-batería: Multi-battery management
+            Estimación de consumo diario: Daily consumption estimate
+            Carga semanal completa: Weekly full charge
+            Peak shaving: Peak shaving
+            Retraso de carga solar: Solar charge delay
+            Exclusión de cargas: Load exclusion
+            Referencia técnica: Technical reference
+            Arquitectura: Architecture
+            Registros Modbus: Modbus registers
+            Entidades HA: HA entities
+            Solución de problemas: Troubleshooting
+            Changelog: Changelog
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ffunes/Marstek-Venus-Energy-Manager
+    - icon: fontawesome/solid/mug-hot
+      link: https://buymeacoffee.com/ffunes
+  version:
+    provider: mike
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+nav:
+  - Inicio: index.md
+  - Instalación: installation.md
+  - Configuración:
+      - Resumen: configuration/index.md
+      - Sensor principal: configuration/main-sensor.md
+      - Baterías: configuration/batteries.md
+      - Franjas horarias: configuration/time-slots.md
+      - Dispositivos excluidos: configuration/excluded-devices.md
+      - Carga predictiva:
+          - Resumen: configuration/predictive-charging/index.md
+          - Modo Franja Horaria: configuration/predictive-charging/time-slot.md
+          - Modo Precio Dinámico: configuration/predictive-charging/dynamic-pricing.md
+          - Modo Precio en Tiempo Real: configuration/predictive-charging/real-time-price.md
+      - Opciones avanzadas: configuration/advanced.md
+  - Funcionalidades:
+      - Controlador PD: features/pd-controller.md
+      - Gestión multi-batería: features/multi-battery.md
+      - Estimación de consumo diario: features/consumption-estimate.md
+      - Carga semanal completa: features/weekly-full-charge.md
+      - Peak shaving: features/peak-shaving.md
+      - Retraso de carga solar: features/solar-charge-delay.md
+      - Exclusión de cargas: features/load-exclusion.md
+  - Referencia técnica:
+      - Arquitectura: reference/architecture.md
+      - Registros Modbus: reference/modbus-registers.md
+      - Entidades HA: reference/entities.md
+  - Solución de problemas: troubleshooting.md
+  - Changelog: changelog.md
