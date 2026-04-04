@@ -1364,6 +1364,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#compatibilidad-con-la-app-de-marstek" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibilidad con la app de Marstek
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#la-bateria-no-responde-a-los-comandos" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1415,6 +1426,56 @@
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#el-dispositivo-de-medida-no-esta-disponible-o-pierde-conexion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El dispositivo de medida no está disponible o pierde conexión
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="El dispositivo de medida no está disponible o pierde conexión">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#el-sensor-reporta-unavailable-o-unknown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El sensor reporta unavailable o unknown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#el-sensor-se-congela-el-valor-deja-de-actualizarse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El sensor se congela (el valor deja de actualizarse)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resumen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resumen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1491,6 +1552,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#compatibilidad-con-la-app-de-marstek" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compatibilidad con la app de Marstek
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#la-bateria-no-responde-a-los-comandos" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1546,6 +1618,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#el-dispositivo-de-medida-no-esta-disponible-o-pierde-conexion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El dispositivo de medida no está disponible o pierde conexión
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="El dispositivo de medida no está disponible o pierde conexión">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#el-sensor-reporta-unavailable-o-unknown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El sensor reporta unavailable o unknown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#el-sensor-se-congela-el-valor-deja-de-actualizarse" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        El sensor se congela (el valor deja de actualizarse)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resumen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resumen
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#registros-de-depuracion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1582,6 +1704,10 @@
 
 
 <h1 id="solucion-de-problemas">Solución de problemas<a class="headerlink" href="#solucion-de-problemas" title="Permanent link">&para;</a></h1>
+<h2 id="compatibilidad-con-la-app-de-marstek">Compatibilidad con la app de Marstek<a class="headerlink" href="#compatibilidad-con-la-app-de-marstek" title="Permanent link">&para;</a></h2>
+<p><strong>No es necesario realizar ningún cambio en la app de Marstek</strong> para que la integración funcione — incluyendo desactivar el medidor de energía o modificar cualquier configuración. La integración opera junto a la app sin requerir ningún ajuste desde ella.</p>
+<p>Sin embargo, <strong>no cambies ningún modo de operación ni configuración desde la app de Marstek mientras la integración de Home Assistant esté en ejecución</strong>. Hacerlo romperá la compatibilidad y necesitarás deshabilitar y volver a habilitar la integración para restaurar el funcionamiento normal.</p>
+<hr />
 <h2 id="la-bateria-no-responde-a-los-comandos">La batería no responde a los comandos<a class="headerlink" href="#la-bateria-no-responde-a-los-comandos" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Verifica que el conversor Modbus TCP (Elfin-EW11 o similar) está accesible por IP desde Home Assistant.</li>
@@ -1634,6 +1760,40 @@
 <hr />
 <h2 id="el-switch-rs485-se-reactiva-solo-tras-reiniciar">El switch RS485 se reactiva solo tras reiniciar<a class="headerlink" href="#el-switch-rs485-se-reactiva-solo-tras-reiniciar" title="Permanent link">&para;</a></h2>
 <p>Corregido en v1.5.0. La preferencia del usuario se persiste y se restaura en el arranque.</p>
+<hr />
+<h2 id="el-dispositivo-de-medida-no-esta-disponible-o-pierde-conexion">El dispositivo de medida no está disponible o pierde conexión<a class="headerlink" href="#el-dispositivo-de-medida-no-esta-disponible-o-pierde-conexion" title="Permanent link">&para;</a></h2>
+<p>Si el sensor de red (por ejemplo, un medidor con conexión Wi-Fi inestable) se desconecta, el controlador se comporta de forma diferente según cómo falle el sensor.</p>
+<h3 id="el-sensor-reporta-unavailable-o-unknown">El sensor reporta <code>unavailable</code> o <code>unknown</code><a class="headerlink" href="#el-sensor-reporta-unavailable-o-unknown" title="Permanent link">&para;</a></h3>
+<p>El bucle de control sale inmediatamente sin enviar ningún nuevo comando. Las baterías <strong>mantienen el último nivel de potencia comandado</strong> hasta que el sensor vuelva a estar disponible.</p>
+<h3 id="el-sensor-se-congela-el-valor-deja-de-actualizarse">El sensor se congela (el valor deja de actualizarse)<a class="headerlink" href="#el-sensor-se-congela-el-valor-deja-de-actualizarse" title="Permanent link">&para;</a></h3>
+<p>La integración detecta que la marca de tiempo del sensor no ha cambiado:</p>
+<ul>
+<li>Durante hasta <strong>15 ciclos (~30 segundos)</strong> mantiene el último comando sin cambios.</li>
+<li>Pasado ese período de gracia, realiza un nuevo cálculo de seguridad usando el valor congelado, con el término derivativo suprimido para evitar picos de potencia.</li>
+</ul>
+<h3 id="resumen">Resumen<a class="headerlink" href="#resumen" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Estado del sensor</th>
+<th>Comportamiento</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>unavailable</code> / <code>unknown</code></td>
+<td>El bucle de control sale — las baterías mantienen la última potencia</td>
+</tr>
+<tr>
+<td>Valor congelado (sin nuevas lecturas)</td>
+<td>~30 s de gracia, luego recalcula con el valor obsoleto</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Sin fallback automático a 0 W</p>
+<p>Si el medidor se pierde mientras la batería estaba descargando a, por ejemplo, 2000 W, <strong>seguirá descargando a 2000 W</strong> hasta que el medidor se recupere. No hay ningún temporizador integrado que lleve la batería a reposo. Considera mejorar la fiabilidad del Wi-Fi de tu medidor, o usar una alternativa cableada o Zigbee si los cortes son frecuentes.</p>
+</div>
 <hr />
 <h2 id="registros-de-depuracion">Registros de depuración<a class="headerlink" href="#registros-de-depuracion" title="Permanent link">&para;</a></h2>
 <p>Activa el nivel de log <code>debug</code> para la integración pulsando en "Enable debug logging" en la configuración de la integración. Una vez que lo hayas ejecutado durante el tiempo apropiado, desactívalo para no llenar los logs, y se creará un archivo de log con la información de depuración.</p>
