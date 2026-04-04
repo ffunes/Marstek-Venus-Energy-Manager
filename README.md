@@ -41,7 +41,7 @@ Full documentation (configuration, features, entities, troubleshooting) is avail
 | Requirement | Details |
 |---|---|
 | Battery | Marstek Venus E v2/v3, Venus A or Venus D |
-| Modbus bridge | Elfin-EW11 or compatible RS485-to-TCP converter |
+| Modbus bridge | Elfin-EW11 or compatible RS485-to-TCP converter — **Venus E v2 only**. Venus E v3, Venus A and Venus D connect via Ethernet with native Modbus TCP support. |
 | Grid sensor | HA sensor measuring total grid consumption (e.g. Shelly EM3, Neurio, smart meter) |
 | Network | Battery reachable by IP from Home Assistant |
 | Home Assistant | Recent version (tested on 2024.x+) |
