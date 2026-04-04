@@ -1480,6 +1480,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reporting-an-issue-configuration-summary-sensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reporting an issue — Configuration Summary sensor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#debug-logging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1668,6 +1679,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#reporting-an-issue-configuration-summary-sensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reporting an issue — Configuration Summary sensor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#debug-logging" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1794,6 +1816,17 @@
 <p class="admonition-title">No automatic fallback to 0 W</p>
 <p>If the meter goes unavailable while the battery was, for example, discharging at 2000 W, it will <strong>continue discharging at 2000 W</strong> until the meter recovers. There is no built-in timeout that ramps the battery to idle. Consider improving the Wi-Fi reliability of your metering device, or using a wired/Zigbee alternative if dropouts are frequent.</p>
 </div>
+<hr />
+<h2 id="reporting-an-issue-configuration-summary-sensor">Reporting an issue — Configuration Summary sensor<a class="headerlink" href="#reporting-an-issue-configuration-summary-sensor" title="Permanent link">&para;</a></h2>
+<p>When opening a bug report or asking for help, it is useful to share the current integration configuration. The <strong>Configuration Summary</strong> sensor exposes the complete setup as entity attributes.</p>
+<p><strong>How to enable it:</strong></p>
+<ol>
+<li>Go to <strong>Settings → Devices &amp; Services → Marstek Venus Energy Manager</strong>.</li>
+<li>Select the <strong>Marstek Venus System</strong> device.</li>
+<li>Find the <strong>Configuration Summary</strong> sensor (it is hidden by default) and enable it.</li>
+<li>Open the sensor's detail card and share its attributes (state + attributes).</li>
+</ol>
+<p>The sensor is read-only and diagnostic. It does not affect integration behaviour in any way.</p>
 <hr />
 <h2 id="debug-logging">Debug logging<a class="headerlink" href="#debug-logging" title="Permanent link">&para;</a></h2>
 <p>Enable <code>debug</code> for the integration by clicking in "Enable debug logging" button in the integration settings. Once you have run it for the appropriate time, disable it to avoid filling the logs, and a log file will be created with the debug information.</p>
