@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.2] - 2026-04-04
+
+### Added
+- **Backup function exclusion from PD control**: When the **Backup Function** switch is enabled on a battery **and** the **AC Offgrid Power** sensor reports a non-zero value, that battery is automatically excluded from PD controller writes. Having the switch on alone is not sufficient — the battery must actually be providing offgrid power. No power commands, force mode changes, or configuration register writes are sent while both conditions are met. A **5-minute cooldown** is applied after the offgrid load drops back to 0 W, keeping the battery excluded until the window expires to avoid sending commands immediately after a backup event ends. Turning the switch off clears the cooldown immediately. The battery continues to be polled normally so all read-only sensors remain up to date. This applies to all write paths: normal PD control, predictive grid charging, weekly full charge register writes, and the shutdown sequence. The AC Offgrid Power sensor (register 32302) has been added to v3, vA, and vD battery definitions so that the two-condition check works across all versions.
+
 ## [1.5.1] - 2026-04-01
 
 ### Added

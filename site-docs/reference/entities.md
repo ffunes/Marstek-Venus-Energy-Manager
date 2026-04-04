@@ -56,7 +56,7 @@ La integración crea automáticamente entidades para cada batería configurada y
 | Entidad | Descripción |
 |---|---|
 | `switch.*_rs485_control` | Modo control RS485 |
-| `switch.*_backup_function` | Función de reserva |
+| `switch.*_backup_function` | Función de reserva — cuando está activo **y** la potencia AC offgrid ≠ 0 W, la batería queda excluida del control PD (no se envían comandos de escritura) |
 | `switch.marstek_venus_system_override_predictive_charging` | Cancelar carga predictiva |
 
 ## Botones
