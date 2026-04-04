@@ -56,7 +56,7 @@ The integration automatically creates entities for each configured battery and a
 | Entity | Description |
 |---|---|
 | `switch.*_rs485_control` | RS485 control mode |
-| `switch.*_backup_function` | Backup function |
+| `switch.*_backup_function` | Backup function — when enabled **and** AC offgrid power ≠ 0 W, the battery is excluded from PD control (no write commands sent) |
 | `switch.marstek_venus_system_override_predictive_charging` | Override predictive charging |
 
 ## Buttons

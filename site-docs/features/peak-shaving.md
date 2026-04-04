@@ -1,6 +1,6 @@
-# Peak shaving (protección de capacidad)
+# Peak shaving
 
-Conserva la energía de la batería cuando el SOC cae por debajo de un umbral configurable, limitando la descarga para cubrir solo los picos que superen un límite de potencia definido.
+Reserva parte de la capacidad de la batería para satisfacer picos de demanda que superen un umbral de potencia configurable. En lugar de cubrir todo el consumo doméstico, la batería retiene energía y solo descarga para compensar la parte del consumo que supera el límite de pico — manteniendo capacidad en reserva para cuando realmente se necesita.
 
 ## Comportamiento sin peak shaving
 

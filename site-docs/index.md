@@ -28,7 +28,7 @@
 - **Carga predictiva**: tres modos (franja horaria, precio dinámico, precio en tiempo real) que cargan desde la red solo cuando el balance energético lo requiere. Utiliza una media móvil de 7 días del consumo real del hogar para decidir si es necesario cargar desde la red.
 - **Gestión multi-batería**: selección inteligente con prioridades de SOC, histéresis de energía y eficiencia por zona de operación.
 - **Franjas de descarga**: define ventanas horarias y niveles objetivo de red por franja.
-- **Peak shaving**: protege la batería conservando energía cuando el SOC baja del umbral configurado.
+- **Peak shaving**: reserva capacidad de la batería para satisfacer picos de demanda que superen un umbral de potencia configurable.
 - **Carga semanal completa**: carga al 100% una vez por semana para equilibrar celdas.
 - **Retraso de carga solar**: pospone la carga matutina desde la red mientras la producción solar prevista es suficiente para cubrir la energía restante necesaria.
 - **Exclusión de cargas**: excluye dispositivos de alta potencia (p. ej. cargadores de VE) para que el controlador no intente compensar su consumo.

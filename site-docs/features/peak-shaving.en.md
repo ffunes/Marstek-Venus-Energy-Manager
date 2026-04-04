@@ -1,6 +1,6 @@
-# Peak shaving (capacity protection)
+# Peak shaving
 
-Conserves battery energy when SOC drops below a configurable threshold, limiting discharge to cover only peaks that exceed a defined power limit.
+Reserves a portion of battery capacity to cover demand spikes that exceed a configurable power threshold. Instead of the battery covering all household consumption, it holds back energy and only discharges to compensate the portion of demand above the peak limit — keeping capacity in reserve for when it is actually needed.
 
 ## Behaviour without peak shaving
 

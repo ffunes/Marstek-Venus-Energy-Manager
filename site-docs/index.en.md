@@ -28,7 +28,7 @@
 - **Predictive charging**: three modes (time slot, dynamic pricing, real-time price) that charge from the grid only when the energy balance requires it. Uses a 7-day rolling average of real household consumption to decide whether grid charging is needed.
 - **Multi-battery management**: smart selection with SOC priorities, energy hysteresis and efficiency zone operation.
 - **Discharge time slots**: define time windows and per-slot target grid power levels.
-- **Peak shaving**: protects the battery by conserving energy when SOC drops below a configurable threshold.
+- **Peak shaving**: reserves battery capacity to cover demand spikes above a configurable power threshold.
 - **Weekly full charge**: charges to 100% once a week for cell balancing.
 - **Solar charge delay**: postpones morning grid charging while expected solar production is enough to cover the remaining energy needed.
 - **Load exclusion**: exclude high-power devices (e.g. EV chargers) so the controller does not try to compensate their consumption.

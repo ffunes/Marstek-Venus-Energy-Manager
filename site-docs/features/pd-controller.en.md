@@ -41,6 +41,26 @@ The controller monitors frequent direction reversals (charge↔discharge). If su
 
 Prevents direction changes from momentary load variations (such as appliance start-ups). The controller requires the error to exceed a threshold for several cycles before switching from charging to discharging or vice versa.
 
+## Backup function exclusion
+
+A battery is excluded from the PD controller when **both** of the following are true:
+
+1. The **Backup Function** switch (`switch.*_backup_function`) is enabled.
+2. The **AC Offgrid Power** sensor (`sensor.*_ac_offgrid_power`) reports a non-zero value — confirming the battery is actually providing offgrid power.
+
+Having the switch on alone is not sufficient. If the switch is on but AC offgrid power reads 0 W (the battery is not actively serving an offgrid load), it continues to participate in PD control normally.
+
+While excluded, the controller sends no power commands, force mode changes, or configuration register writes to the battery. The battery continues to be polled normally so all read-only sensors (SOC, power, temperature, etc.) remain up to date.
+
+### Post-backup cooldown
+
+When the offgrid load drops back to 0 W, the battery does not re-enter PD control immediately. A **5-minute cooldown** keeps the battery excluded after the backup event ends. This avoids sending write commands to a battery that may still be settling after a backup episode.
+
+Turning the **Backup Function** switch off clears the cooldown immediately.
+
+!!! info
+    This exclusion also covers the weekly full charge register writes and the shutdown sequence.
+
 ## Per-slot target power
 
 Each [time slot](../configuration/time-slots.md) can have its own **target grid power** (`target_grid_power`), allowing different strategies at different times of day.

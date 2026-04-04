@@ -169,6 +169,10 @@ class ChargeDischargeController:
         # Non-responsive battery tracking: excludes batteries that ACK commands but don't deliver power
         # Format: coordinator -> {"fail_count": int, "excluded_at": datetime|None, "cooldown_minutes": int}
         self._non_responsive_batteries: dict = {}
+
+        # Backup function cooldown: prevents re-entering PD control immediately after offgrid load drops.
+        # Format: coordinator -> datetime (UTC) until which the battery stays excluded
+        self._backup_cooldown_until: dict = {}
         
         # Predictive Grid Charging state
         self.predictive_charging_enabled = config_entry.data.get(CONF_ENABLE_PREDICTIVE_CHARGING, False)
@@ -478,7 +482,12 @@ class ChargeDischargeController:
             if self._is_battery_excluded(coordinator):
                 _LOGGER.debug("%s: Skipping - excluded due to non-responsive behavior", coordinator.name)
                 continue
-                
+
+            # Skip batteries with backup function active (they manage themselves autonomously)
+            if self._is_backup_function_active(coordinator):
+                _LOGGER.debug("%s: Skipping - backup function is active", coordinator.name)
+                continue
+
             current_soc = coordinator.data.get("battery_soc", 0)
             
             if is_charging:
@@ -530,6 +539,54 @@ class ChargeDischargeController:
     # -------------------------------------------------------------------------
     # Non-responsive battery detection helpers
     # -------------------------------------------------------------------------
+
+    def _is_backup_function_active(self, coordinator) -> bool:
+        """Return True if the battery must be excluded from PD control due to backup mode.
+
+        A battery is excluded when:
+          - The Backup Function switch is enabled (register value == 0) AND
+          - The AC offgrid power sensor reads a non-zero value (battery is
+            actively providing offgrid power), OR the sensor is unavailable.
+
+        Additionally, a 5-minute cooldown is applied after the offgrid load
+        drops to 0: the battery stays excluded until the cooldown expires to
+        avoid sending write commands immediately after a backup event ends.
+
+        The switch turning OFF clears the cooldown immediately.
+        """
+        if coordinator.data is None:
+            return False
+
+        now = dt_util.utcnow()
+
+        # From SWITCH_DEFINITIONS: command_on = 0 (enabled), command_off = 1 (disabled)
+        backup_value = coordinator.data.get("backup_function")
+        if backup_value is None or backup_value != 0:
+            # Switch is off — clear any lingering cooldown and allow PD control
+            self._backup_cooldown_until.pop(coordinator, None)
+            return False
+
+        # Switch is ON. Check whether the battery is actively providing offgrid power.
+        ac_offgrid = coordinator.data.get("ac_offgrid_power")
+
+        if ac_offgrid is not None and ac_offgrid == 0:
+            # Offgrid power is 0 — check if we are still within the post-backup cooldown
+            cooldown_until = self._backup_cooldown_until.get(coordinator)
+            if cooldown_until and now < cooldown_until:
+                remaining = int((cooldown_until - now).total_seconds() / 60)
+                _LOGGER.debug(
+                    "%s: Backup cooldown active — %d min remaining before re-entering PD control",
+                    coordinator.name, remaining
+                )
+                return True
+            # Cooldown expired (or was never set) — allow PD control
+            self._backup_cooldown_until.pop(coordinator, None)
+            return False
+
+        # Offgrid power > 0 (or sensor not available): backup is actively running.
+        # Refresh the cooldown window so it starts counting from the last active reading.
+        self._backup_cooldown_until[coordinator] = now + timedelta(minutes=5)
+        return True
 
     def _is_battery_excluded(self, coordinator) -> bool:
         """Return True if the battery is currently in non-responsive cooldown.
@@ -1298,6 +1355,10 @@ class ChargeDischargeController:
             for coordinator in self.coordinators:
                 cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
 
+                if self._is_backup_function_active(coordinator):
+                    _LOGGER.debug("%s: Skipping weekly full charge - backup function is active", coordinator.name)
+                    continue
+
                 if cutoff_reg is None:
                     _LOGGER.warning(
                         "%s: Weekly full charge - no hardware cutoff register (v3 battery). "
@@ -1335,6 +1396,10 @@ class ChargeDischargeController:
             # Restore register 44000 to original max_soc values (v2 only)
             for coordinator in self.coordinators:
                 cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
+
+                if self._is_backup_function_active(coordinator):
+                    _LOGGER.debug("%s: Skipping cutoff restore - backup function is active", coordinator.name)
+                    continue
 
                 if cutoff_reg is None:
                     _LOGGER.debug("%s: No hardware cutoff register to restore (v3 battery)", coordinator.name)
@@ -2476,6 +2541,14 @@ class ChargeDischargeController:
             _LOGGER.debug(
                 "[%s] Skipping power write - battery unreachable (failures: %d)",
                 coordinator.name, coordinator._consecutive_failures
+            )
+            return False
+
+        # Skip if backup function is active (battery manages itself autonomously)
+        if self._is_backup_function_active(coordinator):
+            _LOGGER.debug(
+                "[%s] Skipping power write - backup function is active",
+                coordinator.name
             )
             return False
 
@@ -4651,6 +4724,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.info("Shutting down integration - stopping all battery operations")
         for coordinator in coordinators:
             try:
+                # Skip batteries that are actively providing offgrid backup power
+                # (backup switch ON and ac_offgrid_power != 0, or sensor unavailable)
+                if coordinator.data and coordinator.data.get("backup_function") == 0:
+                    ac_offgrid = coordinator.data.get("ac_offgrid_power")
+                    if ac_offgrid is None or ac_offgrid != 0:
+                        _LOGGER.info("%s: Skipping shutdown writes - backup function active with offgrid load", coordinator.name)
+                        continue
+
                 # Get version-specific registers
                 discharge_reg = coordinator.get_register("set_discharge_power")
                 charge_reg = coordinator.get_register("set_charge_power")

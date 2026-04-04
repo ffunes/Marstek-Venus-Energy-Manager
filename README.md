@@ -33,7 +33,7 @@ Full documentation (configuration, features, entities, troubleshooting) is avail
 - **Discharge Time Slots**: Restrict or allow discharge during specific hours and days.
 - **Weekly Full Charge**: Forces 100% SOC once a week for LFP cell balancing.
 - **Solar-Aware Charge Delay**: Holds back grid charging while solar can still cover the required energy.
-- **Capacity Protection**: Limits battery discharge when SOC drops below a configurable threshold (peak shaving).
+- **Peak Shaving**: Reserves battery capacity to cover demand spikes above a configurable power threshold, keeping energy in reserve rather than covering all consumption.
 - **Load Exclusion**: Mask high-power devices (e.g. EV chargers) so the battery doesn't try to cover them.
 
 ## Requirements
