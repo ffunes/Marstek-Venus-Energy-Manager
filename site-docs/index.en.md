@@ -14,7 +14,7 @@
 
 -   :material-battery-sync: **Multi-battery**
 
-    Intelligent management of up to 4 batteries with optimal power distribution.
+    Intelligent management of up to 6 batteries with optimal power distribution.
 
 -   :material-tune: **Highly configurable**
 

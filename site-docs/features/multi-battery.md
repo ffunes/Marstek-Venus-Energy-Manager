@@ -1,6 +1,6 @@
 # Gestión multi-batería
 
-La integración gestiona hasta **4 baterías** como un sistema agregado, distribuyendo la potencia de forma inteligente para maximizar la eficiencia.
+La integración gestiona hasta **6 baterías** como un sistema agregado, distribuyendo la potencia de forma inteligente para maximizar la eficiencia.
 
 ## Principio de eficiencia
 

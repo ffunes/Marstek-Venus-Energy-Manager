@@ -7,7 +7,7 @@
 | Component | Description |
 |---|---|
 | Battery | Marstek Venus E v2/v3, Venus A or Venus D |
-| Modbus converter | RS485 → Modbus TCP device (e.g. Elfin-EW11) |
+| Modbus converter | RS485 → Modbus TCP device (e.g. Elfin-EW11) — **Venus E v2 only**. Venus E v3, Venus A and Venus D connect via Ethernet and support Modbus TCP natively. |
 | Grid sensor | HA sensor measuring total grid consumption (e.g. Shelly EM3, Neurio, smart meter integration) |
 
 ### Software

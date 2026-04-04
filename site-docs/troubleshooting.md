@@ -1,5 +1,13 @@
 # Solución de problemas
 
+## Compatibilidad con la app de Marstek
+
+**No es necesario realizar ningún cambio en la app de Marstek** para que la integración funcione — incluyendo desactivar el medidor de energía o modificar cualquier configuración. La integración opera junto a la app sin requerir ningún ajuste desde ella.
+
+Sin embargo, **no cambies ningún modo de operación ni configuración desde la app de Marstek mientras la integración de Home Assistant esté en ejecución**. Hacerlo romperá la compatibilidad y necesitarás deshabilitar y volver a habilitar la integración para restaurar el funcionamiento normal.
+
+---
+
 ## La batería no responde a los comandos
 
 1. Verifica que el conversor Modbus TCP (Elfin-EW11 o similar) está accesible por IP desde Home Assistant.
@@ -46,6 +54,33 @@ Si persiste el problema, verifica que estás usando la versión **1.5.0** o supe
 ## El switch RS485 se reactiva solo tras reiniciar
 
 Corregido en v1.5.0. La preferencia del usuario se persiste y se restaura en el arranque.
+
+---
+
+## El dispositivo de medida no está disponible o pierde conexión
+
+Si el sensor de red (por ejemplo, un medidor con conexión Wi-Fi inestable) se desconecta, el controlador se comporta de forma diferente según cómo falle el sensor.
+
+### El sensor reporta `unavailable` o `unknown`
+
+El bucle de control sale inmediatamente sin enviar ningún nuevo comando. Las baterías **mantienen el último nivel de potencia comandado** hasta que el sensor vuelva a estar disponible.
+
+### El sensor se congela (el valor deja de actualizarse)
+
+La integración detecta que la marca de tiempo del sensor no ha cambiado:
+
+- Durante hasta **15 ciclos (~30 segundos)** mantiene el último comando sin cambios.
+- Pasado ese período de gracia, realiza un nuevo cálculo de seguridad usando el valor congelado, con el término derivativo suprimido para evitar picos de potencia.
+
+### Resumen
+
+| Estado del sensor | Comportamiento |
+|---|---|
+| `unavailable` / `unknown` | El bucle de control sale — las baterías mantienen la última potencia |
+| Valor congelado (sin nuevas lecturas) | ~30 s de gracia, luego recalcula con el valor obsoleto |
+
+!!! warning "Sin fallback automático a 0 W"
+    Si el medidor se pierde mientras la batería estaba descargando a, por ejemplo, 2000 W, **seguirá descargando a 2000 W** hasta que el medidor se recupere. No hay ningún temporizador integrado que lleve la batería a reposo. Considera mejorar la fiabilidad del Wi-Fi de tu medidor, o usar una alternativa cableada o Zigbee si los cortes son frecuentes.
 
 ---
 

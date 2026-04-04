@@ -1,5 +1,13 @@
 # Troubleshooting
 
+## Marstek app compatibility
+
+You do **not** need to make any changes in the Marstek app for the integration to work — including disabling the energy meter setting or changing any configuration. The integration works alongside the app without requiring any app-side adjustments.
+
+However, **do not change any operating mode or setting from the Marstek app while the Home Assistant integration is running**. Doing so will break compatibility, and you will need to disable and re-enable the integration to restore normal operation.
+
+---
+
 ## Battery does not respond to commands
 
 1. Verify that the Modbus TCP converter (Elfin-EW11 or similar) is reachable by IP from Home Assistant.
@@ -46,6 +54,33 @@ If the problem persists, verify you are using version **1.5.0** or later.
 ## RS485 switch re-enables itself after restart
 
 Fixed in v1.5.0. The user's preference is now persisted and restored at startup.
+
+---
+
+## Metering device unavailable or losing connectivity
+
+If the grid sensor (e.g. a power meter with a poor Wi-Fi connection) goes offline, the controller behaves differently depending on how the sensor fails.
+
+### Sensor reports `unavailable` or `unknown`
+
+The control loop exits immediately without sending any new command. The batteries **hold their last commanded power level** until the sensor comes back online.
+
+### Sensor freezes (value stops updating)
+
+The integration detects that the sensor's timestamp has not changed:
+
+- For up to **15 cycles (~30 seconds)** it keeps the last command unchanged.
+- After that grace period it performs a safety recalculation using the frozen value, with the derivative term suppressed to avoid power spikes.
+
+### Summary
+
+| Sensor state | Behaviour |
+|---|---|
+| `unavailable` / `unknown` | Control loop skips — batteries hold last power level |
+| Frozen value (no new readings) | ~30 s grace period, then recalculates with stale value |
+
+!!! warning "No automatic fallback to 0 W"
+    If the meter goes unavailable while the battery was, for example, discharging at 2000 W, it will **continue discharging at 2000 W** until the meter recovers. There is no built-in timeout that ramps the battery to idle. Consider improving the Wi-Fi reliability of your metering device, or using a wired/Zigbee alternative if dropouts are frequent.
 
 ---
 

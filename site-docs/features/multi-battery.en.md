@@ -1,6 +1,6 @@
 # Multi-battery management
 
-The integration manages up to **4 batteries** as an aggregated system, distributing power intelligently to maximise efficiency.
+The integration manages up to **6 batteries** as an aggregated system, distributing power intelligently to maximise efficiency.
 
 ## Efficiency principle
 

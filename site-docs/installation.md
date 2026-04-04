@@ -7,7 +7,7 @@
 | Componente | Descripción |
 |---|---|
 | Batería | Marstek Venus E v2/v3, Venus A o Venus D |
-| Conversor Modbus | Dispositivo RS485 → Modbus TCP (p. ej. Elfin-EW11) |
+| Conversor Modbus | Dispositivo RS485 → Modbus TCP (p. ej. Elfin-EW11) — **solo necesario para Venus E v2**. Las Venus E v3, Venus A y Venus D se conectan por Ethernet y soportan Modbus TCP de forma nativa. |
 | Sensor de red | Sensor HA que mide el consumo total de la red (p. ej. Shelly EM3, Neurio, contador inteligente) |
 
 ### Software
