@@ -84,6 +84,21 @@ The integration detects that the sensor's timestamp has not changed:
 
 ---
 
+## Reporting an issue — Configuration Summary sensor
+
+When opening a bug report or asking for help, it is useful to share the current integration configuration. The **Configuration Summary** sensor exposes the complete setup as entity attributes.
+
+**How to enable it:**
+
+1. Go to **Settings → Devices & Services → Marstek Venus Energy Manager**.
+2. Select the **Marstek Venus System** device.
+3. Find the **Configuration Summary** sensor (it is hidden by default) and enable it.
+4. Open the sensor's detail card and share its attributes (state + attributes).
+
+The sensor is read-only and diagnostic. It does not affect integration behaviour in any way.
+
+---
+
 ## Debug logging
 
 Enable `debug` for the integration by clicking in "Enable debug logging" button in the integration settings. Once you have run it for the appropriate time, disable it to avoid filling the logs, and a log file will be created with the debug information.

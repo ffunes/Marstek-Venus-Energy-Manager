@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.2] - 2026-04-04
+
+### Added
+- **Configuration Summary diagnostic sensor**: New hidden sensor (`Configuration Summary`) on the Marstek Venus System device that exposes the complete integration configuration as entity attributes. Intended for support purposes — enable it from the entity registry, then share the state card to provide a full picture of the system setup at a glance. Attributes are organised in sections: general (grid sensor, meter inversion, solar forecast sensor), per-battery settings (name, IP, version, power limits, SOC thresholds, hysteresis), time slots, predictive charging (mode, time slot, contracted power, price sensor and thresholds), weekly full charge, charge delay, capacity protection, PD controller parameters, and excluded devices. The sensor is disabled by default and categorised as diagnostic.
+
 ## [1.5.1] - 2026-04-01
 
 ### Added

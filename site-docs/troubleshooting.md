@@ -84,6 +84,21 @@ La integración detecta que la marca de tiempo del sensor no ha cambiado:
 
 ---
 
+## Reportar un problema — Sensor de Resumen de Configuración
+
+Al abrir un informe de error o pedir ayuda, es muy útil compartir la configuración actual de la integración. El sensor **Resumen de Configuración** expone toda la configuración como atributos de la entidad.
+
+**Cómo activarlo:**
+
+1. Ve a **Configuración → Dispositivos y servicios → Marstek Venus Energy Manager**.
+2. Selecciona el dispositivo **Marstek Venus System**.
+3. Busca el sensor **Resumen de Configuración** (está oculto por defecto) y actívalo.
+4. Abre la tarjeta de detalle del sensor y comparte sus atributos (estado + atributos).
+
+El sensor es de solo lectura y diagnóstico. No afecta al comportamiento de la integración de ninguna manera.
+
+---
+
 ## Registros de depuración
 
 Activa el nivel de log `debug` para la integración pulsando en "Enable debug logging" en la configuración de la integración. Una vez que lo hayas ejecutado durante el tiempo apropiado, desactívalo para no llenar los logs, y se creará un archivo de log con la información de depuración.

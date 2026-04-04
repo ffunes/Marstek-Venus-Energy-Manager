@@ -601,6 +601,7 @@
       },
       "active_batteries": { "name": "Batteries Actives" },
       "non_responsive_batteries": { "name": "Batteries Non Réactives" },
+      "configuration_summary": { "name": "Résumé de Configuration" },
       "weekly_full_charge": {
         "name": "Charge Complète Hebdomadaire",
         "state": {

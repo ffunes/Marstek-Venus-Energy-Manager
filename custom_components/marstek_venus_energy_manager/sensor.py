@@ -17,6 +17,38 @@ from .const import (
     CYCLE_SENSOR_DEFINITIONS,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
+    CONF_ENABLE_PREDICTIVE_CHARGING,
+    CONF_CHARGING_TIME_SLOT,
+    CONF_SOLAR_FORECAST_SENSOR,
+    CONF_MAX_CONTRACTED_POWER,
+    CONF_ENABLE_WEEKLY_FULL_CHARGE,
+    CONF_WEEKLY_FULL_CHARGE_DAY,
+    CONF_DELAY_SAFETY_MARGIN_MIN,
+    CONF_CAPACITY_PROTECTION_ENABLED,
+    CONF_CAPACITY_PROTECTION_SOC_THRESHOLD,
+    CONF_CAPACITY_PROTECTION_LIMIT,
+    CONF_PD_KP,
+    CONF_PD_KD,
+    CONF_PD_DEADBAND,
+    CONF_PD_MAX_POWER_CHANGE,
+    CONF_PD_DIRECTION_HYSTERESIS,
+    CONF_PD_MIN_CHARGE_POWER,
+    CONF_PD_MIN_DISCHARGE_POWER,
+    DEFAULT_PD_KP,
+    DEFAULT_PD_KD,
+    DEFAULT_PD_DEADBAND,
+    DEFAULT_PD_MAX_POWER_CHANGE,
+    DEFAULT_PD_DIRECTION_HYSTERESIS,
+    DEFAULT_PD_MIN_CHARGE_POWER,
+    DEFAULT_PD_MIN_DISCHARGE_POWER,
+    CONF_PREDICTIVE_CHARGING_MODE,
+    CONF_PRICE_SENSOR,
+    CONF_PRICE_INTEGRATION_TYPE,
+    CONF_MAX_PRICE_THRESHOLD,
+    CONF_AVERAGE_PRICE_SENSOR,
+    CONF_DP_PRICE_DISCHARGE_CONTROL,
+    CONF_RT_PRICE_DISCHARGE_CONTROL,
+    CONF_METER_INVERTED,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor, DailyGridAtMinSocSensor
@@ -97,6 +129,9 @@ async def async_setup_entry(
     # Add daily grid-at-min-soc energy sensor (feeds into consumption estimation)
     if controller:
         entities.append(DailyGridAtMinSocSensor(controller))
+
+    # Add configuration summary diagnostic sensor (hidden, for support purposes)
+    entities.append(ConfigurationSummarySensor(hass, entry))
 
     async_add_entities(entities)
 
@@ -480,6 +515,155 @@ class ChargeDelaySensor(SensorEntity):
             value = status.get(key)
             if value is not None:
                 attrs[key] = value
+
+        return attrs
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class ConfigurationSummarySensor(SensorEntity):
+    """Hidden diagnostic sensor exposing the full integration configuration as attributes.
+
+    Intended for support purposes: share this sensor's state card to give a
+    complete picture of how the system is configured.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the configuration summary sensor."""
+        self.hass = hass
+        self.entry = entry
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "configuration_summary"
+        self._attr_unique_id = f"{entry.entry_id}_configuration_summary"
+        self._attr_icon = "mdi:cog-outline"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_registry_enabled_default = False
+        self._attr_should_poll = False
+
+    @property
+    def native_value(self) -> int:
+        """Return number of configured batteries as a quick-glance value."""
+        return len(self.entry.data.get("batteries", []))
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the full integration configuration as attributes."""
+        data = self.entry.data
+        attrs = {}
+
+        # --- General ---
+        attrs["consumption_sensor"] = data.get("consumption_sensor")
+        attrs["meter_inverted"] = data.get(CONF_METER_INVERTED, False)
+        forecast = data.get(CONF_SOLAR_FORECAST_SENSOR)
+        attrs["solar_forecast_sensor"] = forecast if forecast else "not_configured"
+
+        # --- Batteries ---
+        batteries = data.get("batteries", [])
+        attrs["num_batteries"] = len(batteries)
+        for i, bat in enumerate(batteries):
+            n = i + 1
+            attrs[f"battery_{n}_name"] = bat.get("name")
+            attrs[f"battery_{n}_host"] = bat.get("host")
+            attrs[f"battery_{n}_port"] = bat.get("port")
+            attrs[f"battery_{n}_version"] = bat.get("battery_version")
+            attrs[f"battery_{n}_max_charge_power_W"] = bat.get("max_charge_power")
+            attrs[f"battery_{n}_max_discharge_power_W"] = bat.get("max_discharge_power")
+            attrs[f"battery_{n}_max_soc"] = bat.get("max_soc")
+            attrs[f"battery_{n}_min_soc"] = bat.get("min_soc")
+            attrs[f"battery_{n}_hysteresis_enabled"] = bat.get("enable_charge_hysteresis", False)
+            if bat.get("enable_charge_hysteresis"):
+                attrs[f"battery_{n}_hysteresis_percent"] = bat.get("charge_hysteresis_percent")
+
+        # --- Time slots ---
+        slots = data.get("no_discharge_time_slots", [])
+        attrs["num_time_slots"] = len(slots)
+        for i, slot in enumerate(slots):
+            n = i + 1
+            days = slot.get("days", [])
+            days_str = ", ".join(d.capitalize() for d in days) if days else "None"
+            attrs[f"slot_{n}_schedule"] = f"{slot.get('start_time')}-{slot.get('end_time')}"
+            attrs[f"slot_{n}_days"] = days_str
+            attrs[f"slot_{n}_enabled"] = slot.get("enabled", True)
+            attrs[f"slot_{n}_apply_to_charge"] = slot.get("apply_to_charge", False)
+            attrs[f"slot_{n}_target_grid_power_W"] = slot.get("target_grid_power", 0)
+
+        # --- Predictive charging ---
+        predictive_enabled = data.get(CONF_ENABLE_PREDICTIVE_CHARGING, False)
+        attrs["predictive_charging_enabled"] = predictive_enabled
+        if predictive_enabled:
+            attrs["predictive_charging_mode"] = data.get(CONF_PREDICTIVE_CHARGING_MODE)
+            time_slot = data.get(CONF_CHARGING_TIME_SLOT)
+            if time_slot:
+                attrs["predictive_charging_time_slot"] = time_slot
+            max_power = data.get(CONF_MAX_CONTRACTED_POWER)
+            if max_power is not None:
+                attrs["predictive_max_contracted_power_W"] = max_power
+            price_sensor = data.get(CONF_PRICE_SENSOR)
+            if price_sensor:
+                attrs["price_sensor"] = price_sensor
+            price_type = data.get(CONF_PRICE_INTEGRATION_TYPE)
+            if price_type:
+                attrs["price_integration_type"] = price_type
+            max_price = data.get(CONF_MAX_PRICE_THRESHOLD)
+            if max_price is not None:
+                attrs["max_price_threshold"] = max_price
+            avg_price_sensor = data.get(CONF_AVERAGE_PRICE_SENSOR)
+            if avg_price_sensor:
+                attrs["average_price_sensor"] = avg_price_sensor
+            dp_discharge = data.get(CONF_DP_PRICE_DISCHARGE_CONTROL)
+            if dp_discharge is not None:
+                attrs["dp_price_discharge_control"] = dp_discharge
+            rt_discharge = data.get(CONF_RT_PRICE_DISCHARGE_CONTROL)
+            if rt_discharge is not None:
+                attrs["rt_price_discharge_control"] = rt_discharge
+
+        # --- Weekly full charge ---
+        weekly_enabled = data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False)
+        attrs["weekly_full_charge_enabled"] = weekly_enabled
+        if weekly_enabled:
+            attrs["weekly_full_charge_day"] = data.get(CONF_WEEKLY_FULL_CHARGE_DAY)
+
+        # --- Charge delay ---
+        charge_delay = data.get(CONF_ENABLE_CHARGE_DELAY, False)
+        weekly_delay = data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
+        attrs["charge_delay_enabled"] = charge_delay or weekly_delay
+        if charge_delay or weekly_delay:
+            attrs["charge_delay_for_weekly_charge"] = weekly_delay
+            attrs["charge_delay_safety_margin_min"] = data.get(CONF_DELAY_SAFETY_MARGIN_MIN)
+
+        # --- Capacity protection ---
+        cap_enabled = data.get(CONF_CAPACITY_PROTECTION_ENABLED, False)
+        attrs["capacity_protection_enabled"] = cap_enabled
+        if cap_enabled:
+            attrs["capacity_protection_soc_threshold"] = data.get(CONF_CAPACITY_PROTECTION_SOC_THRESHOLD)
+            attrs["capacity_protection_limit_W"] = data.get(CONF_CAPACITY_PROTECTION_LIMIT)
+
+        # --- PD controller ---
+        attrs["pd_kp"] = data.get(CONF_PD_KP, DEFAULT_PD_KP)
+        attrs["pd_kd"] = data.get(CONF_PD_KD, DEFAULT_PD_KD)
+        attrs["pd_deadband_W"] = data.get(CONF_PD_DEADBAND, DEFAULT_PD_DEADBAND)
+        attrs["pd_max_power_change_W"] = data.get(CONF_PD_MAX_POWER_CHANGE, DEFAULT_PD_MAX_POWER_CHANGE)
+        attrs["pd_direction_hysteresis_W"] = data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
+        attrs["pd_min_charge_power_W"] = data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
+        attrs["pd_min_discharge_power_W"] = data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
+
+        # --- Excluded devices ---
+        excluded = data.get("excluded_devices", [])
+        attrs["num_excluded_devices"] = len(excluded)
+        for i, dev in enumerate(excluded):
+            n = i + 1
+            attrs[f"excluded_device_{n}_sensor"] = dev.get("power_sensor")
+            attrs[f"excluded_device_{n}_included_in_consumption"] = dev.get("included_in_consumption", True)
+            attrs[f"excluded_device_{n}_allow_solar_surplus"] = dev.get("allow_solar_surplus", False)
 
         return attrs
 
