@@ -1108,6 +1108,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#exclusion-por-funcion-de-reserva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exclusión por función de reserva
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exclusión por función de reserva">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cooldown-post-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cooldown post-backup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#potencia-objetivo-por-franja" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1617,6 +1645,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#exclusion-por-funcion-de-reserva" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exclusión por función de reserva
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exclusión por función de reserva">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cooldown-post-backup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cooldown post-backup
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#potencia-objetivo-por-franja" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1704,6 +1760,21 @@
 <p>El controlador monitoriza reversiones de dirección (carga↔descarga) frecuentes. Si detecta oscilación sostenida, reduce temporalmente la ganancia efectiva.</p>
 <h3 id="histeresis-direccional">Histéresis direccional<a class="headerlink" href="#histeresis-direccional" title="Permanent link">&para;</a></h3>
 <p>Evita cambios de dirección por variaciones de carga momentáneas (como el arranque de electrodomésticos). El controlador requiere que el error supere un umbral durante varios ciclos antes de cambiar de carga a descarga o viceversa.</p>
+<h2 id="exclusion-por-funcion-de-reserva">Exclusión por función de reserva<a class="headerlink" href="#exclusion-por-funcion-de-reserva" title="Permanent link">&para;</a></h2>
+<p>Una batería queda excluida del controlador PD cuando se cumplen <strong>las dos</strong> condiciones siguientes:</p>
+<ol>
+<li>El switch <strong>Función de reserva</strong> (<code>switch.*_backup_function</code>) está activado.</li>
+<li>El sensor <strong>Potencia AC offgrid</strong> (<code>sensor.*_ac_offgrid_power</code>) reporta un valor distinto de 0 W, lo que confirma que la batería está proporcionando energía offgrid activamente.</li>
+</ol>
+<p>Tener el switch activado por sí solo no es suficiente. Si el switch está activo pero la potencia AC offgrid lee 0 W (la batería no está sirviendo ninguna carga offgrid), la batería sigue participando en el control PD con normalidad.</p>
+<p>Mientras está excluida, el controlador no envía ningún comando de potencia, cambio de modo forzado ni escritura de registros de configuración. La batería sigue siendo consultada con normalidad, por lo que todos los sensores de solo lectura (SOC, potencia, temperatura, etc.) se mantienen actualizados.</p>
+<h3 id="cooldown-post-backup">Cooldown post-backup<a class="headerlink" href="#cooldown-post-backup" title="Permanent link">&para;</a></h3>
+<p>Cuando la carga offgrid vuelve a 0 W, la batería no se reincorpora inmediatamente al control PD. Se aplica un <strong>cooldown de 5 minutos</strong> que mantiene la batería excluida tras el fin del evento de reserva, evitando enviar comandos de escritura a una batería que puede estar aún estabilizándose.</p>
+<p>Desactivar el switch de <strong>Función de reserva</strong> elimina el cooldown de forma inmediata.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>La exclusión también aplica a las escrituras de registro de la carga semanal completa y a la secuencia de apagado.</p>
+</div>
 <h2 id="potencia-objetivo-por-franja">Potencia objetivo por franja<a class="headerlink" href="#potencia-objetivo-por-franja" title="Permanent link">&para;</a></h2>
 <p>Cada <a href="../../configuration/time-slots/">franja horaria</a> puede tener su propia <strong>potencia objetivo de red</strong> (<code>target_grid_power</code>), permitiendo distintas estrategias según el momento del día.</p>
 <p><img alt="Entidades del controlador PD en Home Assistant" src="../../assets/screenshots/features/pd-controller-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>

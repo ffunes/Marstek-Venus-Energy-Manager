@@ -1108,6 +1108,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#backup-function-exclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup function exclusion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup function exclusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#post-backup-cooldown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-backup cooldown
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#per-slot-target-power" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1617,6 +1645,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#backup-function-exclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup function exclusion
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backup function exclusion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#post-backup-cooldown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Post-backup cooldown
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#per-slot-target-power" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1704,6 +1760,21 @@
 <p>The controller monitors frequent direction reversals (charge↔discharge). If sustained oscillation is detected, the effective gain is temporarily reduced.</p>
 <h3 id="directional-hysteresis">Directional hysteresis<a class="headerlink" href="#directional-hysteresis" title="Permanent link">&para;</a></h3>
 <p>Prevents direction changes from momentary load variations (such as appliance start-ups). The controller requires the error to exceed a threshold for several cycles before switching from charging to discharging or vice versa.</p>
+<h2 id="backup-function-exclusion">Backup function exclusion<a class="headerlink" href="#backup-function-exclusion" title="Permanent link">&para;</a></h2>
+<p>A battery is excluded from the PD controller when <strong>both</strong> of the following are true:</p>
+<ol>
+<li>The <strong>Backup Function</strong> switch (<code>switch.*_backup_function</code>) is enabled.</li>
+<li>The <strong>AC Offgrid Power</strong> sensor (<code>sensor.*_ac_offgrid_power</code>) reports a non-zero value — confirming the battery is actually providing offgrid power.</li>
+</ol>
+<p>Having the switch on alone is not sufficient. If the switch is on but AC offgrid power reads 0 W (the battery is not actively serving an offgrid load), it continues to participate in PD control normally.</p>
+<p>While excluded, the controller sends no power commands, force mode changes, or configuration register writes to the battery. The battery continues to be polled normally so all read-only sensors (SOC, power, temperature, etc.) remain up to date.</p>
+<h3 id="post-backup-cooldown">Post-backup cooldown<a class="headerlink" href="#post-backup-cooldown" title="Permanent link">&para;</a></h3>
+<p>When the offgrid load drops back to 0 W, the battery does not re-enter PD control immediately. A <strong>5-minute cooldown</strong> keeps the battery excluded after the backup event ends. This avoids sending write commands to a battery that may still be settling after a backup episode.</p>
+<p>Turning the <strong>Backup Function</strong> switch off clears the cooldown immediately.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This exclusion also covers the weekly full charge register writes and the shutdown sequence.</p>
+</div>
 <h2 id="per-slot-target-power">Per-slot target power<a class="headerlink" href="#per-slot-target-power" title="Permanent link">&para;</a></h2>
 <p>Each <a href="../../configuration/time-slots/">time slot</a> can have its own <strong>target grid power</strong> (<code>target_grid_power</code>), allowing different strategies at different times of day.</p>
 <p><img alt="PD controller entities in Home Assistant" src="../../../assets/screenshots/features/pd-controller-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
