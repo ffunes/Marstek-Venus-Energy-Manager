@@ -21,4 +21,28 @@ La integración **suma** la potencia del dispositivo excluido al consumo de red 
 
 Cuando está activa, si el sistema opera con excedente solar (la batería está cargando por excedente), la exclusión no se aplica para la parte de carga. En otras palabras: la batería no cargará para compensar el consumo de este dispositivo cuando ya hay excedente solar disponible.
 
+Esta opción es la base para la **prioridad batería vs. carga del VE**:
+
+| Modo | ¿La batería carga con solar? | ¿La batería descarga para el dispositivo? |
+|---|---|---|
+| Excluido, excedente OFF | Sí | No |
+| Excluido, excedente ON | **No** — el solar va primero al dispositivo | No |
+
+### Switch de excedente solar (control en tiempo real)
+
+Cada dispositivo excluido dispone de una entidad switch **Solar Surplus** dedicada que permite cambiar este comportamiento en tiempo real sin reconfigurar la integración. Úsalo en automatizaciones de HA para cambiar la prioridad dinámicamente:
+
+```yaml
+# Ejemplo: priorizar el VE cuando está conectado
+automation:
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.ev_conectado
+      to: "on"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.solar_surplus_wallbox_power
+```
+
 ![Sensor de potencia de dispositivo excluido en HA](../assets/screenshots/features/load-exclusion-entities.png){ width="700"  style="display: block; margin: 0 auto;"}
