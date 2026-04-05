@@ -2,8 +2,13 @@
 
 ## [1.5.3] - 2026-04-05
 
+### Added
+- **Solar Surplus switch per excluded device**: Each excluded device now gets a dedicated switch entity (`Solar Surplus – <device name>`) that toggles the `allow_solar_surplus` flag at runtime without entering the options flow. When ON, the battery yields solar surplus to that device (e.g. EV charger) instead of charging itself — solar goes to the device first and the battery will not discharge to power it either. When OFF, the battery charges normally with any available solar surplus. The switch is controllable from HA automations, enabling priority changes based on schedules, battery SOC, EV connection state, or any other condition.
+
 ### Changed
 - **strings.json now in English**: The base translation file (`strings.json`) has been converted to English to serve as the proper fallback language for Home Assistant installations using a language without a dedicated translation file.
+
+### Fixed
 - **German translation fix**: Corrected `round_trip_efficiency_total` label from "Gesamte Hin- und Rückfahreffizienz" to "Gesamtwirkungsgrad".
 
 ## [1.5.2] - 2026-04-04
