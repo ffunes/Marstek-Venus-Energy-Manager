@@ -56,6 +56,11 @@ async def async_setup_entry(
     for index in range(len(time_slots)):
         entities.append(TimeSlotSwitch(hass, entry, index))
 
+    # Add solar surplus switches for excluded devices
+    excluded_devices = entry.data.get("excluded_devices", [])
+    for index in range(len(excluded_devices)):
+        entities.append(ExcludedDeviceSolarSurplusSwitch(hass, entry, index))
+
     async_add_entities(entities)
 
 
@@ -343,6 +348,87 @@ class ChargeDelaySwitch(SwitchEntity):
         self.hass.config_entries.async_update_entry(self.entry, data=new_data)
         _LOGGER.info("Charge Delay DISABLED")
         self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class ExcludedDeviceSolarSurplusSwitch(SwitchEntity):
+    """Switch to toggle solar surplus priority for an excluded device at runtime.
+
+    ON  = Battery does NOT charge with solar surplus while this device is consuming
+          (solar goes to the device first — EV/priority mode).
+    OFF = Battery charges normally with solar surplus regardless of this device.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, index: int) -> None:
+        """Initialize the solar surplus switch."""
+        self.hass = hass
+        self.entry = entry
+        self._device_index = index
+
+        device = entry.data.get("excluded_devices", [])[index]
+        sensor_id = device.get("power_sensor", "")
+        # Derive a friendly name from the sensor entity ID
+        friendly = sensor_id.replace("sensor.", "").replace("_", " ").title()
+
+        self._attr_has_entity_name = True
+        self._attr_name = f"Solar Surplus – {friendly}"
+        self._attr_unique_id = f"{entry.entry_id}_solar_surplus_{index}"
+        self._attr_icon = "mdi:solar-power-variant"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if solar surplus priority is active for this device."""
+        devices = self.entry.data.get("excluded_devices", [])
+        if self._device_index < len(devices):
+            return devices[self._device_index].get("allow_solar_surplus", False)
+        return False
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the power sensor entity as an attribute."""
+        devices = self.entry.data.get("excluded_devices", [])
+        if self._device_index >= len(devices):
+            return {}
+        device = devices[self._device_index]
+        return {
+            "power_sensor": device.get("power_sensor", ""),
+            "included_in_consumption": device.get("included_in_consumption", True),
+        }
+
+    async def _update_solar_surplus(self, enabled: bool) -> None:
+        """Update allow_solar_surplus for this device in config_entry.data."""
+        new_data = dict(self.entry.data)
+        devices = [dict(d) for d in new_data.get("excluded_devices", [])]
+        if self._device_index < len(devices):
+            devices[self._device_index]["allow_solar_surplus"] = enabled
+            new_data["excluded_devices"] = devices
+            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+            state = "enabled" if enabled else "disabled"
+            _LOGGER.info(
+                "Solar surplus priority for device %d (%s) %s",
+                self._device_index + 1,
+                devices[self._device_index].get("power_sensor", ""),
+                state,
+            )
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Enable solar surplus priority (battery yields solar to this device)."""
+        await self._update_solar_surplus(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable solar surplus priority (battery charges normally)."""
+        await self._update_solar_surplus(False)
 
     @property
     def device_info(self):
