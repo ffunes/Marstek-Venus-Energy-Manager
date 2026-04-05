@@ -641,7 +641,7 @@
       "mppt2_power": { "name": "MPPT2-Leistung" },
       "mppt3_power": { "name": "MPPT3-Leistung" },
       "mppt4_power": { "name": "MPPT4-Leistung" },
-      "round_trip_efficiency_total": { "name": "Gesamte Hin- und Rückfahreffizienz" },
+      "round_trip_efficiency_total": { "name": "Gesamtwirkungsgrad" },
       "stored_energy": { "name": "Gespeicherte Energie" },
       "system_soc": { "name": "System-SOC" },
       "system_charge_power": { "name": "System-Ladeleistung" },

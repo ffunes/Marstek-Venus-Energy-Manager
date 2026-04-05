@@ -4,6 +4,7 @@
 
 ### Changed
 - **strings.json now in English**: The base translation file (`strings.json`) has been converted to English to serve as the proper fallback language for Home Assistant installations using a language without a dedicated translation file.
+- **German translation fix**: Corrected `round_trip_efficiency_total` label from "Gesamte Hin- und Rückfahreffizienz" to "Gesamtwirkungsgrad".
 
 ## [1.5.2] - 2026-04-04
 
