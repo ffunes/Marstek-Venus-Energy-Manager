@@ -766,6 +766,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#solar-surplus-switch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar Surplus switch
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1508,6 +1519,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#solar-surplus-switch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar Surplus switch
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1557,7 +1579,7 @@
 </tr>
 <tr>
 <td><strong>Allow solar surplus</strong></td>
-<td>If enabled, the battery will not charge to compensate this device when there is a solar surplus</td>
+<td>If enabled, the battery will not charge to compensate this device when there is a solar surplus. Can also be toggled at runtime via a switch entity (see below).</td>
 </tr>
 </tbody>
 </table>
@@ -1570,6 +1592,16 @@
 </code></pre></div>
 <p>The integration uses this setting to correctly calculate the net consumption without the excluded device.</p>
 <p><img alt="Excluded device form" src="../../../assets/screenshots/configuration/excluded-device-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
+<hr />
+<h2 id="solar-surplus-switch">Solar Surplus switch<a class="headerlink" href="#solar-surplus-switch" title="Permanent link">&para;</a></h2>
+<p>For each excluded device a <strong>Solar Surplus</strong> switch entity is automatically created (<code>Solar Surplus – &lt;device name&gt;</code>). It mirrors the <em>Allow solar surplus</em> setting and can be toggled at any time without entering the options flow.</p>
+<p>This makes it possible to change the charging priority from automations — for example:</p>
+<ul>
+<li>Turn ON when the EV is connected, so solar charges the car first.</li>
+<li>Turn OFF at a scheduled time to let the battery capture morning surplus.</li>
+<li>React to battery SOC: turn ON above 80 %, turn OFF below 50 %.</li>
+</ul>
+<p>The switch state is persisted in the config entry and survives restarts.</p>
 
 
 

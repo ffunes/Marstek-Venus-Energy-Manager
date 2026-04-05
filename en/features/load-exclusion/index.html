@@ -1223,6 +1223,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="&#34;Allow solar surplus&#34; option">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solar-surplus-switch-runtime-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar Surplus switch (runtime control)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1503,6 +1520,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="&#34;Allow solar surplus&#34; option">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solar-surplus-switch-runtime-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Solar Surplus switch (runtime control)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1542,6 +1576,41 @@
 <p>The integration <strong>adds</strong> the excluded device's power to the measured grid consumption (because the main sensor does not see it) and then subtracts it, resulting in the same net effective consumption.</p>
 <h2 id="allow-solar-surplus-option">"Allow solar surplus" option<a class="headerlink" href="#allow-solar-surplus-option" title="Permanent link">&para;</a></h2>
 <p>When active, if the system is operating on solar surplus (battery is charging from surplus), the exclusion does not apply to the charging side. In other words: the battery will not charge to compensate this device's consumption when solar surplus is already available.</p>
+<p>This is the basis for <strong>EV vs. battery charging priority</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Battery charges with solar?</th>
+<th>Battery discharges for device?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Excluded, surplus OFF</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Excluded, surplus ON</td>
+<td><strong>No</strong> — solar goes to device first</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="solar-surplus-switch-runtime-control">Solar Surplus switch (runtime control)<a class="headerlink" href="#solar-surplus-switch-runtime-control" title="Permanent link">&para;</a></h3>
+<p>Each excluded device gets a dedicated <strong>Solar Surplus</strong> switch entity that toggles this behaviour at runtime without reconfiguring the integration. Use it in HA automations to change priority dynamically:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Example: prioritise EV when connected</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">automation</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">trigger</span><span class="p">:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">state</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">binary_sensor.ev_connected</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">action</span><span class="p">:</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">service</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.turn_on</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.solar_surplus_wallbox_power</span>
+</code></pre></div>
 <p><img alt="Excluded device power sensor in HA" src="../../../assets/screenshots/features/load-exclusion-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
 
 

@@ -766,6 +766,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#switch-de-excedente-solar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch de excedente solar
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1508,6 +1519,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#switch-de-excedente-solar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch de excedente solar
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1557,7 +1579,7 @@
 </tr>
 <tr>
 <td><strong>Permitir excedente solar</strong></td>
-<td>Si está activo, la batería no cargará para compensar este dispositivo cuando hay excedente solar</td>
+<td>Si está activo, la batería no cargará para compensar este dispositivo cuando hay excedente solar. También puede activarse en tiempo real desde una entidad switch (ver más abajo).</td>
 </tr>
 </tbody>
 </table>
@@ -1570,6 +1592,16 @@
 </code></pre></div>
 <p>La integración usa esta configuración para calcular correctamente el consumo neto sin el dispositivo excluido.</p>
 <p><img alt="Formulario de dispositivo excluido" src="../../assets/screenshots/configuration/excluded-device-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
+<hr />
+<h2 id="switch-de-excedente-solar">Switch de excedente solar<a class="headerlink" href="#switch-de-excedente-solar" title="Permanent link">&para;</a></h2>
+<p>Por cada dispositivo excluido se crea automáticamente una entidad switch <strong>Solar Surplus – \&lt;nombre del dispositivo&gt;</strong> que refleja el ajuste <em>Permitir excedente solar</em> y puede activarse en cualquier momento sin entrar en el flujo de opciones.</p>
+<p>Esto permite cambiar la prioridad de carga desde automatizaciones — por ejemplo:</p>
+<ul>
+<li>Activar cuando el VE está conectado, para que el solar cargue primero el coche.</li>
+<li>Desactivar a una hora programada para que la batería capture el excedente de la mañana.</li>
+<li>Reaccionar al SOC de la batería: activar por encima del 80 %, desactivar por debajo del 50 %.</li>
+</ul>
+<p>El estado del switch se persiste en la entrada de configuración y sobrevive reinicios.</p>
 
 
 

@@ -1223,6 +1223,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Opción &#34;Permitir excedente solar&#34;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switch-de-excedente-solar-control-en-tiempo-real" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch de excedente solar (control en tiempo real)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1503,6 +1520,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Opción &#34;Permitir excedente solar&#34;">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#switch-de-excedente-solar-control-en-tiempo-real" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Switch de excedente solar (control en tiempo real)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1542,6 +1576,41 @@
 <p>La integración <strong>suma</strong> la potencia del dispositivo excluido al consumo de red medido (porque el sensor principal no la ve) y luego la resta, resultando en el mismo consumo efectivo neto.</p>
 <h2 id="opcion-permitir-excedente-solar">Opción "Permitir excedente solar"<a class="headerlink" href="#opcion-permitir-excedente-solar" title="Permanent link">&para;</a></h2>
 <p>Cuando está activa, si el sistema opera con excedente solar (la batería está cargando por excedente), la exclusión no se aplica para la parte de carga. En otras palabras: la batería no cargará para compensar el consumo de este dispositivo cuando ya hay excedente solar disponible.</p>
+<p>Esta opción es la base para la <strong>prioridad batería vs. carga del VE</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Modo</th>
+<th>¿La batería carga con solar?</th>
+<th>¿La batería descarga para el dispositivo?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Excluido, excedente OFF</td>
+<td>Sí</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Excluido, excedente ON</td>
+<td><strong>No</strong> — el solar va primero al dispositivo</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<h3 id="switch-de-excedente-solar-control-en-tiempo-real">Switch de excedente solar (control en tiempo real)<a class="headerlink" href="#switch-de-excedente-solar-control-en-tiempo-real" title="Permanent link">&para;</a></h3>
+<p>Cada dispositivo excluido dispone de una entidad switch <strong>Solar Surplus</strong> dedicada que permite cambiar este comportamiento en tiempo real sin reconfigurar la integración. Úsalo en automatizaciones de HA para cambiar la prioridad dinámicamente:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Ejemplo: priorizar el VE cuando está conectado</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">automation</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">trigger</span><span class="p">:</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">state</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">binary_sensor.ev_conectado</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">action</span><span class="p">:</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">service</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.turn_on</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.solar_surplus_wallbox_power</span>
+</code></pre></div>
 <p><img alt="Sensor de potencia de dispositivo excluido en HA" src="../../assets/screenshots/features/load-exclusion-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
 
 
