@@ -1408,6 +1408,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#recibo-una-notificacion-de-alarma-o-fallo-de-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recibo una notificación de alarma o fallo de batería
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#la-carga-predictiva-no-se-activa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1607,6 +1618,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#recibo-una-notificacion-de-alarma-o-fallo-de-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recibo una notificación de alarma o fallo de batería
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#la-carga-predictiva-no-se-activa" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1771,6 +1793,39 @@
 <h2 id="los-valores-de-socpotencia-no-se-persisten-tras-reiniciar-ha">Los valores de SOC/potencia no se persisten tras reiniciar HA<a class="headerlink" href="#los-valores-de-socpotencia-no-se-persisten-tras-reiniciar-ha" title="Permanent link">&para;</a></h2>
 <p>A partir de la v1.5.0 este problema está corregido. Los cambios en sliders de SOC y potencia se guardan inmediatamente en la configuración y se restauran en cada reinicio.</p>
 <p>Si persiste el problema, verifica que estás usando la versión <strong>1.5.0</strong> o superior.</p>
+<hr />
+<h2 id="recibo-una-notificacion-de-alarma-o-fallo-de-bateria">Recibo una notificación de alarma o fallo de batería<a class="headerlink" href="#recibo-una-notificacion-de-alarma-o-fallo-de-bateria" title="Permanent link">&para;</a></h2>
+<p>La integración monitoriza los registros <code>Alarm Status</code> y <code>Fault Status</code> de la batería (solo v2) cada 5 segundos. Cuando se activa un nuevo bit, aparece una notificación persistente en Home Assistant con el nombre exacto de la condición (p. ej. <em>BAT Overvoltage</em>, <em>Fan Abnormal Warning</em>). La notificación se descarta automáticamente cuando todas las condiciones se resuelven.</p>
+<p><strong>Niveles de severidad de la notificación:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Prefijo del título</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🚨 Battery Fault</td>
+<td>Al menos un bit de fallo está activo — requiere atención inmediata</td>
+</tr>
+<tr>
+<td>⚠️ Battery Warning</td>
+<td>Al menos un bit de alarma está activo — conviene monitorizar la situación</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Qué hacer al recibir una notificación:</strong></p>
+<ol>
+<li>Consulta el sensor <strong><code>System Alarm Status</code></strong> en el dispositivo <em>Marstek Venus System</em> — sus atributos indican qué batería está afectada y qué condiciones están activas.</li>
+<li>Revisa los sensores <strong>Alarm Status</strong> y <strong>Fault Status</strong> individuales en el dispositivo de la batería afectada para ver el estado completo.</li>
+<li>Consulta la documentación de Marstek Venus o la app de Marstek para el código de fallo concreto.</li>
+<li>Si la condición no se resuelve sola, considera reiniciar la batería o contactar con el soporte de Marstek.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">Solo baterías v2</p>
+<p>La monitorización de registros de alarma y fallo solo está disponible para hardware v2. Las baterías v3, vA y vD no exponen estos registros vía Modbus.</p>
+</div>
 <hr />
 <h2 id="la-carga-predictiva-no-se-activa">La carga predictiva no se activa<a class="headerlink" href="#la-carga-predictiva-no-se-activa" title="Permanent link">&para;</a></h2>
 <ol>

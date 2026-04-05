@@ -1408,6 +1408,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#battery-alarm-or-fault-notification-received" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Battery alarm or fault notification received
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#predictive-charging-does-not-activate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1607,6 +1618,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#battery-alarm-or-fault-notification-received" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Battery alarm or fault notification received
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#predictive-charging-does-not-activate" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1771,6 +1793,39 @@
 <h2 id="socpower-values-are-not-persisted-after-ha-restart">SOC/power values are not persisted after HA restart<a class="headerlink" href="#socpower-values-are-not-persisted-after-ha-restart" title="Permanent link">&para;</a></h2>
 <p>Fixed since v1.5.0. Changes to SOC and power sliders are saved immediately to the config entry and restored on every restart.</p>
 <p>If the problem persists, verify you are using version <strong>1.5.0</strong> or later.</p>
+<hr />
+<h2 id="battery-alarm-or-fault-notification-received">Battery alarm or fault notification received<a class="headerlink" href="#battery-alarm-or-fault-notification-received" title="Permanent link">&para;</a></h2>
+<p>The integration monitors the battery's <code>Alarm Status</code> and <code>Fault Status</code> registers (v2 only) every 5 seconds. When a new bit is set a persistent notification appears in Home Assistant with the exact condition name (e.g. <em>BAT Overvoltage</em>, <em>Fan Abnormal Warning</em>). The notification is automatically dismissed once all conditions clear.</p>
+<p><strong>Notification severity levels:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Title prefix</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🚨 Battery Fault</td>
+<td>At least one fault bit is active — requires immediate attention</td>
+</tr>
+<tr>
+<td>⚠️ Battery Warning</td>
+<td>At least one alarm bit is active — monitor the situation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>What to do when you receive a notification:</strong></p>
+<ol>
+<li>Check the <strong><code>System Alarm Status</code></strong> sensor on the <em>Marstek Venus System</em> device — its attributes list which battery is affected and what conditions are active.</li>
+<li>Check the individual <strong>Alarm Status</strong> and <strong>Fault Status</strong> sensors on the affected battery device for the full current state.</li>
+<li>Consult the Marstek Venus documentation or the Marstek app for the specific fault code.</li>
+<li>If the condition does not clear automatically, consider restarting the battery or contacting Marstek support.</li>
+</ol>
+<div class="admonition note">
+<p class="admonition-title">v2 batteries only</p>
+<p>Alarm and fault register monitoring is only available for v2 hardware. v3, vA and vD batteries do not expose these registers via Modbus.</p>
+</div>
 <hr />
 <h2 id="predictive-charging-does-not-activate">Predictive charging does not activate<a class="headerlink" href="#predictive-charging-does-not-activate" title="Permanent link">&para;</a></h2>
 <ol>

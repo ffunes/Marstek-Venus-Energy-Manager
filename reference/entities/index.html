@@ -1695,6 +1695,16 @@
 <td>Tensión mín. de celda (v3/vA/vD)</td>
 <td>V</td>
 </tr>
+<tr>
+<td><code>sensor.*_alarm_status</code></td>
+<td>Condiciones de alarma activas (v2) — diagnóstico</td>
+<td>texto</td>
+</tr>
+<tr>
+<td><code>sensor.*_fault_status</code></td>
+<td>Condiciones de fallo activas (v2) — diagnóstico</td>
+<td>texto</td>
+</tr>
 </tbody>
 </table>
 <h2 id="sensores-de-informacion-de-dispositivo">Sensores de información de dispositivo<a class="headerlink" href="#sensores-de-informacion-de-dispositivo" title="Permanent link">&para;</a></h2>
@@ -1844,6 +1854,7 @@
 <li><code>system_total_charging_energy</code> — Energía total cargada (sistema)</li>
 <li><code>system_total_discharging_energy</code> — Energía total descargada (sistema)</li>
 <li><code>grid_at_min_soc</code> — Importación de red durante periodos en SOC mínimo (kWh)</li>
+<li><code>system_alarm_status</code> — Estado de alarma agregado de todas las baterías (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); los atributos listan las condiciones activas por batería</li>
 </ul>
 <p><img alt="Lista de entidades en Home Assistant" src="../assets/screenshots/reference/entities-list.png" style="display: block; margin: 0 auto;" width="700" /></p>
 

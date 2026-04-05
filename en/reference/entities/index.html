@@ -1695,6 +1695,16 @@
 <td>Min cell voltage (v3/vA/vD)</td>
 <td>V</td>
 </tr>
+<tr>
+<td><code>sensor.*_alarm_status</code></td>
+<td>Active alarm conditions (v2) — diagnostic</td>
+<td>text</td>
+</tr>
+<tr>
+<td><code>sensor.*_fault_status</code></td>
+<td>Active fault conditions (v2) — diagnostic</td>
+<td>text</td>
+</tr>
 </tbody>
 </table>
 <h2 id="device-information-sensors">Device information sensors<a class="headerlink" href="#device-information-sensors" title="Permanent link">&para;</a></h2>
@@ -1844,6 +1854,7 @@
 <li><code>system_total_charging_energy</code> — Total system charging energy</li>
 <li><code>system_total_discharging_energy</code> — Total system discharging energy</li>
 <li><code>grid_at_min_soc</code> — Grid import during min SOC periods (kWh)</li>
+<li><code>system_alarm_status</code> — Aggregated alarm state across all batteries (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); attributes list active conditions per battery</li>
 </ul>
 <p><img alt="Entity list in Home Assistant" src="../assets/screenshots/reference/entities-list.png" style="display: block; margin: 0 auto;" width="700" /></p>
 
