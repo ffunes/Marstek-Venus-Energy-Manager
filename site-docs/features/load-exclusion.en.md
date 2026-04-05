@@ -21,4 +21,28 @@ The integration **adds** the excluded device's power to the measured grid consum
 
 When active, if the system is operating on solar surplus (battery is charging from surplus), the exclusion does not apply to the charging side. In other words: the battery will not charge to compensate this device's consumption when solar surplus is already available.
 
+This is the basis for **EV vs. battery charging priority**:
+
+| Mode | Battery charges with solar? | Battery discharges for device? |
+|---|---|---|
+| Excluded, surplus OFF | Yes | No |
+| Excluded, surplus ON | **No** — solar goes to device first | No |
+
+### Solar Surplus switch (runtime control)
+
+Each excluded device gets a dedicated **Solar Surplus** switch entity that toggles this behaviour at runtime without reconfiguring the integration. Use it in HA automations to change priority dynamically:
+
+```yaml
+# Example: prioritise EV when connected
+automation:
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.ev_connected
+      to: "on"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.solar_surplus_wallbox_power
+```
+
 ![Excluded device power sensor in HA](../assets/screenshots/features/load-exclusion-entities.png){ width="700"  style="display: block; margin: 0 auto;"}

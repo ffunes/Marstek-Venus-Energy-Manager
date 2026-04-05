@@ -14,7 +14,7 @@ If you have a 7 kW EV charger and a 2.5 kW battery, without exclusion the batter
 |---|---|
 | **Power sensor** | HA entity measuring the device's power (e.g. `sensor.wallbox_power`) |
 | **Included in consumption** | Check if your main sensor **already** includes this load |
-| **Allow solar surplus** | If enabled, the battery will not charge to compensate this device when there is a solar surplus |
+| **Allow solar surplus** | If enabled, the battery will not charge to compensate this device when there is a solar surplus. Can also be toggled at runtime via a switch entity (see below). |
 
 ### Included in consumption?
 
@@ -29,3 +29,17 @@ EV charger is on a separate circuit → ❌ Not included in consumption
 The integration uses this setting to correctly calculate the net consumption without the excluded device.
 
 ![Excluded device form](../assets/screenshots/configuration/excluded-device-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+
+---
+
+## Solar Surplus switch
+
+For each excluded device a **Solar Surplus** switch entity is automatically created (`Solar Surplus – <device name>`). It mirrors the *Allow solar surplus* setting and can be toggled at any time without entering the options flow.
+
+This makes it possible to change the charging priority from automations — for example:
+
+- Turn ON when the EV is connected, so solar charges the car first.
+- Turn OFF at a scheduled time to let the battery capture morning surplus.
+- React to battery SOC: turn ON above 80 %, turn OFF below 50 %.
+
+The switch state is persisted in the config entry and survives restarts.
