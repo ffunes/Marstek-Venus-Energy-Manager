@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -351,6 +352,7 @@ class SystemAlarmSensor(SensorEntity):
     _attr_translation_key = "system_alarm_status"
     _attr_icon = "mdi:bell-alert"
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinators: list[MarstekVenusDataUpdateCoordinator]) -> None:
         """Initialize the system alarm sensor."""

@@ -650,6 +650,7 @@
       "system_daily_charging_energy": { "name": "System Daily Charging Energy" },
       "system_daily_discharging_energy": { "name": "System Daily Discharging Energy" },
       "system_daily_grid_at_min_soc_energy": { "name": "Grid at Min SOC" },
+      "system_alarm_status": { "name": "System Alarm Status" },
       "device_name": { "name": "Device Name" },
       "sn_code": { "name": "Serial Number" },
       "software_version": { "name": "Software Version" },

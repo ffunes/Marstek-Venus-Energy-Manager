@@ -88,8 +88,10 @@ async def async_setup_entry(
         for definition in AGGREGATE_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusAggregateSensor(coordinators, definition, entry, hass))
 
-    # System alarm sensor — always added (single battery can also raise alarms)
-    entities.append(SystemAlarmSensor(coordinators))
+    # System alarm sensor — only for v2 batteries (only version with alarm/fault registers)
+    v2_coordinators = [c for c in coordinators if c.battery_version == "v2"]
+    if v2_coordinators:
+        entities.append(SystemAlarmSensor(v2_coordinators))
 
     # Add calculated sensors (efficiency, stored energy, cycle count) per battery
     for coordinator in coordinators:

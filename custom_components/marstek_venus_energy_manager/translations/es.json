@@ -651,6 +651,7 @@
       "system_daily_charging_energy": { "name": "Energía de Carga Diaria del Sistema" },
       "system_daily_discharging_energy": { "name": "Energía de Descarga Diaria del Sistema" },
       "system_daily_grid_at_min_soc_energy": { "name": "Red al Mín. SOC" },
+      "system_alarm_status": { "name": "Estado de Alarma del Sistema" },
       "device_name": { "name": "Nombre del Dispositivo" },
       "sn_code": { "name": "Número de Serie" },
       "software_version": { "name": "Versión de Software" },
