@@ -2,664 +2,709 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configurar Marstek Venus Energy Manager",
-        "description": "Selecciona el sensor que mide la importación/exportación de la red eléctrica. Opcionalmente, configura el sensor de predicción solar para funciones avanzadas.",
+        "title": "Configure Marstek Venus Energy Manager",
+        "description": "Select the sensor that measures grid import/export power. Optionally, configure the solar forecast sensor for advanced features.",
         "data": {
-          "consumption_sensor": "Sensor de consumo de la red",
-          "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "meter_inverted": "Signo del medidor invertido"
+          "consumption_sensor": "Grid consumption sensor",
+          "solar_forecast_sensor": "Solar forecast sensor (optional)",
+          "meter_inverted": "Inverted meter sign"
         },
         "data_description": {
-          "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red. El controlador ajustará las baterías para mantener este valor cerca de 0W.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
+          "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid. The controller will adjust batteries to keep this value near 0W.",
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). If configured here, it will be used automatically for predictive charging and solar charge delay.",
+          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically."
         }
       },
       "batteries": {
-        "title": "Número de baterías",
-        "description": "¿Cuántas baterías Marstek Venus tienes instaladas?",
+        "title": "Number of batteries",
+        "description": "How many Marstek Venus batteries do you have installed?",
         "data": {
-          "num_batteries": "Número de baterías"
+          "num_batteries": "Number of batteries"
         }
       },
       "battery_connection": {
-        "title": "Configurar batería {battery_num} — Conexión",
-        "description": "Introduce los datos de conexión y el modelo de la batería {battery_num}.",
+        "title": "Configure battery {battery_num} — Connection",
+        "description": "Enter connection details and battery model for battery {battery_num}.",
         "data": {
-          "name": "Nombre",
-          "host": "Dirección IP",
-          "port": "Puerto Modbus",
-          "battery_version": "Modelo de batería"
+          "name": "Name",
+          "host": "IP Address",
+          "port": "Modbus Port",
+          "battery_version": "Battery Model"
         },
         "data_description": {
-          "name": "Nombre descriptivo para identificar esta batería",
-          "host": "Dirección IP de la batería en tu red local",
-          "port": "Puerto Modbus (normalmente 502)",
-          "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
         }
       },
       "battery_limits": {
-        "title": "Configurar batería {battery_num} — Límites",
-        "description": "Introduce los límites de potencia y SOC de la batería {battery_num}.",
+        "title": "Configure battery {battery_num} — Limits",
+        "description": "Enter power and SOC limits for battery {battery_num}.",
         "data": {
-          "max_charge_power": "Potencia máxima de carga",
-          "max_discharge_power": "Potencia máxima de descarga",
-          "max_soc": "SOC máximo (%)",
-          "min_soc": "SOC mínimo de descarga (%)",
-          "enable_charge_hysteresis": "Activar histéresis de carga",
-          "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
+          "max_charge_power": "Maximum charge power (W)",
+          "max_discharge_power": "Maximum discharge power (W)",
+          "max_soc": "Maximum SOC (%)",
+          "min_soc": "Minimum SOC (%)",
+          "enable_charge_hysteresis": "Enable Charge Hysteresis",
+          "charge_hysteresis_percent": "Hysteresis Percentage (%)"
         },
         "data_description": {
-          "max_charge_power": "Potencia máxima permitida para cargar la batería",
-          "max_discharge_power": "Potencia máxima permitida para descargar la batería",
-          "max_soc": "Estado de carga máximo (80-100%) - la batería no cargará por encima de este valor",
-          "min_soc": "Estado de carga mínimo para descarga (12-30%) - la batería no descargará por debajo de este valor",
-          "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",
-          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%"
+          "max_charge_power": "Maximum power allowed to charge the battery",
+          "max_discharge_power": "Maximum power allowed to discharge the battery",
+          "max_soc": "Maximum state of charge - battery won't charge above this value",
+          "min_soc": "Minimum state of charge - battery won't discharge below this value",
+          "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
+          "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%"
         }
       },
       "time_slots": {
-        "title": "Franjas horarias de operación",
-        "description": "¿Deseas configurar franjas horarias? Si configuras franjas, las baterías SOLO podrán descargar durante esas franjas. Sin franjas configuradas, funcionan siempre.",
+        "title": "Discharge time slots",
+        "description": "Do you want to configure time slots? If configured, batteries will ONLY discharge during these slots. Without slots, they operate at all times.",
         "data": {
-          "configure_time_slots": "Configurar franjas horarias"
+          "configure_time_slots": "Configure time slots"
         }
       },
       "add_time_slot": {
-        "title": "Franja horaria {slot_num}",
-        "description": "Define una franja horaria en la que las baterías PODRÁN descargar. Fuera de esta franja, no descargarán.",
+        "title": "Time slot {slot_num}",
+        "description": "Define a time slot where batteries will be ALLOWED to discharge. Outside this slot, they will not discharge.",
         "data": {
-          "start_time": "Hora de inicio",
-          "end_time": "Hora de fin",
-          "days": "Días de la semana",
-          "apply_to_charge": "Aplicar también a la carga",
-          "target_grid_power": "Potencia objetivo de red (W)"
+          "start_time": "Start time",
+          "end_time": "End time",
+          "days": "Days of the week",
+          "apply_to_charge": "Apply also to charging",
+          "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
-          "start_time": "Hora de inicio de la franja (formato 24h)",
-          "end_time": "Hora de fin de la franja (formato 24h)",
-          "days": "Días en los que se aplica esta franja",
-          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)",
-          "target_grid_power": "Potencia de red a la que el controlador regula durante esta franja. 0W = flujo cero (predeterminado). Negativo = ligera exportación (ej: -150W). Positivo = permitir ligera importación."
+          "start_time": "Start time of the slot (24h format)",
+          "end_time": "End time of the slot (24h format)",
+          "days": "Days when this slot applies",
+          "apply_to_charge": "If checked, the slot will also restrict charging (battery will only charge during this slot)",
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
       "add_more_slots": {
-        "title": "Añadir más franjas horarias",
-        "description": "Actualmente tienes {current_slots} franja(s) configurada(s). Puedes añadir hasta {max_slots} franjas en total.",
+        "title": "Add more time slots",
+        "description": "You currently have {current_slots} configured slot(s). You can add up to {max_slots} slots in total.",
         "data": {
-          "add_more": "Añadir otra franja horaria"
+          "add_more": "Add another time slot"
         }
       },
       "excluded_devices": {
-        "title": "Gestión de dispositivos especiales",
-        "description": "Configura dispositivos con gestión especial: puedes EXCLUIR dispositivos que NO deben alimentarse por batería, o AÑADIR dispositivos que SÍ debe alimentar la batería aunque no estén en el sensor de consumo del hogar.",
+        "title": "Special Device Management",
+        "description": "Configure devices with special management: you can EXCLUDE devices that should NOT be powered by battery, or ADD devices that SHOULD be powered by battery even if they're not in the home consumption sensor.",
         "data": {
-          "configure_excluded_devices": "Configurar dispositivos especiales"
+          "configure_excluded_devices": "Configure special devices"
         }
       },
       "add_excluded_device": {
-        "title": "Dispositivo especial {device_num}",
-        "description": "Configura cómo debe gestionar la batería este dispositivo.",
+        "title": "Special Device {device_num}",
+        "description": "Configure how the battery should manage this device.",
         "data": {
-          "power_sensor": "Sensor de potencia del dispositivo",
-          "included_in_consumption": "El consumo está incluido en el sensor de consumo del hogar",
-          "allow_solar_surplus": "Permitir usar excedente solar (no cargar batería)"
+          "power_sensor": "Device power sensor",
+          "included_in_consumption": "Consumption is included in home consumption sensor",
+          "allow_solar_surplus": "Allow to use solar surplus (do not charge battery)"
         },
         "data_description": {
-          "power_sensor": "Sensor que mide la potencia consumida por este dispositivo (en W)",
-          "included_in_consumption": "✓ MARCADO = El sensor de consumo del hogar YA incluye este dispositivo → La batería NO lo alimentará (excluido). ✗ DESMARCADO = El sensor del hogar NO lo ve → La batería SÍ lo alimentará (adicional)",
-          "allow_solar_surplus": "Si se marca, el dispositivo podrá consumir energía directamente de los paneles solares (excedente) sin que la batería intente compensarlo. Se recomienda marcar para dispositivos de gran consumo como cargadores de VE."
+          "power_sensor": "Sensor that measures the power consumed by this device (in W)",
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)",
+          "allow_solar_surplus": "If checked, the device will be able to consume energy directly from solar panels (surplus) without the battery trying to compensate. Recommended for high consumption devices like EV chargers."
         }
       },
       "add_more_excluded_devices": {
-        "title": "Añadir más dispositivos excluidos",
-        "description": "Actualmente tienes {current_devices} dispositivo(s) excluido(s). Puedes añadir hasta {max_devices} dispositivos en total.",
+        "title": "Add more excluded devices",
+        "description": "You currently have {current_devices} excluded device(s). You can add up to {max_devices} devices total.",
         "data": {
-          "add_more": "Añadir otro dispositivo excluido"
+          "add_more": "Add another excluded device"
         }
       },
       "predictive_charging": {
-        "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "title": "Predictive Grid Charging",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
         "data": {
-          "configure_predictive_charging": "Configurar carga predictiva"
+          "configure_predictive_charging": "Configure predictive charging"
         }
       },
       "predictive_charging_mode": {
-        "title": "Modo de carga predictiva",
-        "description": "Selecciona cómo el sistema decide cuándo cargar desde la red.",
+        "title": "Predictive Charging Mode",
+        "description": "Select how the system decides when to charge from the grid.",
         "data": {
-          "predictive_charging_mode": "Modo de carga"
+          "predictive_charging_mode": "Charging mode"
         },
         "data_description": {
-          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor. Real-Time Price: activate charging instantly whenever the current price is below a threshold — no scheduling needed."
         }
       },
       "predictive_charging_config": {
-        "title": "Carga predictiva — Franja horaria",
-        "description": "Configura cuándo y cómo cargar las baterías desde la red eléctrica basándose en la predicción solar.",
+        "title": "Predictive Charging — Time Slot",
+        "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
         "data": {
-          "start_time": "Hora de inicio (tarifa valle)",
-          "end_time": "Hora de fin (tarifa valle)",
-          "days": "Días de la semana",
-          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+          "start_time": "Start time (off-peak tariff)",
+          "end_time": "End time (off-peak tariff)",
+          "days": "Days of the week",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
         },
         "data_description": {
-          "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
-          "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
-          "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+          "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
+          "end_time": "End time of charging window (e.g., 06:00)",
+          "days": "Days when grid charging is allowed",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "dynamic_pricing_config": {
-        "title": "Carga predictiva — Precio dinámico",
-        "description": "Configura el sensor de precio eléctrico y los parámetros para la selección automática de horas baratas.",
+        "title": "Predictive Charging — Dynamic Pricing",
+        "description": "Configure the electricity price sensor and parameters for automatic cheap-hour selection.",
         "data": {
-          "price_integration_type": "Integración de precios",
-          "price_sensor": "Sensor de precio eléctrico",
-          "max_price_threshold": "Precio máximo (opcional)",
-          "dp_price_discharge_control": "Descargar solo cuando el precio supere la media diaria",
-          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+          "price_integration_type": "Price integration",
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "dp_price_discharge_control": "Only discharge when price is above threshold",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
         },
         "data_description": {
-          "price_integration_type": "Selecciona tu integración de precios de electricidad",
-          "price_sensor": "Sensor que proporciona precios horarios de electricidad (ej: sensor.nordpool_kwh_se3_sek_3_10_025)",
-          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
-          "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio medio del día (calculado automáticamente a partir del sensor de precios). Si aún no se ha ejecutado la evaluación diaria, se usa el precio máximo configurado como umbral. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+          "price_integration_type": "Select your electricity price provider integration",
+          "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
+          "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
+          "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds today's average price (computed automatically from the price sensor). Falls back to the fixed max price threshold if the daily evaluation has not run yet. If discharge time slots are configured, both conditions must be met.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "realtime_price_config": {
+        "title": "Predictive Charging — Real-Time Price",
+        "description": "Configure the price sensor and threshold. The system reads the current price every few seconds and starts or stops grid charging immediately — no daily schedule needed.",
+        "data": {
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "average_price_sensor": "Daily average price sensor (optional)",
+          "rt_price_discharge_control": "Only discharge when price is above threshold",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "price_sensor": "Sensor whose state is the current electricity price (e.g. sensor.esios_pvpc, sensor.nordpool_kwh_es_eur_3_10_0). Any sensor that exposes the current period price as its state works.",
+          "max_price_threshold": "Charging activates when the current price is at or below this value. Use the same unit as your price sensor (e.g. €/kWh for PVPC, ct/kWh for Nordpool). Leave empty if using the daily average sensor below.",
+          "average_price_sensor": "If provided, this sensor's state is used as the threshold instead of the fixed value above — useful when your price integration already exposes a daily average. Leave empty to use the fixed threshold.",
+          "rt_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the threshold (fixed or daily average). If discharge time slots are configured, both conditions must be met.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "weekly_full_charge": {
-        "title": "Carga completa semanal",
-        "description": "¿Deseas activar la carga completa semanal para balanceo de celdas? Esta función carga las baterías al 100% una vez por semana para equilibrar las celdas.",
+        "title": "Weekly Full Charge",
+        "description": "Do you want to enable weekly full battery charge for cell balancing? This feature charges batteries to 100% once per week to balance the cells.",
         "data": {
-          "configure_weekly_full_charge": "Configurar carga completa semanal"
+          "configure_weekly_full_charge": "Configure weekly full charge"
         }
       },
       "weekly_full_charge_config": {
-        "title": "Configuración de carga completa semanal",
-        "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
+        "title": "Weekly Full Charge Configuration",
+        "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana"
+          "weekly_full_charge_day": "Day of the week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
         }
       },
       "charge_delay": {
-        "title": "Retraso de carga solar",
-        "description": "¿Deseas activar el retraso de carga solar? Esta función retrasa la carga de las baterías hasta que el balance energético solar indique que es necesario, exportando el excedente a red mientras tanto.",
+        "title": "Solar charge delay",
+        "description": "Enable solar charge delay? This delays battery charging until the solar energy balance indicates it's needed, exporting excess solar to grid in the meantime.",
         "data": {
-          "configure_charge_delay": "Configurar retraso de carga"
+          "configure_charge_delay": "Configure charge delay"
         }
       },
       "charge_delay_config": {
-        "title": "Configuración del retraso de carga",
-        "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
+        "title": "Charge delay configuration",
+        "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
-          "delay_safety_margin_h": "Margen de seguridad (horas)",
-          "solar_forecast_sensor": "Sensor de predicción solar"
+          "delay_safety_margin_h": "Safety margin (hours)",
+          "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
-          "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
+          "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
-        "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
+        "title": "Capacity Protection Mode",
+        "description": "When enabled, if battery SOC drops below a threshold, the system conserves energy by only discharging to offset consumption above a peak limit.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Enable capacity protection"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Capacity Protection Configuration",
+        "description": "Configure the SOC threshold below which protection activates, and the peak power limit. The battery will only discharge to keep grid import at or below the peak limit.",
         "data": {
-          "capacity_protection_soc_threshold": "Umbral de SOC (%)",
-          "capacity_protection_limit": "Límite pico (W)"
+          "capacity_protection_soc_threshold": "SOC Threshold (%)",
+          "capacity_protection_limit": "Peak Limit (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "When average battery SOC drops below this value, capacity protection activates. The battery will stop discharging for normal consumption and only cover peaks above the limit.",
+          "capacity_protection_limit": "Grid import power threshold. When house consumption exceeds this value and protection is active, the battery discharges only the excess above this limit."
         }
       }
     },
     "error": {
-      "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
-      "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
-      "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
-      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00).",
-      "no_price_data": "El sensor seleccionado no tiene los atributos de precio esperados. Nordpool: necesita `raw_today`. PVPC: necesita `price_00h` … `price_23h`. CKW: necesita el atributo `prices` con una lista de franjas."
+      "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
+      "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
+      "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
+      "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
+      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00).",
+      "no_price_data": "Selected sensor does not have the expected price attributes. Nordpool: needs `raw_today` attribute. PVPC: needs `price_00h` … `price_23h` attributes. CKW: needs `prices` attribute with a list of slots."
     },
     "abort": {
-      "already_configured": "Esta integración ya está configurada."
+      "already_configured": "This integration is already configured."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Reconfigurar Marstek Venus Energy Manager",
-        "description": "Modifica la configuración de la integración. Los cambios se aplicarán al reiniciar la integración.",
+        "title": "Reconfigure Marstek Venus Energy Manager",
+        "description": "Modify the integration configuration. Changes will be applied when restarting the integration.",
         "data": {
-          "consumption_sensor": "Sensor de consumo de la red",
-          "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "meter_inverted": "Signo del medidor invertido"
+          "consumption_sensor": "Grid consumption sensor",
+          "solar_forecast_sensor": "Solar forecast sensor (optional)",
+          "meter_inverted": "Inverted meter sign"
         },
         "data_description": {
-          "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
+          "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid.",
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). If configured here, it will be used automatically for predictive charging and solar charge delay.",
+          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically."
         }
       },
       "batteries": {
-        "title": "Número de baterías",
-        "description": "Modifica el número de baterías. Si reduces el número, se eliminarán las últimas baterías configuradas.",
+        "title": "Number of batteries",
+        "description": "Modify the number of batteries. If you reduce the number, the last configured batteries will be removed.",
         "data": {
-          "num_batteries": "Número de baterías"
+          "num_batteries": "Number of batteries"
         }
       },
       "battery_connection": {
-        "title": "Configurar batería {battery_num} — Conexión",
-        "description": "Modifica los datos de conexión y el modelo de la batería {battery_num}.",
+        "title": "Configure battery {battery_num} — Connection",
+        "description": "Modify connection details and battery model for battery {battery_num}.",
         "data": {
-          "name": "Nombre",
-          "host": "Dirección IP",
-          "port": "Puerto Modbus",
-          "battery_version": "Modelo de batería"
+          "name": "Name",
+          "host": "IP Address",
+          "port": "Modbus Port",
+          "battery_version": "Battery Model"
         },
         "data_description": {
-          "name": "Nombre descriptivo para identificar esta batería",
-          "host": "Dirección IP de la batería en tu red local",
-          "port": "Puerto Modbus (normalmente 502)",
-          "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the battery on your local network",
+          "port": "Modbus port (usually 502)",
+          "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
         }
       },
       "battery_limits": {
-        "title": "Configurar batería {battery_num} — Límites",
-        "description": "Modifica los límites de potencia y SOC de la batería {battery_num}.",
+        "title": "Configure battery {battery_num} — Limits",
+        "description": "Modify power and SOC limits for battery {battery_num}.",
         "data": {
-          "max_charge_power": "Potencia máxima de carga",
-          "max_discharge_power": "Potencia máxima de descarga",
-          "max_soc": "SOC máximo (%)",
-          "min_soc": "SOC mínimo de descarga (%)",
-          "enable_charge_hysteresis": "Activar histéresis de carga",
-          "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
+          "max_charge_power": "Maximum charge power (W)",
+          "max_discharge_power": "Maximum discharge power (W)",
+          "max_soc": "Maximum SOC (%)",
+          "min_soc": "Minimum SOC (%)",
+          "enable_charge_hysteresis": "Enable Charge Hysteresis",
+          "charge_hysteresis_percent": "Hysteresis Percentage (%)"
         },
         "data_description": {
-          "max_charge_power": "Potencia máxima permitida para cargar la batería",
-          "max_discharge_power": "Potencia máxima permitida para descargar la batería",
-          "max_soc": "Estado de carga máximo (80-100%)",
-          "min_soc": "Estado de carga mínimo para descarga (12-30%)",
-          "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",
-          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%"
+          "max_charge_power": "Maximum power allowed to charge the battery",
+          "max_discharge_power": "Maximum power allowed to discharge the battery",
+          "max_soc": "Maximum state of charge",
+          "min_soc": "Minimum state of charge",
+          "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
+          "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%"
         }
       },
       "time_slots": {
-        "title": "Franjas horarias de operación",
-        "description": "¿Deseas reconfigurar las franjas horarias? Si lo desmarcas, se eliminarán todas las franjas (las baterías funcionarán siempre).",
+        "title": "Discharge time slots",
+        "description": "Do you want to reconfigure time slots? If unchecked, all slots will be removed (batteries will operate at all times).",
         "data": {
-          "configure_time_slots": "Configurar franjas horarias"
+          "configure_time_slots": "Configure time slots"
         }
       },
       "add_time_slot": {
-        "title": "Franja horaria {slot_num}",
-        "description": "Define o modifica una franja horaria en la que las baterías PODRÁN descargar.",
+        "title": "Time slot {slot_num}",
+        "description": "Define or modify a time slot where batteries will be ALLOWED to discharge.",
         "data": {
-          "start_time": "Hora de inicio",
-          "end_time": "Hora de fin",
-          "days": "Días de la semana",
-          "apply_to_charge": "Aplicar también a la carga",
-          "target_grid_power": "Potencia objetivo de red (W)"
+          "start_time": "Start time",
+          "end_time": "End time",
+          "days": "Days of the week",
+          "apply_to_charge": "Apply also to charging",
+          "target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
-          "start_time": "Hora de inicio de la franja (formato 24h)",
-          "end_time": "Hora de fin de la franja (formato 24h)",
-          "days": "Días en los que se aplica esta franja",
-          "apply_to_charge": "Si se marca, la franja también limitará la carga (solo cargará durante la franja)",
-          "target_grid_power": "Potencia de red a la que el controlador regula durante esta franja. 0W = flujo cero (predeterminado). Negativo = ligera exportación (ej: -150W). Positivo = permitir ligera importación."
+          "start_time": "Start time of the slot (24h format)",
+          "end_time": "End time of the slot (24h format)",
+          "days": "Days when this slot applies",
+          "apply_to_charge": "If checked, the slot will also restrict charging (battery will only charge during this slot)",
+          "target_grid_power": "Grid power the controller regulates toward during this slot. 0W = zero grid flow (default). Negative = slight export (e.g. -150W). Positive = allow slight import."
         }
       },
       "add_more_slots": {
-        "title": "Añadir más franjas horarias",
-        "description": "Tienes {current_slots} franja(s) configurada(s). Puedes añadir hasta {max_slots} en total.",
+        "title": "Add more time slots",
+        "description": "You have {current_slots} configured slot(s). You can add up to {max_slots} in total.",
         "data": {
-          "add_more": "Añadir otra franja horaria"
+          "add_more": "Add another time slot"
         }
       },
       "excluded_devices": {
-        "title": "Gestión de dispositivos especiales",
-        "description": "Configura dispositivos con gestión especial: puedes EXCLUIR dispositivos que NO deben alimentarse por batería, o AÑADIR dispositivos que SÍ debe alimentar la batería aunque no estén en el sensor de consumo del hogar.",
+        "title": "Special Device Management",
+        "description": "Configure devices with special management: you can EXCLUDE devices that should NOT be powered by battery, or ADD devices that SHOULD be powered by battery even if they're not in the home consumption sensor.",
         "data": {
-          "configure_excluded_devices": "Configurar dispositivos especiales"
+          "configure_excluded_devices": "Configure special devices"
         }
       },
       "add_excluded_device": {
-        "title": "Dispositivo especial {device_num}",
-        "description": "Configura cómo debe gestionar la batería este dispositivo.",
+        "title": "Special Device {device_num}",
+        "description": "Configure how the battery should manage this device.",
         "data": {
-          "power_sensor": "Sensor de potencia del dispositivo",
-          "included_in_consumption": "El consumo está incluido en el sensor de consumo del hogar",
-          "allow_solar_surplus": "Permitir usar excedente solar (no cargar batería)"
+          "power_sensor": "Device power sensor",
+          "included_in_consumption": "Consumption is included in home consumption sensor",
+          "allow_solar_surplus": "Allow to use solar surplus (do not charge battery)"
         },
         "data_description": {
-          "power_sensor": "Sensor que mide la potencia consumida por este dispositivo (en W)",
-          "included_in_consumption": "✓ MARCADO = El sensor de consumo del hogar YA incluye este dispositivo → La batería NO lo alimentará (excluido). ✗ DESMARCADO = El sensor del hogar NO lo ve → La batería SÍ lo alimentará (adicional)",
-          "allow_solar_surplus": "Si se marca, el dispositivo podrá consumir energía directamente de los paneles solares (excedente) sin que la batería intente compensarlo. Se recomienda marcar para dispositivos de gran consumo como cargadores de VE."
+          "power_sensor": "Sensor that measures the power consumed by this device (in W)",
+          "included_in_consumption": "✓ CHECKED = Home sensor ALREADY includes this device → Battery will NOT power it (excluded). ✗ UNCHECKED = Home sensor doesn't see it → Battery WILL power it (additional)",
+          "allow_solar_surplus": "If checked, the device will be able to consume energy directly from solar panels (surplus) without the battery trying to compensate. Recommended for high consumption devices like EV chargers."
         }
       },
       "add_more_excluded_devices": {
-        "title": "Añadir más dispositivos especiales",
-        "description": "Tienes {current_devices} dispositivo(s) configurado(s). Puedes añadir hasta {max_devices} en total.",
+        "title": "Add more excluded devices",
+        "description": "You have {current_devices} excluded device(s). You can add up to {max_devices} in total.",
         "data": {
-          "add_more": "Añadir otro dispositivo especial"
+          "add_more": "Add another excluded device"
         }
       },
       "predictive_charging": {
-        "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "title": "Predictive Grid Charging",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
         "data": {
-          "configure_predictive_charging": "Configurar carga predictiva"
+          "configure_predictive_charging": "Configure predictive charging"
         }
       },
       "predictive_charging_mode": {
-        "title": "Modo de carga predictiva",
-        "description": "Selecciona cómo el sistema decide cuándo cargar desde la red.",
+        "title": "Predictive Charging Mode",
+        "description": "Select how the system decides when to charge from the grid.",
         "data": {
-          "predictive_charging_mode": "Modo de carga"
+          "predictive_charging_mode": "Charging mode"
         },
         "data_description": {
-          "predictive_charging_mode": "Franja horaria: carga en una ventana nocturna fija. Precio dinámico: selecciona automáticamente las horas más baratas del sensor de precios."
+          "predictive_charging_mode": "Time Slot: charge during a fixed nightly window. Dynamic Pricing: automatically select the cheapest hours from a price sensor. Real-Time Price: activate charging instantly whenever the current price is below a threshold — no scheduling needed."
         }
       },
       "predictive_charging_config": {
-        "title": "Carga predictiva — Franja horaria",
-        "description": "Configura cuándo y cómo cargar las baterías desde la red eléctrica basándose en la predicción solar.",
+        "title": "Predictive Charging — Time Slot",
+        "description": "Configure when and how to charge batteries from the grid based on solar forecast.",
         "data": {
-          "start_time": "Hora de inicio (tarifa valle)",
-          "end_time": "Hora de fin (tarifa valle)",
-          "days": "Días de la semana",
-          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+          "start_time": "Start time (off-peak tariff)",
+          "end_time": "End time (off-peak tariff)",
+          "days": "Days of the week",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
         },
         "data_description": {
-          "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
-          "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
-          "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+          "start_time": "Start time of charging window (e.g., 01:00, off-peak tariff)",
+          "end_time": "End time of charging window (e.g., 06:00)",
+          "days": "Days when grid charging is allowed",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "dynamic_pricing_config": {
-        "title": "Carga predictiva — Precio dinámico",
-        "description": "Configura el sensor de precio eléctrico y los parámetros para la selección automática de horas baratas.",
+        "title": "Predictive Charging — Dynamic Pricing",
+        "description": "Configure the electricity price sensor and parameters for automatic cheap-hour selection.",
         "data": {
-          "price_integration_type": "Integración de precios",
-          "price_sensor": "Sensor de precio eléctrico",
-          "max_price_threshold": "Precio máximo (opcional)",
-          "dp_price_discharge_control": "Descargar solo cuando el precio supere la media diaria",
-          "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)"
+          "price_integration_type": "Price integration",
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "dp_price_discharge_control": "Only discharge when price is above threshold",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
         },
         "data_description": {
-          "price_integration_type": "Selecciona tu integración de precios de electricidad",
-          "price_sensor": "Sensor que proporciona precios horarios de electricidad",
-          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Usa la misma unidad que el sensor: ct/kWh para Nordpool, €/kWh para PVPC, Rp/kWh para CKW. Deja vacío para usar todas las horas.",
-          "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio medio del día (calculado automáticamente a partir del sensor de precios). Si aún no se ha ejecutado la evaluación diaria, se usa el precio máximo configurado como umbral. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
+          "price_integration_type": "Select your electricity price provider integration",
+          "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
+          "max_price_threshold": "Slots above this price will not be selected. Use the same unit as the sensor: ct/kWh for Nordpool, €/kWh for PVPC, Rp/kWh for CKW. Leave empty to use all slots.",
+          "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds today's average price (computed automatically from the price sensor). Falls back to the fixed max price threshold if the daily evaluation has not run yet. If discharge time slots are configured, both conditions must be met.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
+        }
+      },
+      "realtime_price_config": {
+        "title": "Predictive Charging — Real-Time Price",
+        "description": "Configure the price sensor and threshold. The system reads the current price every few seconds and starts or stops grid charging immediately — no daily schedule needed.",
+        "data": {
+          "price_sensor": "Electricity price sensor",
+          "max_price_threshold": "Maximum price threshold (optional)",
+          "average_price_sensor": "Daily average price sensor (optional)",
+          "rt_price_discharge_control": "Only discharge when price is above threshold",
+          "solar_forecast_sensor": "Solar forecast sensor (kWh)",
+          "max_contracted_power": "Maximum contracted power ICP (W)"
+        },
+        "data_description": {
+          "price_sensor": "Sensor whose state is the current electricity price (e.g. sensor.esios_pvpc, sensor.nordpool_kwh_es_eur_3_10_0). Any sensor that exposes the current period price as its state works.",
+          "max_price_threshold": "Charging activates when the current price is at or below this value. Use the same unit as your price sensor (e.g. €/kWh for PVPC, ct/kWh for Nordpool). Leave empty if using the daily average sensor below.",
+          "average_price_sensor": "If provided, this sensor's state is used as the threshold instead of the fixed value above — useful when your price integration already exposes a daily average. Leave empty to use the fixed threshold.",
+          "rt_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the threshold (fixed or daily average). If discharge time slots are configured, both conditions must be met.",
+          "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
+          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "weekly_full_charge": {
-        "title": "Carga completa semanal",
-        "description": "¿Deseas activar la carga completa semanal para balanceo de celdas? Esta función carga las baterías al 100% una vez por semana para equilibrar las celdas.",
+        "title": "Weekly Full Charge",
+        "description": "Do you want to enable weekly full battery charge for cell balancing? This feature charges batteries to 100% once per week to balance the cells.",
         "data": {
-          "configure_weekly_full_charge": "Configurar carga completa semanal"
+          "configure_weekly_full_charge": "Configure weekly full charge"
         }
       },
       "weekly_full_charge_config": {
-        "title": "Configuración de carga completa semanal",
-        "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
+        "title": "Weekly Full Charge Configuration",
+        "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana"
+          "weekly_full_charge_day": "Day of the week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
         }
       },
       "charge_delay": {
-        "title": "Retraso de carga solar",
-        "description": "¿Deseas activar el retraso de carga solar? Esta función retrasa la carga de las baterías hasta que el balance energético solar indique que es necesario, exportando el excedente a red mientras tanto.",
+        "title": "Solar charge delay",
+        "description": "Enable solar charge delay? This delays battery charging until the solar energy balance indicates it's needed, exporting excess solar to grid in the meantime.",
         "data": {
-          "configure_charge_delay": "Configurar retraso de carga"
+          "configure_charge_delay": "Configure charge delay"
         }
       },
       "charge_delay_config": {
-        "title": "Configuración del retraso de carga",
-        "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
+        "title": "Charge delay configuration",
+        "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
-          "delay_safety_margin_h": "Margen de seguridad (horas)",
-          "solar_forecast_sensor": "Sensor de predicción solar"
+          "delay_safety_margin_h": "Safety margin (hours)",
+          "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
-          "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
+          "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
+          "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
-        "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
+        "title": "Capacity Protection Mode",
+        "description": "When enabled, if battery SOC drops below a threshold, the system conserves energy by only discharging to offset consumption above a peak limit.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Enable capacity protection"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Capacity Protection Configuration",
+        "description": "Configure the SOC threshold below which protection activates, and the peak power limit. The battery will only discharge to keep grid import at or below the peak limit.",
         "data": {
-          "capacity_protection_soc_threshold": "Umbral de SOC (%)",
-          "capacity_protection_limit": "Límite pico (W)"
+          "capacity_protection_soc_threshold": "SOC Threshold (%)",
+          "capacity_protection_limit": "Peak Limit (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "When average battery SOC drops below this value, capacity protection activates. The battery will stop discharging for normal consumption and only cover peaks above the limit.",
+          "capacity_protection_limit": "Grid import power threshold. When house consumption exceeds this value and protection is active, the battery discharges only the excess above this limit."
         }
       },
       "pd_advanced": {
-        "title": "Parámetros avanzados del controlador PD",
-        "description": "Configura parámetros avanzados del controlador PD para ajustar el comportamiento de carga/descarga de las baterías. Solo modifica estos valores si comprendes la teoría de control PID. Los valores predeterminados funcionan bien para la mayoría de instalaciones.",
+        "title": "Advanced PD Controller Parameters",
+        "description": "Configure advanced PD controller parameters for expert tuning of battery charge/discharge behavior. Only modify these if you understand PID control theory. Default values work well for most installations.",
         "data": {
-          "configure_pd_advanced": "Configurar parámetros avanzados del controlador PD"
+          "configure_pd_advanced": "Configure advanced PD controller parameters"
         }
       },
       "pd_advanced_config": {
-        "title": "Configuración del controlador PD",
-        "description": "Ajusta el controlador Proporcional-Derivativo que gestiona los cambios de potencia de las baterías. Los cambios se aplicarán después de recargar la integración.",
+        "title": "PD Controller Configuration",
+        "description": "Tune the Proportional-Derivative controller that manages battery power adjustments. Changes will apply after integration reload.",
         "data": {
-          "pd_kp": "Kp - Ganancia Proporcional",
-          "pd_kd": "Kd - Ganancia Derivativa",
-          "pd_deadband": "Banda muerta (W)",
-          "pd_max_power_change": "Cambio máximo de potencia por ciclo (W)",
-          "pd_direction_hysteresis": "Histéresis de dirección (W)",
-          "pd_min_charge_power": "Potencia mínima de carga (W)",
-          "pd_min_discharge_power": "Potencia mínima de descarga (W)"
+          "pd_kp": "Kp - Proportional Gain",
+          "pd_kd": "Kd - Derivative Gain",
+          "pd_deadband": "Deadband (W)",
+          "pd_max_power_change": "Max Power Change per Cycle (W)",
+          "pd_direction_hysteresis": "Direction Hysteresis (W)",
+          "pd_min_charge_power": "Minimum Charge Power (W)",
+          "pd_min_discharge_power": "Minimum Discharge Power (W)"
         },
         "data_description": {
-          "pd_kp": "Capacidad de respuesta al desequilibrio de red. Valores más altos = respuesta más rápida pero riesgo de sobreoscilación. Rango: 0.1-2.0, predeterminado: 0.65",
-          "pd_kd": "Amortiguación para prevenir oscilaciones. Valores más altos = transiciones más suaves pero asentamiento más lento. Rango: 0.0-2.0, predeterminado: 0.5",
-          "pd_deadband": "Tolerancia de potencia de red alrededor de cero. Previene microajustes ante fluctuaciones menores. Valores más altos reducen la sensibilidad. Rango: 0-200W, predeterminado: 40W",
-          "pd_max_power_change": "Cambio máximo de potencia de batería por ciclo de control (2.5s). Previene comandos abruptos. Valores más bajos = más suave pero más lento. Rango: 100-2000W, predeterminado: 800W",
-          "pd_direction_hysteresis": "Umbral de potencia requerido para cambiar entre carga y descarga. Previene cambios rápidos de dirección. Rango: 0-200W, predeterminado: 60W",
-          "pd_min_charge_power": "Potencia mínima para cargar. Por debajo de este umbral, el controlador queda en reposo en vez de cargar a baja potencia. 0 = desactivado.",
-          "pd_min_discharge_power": "Potencia mínima para descargar. Por debajo de este umbral, el controlador queda en reposo en vez de descargar a baja potencia. 0 = desactivado."
+          "pd_kp": "Responsiveness to grid imbalance. Higher values = faster response but risk of overshoot. Range: 0.1-2.0, default: 0.65",
+          "pd_kd": "Damping to prevent oscillation. Higher values = smoother transitions but slower settling. Range: 0.0-2.0, default: 0.5",
+          "pd_deadband": "Grid power tolerance around zero. Prevents micro-adjustments to minor fluctuations. Higher values reduce sensitivity. Range: 0-200W, default: 40W",
+          "pd_max_power_change": "Maximum battery power change per control cycle (2.5s). Prevents abrupt commands. Lower values = smoother but slower. Range: 100-2000W, default: 800W",
+          "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W",
+          "pd_min_charge_power": "Minimum power for charging. Below this threshold, the controller stays idle instead of charging at low power. 0 = disabled.",
+          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled."
         }
       }
     },
     "error": {
-      "cannot_connect": "No se puede conectar a la batería. Verifica la dirección IP y que la batería esté accesible en la red.",
-      "sensor_not_found": "El sensor de predicción solar no existe. Verifica que el sensor esté disponible.",
-      "invalid_unit": "El sensor de predicción solar debe tener como unidad 'kWh' o 'Wh'.",
-      "overlapping_slots": "Esta franja se solapa con una existente. Ajuste los horarios o los días.",
-      "midnight_crossing": "La hora de inicio debe ser anterior a la hora de fin. Para períodos nocturnos, cree dos franjas separadas (ej: 22:00-23:59 y 00:00-06:00)."
+      "cannot_connect": "Cannot connect to the battery. Check the IP address and that the battery is accessible on the network.",
+      "sensor_not_found": "Solar forecast sensor does not exist. Verify the sensor is available.",
+      "invalid_unit": "Solar forecast sensor must have 'kWh' or 'Wh' as unit.",
+      "overlapping_slots": "This time slot overlaps with an existing one. Adjust the times or days.",
+      "midnight_crossing": "Start time must be before end time. For overnight periods, create two separate slots (e.g., 22:00-23:59 and 00:00-06:00)."
     }
   },
   "selector": {
     "weekday": {
       "options": {
-        "mon": "Lunes",
-        "tue": "Martes",
-        "wed": "Miércoles",
-        "thu": "Jueves",
-        "fri": "Viernes",
-        "sat": "Sábado",
-        "sun": "Domingo"
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday",
+        "sat": "Saturday",
+        "sun": "Sunday"
       }
     },
     "predictive_charging_mode": {
       "options": {
-        "time_slot": "Franja horaria (ventana nocturna fija)",
-        "dynamic_pricing": "Precio dinámico (horas más baratas)"
+        "time_slot": "Time Slot (fixed nightly window)",
+        "dynamic_pricing": "Dynamic Pricing (cheapest hours)",
+        "realtime_price": "Real-Time Price (instant threshold)"
       }
     },
     "price_integration_type": {
       "options": {
         "nordpool": "Nordpool",
         "pvpc": "PVPC (Spain – ESIOS REE)",
-        "ckw": "CKW (Suiza)"
+        "ckw": "CKW (Switzerland)"
       }
     }
   },
   "entity": {
     "switch": {
-      "manual_mode": { "name": "Modo Manual" },
-      "predictive_charging": { "name": "Carga Predictiva" },
-      "charge_delay": { "name": "Retraso de Carga" },
-      "capacity_protection": { "name": "Protección de Capacidad" },
-      "backup_function": { "name": "Función de Respaldo" },
-      "rs485_control_mode": { "name": "Modo de Control RS485" }
+      "manual_mode": { "name": "Manual Mode" },
+      "predictive_charging": { "name": "Predictive Charging" },
+      "charge_delay": { "name": "Charge Delay" },
+      "capacity_protection": { "name": "Capacity Protection" },
+      "backup_function": { "name": "Backup Function" },
+      "rs485_control_mode": { "name": "RS485 Control Mode" },
+      "automation_charging_active": { "name": "External Price Charging" }
+    },
+    "time": {
+      "automation_charging_end_time": { "name": "External Charging End Time" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Dispositivos Excluidos" },
+      "excluded_devices": { "name": "Excluded Devices" },
       "discharge_window": {
-        "name": "Ventana de Descarga",
+        "name": "Discharge Window",
         "state": {
-          "no_slots": "Sin franjas",
-          "inactive": "Inactivo",
-          "active": "Activo"
+          "no_slots": "No slots",
+          "inactive": "Inactive",
+          "active": "Active"
         }
       },
-      "active_batteries": { "name": "Baterías Activas" },
-      "non_responsive_batteries": { "name": "Baterías Sin Respuesta" },
-      "configuration_summary": { "name": "Resumen de Configuración" },
+      "active_batteries": { "name": "Active Batteries" },
+      "non_responsive_batteries": { "name": "Non-Responsive Batteries" },
+      "configuration_summary": { "name": "Configuration Summary" },
       "weekly_full_charge": {
-        "name": "Carga Completa Semanal",
+        "name": "Weekly Full Charge",
         "state": {
-          "idle": "Inactivo",
-          "disabled": "Desactivado",
-          "charging": "Cargando al 100%",
-          "complete": "Completado"
+          "idle": "Idle",
+          "disabled": "Disabled",
+          "charging": "Charging to 100%",
+          "complete": "Complete"
         }
       },
       "charge_delay_status": {
-        "name": "Retraso de Carga",
+        "name": "Charge Delay",
         "state": {
-          "idle": "Inactivo",
-          "disabled": "Desactivado",
-          "waiting_for_solar": "Esperando solar",
-          "delayed": "Retrasado",
-          "charging_allowed": "Carga permitida"
+          "idle": "Idle",
+          "disabled": "Disabled",
+          "waiting_for_solar": "Waiting for solar",
+          "delayed": "Delayed",
+          "charging_allowed": "Charging allowed"
         }
       },
-      "battery_soc": { "name": "SOC de la Batería" },
-      "battery_total_energy": { "name": "Energía Total de la Batería" },
-      "battery_power": { "name": "Potencia de la Batería" },
-      "internal_temperature": { "name": "Temperatura Interna" },
-      "ac_power": { "name": "Potencia AC" },
-      "total_charging_energy": { "name": "Energía Total de Carga" },
-      "total_discharging_energy": { "name": "Energía Total de Descarga" },
-      "total_daily_charging_energy": { "name": "Energía de Carga Diaria" },
-      "total_daily_discharging_energy": { "name": "Energía de Descarga Diaria" },
-      "inverter_state": { "name": "Estado del Inversor" },
-      "battery_voltage": { "name": "Tensión de la Batería" },
-      "max_cell_voltage": { "name": "Tensión Máxima de Celda" },
-      "min_cell_voltage": { "name": "Tensión Mínima de Celda" },
-      "fault_status": { "name": "Estado de Fallo" },
-      "alarm_status": { "name": "Estado de Alarma" },
-      "ac_offgrid_power": { "name": "Potencia AC Offgrid" },
-      "mppt1_power": { "name": "Potencia MPPT1" },
-      "mppt2_power": { "name": "Potencia MPPT2" },
-      "mppt3_power": { "name": "Potencia MPPT3" },
-      "mppt4_power": { "name": "Potencia MPPT4" },
-      "round_trip_efficiency_total": { "name": "Eficiencia Total de Ciclo" },
-      "stored_energy": { "name": "Energía Almacenada" },
-      "system_soc": { "name": "SOC del Sistema" },
-      "system_charge_power": { "name": "Potencia de Carga del Sistema" },
-      "system_discharge_power": { "name": "Potencia de Descarga del Sistema" },
-      "system_total_energy": { "name": "Energía Total del Sistema" },
-      "system_stored_energy": { "name": "Energía Almacenada del Sistema" },
-      "system_daily_charging_energy": { "name": "Energía de Carga Diaria del Sistema" },
-      "system_daily_discharging_energy": { "name": "Energía de Descarga Diaria del Sistema" },
-      "system_daily_grid_at_min_soc_energy": { "name": "Red al Mín. SOC" },
-      "device_name": { "name": "Nombre del Dispositivo" },
-      "sn_code": { "name": "Número de Serie" },
-      "software_version": { "name": "Versión de Software" },
-      "bms_version": { "name": "Versión BMS" },
-      "ems_version": { "name": "Versión EMS" },
-      "vms_version": { "name": "Versión VMS" },
-      "comm_module_firmware": { "name": "Firmware Módulo Comunicación" },
-      "mac_address": { "name": "Dirección MAC" },
-      "battery_cycle_count": { "name": "Ciclos de la Batería" },
-      "battery_cycle_count_calc": { "name": "Ciclos de la Batería (Calculado)" }
+      "battery_soc": { "name": "Battery SOC" },
+      "battery_total_energy": { "name": "Battery Total Energy" },
+      "battery_power": { "name": "Battery Power" },
+      "internal_temperature": { "name": "Internal Temperature" },
+      "ac_power": { "name": "AC Power" },
+      "total_charging_energy": { "name": "Total Charging Energy" },
+      "total_discharging_energy": { "name": "Total Discharging Energy" },
+      "total_daily_charging_energy": { "name": "Total Daily Charging Energy" },
+      "total_daily_discharging_energy": { "name": "Total Daily Discharging Energy" },
+      "inverter_state": { "name": "Inverter State" },
+      "battery_voltage": { "name": "Battery Voltage" },
+      "max_cell_voltage": { "name": "Max Cell Voltage" },
+      "min_cell_voltage": { "name": "Min Cell Voltage" },
+      "fault_status": { "name": "Fault Status" },
+      "alarm_status": { "name": "Alarm Status" },
+      "ac_offgrid_power": { "name": "AC Offgrid Power" },
+      "mppt1_power": { "name": "MPPT1 Power" },
+      "mppt2_power": { "name": "MPPT2 Power" },
+      "mppt3_power": { "name": "MPPT3 Power" },
+      "mppt4_power": { "name": "MPPT4 Power" },
+      "round_trip_efficiency_total": { "name": "Round-Trip Efficiency" },
+      "stored_energy": { "name": "Stored Energy" },
+      "system_soc": { "name": "System SOC" },
+      "system_charge_power": { "name": "System Charge Power" },
+      "system_discharge_power": { "name": "System Discharge Power" },
+      "system_total_energy": { "name": "System Total Energy" },
+      "system_stored_energy": { "name": "System Stored Energy" },
+      "system_daily_charging_energy": { "name": "System Daily Charging Energy" },
+      "system_daily_discharging_energy": { "name": "System Daily Discharging Energy" },
+      "system_daily_grid_at_min_soc_energy": { "name": "Grid at Min SOC" },
+      "device_name": { "name": "Device Name" },
+      "sn_code": { "name": "Serial Number" },
+      "software_version": { "name": "Software Version" },
+      "bms_version": { "name": "BMS Version" },
+      "ems_version": { "name": "EMS Version" },
+      "vms_version": { "name": "VMS Version" },
+      "comm_module_firmware": { "name": "Comm Module Firmware" },
+      "mac_address": { "name": "MAC Address" },
+      "battery_cycle_count": { "name": "Battery Cycle Count" },
+      "battery_cycle_count_calc": { "name": "Battery Cycle Count (Calc)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Protección de Capacidad Activa" },
-      "predictive_charging_active": { "name": "Carga Predictiva Activa" },
-      "wifi_status": { "name": "Estado WiFi" },
-      "cloud_status": { "name": "Estado Cloud" }
+      "capacity_protection_active": { "name": "Capacity Protection Active" },
+      "predictive_charging_active": { "name": "Predictive Charging Active" },
+      "wifi_status": { "name": "WiFi Status" },
+      "cloud_status": { "name": "Cloud Status" }
     },
     "select": {
-      "force_mode": { "name": "Modo Forzado" },
-      "user_work_mode": { "name": "Modo de Trabajo" },
+      "force_mode": { "name": "Force Mode" },
+      "user_work_mode": { "name": "User Work Mode" },
       "weekly_full_charge_day": {
-        "name": "Día de Carga Completa Semanal",
+        "name": "Weekly Full Charge Day",
         "state": {
-          "monday": "Lunes",
-          "tuesday": "Martes",
-          "wednesday": "Miércoles",
-          "thursday": "Jueves",
-          "friday": "Viernes",
-          "saturday": "Sábado",
-          "sunday": "Domingo"
+          "monday": "Monday",
+          "tuesday": "Tuesday",
+          "wednesday": "Wednesday",
+          "thursday": "Thursday",
+          "friday": "Friday",
+          "saturday": "Saturday",
+          "sunday": "Sunday"
         }
       }
     },
     "number": {
-      "set_charge_power": { "name": "Potencia de Carga" },
-      "set_discharge_power": { "name": "Potencia de Descarga" },
-      "max_charge_power": { "name": "Potencia Máxima de Carga" },
-      "max_discharge_power": { "name": "Potencia Máxima de Descarga" },
-      "charging_cutoff_capacity": { "name": "SOC Máximo de Carga" },
-      "discharging_cutoff_capacity": { "name": "SOC Mínimo de Descarga" },
-      "charge_to_soc": { "name": "Cargar hasta SOC" },
+      "set_charge_power": { "name": "Set Charge Power" },
+      "set_discharge_power": { "name": "Set Discharge Power" },
+      "max_charge_power": { "name": "Max Charge Power" },
+      "max_discharge_power": { "name": "Max Discharge Power" },
+      "charging_cutoff_capacity": { "name": "Charging Cutoff Capacity" },
+      "discharging_cutoff_capacity": { "name": "Discharging Cutoff Capacity" },
+      "charge_to_soc": { "name": "Charge To SOC" },
       "pd_controller_kp": { "name": "PD Kp" },
       "pd_controller_kd": { "name": "PD Kd" },
-      "pd_controller_deadband": { "name": "Banda Muerta PD" },
-      "pd_controller_max_power_change": { "name": "Cambio Máximo de Potencia PD" },
-      "pd_controller_direction_hysteresis": { "name": "Histéresis de Dirección PD" },
-      "pd_min_charge_power": { "name": "Potencia Mínima de Carga PD" },
-      "pd_min_discharge_power": { "name": "Potencia Mínima de Descarga PD" },
-      "max_contracted_power": { "name": "Potencia Máxima Contratada" },
-      "capacity_protection_soc_threshold": { "name": "Umbral SOC Protección de Capacidad" },
-      "delay_safety_margin_min": { "name": "Margen Retraso de Carga" },
-      "capacity_protection_limit": { "name": "Límite Pico Protección" }
+      "pd_controller_deadband": { "name": "PD Deadband" },
+      "pd_controller_max_power_change": { "name": "PD Max Power Change" },
+      "pd_controller_direction_hysteresis": { "name": "PD Direction Hysteresis" },
+      "pd_min_charge_power": { "name": "PD Min Charge Power" },
+      "pd_min_discharge_power": { "name": "PD Min Discharge Power" },
+      "max_contracted_power": { "name": "Max Contracted Power" },
+      "capacity_protection_soc_threshold": { "name": "Capacity Protection SOC Threshold" },
+      "delay_safety_margin_min": { "name": "Charge Delay Margin" },
+      "capacity_protection_limit": { "name": "Peak Limit Protection" }
     },
     "button": {
-      "reset_device": { "name": "Reiniciar Dispositivo" }
+      "reset_device": { "name": "Reset Device" }
     }
   }
 }
