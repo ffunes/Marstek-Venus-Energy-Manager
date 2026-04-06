@@ -1622,6 +1622,417 @@
 <p>The integration manages up to <strong>6 batteries</strong> as an aggregated system, distributing power intelligently to maximise efficiency.</p>
 <h2 id="efficiency-principle">Efficiency principle<a class="headerlink" href="#efficiency-principle" title="Permanent link">&para;</a></h2>
 <p>Based on the Venus efficiency curve (peak ~91% between 1000–1500 W), batteries are activated only when total power exceeds <strong>60% of combined capacity</strong>. Running fewer batteries at higher power is more efficient than spreading the same load across all of them.</p>
+<p>The following measurements show DC power consumption/output, AC power at the meter (internal clamp) and at the wall outlet (external clamp), and the resulting efficiency at each power level:</p>
+<p><strong>Charging</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">% of max</th>
+<th style="text-align: right;">Setpoint (W)</th>
+<th style="text-align: right;">DC internal (W)</th>
+<th style="text-align: right;">AC internal (W)</th>
+<th style="text-align: right;">AC external (W)</th>
+<th style="text-align: right;">η internal</th>
+<th style="text-align: right;">η external</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">3 %</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">70.7 %</td>
+<td style="text-align: right;">60.3 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">5 %</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">123</td>
+<td style="text-align: right;">136</td>
+<td style="text-align: right;">85.4 %</td>
+<td style="text-align: right;">77.2 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">10 %</td>
+<td style="text-align: right;">250</td>
+<td style="text-align: right;">232</td>
+<td style="text-align: right;">247</td>
+<td style="text-align: right;">262</td>
+<td style="text-align: right;">93.9 %</td>
+<td style="text-align: right;">88.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">15 %</td>
+<td style="text-align: right;">375</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">372</td>
+<td style="text-align: right;">387</td>
+<td style="text-align: right;">96.0 %</td>
+<td style="text-align: right;">92.2 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">20 %</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">481</td>
+<td style="text-align: right;">497</td>
+<td style="text-align: right;">513</td>
+<td style="text-align: right;">96.8 %</td>
+<td style="text-align: right;">93.8 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">25 %</td>
+<td style="text-align: right;">625</td>
+<td style="text-align: right;">604</td>
+<td style="text-align: right;">621</td>
+<td style="text-align: right;">639</td>
+<td style="text-align: right;">97.3 %</td>
+<td style="text-align: right;">94.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">30 %</td>
+<td style="text-align: right;">750</td>
+<td style="text-align: right;">727</td>
+<td style="text-align: right;">743</td>
+<td style="text-align: right;">766</td>
+<td style="text-align: right;">97.8 %</td>
+<td style="text-align: right;">94.9 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">35 %</td>
+<td style="text-align: right;">875</td>
+<td style="text-align: right;">850</td>
+<td style="text-align: right;">871</td>
+<td style="text-align: right;">892</td>
+<td style="text-align: right;">97.6 %</td>
+<td style="text-align: right;">95.3 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">40 %</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">973</td>
+<td style="text-align: right;">995</td>
+<td style="text-align: right;">1019</td>
+<td style="text-align: right;">97.8 %</td>
+<td style="text-align: right;">95.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">45 %</td>
+<td style="text-align: right;">1125</td>
+<td style="text-align: right;">1095</td>
+<td style="text-align: right;">1120</td>
+<td style="text-align: right;">1146</td>
+<td style="text-align: right;">97.8 %</td>
+<td style="text-align: right;">95.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">50 %</td>
+<td style="text-align: right;">1250</td>
+<td style="text-align: right;">1245</td>
+<td style="text-align: right;">1271</td>
+<td style="text-align: right;">1274</td>
+<td style="text-align: right;">98.0 %</td>
+<td style="text-align: right;">97.7 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">55 %</td>
+<td style="text-align: right;">1375</td>
+<td style="text-align: right;">1339</td>
+<td style="text-align: right;">1369</td>
+<td style="text-align: right;">1401</td>
+<td style="text-align: right;">97.8 %</td>
+<td style="text-align: right;">95.6 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">60 %</td>
+<td style="text-align: right;">1500</td>
+<td style="text-align: right;">1460</td>
+<td style="text-align: right;">1494</td>
+<td style="text-align: right;">1530</td>
+<td style="text-align: right;">97.7 %</td>
+<td style="text-align: right;">95.4 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">65 %</td>
+<td style="text-align: right;">1625</td>
+<td style="text-align: right;">1581</td>
+<td style="text-align: right;">1618</td>
+<td style="text-align: right;">1658</td>
+<td style="text-align: right;">97.7 %</td>
+<td style="text-align: right;">95.4 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">70 %</td>
+<td style="text-align: right;">1750</td>
+<td style="text-align: right;">1702</td>
+<td style="text-align: right;">1743</td>
+<td style="text-align: right;">1786</td>
+<td style="text-align: right;">97.6 %</td>
+<td style="text-align: right;">95.3 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">75 %</td>
+<td style="text-align: right;">1875</td>
+<td style="text-align: right;">1823</td>
+<td style="text-align: right;">1868</td>
+<td style="text-align: right;">1916</td>
+<td style="text-align: right;">97.6 %</td>
+<td style="text-align: right;">95.1 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">80 %</td>
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">1942</td>
+<td style="text-align: right;">1992</td>
+<td style="text-align: right;">2044</td>
+<td style="text-align: right;">97.5 %</td>
+<td style="text-align: right;">95.0 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">85 %</td>
+<td style="text-align: right;">2125</td>
+<td style="text-align: right;">2062</td>
+<td style="text-align: right;">2117</td>
+<td style="text-align: right;">2175</td>
+<td style="text-align: right;">97.4 %</td>
+<td style="text-align: right;">94.8 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">90 %</td>
+<td style="text-align: right;">2250</td>
+<td style="text-align: right;">2183</td>
+<td style="text-align: right;">2242</td>
+<td style="text-align: right;">2304</td>
+<td style="text-align: right;">97.4 %</td>
+<td style="text-align: right;">94.7 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">95 %</td>
+<td style="text-align: right;">2375</td>
+<td style="text-align: right;">2304</td>
+<td style="text-align: right;">2366</td>
+<td style="text-align: right;">2436</td>
+<td style="text-align: right;">97.4 %</td>
+<td style="text-align: right;">94.6 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">100 %</td>
+<td style="text-align: right;">2500</td>
+<td style="text-align: right;">2424</td>
+<td style="text-align: right;">2491</td>
+<td style="text-align: right;">2567</td>
+<td style="text-align: right;">97.3 %</td>
+<td style="text-align: right;">94.4 %</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Discharging</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">% of max</th>
+<th style="text-align: right;">Setpoint (W)</th>
+<th style="text-align: right;">DC internal (W)</th>
+<th style="text-align: right;">AC internal (W)</th>
+<th style="text-align: right;">AC external (W)</th>
+<th style="text-align: right;">η internal</th>
+<th style="text-align: right;">η external</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">3 %</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">80</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">78.8 %</td>
+<td style="text-align: right;">75.0 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">5 %</td>
+<td style="text-align: right;">125</td>
+<td style="text-align: right;">160</td>
+<td style="text-align: right;">124</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">77.5 %</td>
+<td style="text-align: right;">73.8 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">10 %</td>
+<td style="text-align: right;">250</td>
+<td style="text-align: right;">284</td>
+<td style="text-align: right;">249</td>
+<td style="text-align: right;">243</td>
+<td style="text-align: right;">87.7 %</td>
+<td style="text-align: right;">85.6 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">15 %</td>
+<td style="text-align: right;">375</td>
+<td style="text-align: right;">416</td>
+<td style="text-align: right;">373</td>
+<td style="text-align: right;">368</td>
+<td style="text-align: right;">89.7 %</td>
+<td style="text-align: right;">88.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">20 %</td>
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">550</td>
+<td style="text-align: right;">498</td>
+<td style="text-align: right;">494</td>
+<td style="text-align: right;">90.5 %</td>
+<td style="text-align: right;">89.8 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">25 %</td>
+<td style="text-align: right;">625</td>
+<td style="text-align: right;">685</td>
+<td style="text-align: right;">623</td>
+<td style="text-align: right;">619</td>
+<td style="text-align: right;">90.9 %</td>
+<td style="text-align: right;">90.4 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">30 %</td>
+<td style="text-align: right;">750</td>
+<td style="text-align: right;">820</td>
+<td style="text-align: right;">747</td>
+<td style="text-align: right;">745</td>
+<td style="text-align: right;">91.1 %</td>
+<td style="text-align: right;">90.9 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">35 %</td>
+<td style="text-align: right;">875</td>
+<td style="text-align: right;">956</td>
+<td style="text-align: right;">872</td>
+<td style="text-align: right;">870</td>
+<td style="text-align: right;">91.2 %</td>
+<td style="text-align: right;">91.0 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">40 %</td>
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">1092</td>
+<td style="text-align: right;">997</td>
+<td style="text-align: right;">996</td>
+<td style="text-align: right;">91.3 %</td>
+<td style="text-align: right;">91.2 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">45 %</td>
+<td style="text-align: right;">1125</td>
+<td style="text-align: right;">1230</td>
+<td style="text-align: right;">1121</td>
+<td style="text-align: right;">1121</td>
+<td style="text-align: right;">91.1 %</td>
+<td style="text-align: right;">91.1 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">50 %</td>
+<td style="text-align: right;">1250</td>
+<td style="text-align: right;">1369</td>
+<td style="text-align: right;">1246</td>
+<td style="text-align: right;">1246</td>
+<td style="text-align: right;">91.0 %</td>
+<td style="text-align: right;">91.0 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">55 %</td>
+<td style="text-align: right;">1375</td>
+<td style="text-align: right;">1507</td>
+<td style="text-align: right;">1370</td>
+<td style="text-align: right;">1372</td>
+<td style="text-align: right;">90.9 %</td>
+<td style="text-align: right;">91.0 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">60 %</td>
+<td style="text-align: right;">1500</td>
+<td style="text-align: right;">1647</td>
+<td style="text-align: right;">1495</td>
+<td style="text-align: right;">1497</td>
+<td style="text-align: right;">90.8 %</td>
+<td style="text-align: right;">90.9 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">65 %</td>
+<td style="text-align: right;">1625</td>
+<td style="text-align: right;">1789</td>
+<td style="text-align: right;">1620</td>
+<td style="text-align: right;">1623</td>
+<td style="text-align: right;">90.6 %</td>
+<td style="text-align: right;">90.7 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">70 %</td>
+<td style="text-align: right;">1750</td>
+<td style="text-align: right;">1931</td>
+<td style="text-align: right;">1745</td>
+<td style="text-align: right;">1748</td>
+<td style="text-align: right;">90.4 %</td>
+<td style="text-align: right;">90.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">75 %</td>
+<td style="text-align: right;">1875</td>
+<td style="text-align: right;">2073</td>
+<td style="text-align: right;">1869</td>
+<td style="text-align: right;">1874</td>
+<td style="text-align: right;">90.2 %</td>
+<td style="text-align: right;">90.4 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">80 %</td>
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">2218</td>
+<td style="text-align: right;">1994</td>
+<td style="text-align: right;">1999</td>
+<td style="text-align: right;">89.9 %</td>
+<td style="text-align: right;">90.1 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">85 %</td>
+<td style="text-align: right;">2125</td>
+<td style="text-align: right;">2362</td>
+<td style="text-align: right;">2118</td>
+<td style="text-align: right;">2124</td>
+<td style="text-align: right;">89.7 %</td>
+<td style="text-align: right;">89.9 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">90 %</td>
+<td style="text-align: right;">2250</td>
+<td style="text-align: right;">2508</td>
+<td style="text-align: right;">2243</td>
+<td style="text-align: right;">2250</td>
+<td style="text-align: right;">89.4 %</td>
+<td style="text-align: right;">89.7 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">95 %</td>
+<td style="text-align: right;">2375</td>
+<td style="text-align: right;">2654</td>
+<td style="text-align: right;">2368</td>
+<td style="text-align: right;">2375</td>
+<td style="text-align: right;">89.2 %</td>
+<td style="text-align: right;">89.5 %</td>
+</tr>
+<tr>
+<td style="text-align: right;">100 %</td>
+<td style="text-align: right;">2500</td>
+<td style="text-align: right;">2801</td>
+<td style="text-align: right;">2492</td>
+<td style="text-align: right;">2501</td>
+<td style="text-align: right;">89.0 %</td>
+<td style="text-align: right;">89.3 %</td>
+</tr>
+</tbody>
+</table>
 <h2 id="selection-priorities">Selection priorities<a class="headerlink" href="#selection-priorities" title="Permanent link">&para;</a></h2>
 <h3 id="discharge">Discharge<a class="headerlink" href="#discharge" title="Permanent link">&para;</a></h3>
 <p><strong>Highest SOC first</strong>: the most charged battery discharges first to balance the state of charge across the system.</p>
