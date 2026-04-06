@@ -777,6 +777,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ev-charger-without-power-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EV charger without power telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EV charger without power telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#behaviour-when-the-ev-starts-charging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour when the EV starts charging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-the-5-minute-pause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the 5-minute pause?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-with-the-standard-solar-surplus-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with the standard Solar Surplus option
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1530,6 +1580,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ev-charger-without-power-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EV charger without power telemetry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EV charger without power telemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#behaviour-when-the-ev-starts-charging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour when the EV starts charging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-the-5-minute-pause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why the 5-minute pause?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparison-with-the-standard-solar-surplus-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparison with the standard Solar Surplus option
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1570,8 +1670,8 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Power sensor</strong></td>
-<td>HA entity measuring the device's power (e.g. <code>sensor.wallbox_power</code>)</td>
+<td><strong>Device sensor</strong></td>
+<td>HA entity measuring the device's power (e.g. <code>sensor.wallbox_power</code>), or a state sensor for EV chargers without power telemetry.</td>
 </tr>
 <tr>
 <td><strong>Included in consumption</strong></td>
@@ -1580,6 +1680,10 @@
 <tr>
 <td><strong>Allow solar surplus</strong></td>
 <td>If enabled, the battery will not charge to compensate this device when there is a solar surplus. Can also be toggled at runtime via a switch entity (see below).</td>
+</tr>
+<tr>
+<td><strong>EV charger without power telemetry</strong></td>
+<td>Check if the sensor is a state sensor that reads <code>Charging</code> (or a localised equivalent) instead of a watt value. See <a href="#ev-charger-without-power-telemetry">EV charger without power telemetry</a> below.</td>
 </tr>
 </tbody>
 </table>
@@ -1602,6 +1706,65 @@
 <li>React to battery SOC: turn ON above 80 %, turn OFF below 50 %.</li>
 </ul>
 <p>The switch state is persisted in the config entry and survives restarts.</p>
+<hr />
+<h2 id="ev-charger-without-power-telemetry">EV charger without power telemetry<a class="headerlink" href="#ev-charger-without-power-telemetry" title="Permanent link">&para;</a></h2>
+<p>Some EV charger integrations do not expose a real-time power sensor — they only report a <strong>charging state</strong> (e.g. <code>Charging</code>, <code>Idle</code>, <code>Disconnected</code>). This option is designed for those chargers.</p>
+<p>When enabled, the <strong>Device sensor</strong> field must point to the state entity, not a power sensor. The controller recognises any state that contains <code>charg</code> or <code>cargand</code> (case-insensitive), covering:</p>
+<ul>
+<li><code>Charging</code> (most English-language integrations)</li>
+<li><code>Cargando</code>, <code>Cargando VE</code>, <code>Cargando Vehículo</code> (Spanish)</li>
+</ul>
+<h3 id="behaviour-when-the-ev-starts-charging">Behaviour when the EV starts charging<a class="headerlink" href="#behaviour-when-the-ev-starts-charging" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>t = 0  EV state → &quot;Charging&quot; detected
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>       Battery immediately set to 0 W (charge AND discharge blocked)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>       PD state frozen
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>t = 5 min  Pause expires
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>           Battery may charge from solar surplus
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>           Battery discharge remains permanently blocked while EV is charging
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>t = N  EV state → any other value (Idle / Disconnected / …)
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>       Normal operation resumes
+</code></pre></div>
+<h3 id="why-the-5-minute-pause">Why the 5-minute pause?<a class="headerlink" href="#why-the-5-minute-pause" title="Permanent link">&para;</a></h3>
+<p>When an EV charger activates it negotiates the available current with the car over a brief handshake. Any battery discharge during this window can temporarily reduce the apparent grid capacity, causing the charger to settle at a lower current. The pause gives the handshake time to complete before the battery does anything.</p>
+<h3 id="comparison-with-the-standard-solar-surplus-option">Comparison with the standard Solar Surplus option<a class="headerlink" href="#comparison-with-the-standard-solar-surplus-option" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Standard exclusion + Solar Surplus</th>
+<th>EV without telemetry</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Needs a power sensor</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Battery discharges for EV</td>
+<td>Never</td>
+<td>Never</td>
+</tr>
+<tr>
+<td>Battery charges from solar when EV charges</td>
+<td>Yes</td>
+<td>Yes (after 5-min pause)</td>
+</tr>
+<tr>
+<td>Initial 5-min pause</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Reacts to EV state changes</td>
+<td>No</td>
+<td>Yes (automatic)</td>
+</tr>
+</tbody>
+</table>
 
 
 

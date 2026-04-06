@@ -1242,6 +1242,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ev-charger-without-power-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EV charger without power telemetry
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1539,6 +1550,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#ev-charger-without-power-telemetry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        EV charger without power telemetry
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1612,6 +1634,31 @@
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.solar_surplus_wallbox_power</span>
 </code></pre></div>
 <p><img alt="Excluded device power sensor in HA" src="../../../assets/screenshots/features/load-exclusion-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
+<h2 id="ev-charger-without-power-telemetry">EV charger without power telemetry<a class="headerlink" href="#ev-charger-without-power-telemetry" title="Permanent link">&para;</a></h2>
+<p>For EV chargers that only expose a state sensor (no real-time power reading), a dedicated <strong>EV charger without power telemetry</strong> option is available. Instead of reading watts, the controller monitors the sensor state and reacts to any charging string (<code>Charging</code>, <code>Cargando</code>, etc.).</p>
+<table>
+<thead>
+<tr>
+<th>Phase</th>
+<th>Battery behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>EV state → Charging (first 5 min)</td>
+<td>0 W — both charge and discharge blocked, PD state frozen</td>
+</tr>
+<tr>
+<td>EV charging (after 5 min)</td>
+<td>Charging from solar surplus allowed; discharge always blocked</td>
+</tr>
+<tr>
+<td>EV state → anything else</td>
+<td>Normal operation</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../configuration/excluded-devices/#ev-charger-without-power-telemetry">EV charger without power telemetry</a> in the configuration reference for setup details.</p>
 
 
 

@@ -1242,6 +1242,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cargador VE sin telemetría de potencia
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1539,6 +1550,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cargador VE sin telemetría de potencia
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1612,6 +1634,31 @@
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.solar_surplus_wallbox_power</span>
 </code></pre></div>
 <p><img alt="Sensor de potencia de dispositivo excluido en HA" src="../../assets/screenshots/features/load-exclusion-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
+<h2 id="cargador-ve-sin-telemetria-de-potencia">Cargador VE sin telemetría de potencia<a class="headerlink" href="#cargador-ve-sin-telemetria-de-potencia" title="Permanent link">&para;</a></h2>
+<p>Para cargadores VE que solo exponen un sensor de estado (sin lectura de potencia en tiempo real), existe la opción <strong>Cargador VE sin telemetría de potencia</strong>. En lugar de leer vatios, el controlador monitoriza el estado del sensor y reacciona ante cualquier cadena de carga (<code>Charging</code>, <code>Cargando</code>, etc.).</p>
+<table>
+<thead>
+<tr>
+<th>Fase</th>
+<th>Comportamiento de la batería</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Estado VE → Cargando (primeros 5 min)</td>
+<td>0 W — carga y descarga bloqueadas, estado PD congelado</td>
+</tr>
+<tr>
+<td>VE cargando (después de 5 min)</td>
+<td>Se permite cargar con excedente solar; descarga siempre bloqueada</td>
+</tr>
+<tr>
+<td>Estado VE → cualquier otro valor</td>
+<td>Operación normal</td>
+</tr>
+</tbody>
+</table>
+<p>Ver <a href="../../configuration/excluded-devices/#cargador-ve-sin-telemetría-de-potencia">Cargador VE sin telemetría de potencia</a> en la referencia de configuración para los detalles de configuración.</p>
 
 
 

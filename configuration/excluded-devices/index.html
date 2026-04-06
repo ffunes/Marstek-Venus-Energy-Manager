@@ -777,6 +777,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cargador VE sin telemetría de potencia
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cargador VE sin telemetría de potencia">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comportamiento-cuando-el-ve-empieza-a-cargar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comportamiento cuando el VE empieza a cargar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#por-que-la-pausa-de-5-minutos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ¿Por qué la pausa de 5 minutos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparativa-con-la-opcion-estandar-de-excedente-solar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparativa con la opción estándar de excedente solar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1530,6 +1580,56 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cargador VE sin telemetría de potencia
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cargador VE sin telemetría de potencia">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#comportamiento-cuando-el-ve-empieza-a-cargar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comportamiento cuando el VE empieza a cargar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#por-que-la-pausa-de-5-minutos" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ¿Por qué la pausa de 5 minutos?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#comparativa-con-la-opcion-estandar-de-excedente-solar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparativa con la opción estándar de excedente solar
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1570,8 +1670,8 @@
 </thead>
 <tbody>
 <tr>
-<td><strong>Sensor de potencia</strong></td>
-<td>Entidad HA que mide la potencia del dispositivo (p. ej. <code>sensor.wallbox_power</code>)</td>
+<td><strong>Sensor del dispositivo</strong></td>
+<td>Entidad HA que mide la potencia del dispositivo (p. ej. <code>sensor.wallbox_power</code>), o un sensor de estado para cargadores VE sin telemetría de potencia.</td>
 </tr>
 <tr>
 <td><strong>Incluido en el consumo</strong></td>
@@ -1580,6 +1680,10 @@
 <tr>
 <td><strong>Permitir excedente solar</strong></td>
 <td>Si está activo, la batería no cargará para compensar este dispositivo cuando hay excedente solar. También puede activarse en tiempo real desde una entidad switch (ver más abajo).</td>
+</tr>
+<tr>
+<td><strong>Cargador VE sin telemetría de potencia</strong></td>
+<td>Marca si el sensor es un sensor de estado que indica <code>Charging</code>/<code>Cargando</code> en lugar de un valor en vatios. Ver <a href="#cargador-ve-sin-telemetría-de-potencia">Cargador VE sin telemetría</a> más abajo.</td>
 </tr>
 </tbody>
 </table>
@@ -1602,6 +1706,65 @@
 <li>Reaccionar al SOC de la batería: activar por encima del 80 %, desactivar por debajo del 50 %.</li>
 </ul>
 <p>El estado del switch se persiste en la entrada de configuración y sobrevive reinicios.</p>
+<hr />
+<h2 id="cargador-ve-sin-telemetria-de-potencia">Cargador VE sin telemetría de potencia<a class="headerlink" href="#cargador-ve-sin-telemetria-de-potencia" title="Permanent link">&para;</a></h2>
+<p>Algunas integraciones de cargadores de vehículo eléctrico no exponen un sensor de potencia en tiempo real — solo informan del <strong>estado de carga</strong> (p. ej. <code>Charging</code>, <code>Idle</code>, <code>Disconnected</code>). Esta opción está diseñada para esos cargadores.</p>
+<p>Cuando está activa, el campo <strong>Sensor del dispositivo</strong> debe apuntar a la entidad de estado, no a un sensor de potencia. El controlador reconoce cualquier estado que contenga <code>charg</code> o <code>cargand</code> (sin distinguir mayúsculas), lo que cubre:</p>
+<ul>
+<li><code>Charging</code> (la mayoría de integraciones en inglés)</li>
+<li><code>Cargando</code>, <code>Cargando VE</code>, <code>Cargando Vehículo</code> (español)</li>
+</ul>
+<h3 id="comportamiento-cuando-el-ve-empieza-a-cargar">Comportamiento cuando el VE empieza a cargar<a class="headerlink" href="#comportamiento-cuando-el-ve-empieza-a-cargar" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>t = 0  Estado VE → &quot;Charging&quot; detectado
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>       Batería forzada a 0 W (carga Y descarga bloqueadas)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>       Estado del controlador PD congelado
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>t = 5 min  Pausa finalizada
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>           La batería puede cargar con excedente solar
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>           La descarga permanece bloqueada mientras el VE sigue cargando
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>t = N  Estado VE → cualquier otro valor (Idle / Disconnected / …)
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>       Operación normal reanudada
+</code></pre></div>
+<h3 id="por-que-la-pausa-de-5-minutos">¿Por qué la pausa de 5 minutos?<a class="headerlink" href="#por-que-la-pausa-de-5-minutos" title="Permanent link">&para;</a></h3>
+<p>Cuando un cargador VE se activa, negocia la corriente disponible con el coche durante una breve fase de handshake. Cualquier descarga de la batería durante esa ventana puede reducir temporalmente la capacidad de red aparente, haciendo que el cargador se estabilice en una corriente más baja. La pausa da tiempo al handshake para completarse antes de que la batería actúe.</p>
+<h3 id="comparativa-con-la-opcion-estandar-de-excedente-solar">Comparativa con la opción estándar de excedente solar<a class="headerlink" href="#comparativa-con-la-opcion-estandar-de-excedente-solar" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Exclusión estándar + Excedente solar</th>
+<th>VE sin telemetría</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Requiere sensor de potencia</td>
+<td>Sí</td>
+<td>No</td>
+</tr>
+<tr>
+<td>La batería descarga para el VE</td>
+<td>Nunca</td>
+<td>Nunca</td>
+</tr>
+<tr>
+<td>La batería carga con solar mientras el VE carga</td>
+<td>Sí</td>
+<td>Sí (tras pausa de 5 min)</td>
+</tr>
+<tr>
+<td>Pausa inicial de 5 minutos</td>
+<td>No</td>
+<td>Sí</td>
+</tr>
+<tr>
+<td>Reacciona automáticamente al estado del VE</td>
+<td>No</td>
+<td>Sí</td>
+</tr>
+</tbody>
+</table>
 
 
 
