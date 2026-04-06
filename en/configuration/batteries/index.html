@@ -721,6 +721,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#backup-offgrid-threshold-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup offgrid threshold at runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1530,6 +1541,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#backup-offgrid-threshold-at-runtime" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup offgrid threshold at runtime
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1610,6 +1632,11 @@
 <td>Margin to avoid rapid cycling near the charge limit</td>
 <td>—</td>
 </tr>
+<tr>
+<td><strong>Backup offgrid threshold</strong></td>
+<td>Minimum offgrid load (W) to be considered an active backup event</td>
+<td><code>50 W</code></td>
+</tr>
 </tbody>
 </table>
 <h3 id="battery-versions">Battery versions<a class="headerlink" href="#battery-versions" title="Permanent link">&para;</a></h3>
@@ -1649,6 +1676,35 @@
 <h2 id="soc-and-power-limits-at-runtime">SOC and power limits at runtime<a class="headerlink" href="#soc-and-power-limits-at-runtime" title="Permanent link">&para;</a></h2>
 <p>Max/min SOC and max charge/discharge power values can be adjusted at any time using the integration's sliders without reconfiguring. Changes are persisted and restored on every Home Assistant restart.</p>
 <p><img alt="SOC and power sliders" src="../../../assets/screenshots/configuration/battery-runtime-sliders.png" style="display: block; margin: 0 auto;" width="650" /></p>
+<hr />
+<h2 id="backup-offgrid-threshold-at-runtime">Backup offgrid threshold at runtime<a class="headerlink" href="#backup-offgrid-threshold-at-runtime" title="Permanent link">&para;</a></h2>
+<p>The <strong>Backup Offgrid Threshold</strong> number entity (visible on each battery's device card, under configuration entities) lets you adjust the threshold at any time without entering the options flow. Raise it if your battery has small permanent loads on its offgrid port — such as a PoE switch, router, or IP cameras — that would otherwise keep it permanently excluded from PD control.</p>
+<table>
+<thead>
+<tr>
+<th>Load scenario</th>
+<th>Recommended threshold</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>No permanent offgrid loads</td>
+<td><code>0 W</code> (any load triggers exclusion)</td>
+</tr>
+<tr>
+<td>Small standby loads (router + switch, ~20–40 W)</td>
+<td><code>50 W</code> (default)</td>
+</tr>
+<tr>
+<td>Heavier permanent loads (NAS, AP, cameras, ~80–120 W)</td>
+<td><code>150 W</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">How it works</p>
+<p>When the <strong>Backup Function</strong> switch is ON and the measured offgrid load is <strong>above</strong> the threshold, the battery is excluded from PD control and manages itself autonomously. A 5-minute cooldown applies after the load drops back below the threshold, to avoid sending commands immediately after a backup event ends.</p>
+</div>
 
 
 
