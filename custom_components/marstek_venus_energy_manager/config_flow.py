@@ -36,6 +36,8 @@ from .const import (
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
+    CONF_DELAY_SOC_SETPOINT,
+    DEFAULT_DELAY_SOC_SETPOINT,
     CONF_BATTERY_VERSION,
     DEFAULT_VERSION,
     REGISTER_MAP,
@@ -900,6 +902,9 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(
                 user_input.get("delay_safety_margin_h", DEFAULT_DELAY_SAFETY_MARGIN_MIN / 60) * 60
             )
+            self.config_data[CONF_DELAY_SOC_SETPOINT] = int(
+                user_input.get("delay_soc_setpoint", DEFAULT_DELAY_SOC_SETPOINT)
+            )
 
             # Check if solar forecast sensor already configured
             existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
@@ -925,6 +930,14 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                         min=1, max=6, step=0.5,
                         mode=NumberSelectorMode.SLIDER,
                         unit_of_measurement="h",
+                    )
+                ),
+            vol.Optional("delay_soc_setpoint", default=DEFAULT_DELAY_SOC_SETPOINT):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=90, step=5,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="%",
                     )
                 ),
         }
@@ -1993,12 +2006,16 @@ class OptionsFlowHandler(OptionsFlow):
         """Configure charge delay details in options flow."""
         existing_config = self.config_entry.data
         current_margin = existing_config.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN)
+        current_soc_setpoint = existing_config.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
         errors = {}
 
         if user_input is not None:
             self.config_data[CONF_ENABLE_CHARGE_DELAY] = True
             self.config_data[CONF_DELAY_SAFETY_MARGIN_MIN] = int(
                 user_input.get("delay_safety_margin_h", current_margin / 60) * 60
+            )
+            self.config_data[CONF_DELAY_SOC_SETPOINT] = int(
+                user_input.get("delay_soc_setpoint", current_soc_setpoint)
             )
 
             existing_forecast = self.config_data.get(CONF_SOLAR_FORECAST_SENSOR)
@@ -2024,6 +2041,14 @@ class OptionsFlowHandler(OptionsFlow):
                         min=1, max=6, step=0.5,
                         mode=NumberSelectorMode.SLIDER,
                         unit_of_measurement="h",
+                    )
+                ),
+            vol.Optional("delay_soc_setpoint", default=current_soc_setpoint):
+                NumberSelector(
+                    NumberSelectorConfig(
+                        min=0, max=90, step=5,
+                        mode=NumberSelectorMode.SLIDER,
+                        unit_of_measurement="%",
                     )
                 ),
         }

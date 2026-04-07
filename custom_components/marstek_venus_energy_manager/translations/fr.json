@@ -226,10 +226,12 @@
         "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
         "data": {
           "delay_safety_margin_h": "Marge de sécurité (heures)",
+          "delay_soc_setpoint": "SOC minimal avant le retard (%)",
           "solar_forecast_sensor": "Capteur de prévision solaire"
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
+          "delay_soc_setpoint": "La batterie se charge librement jusqu'à ce SOC. Au-delà, le retard solaire s'active. Mettre 0 pour appliquer le retard dès le début.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },
@@ -492,10 +494,12 @@
         "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
         "data": {
           "delay_safety_margin_h": "Marge de sécurité (heures)",
+          "delay_soc_setpoint": "SOC minimal avant le retard (%)",
           "solar_forecast_sensor": "Capteur de prévision solaire"
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
+          "delay_soc_setpoint": "La batterie se charge librement jusqu'à ce SOC. Au-delà, le retard solaire s'active. Mettre 0 pour appliquer le retard dès le début.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },
@@ -711,6 +715,7 @@
       "max_contracted_power": { "name": "Puissance Contractuelle Max." },
       "capacity_protection_soc_threshold": { "name": "Seuil SOC Protection Capacité" },
       "delay_safety_margin_min": { "name": "Marge Retard de Charge" },
+      "delay_soc_setpoint": { "name": "SOC Seuil Retard de Charge" },
       "capacity_protection_limit": { "name": "Limite de Crête Protection" },
       "backup_offgrid_threshold": { "name": "Seuil Offgrid Backup" }
     },

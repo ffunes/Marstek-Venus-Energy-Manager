@@ -226,10 +226,12 @@
         "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
         "data": {
           "delay_safety_margin_h": "Veiligheidsmarge (uren)",
+          "delay_soc_setpoint": "Minimale SOC vóór vertraging (%)",
           "solar_forecast_sensor": "Zonnevoorspellingssensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
+          "delay_soc_setpoint": "De batterij laadt vrij op tot dit SOC. Daarboven wordt de zonnelaadvertraging geactiveerd. Stel in op 0 om de vertraging vanaf het begin toe te passen.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },
@@ -492,10 +494,12 @@
         "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
         "data": {
           "delay_safety_margin_h": "Veiligheidsmarge (uren)",
+          "delay_soc_setpoint": "Minimale SOC vóór vertraging (%)",
           "solar_forecast_sensor": "Zonnevoorspellingssensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
+          "delay_soc_setpoint": "De batterij laadt vrij op tot dit SOC. Daarboven wordt de zonnelaadvertraging geactiveerd. Stel in op 0 om de vertraging vanaf het begin toe te passen.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },
@@ -711,6 +715,7 @@
       "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
       "capacity_protection_soc_threshold": { "name": "SOC Drempel Capaciteitsbeveiliging" },
       "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
+      "delay_soc_setpoint": { "name": "SOC-drempel Laadvertraging" },
       "capacity_protection_limit": { "name": "Piekgrens Beveiliging" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" }
     },

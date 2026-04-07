@@ -226,10 +226,12 @@
         "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
           "delay_safety_margin_h": "Safety margin (hours)",
+          "delay_soc_setpoint": "Minimum SOC before delay (%)",
           "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
+          "delay_soc_setpoint": "The battery will charge freely up to this SOC. Above it, the solar delay activates. Set to 0 to apply the delay from the start.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
@@ -492,10 +494,12 @@
         "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
           "delay_safety_margin_h": "Safety margin (hours)",
+          "delay_soc_setpoint": "Minimum SOC before delay (%)",
           "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
+          "delay_soc_setpoint": "The battery will charge freely up to this SOC. Above it, the solar delay activates. Set to 0 to apply the delay from the start.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
@@ -710,6 +714,7 @@
       "max_contracted_power": { "name": "Max Contracted Power" },
       "capacity_protection_soc_threshold": { "name": "Capacity Protection SOC Threshold" },
       "delay_safety_margin_min": { "name": "Charge Delay Margin" },
+      "delay_soc_setpoint": { "name": "Charge Delay SOC Setpoint" },
       "capacity_protection_limit": { "name": "Peak Limit Protection" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Threshold" }
     },

@@ -226,10 +226,12 @@
         "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
         "data": {
           "delay_safety_margin_h": "Margen de seguridad (horas)",
+          "delay_soc_setpoint": "SOC mínimo antes del retraso (%)",
           "solar_forecast_sensor": "Sensor de predicción solar"
         },
         "data_description": {
           "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
+          "delay_soc_setpoint": "La batería cargará libremente hasta este SOC. A partir de aquí se activa el retraso solar. Usa 0 para aplicar el retraso desde el principio.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
@@ -492,10 +494,12 @@
         "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
         "data": {
           "delay_safety_margin_h": "Margen de seguridad (horas)",
+          "delay_soc_setpoint": "SOC mínimo antes del retraso (%)",
           "solar_forecast_sensor": "Sensor de predicción solar"
         },
         "data_description": {
           "delay_safety_margin_h": "Horas antes de la puesta de sol en las que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
+          "delay_soc_setpoint": "La batería cargará libremente hasta este SOC. A partir de aquí se activa el retraso solar. Usa 0 para aplicar el retraso desde el principio.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
@@ -711,6 +715,7 @@
       "max_contracted_power": { "name": "Potencia Máxima Contratada" },
       "capacity_protection_soc_threshold": { "name": "Umbral SOC Protección de Capacidad" },
       "delay_safety_margin_min": { "name": "Margen Retraso de Carga" },
+      "delay_soc_setpoint": { "name": "SOC Setpoint Retraso de Carga" },
       "capacity_protection_limit": { "name": "Límite Pico Protección" },
       "backup_offgrid_threshold": { "name": "Umbral Offgrid Backup" }
     },

@@ -226,10 +226,12 @@
         "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
         "data": {
           "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
+          "delay_soc_setpoint": "Mindest-SOC vor Verzögerung (%)",
           "solar_forecast_sensor": "Solarprognose-Sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
+          "delay_soc_setpoint": "Die Batterie lädt frei bis zu diesem SOC. Darüber hinaus wird die Solarladungsverzögerung aktiviert. 0 = Verzögerung ab Beginn.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
@@ -492,10 +494,12 @@
         "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
         "data": {
           "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
+          "delay_soc_setpoint": "Mindest-SOC vor Verzögerung (%)",
           "solar_forecast_sensor": "Solarprognose-Sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
+          "delay_soc_setpoint": "Die Batterie lädt frei bis zu diesem SOC. Darüber hinaus wird die Solarladungsverzögerung aktiviert. 0 = Verzögerung ab Beginn.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
@@ -711,6 +715,7 @@
       "max_contracted_power": { "name": "Max. Vertragsleistung" },
       "capacity_protection_soc_threshold": { "name": "Kapazitätsschutz SOC-Schwelle" },
       "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
+      "delay_soc_setpoint": { "name": "SOC-Schwellwert Ladungsverzögerung" },
       "capacity_protection_limit": { "name": "Spitzenlimit Schutz" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" }
     },

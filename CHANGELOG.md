@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.0] - 2026-04-07
+
+### Added
+- **Solar charge delay SOC setpoint**: New optional parameter (0–90 %, default 0 = disabled) that splits the morning charge into two phases. Below the setpoint the battery charges freely without any delay applied; once all batteries reach the setpoint the solar delay logic activates as usual. This guarantees a minimum charge level on deeply discharged batteries before the solar energy decision is made, while still maximising self-consumption for the remaining charge. Configurable during setup and from the options flow; exposed as a number entity (*Charge Delay SOC Setpoint*) on the system device card for runtime adjustment. Setting the value to 0 preserves the existing behaviour (delay active from SOC 0 %).
+
 ## [1.5.4] - 2026-04-06
 
 ### Added
