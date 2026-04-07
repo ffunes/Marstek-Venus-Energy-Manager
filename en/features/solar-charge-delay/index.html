@@ -1541,7 +1541,7 @@
 
 
 <h1 id="solar-charge-delay">Solar charge delay<a class="headerlink" href="#solar-charge-delay" title="Permanent link">&para;</a></h1>
-<p>Delays morning grid charging while the expected solar production is sufficient to cover the required energy. Avoids buying grid energy that would later be displaced by solar.</p>
+<p>Delays morning battery charging (both from solar and from the grid) while the expected solar production is sufficient to cover the required energy. Avoids charging the battery early — whether from solar or the grid — when the sun will be able to do it later.</p>
 <h2 id="when-it-applies">When it applies<a class="headerlink" href="#when-it-applies" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Morning charge after the battery has discharged overnight.</li>
@@ -1552,7 +1552,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>If remaining_solar_production &gt;= energy_to_charge:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Wait (the sun will charge it)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Else:
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Start grid charging
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Start charging (solar or grid)
 </code></pre></div>
 <h2 id="stored-overnight-forecast">Stored overnight forecast<a class="headerlink" href="#stored-overnight-forecast" title="Permanent link">&para;</a></h2>
 <p>Every night, the integration saves tomorrow's solar forecast. This stored forecast is used throughout the following day for the delay model, ensuring a consistent estimate even if the forecast sensor changes during the day.</p>

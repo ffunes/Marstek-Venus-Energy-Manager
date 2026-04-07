@@ -1543,7 +1543,7 @@
 <li><strong>Discharge time slots</strong>: define time windows and per-slot target grid power levels.</li>
 <li><strong>Peak shaving</strong>: reserves battery capacity to cover demand spikes above a configurable power threshold.</li>
 <li><strong>Weekly full charge</strong>: charges to 100% once a week for cell balancing.</li>
-<li><strong>Solar charge delay</strong>: postpones morning grid charging while expected solar production is enough to cover the remaining energy needed.</li>
+<li><strong>Solar charge delay</strong>: postpones morning battery charging (both solar and grid) while expected solar production is enough to cover the remaining energy needed.</li>
 <li><strong>Load exclusion</strong>: exclude high-power devices (e.g. EV chargers) so the controller does not try to compensate their consumption.</li>
 <li><strong>Proactive alarm notifications (v2 batteries only)</strong>: monitors battery fault and alarm registers every 5 seconds and sends a Home Assistant notification the moment a new condition is detected, with the exact fault or alarm name. A system-level <code>System Alarm Status</code> sensor (<code>OK</code> / <code>Warning</code> / <code>Fault</code>) provides an at-a-glance view across all batteries.</li>
 </ul>
