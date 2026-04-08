@@ -7,8 +7,11 @@ Carga desde la red durante una **ventana horaria fija** (típicamente tarifa noc
 | Campo | Descripción |
 |---|---|
 | **Ventana horaria** | Inicio y fin de la franja de carga (p. ej. `02:00` – `05:00`) |
-| **Sensor de previsión solar** | Sensor de producción del día siguiente en kWh (opcional) |
+| **Sensor de previsión solar** | Sensor de producción solar del día actual en kWh (opcional) |
 | **Potencia ICP contratada** | Límite de la conexión de red (W). Asegura que carga + consumo doméstico no supere el ICP |
+
+!!! danger "Cambio importante en v1.6.0"
+    El campo de sensor de previsión solar ahora debe apuntar al sensor de **hoy** (p. ej. `sensor.solcast_pv_forecast_forecast_today`), no al de mañana.
 
 !!! note "Sin sensor solar"
     Si no tienes paneles solares, deja vacío el sensor de previsión. El sistema cargará siempre que la energía de la batería sea insuficiente para cubrir el consumo esperado.
@@ -17,10 +20,11 @@ Carga desde la red durante una **ventana horaria fija** (típicamente tarifa noc
 
 ## Flujo de evaluación
 
-1. **1 hora antes** del inicio del slot: evaluación preliminar con notificación.
-2. **Al inicio del slot**: confirmación final y arranque de la carga.
-3. La carga continúa hasta que la batería alcanza el nivel calculado o finaliza la ventana.
+1. **Al entrar en el slot**: las baterías se mantienen en reposo durante 5 minutos para que el sensor de previsión solar tenga tiempo de actualizarse (especialmente relevante si el slot comienza a las 00:00).
+2. **5 minutos después**: el sistema evalúa el balance energético (`energía usable + previsión solar` vs. `consumo diario estimado`) y decide si cargar o no.
+3. Se envía una notificación con la decisión tomada.
+4. La carga continúa hasta que la batería alcanza el nivel calculado o finaliza la ventana.
 
-## Reevaluación a mitad del día
+## Reevaluación por caída de SOC
 
-Cuando hay varios slots baratos seleccionados, el sistema reevalúa **1 hora antes de cada slot** si la carga sigue siendo necesaria. Si la batería ya tiene suficiente energía (solar + SOC actual cubre el consumo), el slot se omite silenciosamente.
+Si el SOC cae un 30 % o más respecto al último punto de evaluación durante el slot (p. ej. por un consumo elevado), el sistema reevalúa el balance energético automáticamente. No se envía notificación adicional en estas reevaluaciones intermedias.

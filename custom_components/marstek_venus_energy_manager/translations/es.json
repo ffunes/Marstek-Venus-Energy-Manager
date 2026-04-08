@@ -124,7 +124,7 @@
       },
       "predictive_charging": {
         "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día de hoy es insuficiente.",
         "data": {
           "configure_predictive_charging": "Configurar carga predictiva"
         }
@@ -394,7 +394,7 @@
       },
       "predictive_charging": {
         "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día de hoy es insuficiente.",
         "data": {
           "configure_predictive_charging": "Configurar carga predictiva"
         }
@@ -634,7 +634,8 @@
           "disabled": "Desactivado",
           "waiting_for_solar": "Esperando solar",
           "delayed": "Retrasado",
-          "charging_allowed": "Carga permitida"
+          "charging_allowed": "Carga permitida",
+          "charging_to_setpoint": "Cargando hasta setpoint"
         }
       },
       "battery_soc": { "name": "SOC de la Batería" },

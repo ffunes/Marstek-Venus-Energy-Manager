@@ -1,5 +1,8 @@
 # Solar charge delay
 
+!!! danger "Breaking change in v1.6.0"
+    The integration now uses **today's** solar forecast instead of tomorrow's. If you have this feature configured, you must update the solar forecast sensor in settings to point to the **today** sensor (e.g. `sensor.solcast_pv_forecast_forecast_today`) instead of the tomorrow sensor.
+
 Delays morning battery charging (both from solar and from the grid) while the expected solar production is sufficient to cover the required energy. Avoids charging the battery early — whether from solar or the grid — when the sun will be able to do it later.
 
 ## When it applies
@@ -9,7 +12,7 @@ Delays morning battery charging (both from solar and from the grid) while the ex
 
 ## Solar model
 
-The integration uses a **sinusoidal model** based on the stored overnight forecast to estimate hour-by-hour solar production throughout the day. It compares the expected cumulative production from the current hour until sunset with the remaining energy needed.
+The integration uses a **sinusoidal model** based on the current day's solar forecast to estimate hour-by-hour solar production throughout the day. It compares the expected cumulative production from the current hour until sunset with the remaining energy needed.
 
 ```
 If remaining_solar_production >= energy_to_charge:
@@ -18,9 +21,16 @@ Else:
     Start charging (solar or grid)
 ```
 
-## Stored overnight forecast
+## Live forecast
 
-Every night, the integration saves tomorrow's solar forecast. This stored forecast is used throughout the following day for the delay model, ensuring a consistent estimate even if the forecast sensor changes during the day.
+The integration reads the solar forecast sensor live, with no nightly capture or storage. Most solar forecast integrations (Solcast, Forecast.Solar, etc.) update their today sensor multiple times throughout the day, becoming progressively more accurate as actual weather conditions develop.
+
+Every time the sensor value changes by more than 0.05 kWh, the integration re-evaluates the energy balance:
+
+- **Forecast degrades** until `(usable_energy + forecast) < avg_daily_consumption` → the delay unlocks and charging starts immediately.
+- **Forecast improves** while the delay is still active → the system keeps waiting for the sun to charge the battery.
+
+Once the delay is unlocked it stays unlocked for the rest of the day.
 
 ## SOC setpoint
 

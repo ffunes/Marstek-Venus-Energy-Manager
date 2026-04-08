@@ -40,8 +40,6 @@ from .const import (
     WEEKDAY_MAP,
     CHARGE_EFFICIENCY,
     DELAY_SAFETY_FACTOR,
-    LOW_FORECAST_THRESHOLD_FACTOR,
-
     T_START_FALLBACK_HOUR,
     CONF_PD_KP,
     CONF_PD_KD,
@@ -194,6 +192,7 @@ class ChargeDischargeController:
         self.predictive_charging_overridden = config_entry.data.get(CONF_PREDICTIVE_CHARGING_OVERRIDDEN, False)
         self._grid_charging_initialized = False  # Flag for initialization
         self._last_decision_data = None  # Store last decision for diagnostics
+        self._slot_entry_time = None  # When we first entered the time slot (for 5-min delay)
 
         # Real-time Price Mode state
         self.average_price_sensor = config_entry.data.get(CONF_AVERAGE_PRICE_SENSOR, None)
@@ -262,11 +261,10 @@ class ChargeDischargeController:
         self._delay_safety_margin_h = config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._delay_soc_setpoint_enabled = config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._stored_solar_forecast_kwh = None
-        self._stored_solar_forecast_kwh_raw = None
-        self._stored_solar_forecast_date = None
-        self._charge_delay_unlocked = False     # True when delay has been unlocked today
-        self._charge_delay_last_date = None     # For daily reset
+        self._charge_delay_unlocked = False       # True when delay has been unlocked today
+        self._charge_delay_last_date = None       # For daily reset
+        self._charge_delay_forecast_cache = None  # Last forecast value used for balance check
+        self._charge_delay_balance_needs_charge = True  # Cached balance result (conservative default)
         self._solar_t_start = None
         self._delay_last_log_time = 0           # Throttle logging to every 5 minutes
         self._force_full_charge = False         # Manual trigger via button, resets on day change
@@ -769,16 +767,6 @@ class ChargeDischargeController:
             else:
                 _LOGGER.debug("Weekly Full Charge: Stored state is for different day - ignoring")
 
-            # Always restore forecast data (captured night before, independent of day)
-            stored_forecast = data.get("stored_forecast_kwh")
-            stored_forecast_date = data.get("stored_forecast_date")
-            if stored_forecast is not None and stored_forecast_date is not None:
-                from datetime import date
-                self._stored_solar_forecast_kwh = stored_forecast
-                self._stored_solar_forecast_date = date.fromisoformat(stored_forecast_date)
-                _LOGGER.debug("Weekly Full Charge: Restored forecast=%.2f kWh (date=%s)",
-                             stored_forecast, stored_forecast_date)
-
         except Exception as e:
             _LOGGER.error("Weekly Full Charge: Failed to load persisted state: %s", e)
 
@@ -797,8 +785,6 @@ class ChargeDischargeController:
                 "completion_weekday": now.weekday(),
                 "timestamp": now.isoformat(),
                 # Delay state
-                "stored_forecast_kwh": self._stored_solar_forecast_kwh,
-                "stored_forecast_date": self._stored_solar_forecast_date.isoformat() if self._stored_solar_forecast_date else None,
                 "delay_unlocked": self._charge_delay_unlocked,
                 "solar_t_start": self._solar_t_start,
             }
@@ -1086,7 +1072,7 @@ class ChargeDischargeController:
         """Determine if charging should be delayed based on solar forecast.
 
         Unified method for both daily (max_soc) and weekly (100%) charge delay.
-        Uses stored forecast from the night before (captured at 23:00).
+        Uses the live solar forecast sensor (updated throughout the day).
 
         Returns True to keep delay active (block charging),
         False to unlock charging.
@@ -1094,8 +1080,9 @@ class ChargeDischargeController:
         Fail-safe: any failure → unlock (allow charging).
 
         Decision flow:
-        1. No valid stored forecast → unlock immediately
-        2. Low forecast (<1.5× capacity) → unlock (bad solar day)
+        1. No forecast sensor or unavailable → unlock immediately
+        2. Energy balance check: (usable_energy + forecast) < consumption → unlock (grid needed)
+           Recalculated only when forecast value changes (> 0.05 kWh).
         3. No T_start detected and past fallback hour → unlock
         4. Past T_end with no active production → unlock
         5. Batteries already at target → unlock
@@ -1118,28 +1105,28 @@ class ChargeDischargeController:
             return False
 
         # Update common status fields
-        status["forecast_kwh"] = self._stored_solar_forecast_kwh_raw
         status["solar_t_start"] = _h_to_hhmm(self._solar_t_start)
 
-        # --- Exception 1: No valid stored forecast ---
-        if self._stored_solar_forecast_kwh is None or self._stored_solar_forecast_date is None:
-            _LOGGER.info("Charge Delay: No stored forecast - unlocking (reason: no_forecast)")
+        # --- Exception 1: No solar forecast sensor or unavailable ---
+        if not self.solar_forecast_sensor:
+            _LOGGER.info("Charge Delay: No solar forecast sensor configured - unlocking (reason: no_forecast)")
             return _unlock("no_forecast")
 
-        # Validate forecast date is from yesterday (captured night before)
-        today = now.date()
-        from datetime import timedelta as td
-        yesterday = today - td(days=1)
-        if self._stored_solar_forecast_date != yesterday:
-            _LOGGER.info(
-                "Charge Delay: Forecast date mismatch (stored=%s, expected=%s) - unlocking",
-                self._stored_solar_forecast_date, yesterday
-            )
+        forecast_state = self.hass.states.get(self.solar_forecast_sensor)
+        if forecast_state is None or forecast_state.state in ("unknown", "unavailable"):
+            _LOGGER.info("Charge Delay: Solar forecast sensor unavailable - unlocking (reason: no_forecast)")
             return _unlock("no_forecast")
 
-        forecast_today = self._stored_solar_forecast_kwh
+        try:
+            raw_forecast = float(forecast_state.state)
+        except (ValueError, TypeError):
+            _LOGGER.info("Charge Delay: Invalid solar forecast value '%s' - unlocking (reason: no_forecast)", forecast_state.state)
+            return _unlock("no_forecast")
 
-        # --- Exception 2: Low forecast (bad solar day) ---
+        forecast_today = raw_forecast * 0.85  # 15% conservative correction
+        status["forecast_kwh"] = raw_forecast
+
+        # --- Exception 2: Energy balance check (dynamic, recalculated only when forecast changes) ---
         total_capacity_kwh = sum(
             c.data.get("battery_total_energy", 0) for c in self.coordinators if c.data
         )
@@ -1147,11 +1134,35 @@ class ChargeDischargeController:
             _LOGGER.info("Charge Delay: Invalid battery capacity - unlocking")
             return _unlock("no_forecast")
 
-        if forecast_today < LOW_FORECAST_THRESHOLD_FACTOR * total_capacity_kwh:
-            _LOGGER.info(
-                "Charge Delay: Low forecast (%.1f kWh < %.1f × %.1f kWh) - unlocking (reason: low_forecast)",
-                forecast_today, LOW_FORECAST_THRESHOLD_FACTOR, total_capacity_kwh
+        if (
+            self._charge_delay_forecast_cache is None
+            or abs(forecast_today - self._charge_delay_forecast_cache) > 0.05
+        ):
+            coordinators_with_data = [c for c in self.coordinators if c.data]
+            avg_soc = (
+                sum(c.data.get("battery_soc", 0) for c in coordinators_with_data)
+                / len(coordinators_with_data)
+            ) if coordinators_with_data else 0
+            min_soc_values = [c.min_soc for c in self.coordinators]
+            min_soc = max(min_soc_values) if min_soc_values else 20
+            usable_energy_kwh = max(0, ((avg_soc - min_soc) / 100) * total_capacity_kwh)
+            avg_consumption_kwh = self._get_avg_daily_consumption()
+            prev_cache = self._charge_delay_forecast_cache
+            self._charge_delay_balance_needs_charge = (
+                (usable_energy_kwh + forecast_today) < avg_consumption_kwh
             )
+            self._charge_delay_forecast_cache = forecast_today
+            _LOGGER.info(
+                "Charge Delay: Forecast %s (%.2f → %.2f kWh) → "
+                "balance: %.2f usable + %.2f solar = %.2f kWh vs %.2f kWh consumption → %s",
+                "initialised" if prev_cache is None else "changed",
+                prev_cache if prev_cache is not None else 0.0, forecast_today,
+                usable_energy_kwh, forecast_today, usable_energy_kwh + forecast_today,
+                avg_consumption_kwh,
+                "grid needed (unlock delay)" if self._charge_delay_balance_needs_charge else "solar sufficient (keep delay)",
+            )
+
+        if self._charge_delay_balance_needs_charge:
             return _unlock("low_forecast")
 
         # --- Exception 3: No T_start detected ---
@@ -1325,41 +1336,6 @@ class ChargeDischargeController:
                 hi = mid
 
         return (lo + hi) / 2.0
-
-    async def _capture_solar_forecast(self, _now=None) -> None:
-        """Capture solar forecast every night at 23:00 for next day's charge delay.
-
-        The forecast sensor shows tomorrow's value at this hour (before midnight reset).
-        Stored forecast is used by _should_delay_charge() the next morning.
-        """
-        from datetime import datetime
-
-        if not self.solar_forecast_sensor:
-            _LOGGER.warning("Charge Delay: No solar forecast sensor configured - delay won't work")
-            return
-
-        forecast_state = self.hass.states.get(self.solar_forecast_sensor)
-        if forecast_state is None:
-            _LOGGER.warning("Charge Delay: Solar forecast sensor '%s' not found", self.solar_forecast_sensor)
-            return
-
-        try:
-            forecast_value = float(forecast_state.state)
-        except (ValueError, TypeError):
-            _LOGGER.error("Charge Delay: Invalid forecast value '%s'", forecast_state.state)
-            return
-
-        now = datetime.now()
-        self._stored_solar_forecast_kwh_raw = forecast_value
-        self._stored_solar_forecast_kwh = forecast_value * 0.85  # 15% conservative correction
-        self._stored_solar_forecast_date = now.date()
-        _LOGGER.info(
-            "Charge Delay: Captured solar forecast: %.2f kWh (raw=%.2f kWh, -15%% correction) for tomorrow",
-            self._stored_solar_forecast_kwh, forecast_value
-        )
-
-        # Persist to store
-        await self._save_weekly_charge_state()
 
     async def _handle_weekly_full_charge_registers(self) -> None:
         """
@@ -2033,40 +2009,8 @@ class ChargeDischargeController:
         days_in_history = len(self._daily_consumption_history)
 
         # === STEP 4: Get Solar Forecast ===
-        # Prefer the nightly-stored forecast (captured at 23:55 for the next day) so that
-        # mid-day evaluations (e.g. after a restart) use the same value as the 00:05 run,
-        # not whatever the live sensor shows now (which may reflect remaining-today or tomorrow).
-        from datetime import timedelta as _td
-        _today = datetime.now().date()
-        _yesterday = _today - _td(days=1)
-        if (
-            self._stored_solar_forecast_kwh is not None
-            and self._stored_solar_forecast_date == _yesterday
-        ):
-            solar_forecast_kwh = self._stored_solar_forecast_kwh
-            _LOGGER.debug(
-                "Predictive charging: using stored solar forecast %.2f kWh (captured %s)",
-                solar_forecast_kwh, self._stored_solar_forecast_date
-            )
-            total_available_kwh = usable_energy_kwh + solar_forecast_kwh
-            energy_deficit_kwh = avg_consumption_kwh - total_available_kwh
-            should_charge = energy_deficit_kwh > 0
-            return {
-                "should_charge": should_charge,
-                "solar_forecast_kwh": solar_forecast_kwh,
-                "stored_energy_kwh": stored_energy_kwh,
-                "usable_energy_kwh": usable_energy_kwh,
-                "min_reserve_kwh": min_reserve_kwh,
-                "cutoff_energy_kwh": cutoff_energy_kwh,
-                "effective_min_soc": effective_min_soc,
-                "avg_soc": avg_soc,
-                "avg_consumption_kwh": avg_consumption_kwh,
-                "total_available_kwh": total_available_kwh,
-                "energy_deficit_kwh": energy_deficit_kwh,
-                "days_in_history": days_in_history,
-                "reason": f"Stored forecast used ({'charge' if should_charge else 'no charge needed'})"
-            }
-
+        # Use the live sensor value directly — today's forecast updates throughout the day
+        # and reflects improving accuracy as actual weather conditions develop.
         forecast_state = self.hass.states.get(self.solar_forecast_sensor)
         if forecast_state is None or forecast_state.state in ("unknown", "unavailable"):
             # Conservative mode: assume zero solar, compare usable vs consumption
@@ -2214,82 +2158,7 @@ class ChargeDischargeController:
         else:
             return current_time >= start_time or current_time <= end_time
     
-    def _is_in_pre_evaluation_window(self) -> bool:
-        """Check if we're 1 hour before the charging slot starts (for early evaluation).
 
-        This method checks the NEXT occurrence of the configured start_time (either today or tomorrow)
-        and determines if we're currently within the pre-evaluation window (±5 minutes tolerance).
-
-        Returns True if:
-        - Current time is within 60±5 minutes before a slot start time
-        - The day the slot will start on is in configured days
-        """
-        from datetime import datetime, time as dt_time, timedelta
-
-        now = datetime.now()
-
-        try:
-            start_time = dt_time.fromisoformat(self.charging_time_slot["start_time"])
-        except Exception as e:
-            _LOGGER.error("Error parsing predictive charging time slot: %s", e)
-            return False
-
-        # Check both today's and tomorrow's potential slots
-        # This handles all cases including midnight boundary crossings
-        for days_ahead in [0, 1]:
-            slot_date = now.date() + timedelta(days=days_ahead)
-            slot_datetime = datetime.combine(slot_date, start_time)
-
-            # Skip if this slot is in the past
-            if slot_datetime <= now:
-                continue
-
-            # Calculate pre-eval time (1 hour before slot)
-            pre_eval_target = slot_datetime - timedelta(minutes=60)
-
-            # Check if we're within ±5 minutes of pre-eval target (10-minute window)
-            time_diff_seconds = abs((now - pre_eval_target).total_seconds())
-            time_diff_minutes = time_diff_seconds / 60
-
-            # INFO LOG: Show timing calculation for slots that aren't in the past
-            _LOGGER.info(
-                "Pre-eval check: now=%s, slot=%s, pre_eval_target=%s, time_diff=%.1f min, threshold=±5 min",
-                now.strftime("%a %H:%M"),
-                slot_datetime.strftime("%a %H:%M"),
-                pre_eval_target.strftime("%a %H:%M"),
-                time_diff_minutes
-            )
-
-            if time_diff_seconds <= 5 * 60:
-                # We're in the pre-eval window for this slot
-                # Check if the slot's day is configured
-                slot_day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][slot_datetime.weekday()]
-
-                # INFO LOG: Show day matching logic
-                _LOGGER.info(
-                    "Pre-eval WINDOW DETECTED: slot_day=%s, configured_days=%s, match=%s",
-                    slot_day.upper(),
-                    self.charging_time_slot["days"],
-                    slot_day in self.charging_time_slot["days"]
-                )
-
-                if slot_day in self.charging_time_slot["days"]:
-                    _LOGGER.info(
-                        "✓ PRE-EVALUATION WINDOW ACTIVE: slot starts at %s (%s), current time=%s",
-                        slot_datetime.strftime("%a %H:%M"),
-                        slot_day.upper(),
-                        now.strftime("%a %H:%M")
-                    )
-                    return True
-                else:
-                    _LOGGER.info(
-                        "✗ Pre-eval window detected but slot day %s NOT in configured days - skipping",
-                        slot_day.upper()
-                    )
-                    return False
-
-        # No pre-eval window found
-        return False
 
     def _is_in_predictive_charging_slot(self) -> bool:
         """Check if we're currently within the predictive charging time slot."""
@@ -3148,14 +3017,13 @@ class ChargeDischargeController:
     def _format_predictive_notification_message(
         self,
         decision_data: dict,
-        is_pre_evaluation: bool,
         is_daily_evaluation: bool = False,
     ) -> tuple[str, str]:
         """Format notification title and message from decision data.
 
         Args:
             decision_data: Dict from _should_activate_grid_charging() with energy balance data
-            is_pre_evaluation: True if pre-evaluation (1 hour before), False if initial
+            is_daily_evaluation: True when called from daily evaluation in automation_slots mode
 
         Returns:
             tuple: (title, message)
@@ -3196,7 +3064,7 @@ class ChargeDischargeController:
         if not should_charge:
             title = "Predictive Charging: Not required"
             message = (
-                f"✓ Sufficient energy for tomorrow\n\n"
+                f"✓ Sufficient energy for today\n\n"
                 f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
                 f"☀️ Solar forecast: {solar_str}\n"
                 f"📊 Consumption: {consumption_str}\n"
@@ -3213,19 +3081,9 @@ class ChargeDischargeController:
         except Exception:
             slot_str = None
 
-        if is_pre_evaluation:
-            if is_daily_evaluation:
-                title = "Predictive Charging: Expected tomorrow"
-                timing_line = "⏰ Charging will activate when prices are low\n"
-            else:
-                title = (
-                    f"Predictive Charging: Activates at {start_time.strftime('%H:%M')}"
-                    if slot_str else "Predictive Charging: Will activate"
-                )
-                timing_line = (
-                    f"⏰ Charging window: {slot_str} (starts in ~1 hour)\n"
-                    if slot_str else "⏰ Charging will start in ~1 hour\n"
-                )
+        if is_daily_evaluation:
+            title = "Predictive Charging: Expected today"
+            timing_line = "⏰ Charging will activate when prices are low\n"
         else:
             title = "Predictive Charging: STARTED"
             timing_line = (
@@ -3354,7 +3212,7 @@ class ChargeDischargeController:
             if not decision_data.get("should_charge", False):
                 title = "Predictive Charging: Price Optimization - NOT needed"
                 message = (
-                    f"✓ Sufficient energy for tomorrow\n\n"
+                    f"✓ Sufficient energy for today\n\n"
                     f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
                     f"☀️ Solar forecast: {solar_str}\n"
                     f"📊 Consumption: {consumption_str}\n\n"
@@ -3778,36 +3636,6 @@ class ChargeDischargeController:
 
     async def _handle_time_slot_predictive_charging(self) -> None:
         """Handle predictive charging in time slot mode (extracted from main loop)."""
-        in_pre_eval_window = False
-
-        if self.charging_time_slot is not None:
-            in_pre_eval_window = self._is_in_pre_evaluation_window()
-
-            if in_pre_eval_window:
-                _LOGGER.info(
-                    "Pre-eval trigger check: window=TRUE, already_evaluated=%s → will_trigger=%s",
-                    hasattr(self, '_pre_evaluated'),
-                    not hasattr(self, '_pre_evaluated')
-                )
-
-            if in_pre_eval_window and not hasattr(self, '_pre_evaluated'):
-                current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self.coordinators if c.data) / len(self.coordinators)
-                _LOGGER.info("PRE-EVALUATION: 1 hour before charging slot (SOC: %.1f%%)", current_avg_soc)
-
-                decision_data = await self._should_activate_grid_charging()
-                self._pre_eval_decision_data = decision_data
-                self._pre_eval_soc = current_avg_soc
-                self._last_decision_data = decision_data
-                self._pre_evaluated = True
-
-                _LOGGER.info("PRE-EVALUATION result: Charging will be %s when slot starts",
-                            "ACTIVATED" if decision_data["should_charge"] else "NOT NEEDED")
-
-                await self._send_predictive_charging_notification(
-                    is_pre_evaluation=True,
-                    decision_data=decision_data
-                )
-
         # Check if we're in the actual time slot
         in_time_window = (
             self.charging_time_slot is not None and
@@ -3821,29 +3649,35 @@ class ChargeDischargeController:
                     await self._set_battery_power(coordinator, 0, 0)
                 return
 
-            if hasattr(self, '_pre_eval_decision_data'):
-                pre_eval_data = self._pre_eval_decision_data
-                self.grid_charging_active = pre_eval_data["should_charge"]
-                self.last_evaluation_soc = self._pre_eval_soc
-                self._last_decision_data = pre_eval_data
-                delattr(self, '_pre_eval_decision_data')
-                if hasattr(self, '_pre_eval_soc'):
-                    delattr(self, '_pre_eval_soc')
-                _LOGGER.info(
-                    "Applied pre-evaluation decision at slot start: charging=%s (SOC at pre-eval: %.1f%%)",
-                    self.grid_charging_active, self.last_evaluation_soc
-                )
-
             current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self.coordinators if c.data) / len(self.coordinators)
+            is_initial_eval = self.last_evaluation_soc is None
+
+            # On slot entry, wait 5 minutes before the initial evaluation so the
+            # forecast sensor (which resets at midnight) has time to update.
+            if is_initial_eval:
+                if self._slot_entry_time is None:
+                    self._slot_entry_time = datetime.now()
+                    _LOGGER.info(
+                        "Time slot entered (SOC: %.1f%%) — waiting 5 min before evaluation "
+                        "to allow forecast sensor to update",
+                        current_avg_soc,
+                    )
+                wait_elapsed_s = (datetime.now() - self._slot_entry_time).total_seconds()
+                if wait_elapsed_s < 5 * 60:
+                    _LOGGER.debug(
+                        "Predictive charging: holding idle during entry wait (%.0f / 300 s)",
+                        wait_elapsed_s,
+                    )
+                    for coordinator in self.coordinators:
+                        await self._set_battery_power(coordinator, 0, 0)
+                    return
 
             should_reevaluate = (
-                self.last_evaluation_soc is None or
+                is_initial_eval or
                 abs(current_avg_soc - self.last_evaluation_soc) >= SOC_REEVALUATION_THRESHOLD
             )
 
             if should_reevaluate:
-                is_initial_eval = self.last_evaluation_soc is None
-
                 if is_initial_eval:
                     _LOGGER.info("INITIAL evaluation of predictive grid charging (SOC: %.1f%%)", current_avg_soc)
                 else:
@@ -3857,7 +3691,6 @@ class ChargeDischargeController:
 
                 if is_initial_eval:
                     await self._send_predictive_charging_notification(
-                        is_pre_evaluation=False,
                         decision_data=decision_data
                     )
 
@@ -3888,26 +3721,22 @@ class ChargeDischargeController:
             if self.predictive_charging_overridden:
                 self.predictive_charging_overridden = False
 
-            if hasattr(self, '_pre_evaluated') and not in_pre_eval_window:
-                delattr(self, '_pre_evaluated')
-                _LOGGER.info("Predictive charging flags reset (exited time window and pre-eval window)")
+            self._slot_entry_time = None
 
     async def _send_predictive_charging_notification(
         self,
-        is_pre_evaluation: bool,
         decision_data: dict,
         is_daily_evaluation: bool = False,
     ):
         """Send notification about predictive charging evaluation result.
 
         Args:
-            is_pre_evaluation: True if pre-evaluation (1 hour before), False if initial
             decision_data: Dict from _should_activate_grid_charging() with decision factors
-            is_daily_evaluation: True when called from the daily 23:00 assessment in automation_slots mode (unused, kept for signature compatibility)
+            is_daily_evaluation: True when called from daily evaluation in automation_slots mode
         """
         # Format the notification using the helper method
         title, message = self._format_predictive_notification_message(
-            decision_data, is_pre_evaluation, is_daily_evaluation
+            decision_data, is_daily_evaluation
         )
 
         # Send the notification
@@ -3964,6 +3793,8 @@ class ChargeDischargeController:
                 self._charge_delay_status["state"] = "Idle"
                 if saved_margin is not None:
                     self._charge_delay_status["safety_margin_min"] = saved_margin
+                self._charge_delay_forecast_cache = None
+                self._charge_delay_balance_needs_charge = True
                 _LOGGER.info("Charge Delay: New day - state reset")
             # Detect solar production start (shared with weekly charge)
             self._detect_solar_t_start()
@@ -4798,15 +4629,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass, controller._reset_daily_grid_at_min_soc, hour=0, minute=0, second=5
             )
         )
-
-    # Schedule solar forecast capture at 23:00 every night for charge delay
-    if controller.charge_delay_enabled:
-        entry.async_on_unload(
-            async_track_time_change(
-                hass, controller._capture_solar_forecast, hour=23, minute=0, second=0
-            )
-        )
-        _LOGGER.info("Charge Delay: Forecast capture scheduled at 23:00 local time")
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

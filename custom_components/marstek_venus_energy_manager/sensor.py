@@ -498,6 +498,9 @@ class ChargeDelaySensor(SensorEntity):
         if state.startswith("Unlocking") or state == "Charging allowed":
             return "charging_allowed"
 
+        if state == "Charging to setpoint":
+            return "charging_to_setpoint"
+
         return state.lower()  # "idle", "disabled"
 
     @property

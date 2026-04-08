@@ -120,7 +120,7 @@
       },
       "predictive_charging": {
         "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día de hoy es insuficiente.",
         "data": {
           "configure_predictive_charging": "Configurar carga predictiva"
         }
@@ -139,7 +139,7 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día siguiente en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día actual en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
@@ -316,7 +316,7 @@
       },
       "predictive_charging": {
         "title": "Carga predictiva desde red",
-        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día siguiente es insuficiente.",
+        "description": "¿Deseas activar la carga inteligente desde red? Esta función permite cargar las baterías automáticamente durante horas valle cuando la predicción solar del día de hoy es insuficiente.",
         "data": {
           "configure_predictive_charging": "Configurar carga predictiva"
         }
@@ -335,7 +335,7 @@
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
-          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día siguiente en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
+          "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar del día actual en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },

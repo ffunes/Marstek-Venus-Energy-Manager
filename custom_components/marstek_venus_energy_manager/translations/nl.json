@@ -124,7 +124,7 @@
       },
       "predictive_charging": {
         "title": "Voorspellend netladen",
-        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor de volgende dag onvoldoende is.",
+        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor vandaag onvoldoende is.",
         "data": {
           "configure_predictive_charging": "Voorspellend laden configureren"
         }
@@ -394,7 +394,7 @@
       },
       "predictive_charging": {
         "title": "Voorspellend netladen",
-        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor de volgende dag onvoldoende is.",
+        "description": "Wilt u intelligent netladen inschakelen? Deze functie maakt het laden van batterijen vanuit het net mogelijk tijdens daluren wanneer de zonnevoorspelling voor vandaag onvoldoende is.",
         "data": {
           "configure_predictive_charging": "Voorspellend laden configureren"
         }
@@ -634,7 +634,8 @@
           "disabled": "Uitgeschakeld",
           "waiting_for_solar": "Wachten op zon",
           "delayed": "Vertraagd",
-          "charging_allowed": "Laden toegestaan"
+          "charging_allowed": "Laden toegestaan",
+          "charging_to_setpoint": "Laden tot setpoint"
         }
       },
       "battery_soc": { "name": "Batterij SOC" },

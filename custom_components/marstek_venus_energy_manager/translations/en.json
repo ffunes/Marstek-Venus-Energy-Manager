@@ -124,7 +124,7 @@
       },
       "predictive_charging": {
         "title": "Predictive Grid Charging",
-        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when today's solar forecast is insufficient.",
         "data": {
           "configure_predictive_charging": "Configure predictive charging"
         }
@@ -394,7 +394,7 @@
       },
       "predictive_charging": {
         "title": "Predictive Grid Charging",
-        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when the solar forecast for the next day is insufficient.",
+        "description": "Do you want to enable intelligent grid charging? This feature allows charging batteries from the grid during off-peak hours when today's solar forecast is insufficient.",
         "data": {
           "configure_predictive_charging": "Configure predictive charging"
         }
@@ -633,7 +633,8 @@
           "disabled": "Disabled",
           "waiting_for_solar": "Waiting for solar",
           "delayed": "Delayed",
-          "charging_allowed": "Charging allowed"
+          "charging_allowed": "Charging allowed",
+          "charging_to_setpoint": "Charging to setpoint"
         }
       },
       "battery_soc": { "name": "Battery SOC" },

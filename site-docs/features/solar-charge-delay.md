@@ -1,5 +1,8 @@
 # Retraso de carga solar
 
+!!! danger "Cambio importante en v1.6.0"
+    La integración ahora usa la previsión **del día de hoy** en lugar de la del día siguiente. Si tienes esta función configurada, debes actualizar el sensor de previsión solar en los ajustes para que apunte al sensor de **hoy** (p. ej. `sensor.solcast_pv_forecast_forecast_today`) en lugar del de mañana.
+
 Retrasa la carga matutina de la batería (tanto solar como desde la red) mientras la producción solar prevista sea suficiente para cubrir la energía necesaria. Evita cargar la batería a primera hora —ya sea con solar o con red— cuando el sol podrá hacerlo más tarde.
 
 ## Aplicación
@@ -9,7 +12,7 @@ Retrasa la carga matutina de la batería (tanto solar como desde la red) mientra
 
 ## Modelo solar
 
-La integración usa un **modelo sinusoidal** basado en la previsión nocturna almacenada para estimar la producción solar hora a hora a lo largo del día. Compara la producción acumulada esperada desde la hora actual hasta el anochecer con la energía que falta por cargar.
+La integración usa un **modelo sinusoidal** basado en la previsión solar del día actual para estimar la producción hora a hora a lo largo del día. Compara la producción acumulada esperada desde la hora actual hasta el anochecer con la energía que falta por cargar.
 
 ```
 Si producción_solar_restante >= energía_a_cargar:
@@ -18,9 +21,16 @@ Si no:
     Iniciar carga (solar o desde la red)
 ```
 
-## Previsión nocturna almacenada
+## Previsión en tiempo real
 
-Cada noche, la integración guarda la previsión solar del día siguiente. Esta previsión almacenada se usa durante todo el día siguiente para el modelo de retraso, garantizando una estimación coherente incluso si el sensor de previsión cambia durante el día.
+La integración lee el sensor de previsión solar en tiempo real, sin captura ni almacenamiento nocturno. La mayoría de integraciones de previsión solar (Solcast, Forecast.Solar, etc.) actualizan su sensor del día actual varias veces a lo largo del día, siendo progresivamente más precisas conforme se conocen las condiciones meteorológicas reales.
+
+Cada vez que el valor del sensor cambia en más de 0,05 kWh, la integración reevalúa el balance energético:
+
+- **La previsión empeora** hasta que `(energía_usable + previsión) < consumo_diario_medio` → desbloquea el retraso y la carga comienza de inmediato.
+- **La previsión mejora** mientras el retraso sigue activo → el sistema sigue esperando a que el sol cargue la batería.
+
+Una vez que el retraso se desbloquea, permanece desbloqueado el resto del día.
 
 ## SOC de arranque del retraso
 
