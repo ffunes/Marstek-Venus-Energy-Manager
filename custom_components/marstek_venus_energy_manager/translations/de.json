@@ -226,12 +226,14 @@
         "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
         "data": {
           "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
-          "delay_soc_setpoint": "Mindest-SOC vor Verzögerung (%)",
+          "delay_soc_setpoint_enabled": "Mindest-SOC vor Verzögerung aktivieren",
+          "delay_soc_setpoint": "Mindest-SOC (%)",
           "solar_forecast_sensor": "Solarprognose-Sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "delay_soc_setpoint": "Die Batterie lädt frei bis zu diesem SOC. Darüber hinaus wird die Solarladungsverzögerung aktiviert. 0 = Verzögerung ab Beginn.",
+          "delay_soc_setpoint_enabled": "Wenn aktiviert, lädt die Batterie frei bis zum konfigurierten SOC; darüber wird die Solarladungsverzögerung aktiviert.",
+          "delay_soc_setpoint": "SOC, den die Batterie erreichen muss, bevor die Solarladungsverzögerung greift. Mindestwert: 12 % (Mindest-Entlade-SOC der Venus-Batterien).",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },
@@ -494,12 +496,14 @@
         "description": "Konfigurieren Sie den Sicherheitspuffer und den Solarprognose-Sensor für die Ladungsverzögerung.",
         "data": {
           "delay_safety_margin_h": "Sicherheitspuffer (Stunden)",
-          "delay_soc_setpoint": "Mindest-SOC vor Verzögerung (%)",
+          "delay_soc_setpoint_enabled": "Mindest-SOC vor Verzögerung aktivieren",
+          "delay_soc_setpoint": "Mindest-SOC (%)",
           "solar_forecast_sensor": "Solarprognose-Sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Stunden vor Sonnenuntergang, bis zu denen die Ladung abgeschlossen sein muss. Höhere Werte entsperren das Laden früher.",
-          "delay_soc_setpoint": "Die Batterie lädt frei bis zu diesem SOC. Darüber hinaus wird die Solarladungsverzögerung aktiviert. 0 = Verzögerung ab Beginn.",
+          "delay_soc_setpoint_enabled": "Wenn aktiviert, lädt die Batterie frei bis zum konfigurierten SOC; darüber wird die Solarladungsverzögerung aktiviert.",
+          "delay_soc_setpoint": "SOC, den die Batterie erreichen muss, bevor die Solarladungsverzögerung greift. Mindestwert: 12 % (Mindest-Entlade-SOC der Venus-Batterien).",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet."
         }
       },

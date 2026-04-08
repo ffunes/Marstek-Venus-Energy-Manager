@@ -226,12 +226,14 @@
         "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
         "data": {
           "delay_safety_margin_h": "Veiligheidsmarge (uren)",
-          "delay_soc_setpoint": "Minimale SOC vóór vertraging (%)",
+          "delay_soc_setpoint_enabled": "Minimale SOC vóór vertraging inschakelen",
+          "delay_soc_setpoint": "Minimale SOC (%)",
           "solar_forecast_sensor": "Zonnevoorspellingssensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
-          "delay_soc_setpoint": "De batterij laadt vrij op tot dit SOC. Daarboven wordt de zonnelaadvertraging geactiveerd. Stel in op 0 om de vertraging vanaf het begin toe te passen.",
+          "delay_soc_setpoint_enabled": "Wanneer ingeschakeld, laadt de batterij vrij op tot het ingestelde SOC; daarboven wordt de zonnelaadvertraging geactiveerd.",
+          "delay_soc_setpoint": "Het SOC dat de batterij moet bereiken voordat de zonnelaadvertraging ingaat. Minimum: 12 % — het minimale ontlaad-SOC van de Venus-batterijen.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },
@@ -494,12 +496,14 @@
         "description": "Configureer de veiligheidsmarge en de zonnevoorspellingssensor voor de oplaadvertraging.",
         "data": {
           "delay_safety_margin_h": "Veiligheidsmarge (uren)",
-          "delay_soc_setpoint": "Minimale SOC vóór vertraging (%)",
+          "delay_soc_setpoint_enabled": "Minimale SOC vóór vertraging inschakelen",
+          "delay_soc_setpoint": "Minimale SOC (%)",
           "solar_forecast_sensor": "Zonnevoorspellingssensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Uren voor zonsondergang waarvoor het laden voltooid moet zijn. Hogere waarden ontgrendelen het laden eerder.",
-          "delay_soc_setpoint": "De batterij laadt vrij op tot dit SOC. Daarboven wordt de zonnelaadvertraging geactiveerd. Stel in op 0 om de vertraging vanaf het begin toe te passen.",
+          "delay_soc_setpoint_enabled": "Wanneer ingeschakeld, laadt de batterij vrij op tot het ingestelde SOC; daarboven wordt de zonnelaadvertraging geactiveerd.",
+          "delay_soc_setpoint": "Het SOC dat de batterij moet bereiken voordat de zonnelaadvertraging ingaat. Minimum: 12 % — het minimale ontlaad-SOC van de Venus-batterijen.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt."
         }
       },

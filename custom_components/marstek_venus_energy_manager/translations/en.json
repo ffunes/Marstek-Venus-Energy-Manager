@@ -226,12 +226,14 @@
         "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
           "delay_safety_margin_h": "Safety margin (hours)",
-          "delay_soc_setpoint": "Minimum SOC before delay (%)",
+          "delay_soc_setpoint_enabled": "Enable minimum SOC before delay",
+          "delay_soc_setpoint": "Minimum SOC (%)",
           "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
-          "delay_soc_setpoint": "The battery will charge freely up to this SOC. Above it, the solar delay activates. Set to 0 to apply the delay from the start.",
+          "delay_soc_setpoint_enabled": "When enabled, the battery charges freely up to the configured SOC; above it the solar delay activates.",
+          "delay_soc_setpoint": "The SOC the battery must reach before the solar delay kicks in. Minimum is 12 % — the Venus battery minimum discharge SOC.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },
@@ -494,12 +496,14 @@
         "description": "Configure the safety margin and solar forecast sensor for the charge delay.",
         "data": {
           "delay_safety_margin_h": "Safety margin (hours)",
-          "delay_soc_setpoint": "Minimum SOC before delay (%)",
+          "delay_soc_setpoint_enabled": "Enable minimum SOC before delay",
+          "delay_soc_setpoint": "Minimum SOC (%)",
           "solar_forecast_sensor": "Solar forecast sensor"
         },
         "data_description": {
           "delay_safety_margin_h": "Hours before sunset by which charging must be complete. Higher values unlock charging earlier.",
-          "delay_soc_setpoint": "The battery will charge freely up to this SOC. Above it, the solar delay activates. Set to 0 to apply the delay from the start.",
+          "delay_soc_setpoint_enabled": "When enabled, the battery charges freely up to the configured SOC; above it the solar delay activates.",
+          "delay_soc_setpoint": "The SOC the battery must reach before the solar delay kicks in. Minimum is 12 % — the Venus battery minimum discharge SOC.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). Not required if you already configured this sensor in the initial setup step — it will be used automatically."
         }
       },

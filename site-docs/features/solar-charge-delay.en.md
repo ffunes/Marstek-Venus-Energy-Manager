@@ -24,14 +24,14 @@ Every night, the integration saves tomorrow's solar forecast. This stored foreca
 
 ## SOC setpoint
 
-An optional SOC setpoint (0–90 %, default 0 = disabled) splits charging into two phases:
+An optional SOC setpoint (12–90 %, disabled by default) splits charging into two phases:
 
 1. **Below the setpoint** — the battery charges freely (solar and grid), the delay is inactive. Sensor state: `Charging to setpoint`.
 2. **At or above the setpoint** — the solar delay logic activates and decides whether to keep charging or wait.
 
 This is useful when the battery is deeply discharged and needs a guaranteed minimum charge before the solar decision is made. For example, with a setpoint of 50 % the battery charges to 50 % without restrictions; above 50 % the system evaluates whether remaining solar production is enough to complete the charge and waits if it is.
 
-Setting the setpoint to 0 disables this behaviour and applies the delay from the very start of charging, which is the default.
+The setpoint is enabled with a dedicated checkbox in the configuration. When disabled, the delay applies from the very start of charging. The minimum value is 12 % — the minimum discharge SOC of the Venus batteries.
 
 ## Requirements
 

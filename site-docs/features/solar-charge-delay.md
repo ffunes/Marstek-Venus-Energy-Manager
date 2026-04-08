@@ -24,14 +24,14 @@ Cada noche, la integración guarda la previsión solar del día siguiente. Esta 
 
 ## SOC de arranque del retraso
 
-Un SOC de setpoint opcional (0–90 %, por defecto 0 = desactivado) divide la carga en dos fases:
+Un SOC de setpoint opcional (12–90 %, desactivado por defecto) divide la carga en dos fases:
 
 1. **Por debajo del setpoint** — la batería carga libremente (solar y red), el retraso está inactivo. Estado del sensor: `Charging to setpoint`.
 2. **En el setpoint o por encima** — se activa la lógica de retraso solar y decide si continuar cargando o esperar.
 
 Esto es útil cuando la batería está muy descargada y necesita un mínimo garantizado antes de que entre en juego la decisión solar. Por ejemplo, con un setpoint del 50 % la batería carga hasta el 50 % sin restricciones; a partir de ahí, el sistema evalúa si la producción solar restante es suficiente para completar la carga y espera si lo es.
 
-Con setpoint a 0 este comportamiento queda desactivado y el retraso se aplica desde el primer momento de carga, que es el valor por defecto.
+El setpoint se habilita con un checkbox independiente en la configuración. Si está desactivado, el retraso aplica desde el primer momento de carga. El valor mínimo es el 12 %, correspondiente al SOC mínimo de descarga de las baterías Venus.
 
 ## Requisitos
 

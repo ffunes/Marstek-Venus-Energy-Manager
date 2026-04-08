@@ -33,6 +33,8 @@ from .const import (
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
+    CONF_DELAY_SOC_SETPOINT_ENABLED,
+    DEFAULT_DELAY_SOC_SETPOINT_ENABLED,
     CONF_DELAY_SOC_SETPOINT,
     DEFAULT_DELAY_SOC_SETPOINT,
     WEEKDAY_MAP,
@@ -258,6 +260,7 @@ class ChargeDischargeController:
             config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
         )
         self._delay_safety_margin_h = config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
+        self._delay_soc_setpoint_enabled = config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
         self._stored_solar_forecast_kwh = None
         self._stored_solar_forecast_kwh_raw = None
@@ -283,7 +286,7 @@ class ChargeDischargeController:
             "estimated_unlock_time": None,
             "unlock_reason": None,
             "safety_margin_min": int(self._delay_safety_margin_h * 60),
-            "soc_setpoint": self._delay_soc_setpoint,
+            "soc_setpoint": self._delay_soc_setpoint if self._delay_soc_setpoint_enabled else None,
         }
 
         # Minimal status dict for WeeklyFullChargeSensor (charge state only, not delay)
@@ -331,8 +334,9 @@ class ChargeDischargeController:
         self.max_contracted_power = self.config_entry.data.get(CONF_MAX_CONTRACTED_POWER, 7000)
         self._delay_safety_margin_h = self.config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
+        self._delay_soc_setpoint_enabled = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._charge_delay_status["soc_setpoint"] = self._delay_soc_setpoint
+        self._charge_delay_status["soc_setpoint"] = self._delay_soc_setpoint if self._delay_soc_setpoint_enabled else None
         self.charge_delay_enabled = self.config_entry.data.get(
             CONF_ENABLE_CHARGE_DELAY,
             self.config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, False)
@@ -1054,7 +1058,7 @@ class ChargeDischargeController:
             return False
 
         # SOC setpoint: delay only kicks in once all batteries reach the setpoint
-        if self._delay_soc_setpoint > 0:
+        if self._delay_soc_setpoint_enabled:
             min_soc = min(
                 (c.data.get("battery_soc", 100) for c in self.coordinators if c.data),
                 default=100,

@@ -226,12 +226,14 @@
         "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
         "data": {
           "delay_safety_margin_h": "Marge de sécurité (heures)",
-          "delay_soc_setpoint": "SOC minimal avant le retard (%)",
+          "delay_soc_setpoint_enabled": "Activer le SOC minimal avant le retard",
+          "delay_soc_setpoint": "SOC minimal (%)",
           "solar_forecast_sensor": "Capteur de prévision solaire"
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
-          "delay_soc_setpoint": "La batterie se charge librement jusqu'à ce SOC. Au-delà, le retard solaire s'active. Mettre 0 pour appliquer le retard dès le début.",
+          "delay_soc_setpoint_enabled": "Lorsqu'activé, la batterie se charge librement jusqu'au SOC configuré ; au-delà, le retard solaire s'active.",
+          "delay_soc_setpoint": "SOC que la batterie doit atteindre avant que le retard solaire s'active. Minimum : 12 % — le SOC de décharge minimum des batteries Venus.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },
@@ -494,12 +496,14 @@
         "description": "Configurez la marge de sécurité et le capteur de prévision solaire pour le retard de charge.",
         "data": {
           "delay_safety_margin_h": "Marge de sécurité (heures)",
-          "delay_soc_setpoint": "SOC minimal avant le retard (%)",
+          "delay_soc_setpoint_enabled": "Activer le SOC minimal avant le retard",
+          "delay_soc_setpoint": "SOC minimal (%)",
           "solar_forecast_sensor": "Capteur de prévision solaire"
         },
         "data_description": {
           "delay_safety_margin_h": "Heures avant le coucher du soleil avant lesquelles la charge doit être terminée. Des valeurs plus élevées déverrouillent la charge plus tôt.",
-          "delay_soc_setpoint": "La batterie se charge librement jusqu'à ce SOC. Au-delà, le retard solaire s'active. Mettre 0 pour appliquer le retard dès le début.",
+          "delay_soc_setpoint_enabled": "Lorsqu'activé, la batterie se charge librement jusqu'au SOC configuré ; au-delà, le retard solaire s'active.",
+          "delay_soc_setpoint": "SOC que la batterie doit atteindre avant que le retard solaire s'active. Minimum : 12 % — le SOC de décharge minimum des batteries Venus.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement."
         }
       },

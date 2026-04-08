@@ -184,12 +184,14 @@
         "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
         "data": {
           "delay_safety_margin_min": "Margen de seguridad (minutos)",
-          "delay_soc_setpoint": "SOC mínimo antes del retraso (%)",
+          "delay_soc_setpoint_enabled": "Activar SOC mínimo antes del retraso",
+          "delay_soc_setpoint": "SOC mínimo (%)",
           "solar_forecast_sensor": "Sensor de predicción solar"
         },
         "data_description": {
           "delay_safety_margin_min": "Minutos antes de la puesta de sol en los que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "delay_soc_setpoint": "La batería cargará libremente hasta este SOC. A partir de aquí se activa el retraso solar. Usa 0 para aplicar el retraso desde el principio.",
+          "delay_soc_setpoint_enabled": "Si se activa, la batería cargará libremente hasta el SOC indicado; por encima de ese valor se activa el retraso solar.",
+          "delay_soc_setpoint": "SOC mínimo que debe alcanzar la batería antes de que el retraso solar entre en funcionamiento. El valor mínimo es el 12 % (SOC mínimo de descarga de las baterías Venus).",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
@@ -378,12 +380,14 @@
         "description": "Configura el margen de seguridad y el sensor de predicción solar para el retraso de carga.",
         "data": {
           "delay_safety_margin_min": "Margen de seguridad (minutos)",
-          "delay_soc_setpoint": "SOC mínimo antes del retraso (%)",
+          "delay_soc_setpoint_enabled": "Activar SOC mínimo antes del retraso",
+          "delay_soc_setpoint": "SOC mínimo (%)",
           "solar_forecast_sensor": "Sensor de predicción solar"
         },
         "data_description": {
           "delay_safety_margin_min": "Minutos antes de la puesta de sol en los que se garantiza que la carga habrá terminado. Valores más altos desbloquean la carga antes.",
-          "delay_soc_setpoint": "La batería cargará libremente hasta este SOC. A partir de aquí se activa el retraso solar. Usa 0 para aplicar el retraso desde el principio.",
+          "delay_soc_setpoint_enabled": "Si se activa, la batería cargará libremente hasta el SOC indicado; por encima de ese valor se activa el retraso solar.",
+          "delay_soc_setpoint": "SOC mínimo que debe alcanzar la batería antes de que el retraso solar entre en funcionamiento. El valor mínimo es el 12 % (SOC mínimo de descarga de las baterías Venus).",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente."
         }
       },
