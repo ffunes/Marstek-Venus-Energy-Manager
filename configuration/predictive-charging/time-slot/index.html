@@ -863,10 +863,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reevaluacion-a-mitad-del-dia" class="md-nav__link">
+  <a href="#reevaluacion-por-caida-de-soc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reevaluación a mitad del día
+        Reevaluación por caída de SOC
       
     </span>
   </a>
@@ -1486,10 +1486,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reevaluacion-a-mitad-del-dia" class="md-nav__link">
+  <a href="#reevaluacion-por-caida-de-soc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Reevaluación a mitad del día
+        Reevaluación por caída de SOC
       
     </span>
   </a>
@@ -1538,7 +1538,7 @@
 </tr>
 <tr>
 <td><strong>Sensor de previsión solar</strong></td>
-<td>Sensor de producción del día siguiente en kWh (opcional)</td>
+<td>Sensor de producción solar del día actual en kWh (opcional)</td>
 </tr>
 <tr>
 <td><strong>Potencia ICP contratada</strong></td>
@@ -1546,6 +1546,10 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition danger">
+<p class="admonition-title">Cambio importante en v1.6.0</p>
+<p>El campo de sensor de previsión solar ahora debe apuntar al sensor de <strong>hoy</strong> (p. ej. <code>sensor.solcast_pv_forecast_forecast_today</code>), no al de mañana.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Sin sensor solar</p>
 <p>Si no tienes paneles solares, deja vacío el sensor de previsión. El sistema cargará siempre que la energía de la batería sea insuficiente para cubrir el consumo esperado.</p>
@@ -1553,12 +1557,13 @@
 <p><img alt="Formulario de configuración — Modo Franja Horaria" src="../../../assets/screenshots/configuration/predictive-charging/time-slot-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <h2 id="flujo-de-evaluacion">Flujo de evaluación<a class="headerlink" href="#flujo-de-evaluacion" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>1 hora antes</strong> del inicio del slot: evaluación preliminar con notificación.</li>
-<li><strong>Al inicio del slot</strong>: confirmación final y arranque de la carga.</li>
+<li><strong>Al entrar en el slot</strong>: las baterías se mantienen en reposo durante 5 minutos para que el sensor de previsión solar tenga tiempo de actualizarse (especialmente relevante si el slot comienza a las 00:00).</li>
+<li><strong>5 minutos después</strong>: el sistema evalúa el balance energético (<code>energía usable + previsión solar</code> vs. <code>consumo diario estimado</code>) y decide si cargar o no.</li>
+<li>Se envía una notificación con la decisión tomada.</li>
 <li>La carga continúa hasta que la batería alcanza el nivel calculado o finaliza la ventana.</li>
 </ol>
-<h2 id="reevaluacion-a-mitad-del-dia">Reevaluación a mitad del día<a class="headerlink" href="#reevaluacion-a-mitad-del-dia" title="Permanent link">&para;</a></h2>
-<p>Cuando hay varios slots baratos seleccionados, el sistema reevalúa <strong>1 hora antes de cada slot</strong> si la carga sigue siendo necesaria. Si la batería ya tiene suficiente energía (solar + SOC actual cubre el consumo), el slot se omite silenciosamente.</p>
+<h2 id="reevaluacion-por-caida-de-soc">Reevaluación por caída de SOC<a class="headerlink" href="#reevaluacion-por-caida-de-soc" title="Permanent link">&para;</a></h2>
+<p>Si el SOC cae un 30 % o más respecto al último punto de evaluación durante el slot (p. ej. por un consumo elevado), el sistema reevalúa el balance energético automáticamente. No se envía notificación adicional en estas reevaluaciones intermedias.</p>
 
 
 

@@ -863,10 +863,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mid-day-re-evaluation" class="md-nav__link">
+  <a href="#soc-drop-re-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mid-day re-evaluation
+        SOC-drop re-evaluation
       
     </span>
   </a>
@@ -1486,10 +1486,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#mid-day-re-evaluation" class="md-nav__link">
+  <a href="#soc-drop-re-evaluation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Mid-day re-evaluation
+        SOC-drop re-evaluation
       
     </span>
   </a>
@@ -1538,7 +1538,7 @@
 </tr>
 <tr>
 <td><strong>Solar forecast sensor</strong></td>
-<td>Next-day production sensor in kWh (optional)</td>
+<td>Current-day production sensor in kWh (optional)</td>
 </tr>
 <tr>
 <td><strong>Contracted grid power (ICP)</strong></td>
@@ -1546,6 +1546,10 @@
 </tr>
 </tbody>
 </table>
+<div class="admonition danger">
+<p class="admonition-title">Breaking change in v1.6.0</p>
+<p>The solar forecast sensor field must now point to the <strong>today</strong> sensor (e.g. <code>sensor.solcast_pv_forecast_forecast_today</code>), not the tomorrow sensor.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">No solar sensor</p>
 <p>If you have no solar panels, leave the forecast sensor empty. The system will charge whenever battery energy is insufficient to cover expected consumption.</p>
@@ -1553,12 +1557,13 @@
 <p><img alt="Configuration form — Time Slot mode" src="../../../../assets/screenshots/configuration/predictive-charging/time-slot-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <h2 id="evaluation-flow">Evaluation flow<a class="headerlink" href="#evaluation-flow" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>1 hour before</strong> the slot starts: preliminary evaluation with notification.</li>
-<li><strong>When the slot starts</strong>: final confirmation and charging begins.</li>
+<li><strong>On slot entry</strong>: batteries are held idle for 5 minutes to allow the solar forecast sensor time to update (particularly relevant when the slot starts at 00:00).</li>
+<li><strong>5 minutes in</strong>: the system evaluates the energy balance (<code>usable energy + solar forecast</code> vs. <code>estimated daily consumption</code>) and decides whether to charge.</li>
+<li>A notification is sent with the decision.</li>
 <li>Charging continues until the battery reaches the calculated level or the window ends.</li>
 </ol>
-<h2 id="mid-day-re-evaluation">Mid-day re-evaluation<a class="headerlink" href="#mid-day-re-evaluation" title="Permanent link">&para;</a></h2>
-<p>When multiple cheap slots are selected, the system re-evaluates <strong>1 hour before each slot</strong> whether charging is still needed. If the battery already has enough energy (solar + current SOC covers consumption), the slot is silently skipped.</p>
+<h2 id="soc-drop-re-evaluation">SOC-drop re-evaluation<a class="headerlink" href="#soc-drop-re-evaluation" title="Permanent link">&para;</a></h2>
+<p>If the SOC drops 30 % or more from the last evaluation point during the slot (e.g. due to high consumption), the system automatically re-evaluates the energy balance. No additional notification is sent for these mid-slot re-evaluations.</p>
 
 
 

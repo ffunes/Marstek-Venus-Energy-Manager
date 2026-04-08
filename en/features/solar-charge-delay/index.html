@@ -1181,10 +1181,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#stored-overnight-forecast" class="md-nav__link">
+  <a href="#live-forecast" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stored overnight forecast
+        Live forecast
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#soc-setpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC setpoint
       
     </span>
   </a>
@@ -1494,10 +1505,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#stored-overnight-forecast" class="md-nav__link">
+  <a href="#live-forecast" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Stored overnight forecast
+        Live forecast
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#soc-setpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC setpoint
       
     </span>
   </a>
@@ -1541,6 +1563,10 @@
 
 
 <h1 id="solar-charge-delay">Solar charge delay<a class="headerlink" href="#solar-charge-delay" title="Permanent link">&para;</a></h1>
+<div class="admonition danger">
+<p class="admonition-title">Breaking change in v1.6.0</p>
+<p>The integration now uses <strong>today's</strong> solar forecast instead of tomorrow's. If you have this feature configured, you must update the solar forecast sensor in settings to point to the <strong>today</strong> sensor (e.g. <code>sensor.solcast_pv_forecast_forecast_today</code>) instead of the tomorrow sensor.</p>
+</div>
 <p>Delays morning battery charging (both from solar and from the grid) while the expected solar production is sufficient to cover the required energy. Avoids charging the battery early — whether from solar or the grid — when the sun will be able to do it later.</p>
 <h2 id="when-it-applies">When it applies<a class="headerlink" href="#when-it-applies" title="Permanent link">&para;</a></h2>
 <ul>
@@ -1548,14 +1574,28 @@
 <li>Weekly 100% charge (waits for the sun to complete the charge before resorting to the grid).</li>
 </ul>
 <h2 id="solar-model">Solar model<a class="headerlink" href="#solar-model" title="Permanent link">&para;</a></h2>
-<p>The integration uses a <strong>sinusoidal model</strong> based on the stored overnight forecast to estimate hour-by-hour solar production throughout the day. It compares the expected cumulative production from the current hour until sunset with the remaining energy needed.</p>
+<p>The integration uses a <strong>sinusoidal model</strong> based on the current day's solar forecast to estimate hour-by-hour solar production throughout the day. It compares the expected cumulative production from the current hour until sunset with the remaining energy needed.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>If remaining_solar_production &gt;= energy_to_charge:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Wait (the sun will charge it)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Else:
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    Start charging (solar or grid)
 </code></pre></div>
-<h2 id="stored-overnight-forecast">Stored overnight forecast<a class="headerlink" href="#stored-overnight-forecast" title="Permanent link">&para;</a></h2>
-<p>Every night, the integration saves tomorrow's solar forecast. This stored forecast is used throughout the following day for the delay model, ensuring a consistent estimate even if the forecast sensor changes during the day.</p>
+<h2 id="live-forecast">Live forecast<a class="headerlink" href="#live-forecast" title="Permanent link">&para;</a></h2>
+<p>The integration reads the solar forecast sensor live, with no nightly capture or storage. Most solar forecast integrations (Solcast, Forecast.Solar, etc.) update their today sensor multiple times throughout the day, becoming progressively more accurate as actual weather conditions develop.</p>
+<p>Every time the sensor value changes by more than 0.05 kWh, the integration re-evaluates the energy balance:</p>
+<ul>
+<li><strong>Forecast degrades</strong> until <code>(usable_energy + forecast) &lt; avg_daily_consumption</code> → the delay unlocks and charging starts immediately.</li>
+<li><strong>Forecast improves</strong> while the delay is still active → the system keeps waiting for the sun to charge the battery.</li>
+</ul>
+<p>Once the delay is unlocked it stays unlocked for the rest of the day.</p>
+<h2 id="soc-setpoint">SOC setpoint<a class="headerlink" href="#soc-setpoint" title="Permanent link">&para;</a></h2>
+<p>An optional SOC setpoint (12–90 %, disabled by default) splits charging into two phases:</p>
+<ol>
+<li><strong>Below the setpoint</strong> — the battery charges freely (solar and grid), the delay is inactive. Sensor state: <code>Charging to setpoint</code>.</li>
+<li><strong>At or above the setpoint</strong> — the solar delay logic activates and decides whether to keep charging or wait.</li>
+</ol>
+<p>This is useful when the battery is deeply discharged and needs a guaranteed minimum charge before the solar decision is made. For example, with a setpoint of 50 % the battery charges to 50 % without restrictions; above 50 % the system evaluates whether remaining solar production is enough to complete the charge and waits if it is.</p>
+<p>The setpoint is enabled with a dedicated checkbox in the configuration. When disabled, the delay applies from the very start of charging. The minimum value is 12 % — the minimum discharge SOC of the Venus batteries.</p>
 <h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Solar forecast sensor configured in the <a href="../../configuration/main-sensor/">initial setup step</a>.</li>
