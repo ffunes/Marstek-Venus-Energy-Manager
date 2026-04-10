@@ -177,7 +177,6 @@ SENSOR_DEFINITIONS = [
         "data_type": "int32",
         "precision": 1,
         "scan_interval": "high",
-        "force_update": True
     },
     {
         # Internal temperature in degrees Celsius
@@ -207,7 +206,6 @@ SENSOR_DEFINITIONS = [
         "data_type": "int32",
         "precision": 0,
         "scan_interval": "high",
-        "force_update": True
     },
     {
         # Total energy charged into the battery in kilowatt-hours
@@ -733,7 +731,6 @@ SENSOR_DEFINITIONS_V3 = [
         "data_type": "int16",
         "precision": 1,
         "scan_interval": "high",
-        "force_update": True
     },
     {
         "name": "AC Offgrid Power",
@@ -775,7 +772,6 @@ SENSOR_DEFINITIONS_V3 = [
         "data_type": "int16",
         "precision": 0,
         "scan_interval": "high",
-        "force_update": True
     },
     {
         "register": 33000,
@@ -1158,7 +1154,6 @@ SENSOR_DEFINITIONS_VA = [
         "data_type": "int16",
         "precision": 1,
         "scan_interval": "high",
-        "force_update": True,
     },
     {
         "name": "AC Offgrid Power",
@@ -1200,7 +1195,6 @@ SENSOR_DEFINITIONS_VA = [
         "data_type": "int16",
         "precision": 0,
         "scan_interval": "high",
-        "force_update": True,
     },
     {
         "register": 33000,

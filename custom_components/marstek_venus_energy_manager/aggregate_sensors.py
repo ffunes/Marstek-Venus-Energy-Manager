@@ -144,7 +144,7 @@ class MarstekVenusAggregateSensor(SensorEntity):
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
         self._attr_icon = definition.get("icon")
-        self._attr_should_poll = True  # We poll the coordinators
+        self._attr_should_poll = False
 
         # Register as listener to all coordinators
         for coordinator in coordinators:

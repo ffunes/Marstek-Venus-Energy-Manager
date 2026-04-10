@@ -238,22 +238,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Capacity Protection Mode",
+        "title": "Peak Shaving Mode",
         "description": "When enabled, if battery SOC drops below a threshold, the system conserves energy by only discharging to offset consumption above a peak limit.",
         "data": {
-          "configure_capacity_protection": "Enable capacity protection"
+          "configure_capacity_protection": "Enable peak shaving"
         }
       },
       "capacity_protection_config": {
-        "title": "Capacity Protection Configuration",
-        "description": "Configure the SOC threshold below which protection activates, and the peak power limit. The battery will only discharge to keep grid import at or below the peak limit.",
+        "title": "Peak Shaving Configuration",
+        "description": "Configure the SOC threshold below which peak shaving activates, and the peak power limit. The battery will only discharge to keep grid import at or below the peak limit.",
         "data": {
           "capacity_protection_soc_threshold": "SOC Threshold (%)",
           "capacity_protection_limit": "Peak Limit (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "When average battery SOC drops below this value, capacity protection activates. The battery will stop discharging for normal consumption and only cover peaks above the limit.",
-          "capacity_protection_limit": "Grid import power threshold. When house consumption exceeds this value and protection is active, the battery discharges only the excess above this limit."
+          "capacity_protection_soc_threshold": "When average battery SOC drops below this value, peak shaving activates. The battery will stop discharging for normal consumption and only cover peaks above the limit.",
+          "capacity_protection_limit": "Grid import power threshold. When house consumption exceeds this value and peak shaving is active, the battery discharges only the excess above this limit."
         }
       }
     },
@@ -596,7 +596,7 @@
       "manual_mode": { "name": "Manual Mode" },
       "predictive_charging": { "name": "Predictive Charging" },
       "charge_delay": { "name": "Charge Delay" },
-      "capacity_protection": { "name": "Capacity Protection" },
+      "capacity_protection": { "name": "Peak Shaving" },
       "backup_function": { "name": "Backup Function" },
       "rs485_control_mode": { "name": "RS485 Control Mode" },
       "automation_charging_active": { "name": "External Price Charging" }
@@ -680,7 +680,7 @@
       "battery_cycle_count_calc": { "name": "Battery Cycle Count (Calc)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Capacity Protection Active" },
+      "capacity_protection_active": { "name": "Peak Shaving Active" },
       "predictive_charging_active": { "name": "Predictive Charging Active" },
       "wifi_status": { "name": "WiFi Status" },
       "cloud_status": { "name": "Cloud Status" }
@@ -717,10 +717,10 @@
       "pd_min_charge_power": { "name": "PD Min Charge Power" },
       "pd_min_discharge_power": { "name": "PD Min Discharge Power" },
       "max_contracted_power": { "name": "Max Contracted Power" },
-      "capacity_protection_soc_threshold": { "name": "Capacity Protection SOC Threshold" },
+      "capacity_protection_soc_threshold": { "name": "Peak Shaving SOC Threshold" },
       "delay_safety_margin_min": { "name": "Charge Delay Margin" },
       "delay_soc_setpoint": { "name": "Charge Delay SOC Setpoint" },
-      "capacity_protection_limit": { "name": "Peak Limit Protection" },
+      "capacity_protection_limit": { "name": "Peak Shaving Limit" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Threshold" }
     },
     "button": {

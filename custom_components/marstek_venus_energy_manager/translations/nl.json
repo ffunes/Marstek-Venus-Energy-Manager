@@ -238,22 +238,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Capaciteitsbeschermingsmodus",
+        "title": "Piekbegrenzing",
         "description": "Indien ingeschakeld, als de batterij-SOC onder een drempel daalt, spaart het systeem energie door alleen te ontladen om verbruik boven een pieklimiet te compenseren.",
         "data": {
-          "configure_capacity_protection": "Capaciteitsbescherming inschakelen"
+          "configure_capacity_protection": "Piekbegrenzing inschakelen"
         }
       },
       "capacity_protection_config": {
-        "title": "Capaciteitsbescherming configuratie",
-        "description": "Configureer de SOC-drempel waaronder de bescherming activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
+        "title": "Piekbegrenzing configuratie",
+        "description": "Configureer de SOC-drempel waaronder de piekbegrenzing activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
         "data": {
           "capacity_protection_soc_threshold": "SOC-drempel (%)",
           "capacity_protection_limit": "Pieklimiet (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de capaciteitsbescherming geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
-          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de bescherming actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
+          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de piekbegrenzing geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
+          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de piekbegrenzing actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
         }
       }
     },
@@ -508,22 +508,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Capaciteitsbeschermingsmodus",
+        "title": "Piekbegrenzing",
         "description": "Indien ingeschakeld, als de batterij-SOC onder een drempel daalt, spaart het systeem energie door alleen te ontladen om verbruik boven een pieklimiet te compenseren.",
         "data": {
-          "configure_capacity_protection": "Capaciteitsbescherming inschakelen"
+          "configure_capacity_protection": "Piekbegrenzing inschakelen"
         }
       },
       "capacity_protection_config": {
-        "title": "Capaciteitsbescherming configuratie",
-        "description": "Configureer de SOC-drempel waaronder de bescherming activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
+        "title": "Piekbegrenzing configuratie",
+        "description": "Configureer de SOC-drempel waaronder de piekbegrenzing activeert en de piekstroomlimiet. De batterij ontlaadt alleen om de netimport onder de pieklimiet te houden.",
         "data": {
           "capacity_protection_soc_threshold": "SOC-drempel (%)",
           "capacity_protection_limit": "Pieklimiet (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de capaciteitsbescherming geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
-          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de bescherming actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
+          "capacity_protection_soc_threshold": "Wanneer de gemiddelde batterij-SOC onder deze waarde daalt, wordt de piekbegrenzing geactiveerd. De batterij stopt met ontladen voor normaal verbruik en dekt alleen pieken boven de limiet.",
+          "capacity_protection_limit": "Netimport vermogensdrempel. Wanneer het huisverbruik deze waarde overschrijdt en de piekbegrenzing actief is, ontlaadt de batterij alleen het overschot boven deze limiet."
         }
       },
       "pd_advanced": {
@@ -597,7 +597,7 @@
       "manual_mode": { "name": "Handmatige Modus" },
       "predictive_charging": { "name": "Voorspellend Laden" },
       "charge_delay": { "name": "Laadvertraging" },
-      "capacity_protection": { "name": "Capaciteitsbescherming" },
+      "capacity_protection": { "name": "Piekbegrenzing" },
       "backup_function": { "name": "Back-upfunctie" },
       "rs485_control_mode": { "name": "RS485-besturingsmodus" },
       "automation_charging_active": { "name": "Laden op Externe Prijs" }
@@ -681,7 +681,7 @@
       "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Capaciteitsbescherming Actief" },
+      "capacity_protection_active": { "name": "Piekbegrenzing Actief" },
       "predictive_charging_active": { "name": "Voorspellend Laden Actief" },
       "wifi_status": { "name": "WiFi-status" },
       "cloud_status": { "name": "Cloudstatus" }
@@ -718,10 +718,10 @@
       "pd_min_charge_power": { "name": "PD Min. Laadvermogen" },
       "pd_min_discharge_power": { "name": "PD Min. Ontlaadvermogen" },
       "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
-      "capacity_protection_soc_threshold": { "name": "SOC Drempel Capaciteitsbeveiliging" },
+      "capacity_protection_soc_threshold": { "name": "SOC Drempel Piekbegrenzing" },
       "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
       "delay_soc_setpoint": { "name": "SOC-drempel Laadvertraging" },
-      "capacity_protection_limit": { "name": "Piekgrens Beveiliging" },
+      "capacity_protection_limit": { "name": "Piekbegrenzing Limiet" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" }
     },
     "button": {

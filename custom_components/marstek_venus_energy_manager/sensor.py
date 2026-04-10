@@ -159,7 +159,6 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
         self._attr_icon = definition.get("icon")
-        self._attr_force_update = definition.get("force_update", False)
         self._attr_should_poll = False
 
     @property
