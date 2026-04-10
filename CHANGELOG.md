@@ -1,9 +1,14 @@
 # Changelog
 
+## [1.6.2] - 2026-04-10
+
+### Fixed
+- **Max price threshold rejected small decimal values**: The `NumberSelector` input for the max price threshold silently rounded values like `0.0008` to `0` due to browser-level precision loss in the HTML number input. Replaced with a `TextSelector` (free-text field) that preserves the exact value entered. Applies to both dynamic pricing and real-time price modes in the setup and options flows. Existing installations that stored a rounded value will need to re-enter the correct threshold in the options flow. Note: HA's attribute display in entity cards may round the value visually (e.g. `0.008` shown as `0.01`), but the full-precision value is stored correctly and can be verified in Developer Tools → States.
+- **Dynamic pricing config flow did not advance**: The config flow for dynamic pricing mode failed to proceed past the pricing step because the `NumberSelector` could not handle comma-separated decimals used in European locales. The `TextSelector` replacement accepts both comma and dot as decimal separators.
+
 ## [1.6.1] - 2026-04-10
 
 ### Changed
-- **Max price threshold allows up to 5 decimal places**: The input field for the max price threshold in predictive grid charging (both dynamic pricing and real-time price modes) now accepts up to 5 decimal places instead of 3, accommodating price integrations that report values with higher precision.
 - **Peak shaving renamed from "Capacity Protection"**: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.
 
 ### Fixed

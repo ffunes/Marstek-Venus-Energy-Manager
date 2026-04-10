@@ -22,6 +22,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     BooleanSelector,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -700,7 +703,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
-                    max_price = float(max_price_raw) if max_price_raw else None
+                    max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
 
                     self.config_data["enable_predictive_charging"] = True
                     self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
@@ -733,9 +736,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Optional(CONF_MAX_PRICE_THRESHOLD):
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
-                ),
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=False): bool,
         }
         if not has_global_sensor:
@@ -781,7 +782,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
-                    max_price = float(max_price_raw) if max_price_raw else None
+                    max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
                     avg_sensor = user_input.get(CONF_AVERAGE_PRICE_SENSOR) or None
 
                     self.config_data["enable_predictive_charging"] = True
@@ -803,9 +804,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Optional(CONF_MAX_PRICE_THRESHOLD):
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
-                ),
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Optional(CONF_AVERAGE_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Required(CONF_RT_PRICE_DISCHARGE_CONTROL, default=False): bool,
@@ -1778,7 +1777,7 @@ class OptionsFlowHandler(OptionsFlow):
 
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
-                    max_price = float(max_price_raw) if max_price_raw else None
+                    max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
 
                     self.config_data["enable_predictive_charging"] = True
                     self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
@@ -1820,9 +1819,7 @@ class OptionsFlowHandler(OptionsFlow):
                 CONF_MAX_PRICE_THRESHOLD,
                 default=default_max_price if default_max_price is not None else vol.UNDEFINED
             ):
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
-                ),
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=default_dp_discharge_control): bool,
         }
         if not has_global_sensor:
@@ -1870,7 +1867,7 @@ class OptionsFlowHandler(OptionsFlow):
 
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
-                    max_price = float(max_price_raw) if max_price_raw else None
+                    max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
                     avg_sensor = user_input.get(CONF_AVERAGE_PRICE_SENSOR) or None
 
                     self.config_data["enable_predictive_charging"] = True
@@ -1901,9 +1898,7 @@ class OptionsFlowHandler(OptionsFlow):
                 CONF_MAX_PRICE_THRESHOLD,
                 default=default_max_price if default_max_price is not None else vol.UNDEFINED
             ):
-                NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
-                ),
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Optional(
                 CONF_AVERAGE_PRICE_SENSOR,
                 default=default_avg_sensor if default_avg_sensor else vol.UNDEFINED

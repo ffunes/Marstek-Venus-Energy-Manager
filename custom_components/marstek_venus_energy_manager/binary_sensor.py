@@ -295,6 +295,7 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
 
         if self.controller.predictive_charging_mode == "dynamic_pricing":
             attrs["price_data_status"] = getattr(self.controller, "_price_data_status", "not_evaluated")
+            attrs["max_price_threshold"] = self.controller.max_price_threshold
 
         if self.controller._dynamic_pricing_schedule:
             schedule = self.controller._dynamic_pricing_schedule
