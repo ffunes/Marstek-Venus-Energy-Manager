@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💡 Feature Request / Idea
+    url: https://github.com/ffunes/Marstek-Venus-Energy-Manager/discussions/categories/feature-ideas
+    about: >
+      Feature requests go through community voting. Post your idea in Discussions
+      so others can vote on it. Ideas with enough support get prioritized for
+      development.
