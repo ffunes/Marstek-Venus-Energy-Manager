@@ -3,6 +3,7 @@
 ## [1.6.1] - 2026-04-10
 
 ### Changed
+- **Max price threshold allows up to 5 decimal places**: The input field for the max price threshold in predictive grid charging (both dynamic pricing and real-time price modes) now accepts up to 5 decimal places instead of 3, accommodating price integrations that report values with higher precision.
 - **Peak shaving renamed from "Capacity Protection"**: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.
 ### Fixed
 - **Excessive state updates in HA database** ([#96](https://github.com/ffunes/Marstek-Venus-Energy-Manager/issues/96)): Removed `force_update: True` from `battery_power` and `ac_power` sensor definitions across all battery versions (v2, v3, vA, vD). With this flag enabled, HA recorded a new database entry on every poll cycle (~every 2 seconds) even when the value hadn't changed, generating ~43,000 state entries per sensor per day and causing significant database growth. Now HA only records a state change when the value actually differs from the previous one.

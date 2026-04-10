@@ -734,7 +734,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Optional(CONF_MAX_PRICE_THRESHOLD):
                 NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
+                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
                 ),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=False): bool,
         }
@@ -804,7 +804,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Optional(CONF_MAX_PRICE_THRESHOLD):
                 NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
+                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
                 ),
             vol.Optional(CONF_AVERAGE_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
@@ -1821,7 +1821,7 @@ class OptionsFlowHandler(OptionsFlow):
                 default=default_max_price if default_max_price is not None else vol.UNDEFINED
             ):
                 NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
+                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
                 ),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=default_dp_discharge_control): bool,
         }
@@ -1902,7 +1902,7 @@ class OptionsFlowHandler(OptionsFlow):
                 default=default_max_price if default_max_price is not None else vol.UNDEFINED
             ):
                 NumberSelector(
-                    NumberSelectorConfig(min=0, max=5.0, step=0.001, mode=NumberSelectorMode.BOX)
+                    NumberSelectorConfig(min=0, max=5.0, step=0.00001, mode=NumberSelectorMode.BOX)
                 ),
             vol.Optional(
                 CONF_AVERAGE_PRICE_SENSOR,
