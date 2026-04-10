@@ -238,22 +238,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
+        "title": "Modo de reducción de picos",
         "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Activar reducción de picos"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Configuración de reducción de picos",
+        "description": "Configura el umbral de SOC por debajo del cual se activa la reducción de picos y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
         "data": {
           "capacity_protection_soc_threshold": "Umbral de SOC (%)",
           "capacity_protection_limit": "Límite pico (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la reducción de picos. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
+          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la reducción de picos esté activa, la batería solo descargará el exceso por encima de este límite."
         }
       }
     },
@@ -508,22 +508,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
+        "title": "Modo de reducción de picos",
         "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Activar reducción de picos"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Configuración de reducción de picos",
+        "description": "Configura el umbral de SOC por debajo del cual se activa la reducción de picos y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
         "data": {
           "capacity_protection_soc_threshold": "Umbral de SOC (%)",
           "capacity_protection_limit": "Límite pico (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la reducción de picos. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
+          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la reducción de picos esté activa, la batería solo descargará el exceso por encima de este límite."
         }
       },
       "pd_advanced": {
@@ -597,7 +597,7 @@
       "manual_mode": { "name": "Modo Manual" },
       "predictive_charging": { "name": "Carga Predictiva" },
       "charge_delay": { "name": "Retraso de Carga" },
-      "capacity_protection": { "name": "Protección de Capacidad" },
+      "capacity_protection": { "name": "Reducción de Picos" },
       "backup_function": { "name": "Función de Respaldo" },
       "rs485_control_mode": { "name": "Modo de Control RS485" },
       "automation_charging_active": { "name": "Carga por Precio Externo" }
@@ -681,7 +681,7 @@
       "battery_cycle_count_calc": { "name": "Ciclos de la Batería (Calculado)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Protección de Capacidad Activa" },
+      "capacity_protection_active": { "name": "Reducción de Picos Activa" },
       "predictive_charging_active": { "name": "Carga Predictiva Activa" },
       "wifi_status": { "name": "Estado WiFi" },
       "cloud_status": { "name": "Estado Cloud" }
@@ -718,10 +718,10 @@
       "pd_min_charge_power": { "name": "Potencia Mínima de Carga PD" },
       "pd_min_discharge_power": { "name": "Potencia Mínima de Descarga PD" },
       "max_contracted_power": { "name": "Potencia Máxima Contratada" },
-      "capacity_protection_soc_threshold": { "name": "Umbral SOC Protección de Capacidad" },
+      "capacity_protection_soc_threshold": { "name": "Umbral SOC Reducción de Picos" },
       "delay_safety_margin_min": { "name": "Margen Retraso de Carga" },
       "delay_soc_setpoint": { "name": "SOC Setpoint Retraso de Carga" },
-      "capacity_protection_limit": { "name": "Límite Pico Protección" },
+      "capacity_protection_limit": { "name": "Límite Pico Reducción de Picos" },
       "backup_offgrid_threshold": { "name": "Umbral Offgrid Backup" }
     },
     "button": {

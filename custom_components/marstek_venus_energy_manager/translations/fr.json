@@ -238,22 +238,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Mode de protection de capacité",
+        "title": "Mode écrêtement de pointe",
         "description": "Si activé, lorsque le SOC de la batterie descend en dessous d'un seuil, le système économise l'énergie en ne déchargeant que pour compenser la consommation dépassant une limite de pointe.",
         "data": {
-          "configure_capacity_protection": "Activer la protection de capacité"
+          "configure_capacity_protection": "Activer l'écrêtement de pointe"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuration de la protection de capacité",
-        "description": "Configurez le seuil de SOC en dessous duquel la protection s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
+        "title": "Configuration de l'écrêtement de pointe",
+        "description": "Configurez le seuil de SOC en dessous duquel l'écrêtement de pointe s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
         "data": {
           "capacity_protection_soc_threshold": "Seuil de SOC (%)",
           "capacity_protection_limit": "Limite de pointe (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, la protection de capacité s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
-          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que la protection est active, la batterie ne décharge que l'excès au-dessus de cette limite."
+          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, l'écrêtement de pointe s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
+          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que l'écrêtement de pointe est actif, la batterie ne décharge que l'excès au-dessus de cette limite."
         }
       }
     },
@@ -508,22 +508,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Mode de protection de capacité",
+        "title": "Mode écrêtement de pointe",
         "description": "Si activé, lorsque le SOC de la batterie descend en dessous d'un seuil, le système économise l'énergie en ne déchargeant que pour compenser la consommation dépassant une limite de pointe.",
         "data": {
-          "configure_capacity_protection": "Activer la protection de capacité"
+          "configure_capacity_protection": "Activer l'écrêtement de pointe"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuration de la protection de capacité",
-        "description": "Configurez le seuil de SOC en dessous duquel la protection s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
+        "title": "Configuration de l'écrêtement de pointe",
+        "description": "Configurez le seuil de SOC en dessous duquel l'écrêtement de pointe s'active et la limite de puissance de pointe. La batterie ne déchargera que pour maintenir l'importation réseau en dessous de la limite.",
         "data": {
           "capacity_protection_soc_threshold": "Seuil de SOC (%)",
           "capacity_protection_limit": "Limite de pointe (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, la protection de capacité s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
-          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que la protection est active, la batterie ne décharge que l'excès au-dessus de cette limite."
+          "capacity_protection_soc_threshold": "Lorsque le SOC moyen des batteries descend en dessous de cette valeur, l'écrêtement de pointe s'active. La batterie cessera de décharger pour la consommation normale et ne couvrira que les pointes au-dessus de la limite.",
+          "capacity_protection_limit": "Seuil de puissance d'importation réseau. Lorsque la consommation de la maison dépasse cette valeur et que l'écrêtement de pointe est actif, la batterie ne décharge que l'excès au-dessus de cette limite."
         }
       },
       "pd_advanced": {
@@ -597,7 +597,7 @@
       "manual_mode": { "name": "Mode Manuel" },
       "predictive_charging": { "name": "Charge Prédictive" },
       "charge_delay": { "name": "Délai de Charge" },
-      "capacity_protection": { "name": "Protection de Capacité" },
+      "capacity_protection": { "name": "Écrêtement de Pointe" },
       "backup_function": { "name": "Fonction de Secours" },
       "rs485_control_mode": { "name": "Mode de Contrôle RS485" },
       "automation_charging_active": { "name": "Charge par Prix Externe" }
@@ -681,7 +681,7 @@
       "battery_cycle_count_calc": { "name": "Cycles Batterie (Calculé)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Protection de Capacité Active" },
+      "capacity_protection_active": { "name": "Écrêtement de Pointe Actif" },
       "predictive_charging_active": { "name": "Charge Prédictive Active" },
       "wifi_status": { "name": "État WiFi" },
       "cloud_status": { "name": "État Cloud" }
@@ -718,10 +718,10 @@
       "pd_min_charge_power": { "name": "Puissance Min. de Charge PD" },
       "pd_min_discharge_power": { "name": "Puissance Min. de Décharge PD" },
       "max_contracted_power": { "name": "Puissance Contractuelle Max." },
-      "capacity_protection_soc_threshold": { "name": "Seuil SOC Protection Capacité" },
+      "capacity_protection_soc_threshold": { "name": "Seuil SOC Écrêtement de Pointe" },
       "delay_safety_margin_min": { "name": "Marge Retard de Charge" },
       "delay_soc_setpoint": { "name": "SOC Seuil Retard de Charge" },
-      "capacity_protection_limit": { "name": "Limite de Crête Protection" },
+      "capacity_protection_limit": { "name": "Limite Écrêtement de Pointe" },
       "backup_offgrid_threshold": { "name": "Seuil Offgrid Backup" }
     },
     "button": {

@@ -196,22 +196,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
+        "title": "Modo de reducción de picos",
         "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Activar reducción de picos"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Configuración de reducción de picos",
+        "description": "Configura el umbral de SOC por debajo del cual se activa la reducción de picos y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
         "data": {
           "capacity_protection_soc_threshold": "Umbral de SOC (%)",
           "capacity_protection_limit": "Límite pico (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la reducción de picos. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
+          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la reducción de picos esté activa, la batería solo descargará el exceso por encima de este límite."
         }
       }
     },
@@ -392,22 +392,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Modo de protección de capacidad",
+        "title": "Modo de reducción de picos",
         "description": "Si se activa, cuando el SOC de la batería baje de un umbral, el sistema conservará energía descargando solo para cubrir consumo que supere un límite pico.",
         "data": {
-          "configure_capacity_protection": "Activar protección de capacidad"
+          "configure_capacity_protection": "Activar reducción de picos"
         }
       },
       "capacity_protection_config": {
-        "title": "Configuración de protección de capacidad",
-        "description": "Configura el umbral de SOC por debajo del cual se activa la protección y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
+        "title": "Configuración de reducción de picos",
+        "description": "Configura el umbral de SOC por debajo del cual se activa la reducción de picos y el límite de potencia pico. La batería solo descargará para mantener la importación de red por debajo del límite.",
         "data": {
           "capacity_protection_soc_threshold": "Umbral de SOC (%)",
           "capacity_protection_limit": "Límite pico (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la protección. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
-          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la protección esté activa, la batería solo descargará el exceso por encima de este límite."
+          "capacity_protection_soc_threshold": "Cuando el SOC medio de las baterías baje de este valor, se activa la reducción de picos. La batería dejará de descargar para consumo normal y solo cubrirá picos por encima del límite.",
+          "capacity_protection_limit": "Umbral de potencia de importación de red. Cuando el consumo de la casa supere este valor y la reducción de picos esté activa, la batería solo descargará el exceso por encima de este límite."
         }
       }
     },

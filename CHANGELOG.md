@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.1] - 2026-04-10
+
+### Changed
+- **Peak shaving renamed from "Capacity Protection"**: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.
+
 ## [1.6.0] - 2026-04-07
 
 > [!IMPORTANT]

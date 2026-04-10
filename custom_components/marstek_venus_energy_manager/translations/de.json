@@ -238,22 +238,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Kapazitätsschutzmodus",
+        "title": "Spitzenlastkappung",
         "description": "Wenn aktiviert, wird das System bei niedrigem Batterie-SOC Energie sparen und nur entladen, um Verbrauch über einem Spitzenlimit auszugleichen.",
         "data": {
-          "configure_capacity_protection": "Kapazitätsschutz aktivieren"
+          "configure_capacity_protection": "Spitzenlastkappung aktivieren"
         }
       },
       "capacity_protection_config": {
-        "title": "Kapazitätsschutz-Konfiguration",
-        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem der Schutz aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
+        "title": "Spitzenlastkappung konfigurieren",
+        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem die Spitzenlastkappung aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
         "data": {
           "capacity_protection_soc_threshold": "SOC-Schwellenwert (%)",
           "capacity_protection_limit": "Spitzenlimit (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird der Kapazitätsschutz aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
-          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und der Schutz aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
+          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird die Spitzenlastkappung aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
+          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und die Spitzenlastkappung aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
         }
       }
     },
@@ -508,22 +508,22 @@
         }
       },
       "capacity_protection": {
-        "title": "Kapazitätsschutzmodus",
+        "title": "Spitzenlastkappung",
         "description": "Wenn aktiviert, wird das System bei niedrigem Batterie-SOC Energie sparen und nur entladen, um Verbrauch über einem Spitzenlimit auszugleichen.",
         "data": {
-          "configure_capacity_protection": "Kapazitätsschutz aktivieren"
+          "configure_capacity_protection": "Spitzenlastkappung aktivieren"
         }
       },
       "capacity_protection_config": {
-        "title": "Kapazitätsschutz-Konfiguration",
-        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem der Schutz aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
+        "title": "Spitzenlastkappung konfigurieren",
+        "description": "Konfigurieren Sie den SOC-Schwellenwert, unter dem die Spitzenlastkappung aktiviert wird, und das Spitzenleistungslimit. Die Batterie entlädt nur, um den Netzimport unter dem Spitzenlimit zu halten.",
         "data": {
           "capacity_protection_soc_threshold": "SOC-Schwellenwert (%)",
           "capacity_protection_limit": "Spitzenlimit (W)"
         },
         "data_description": {
-          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird der Kapazitätsschutz aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
-          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und der Schutz aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
+          "capacity_protection_soc_threshold": "Wenn der durchschnittliche Batterie-SOC unter diesen Wert fällt, wird die Spitzenlastkappung aktiviert. Die Batterie stoppt die Entladung für normalen Verbrauch und deckt nur Spitzen über dem Limit ab.",
+          "capacity_protection_limit": "Netzimport-Leistungsschwelle. Wenn der Hausverbrauch diesen Wert überschreitet und die Spitzenlastkappung aktiv ist, entlädt die Batterie nur den Überschuss über diesem Limit."
         }
       },
       "pd_advanced": {
@@ -597,7 +597,7 @@
       "manual_mode": { "name": "Manueller Modus" },
       "predictive_charging": { "name": "Prädiktives Laden" },
       "charge_delay": { "name": "Ladeverzögerung" },
-      "capacity_protection": { "name": "Kapazitätsschutz" },
+      "capacity_protection": { "name": "Spitzenlastkappung" },
       "backup_function": { "name": "Backup-Funktion" },
       "rs485_control_mode": { "name": "RS485-Steuermodus" },
       "automation_charging_active": { "name": "Laden nach externem Preis" }
@@ -681,7 +681,7 @@
       "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" }
     },
     "binary_sensor": {
-      "capacity_protection_active": { "name": "Kapazitätsschutz Aktiv" },
+      "capacity_protection_active": { "name": "Spitzenlastkappung Aktiv" },
       "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" },
       "wifi_status": { "name": "WLAN-Status" },
       "cloud_status": { "name": "Cloud-Status" }
@@ -718,10 +718,10 @@
       "pd_min_charge_power": { "name": "PD Min. Ladeleistung" },
       "pd_min_discharge_power": { "name": "PD Min. Entladeleistung" },
       "max_contracted_power": { "name": "Max. Vertragsleistung" },
-      "capacity_protection_soc_threshold": { "name": "Kapazitätsschutz SOC-Schwelle" },
+      "capacity_protection_soc_threshold": { "name": "Spitzenlastkappung SOC-Schwelle" },
       "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
       "delay_soc_setpoint": { "name": "SOC-Schwellwert Ladungsverzögerung" },
-      "capacity_protection_limit": { "name": "Spitzenlimit Schutz" },
+      "capacity_protection_limit": { "name": "Spitzenlastkappung Limit" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" }
     },
     "button": {
