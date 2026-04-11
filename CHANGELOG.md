@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.3] - 2026-04-11
+
+### Fixed
+- **Max price threshold "expected str" error on reconfigure**: Reopening the predictive charging config (dynamic pricing or real-time price) after a threshold was already saved failed with "expected str". The stored value was a `float`, but the `TextSelector` schema expected a `str` default. Fixed by converting the stored value to `str()` before passing it as the schema default.
+
 ## [1.6.2] - 2026-04-10
 
 ### Fixed
