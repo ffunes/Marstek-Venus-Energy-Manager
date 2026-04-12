@@ -6,7 +6,7 @@ on:
 
 jobs:
   comment:
-    if: github.event.discussion.category.name == '💡 Feature Ideas'
+    if: github.event.discussion.category.name == 'Feature Ideas'
     runs-on: ubuntu-latest
     permissions:
       discussions: write
