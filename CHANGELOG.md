@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Household consumption sensor**: New optional power sensor (W or kW) that can be configured at the main sensor step. When set, the integration integrates the sensor's power reading over time to compute daily household energy consumption (kWh) during the solar+battery window (i.e. outside the configured charging time slot). This replaces the previous estimation method — which derived consumption from battery discharge + grid import at min SOC — with real measured data. The improvement is most visible in weeks with high solar production, where the old method systematically underestimated demand and could skip necessary grid charging.
+
+  - **Predictive charging** and **charge delay** automatically use the real consumption data when the sensor is configured. No additional setup is needed — the switch between sources is transparent.
+  - **New diagnostic attributes** on `binary_sensor.marstek_venus_system_predictive_charging_active`: `consumption_source` (`household_sensor` or `battery_discharge`), `household_consumption_sensor` (entity ID), `household_consumption_battery_window_kwh`, and `household_accumulator_date`.
+  - The accumulator survives HA restarts: it is stored in the binary sensor's attributes and restored on startup if the date matches the current day.
+  - Backfill on startup queries the recorder for the configured sensor's history to fill in consumption data for past days, using the same time-window filter.
+
 ## [1.6.3] - 2026-04-12
 
 ### Fixed

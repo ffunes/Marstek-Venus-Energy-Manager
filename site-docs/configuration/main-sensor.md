@@ -44,4 +44,32 @@ Configurarlo aquí lo pone a disposición de:
 
 También puedes dejarlo en blanco y configurarlo más tarde en esas secciones específicas.
 
+---
+
+## Sensor de consumo del hogar *(opcional)*
+
+Sensor de potencia (W o kW) que mide el consumo eléctrico total del hogar.
+
+Cuando está configurado, la integración integra la lectura del sensor en el tiempo — únicamente durante la **franja solar+batería** (fuera de la franja de carga desde red) — para obtener un valor diario en kWh. Esto sustituye al método de estimación por defecto, que deriva el consumo a partir de la descarga de la batería + importación de red en SOC mínimo.
+
+**Cuándo configurarlo:**
+
+- Tienes un pinzímetro, Shelly EM u otro dispositivo que mide la carga total del hogar.
+- Quieres que la carga predictiva y el retraso de carga solar usen datos de consumo reales.
+- Tu producción solar varía significativamente de semana en semana (semanas muy soleadas hacen que el método por defecto subestime la demanda real).
+
+**Cómo funciona:**
+
+| Modo | Fuente de consumo |
+|------|------------------|
+| Sensor configurado | Integración del sensor de potencia (W→kWh) durante la franja solar+batería |
+| Sin sensor | Descarga de batería + importación de red en SOC mínimo (comportamiento actual) |
+
+La integración acumula energía únicamente durante la franja solar+batería (fuera de la franja de carga configurada). Si no hay franja configurada, acumula durante todo el día. El contador se reinicia a medianoche y sobrevive reinicios de HA.
+
+El consumo diario resultante alimenta el mismo historial que leen la carga predictiva y el retraso de carga solar — no es necesaria ninguna configuración adicional en esas secciones.
+
+!!! tip "Unidades admitidas"
+    Se aceptan sensores en **W** y en **kW**. La integración lee el atributo `unit_of_measurement` y convierte automáticamente.
+
 ![Configuración del sensor principal](../assets/screenshots/configuration/main-sensor.png){ width="600"  style="display: block; margin: 0 auto;"}

@@ -4832,7 +4832,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 try:
                     _acc_date = _date.fromisoformat(_acc_date_str)
                     if _acc_date == _today:
-                        _acc_value = float(_bs_state.attributes.get("household_energy_today_kwh", 0.0))
+                        _acc_value = float(_bs_state.attributes.get("household_consumption_battery_window_kwh", 0.0))
                         controller._household_energy_accumulator = _acc_value
                         controller._household_accumulator_date = _today
                         _LOGGER.info(

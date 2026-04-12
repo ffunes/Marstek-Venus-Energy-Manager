@@ -245,7 +245,7 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
         if self.controller.household_consumption_sensor:
             attrs["consumption_source"] = "household_sensor"
             attrs["household_consumption_sensor"] = self.controller.household_consumption_sensor
-            attrs["household_energy_today_kwh"] = round(self.controller._household_energy_accumulator, 2)
+            attrs["household_consumption_battery_window_kwh"] = round(self.controller._household_energy_accumulator, 2)
             if self.controller._household_accumulator_date is not None:
                 attrs["household_accumulator_date"] = self.controller._household_accumulator_date.isoformat()
         else:

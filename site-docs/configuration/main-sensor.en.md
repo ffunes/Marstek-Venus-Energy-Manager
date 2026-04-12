@@ -44,4 +44,32 @@ Configuring it here makes it available to:
 
 You can also leave it blank and configure it later in those specific sections.
 
+---
+
+## Household consumption sensor *(optional)*
+
+A power sensor (W or kW) that measures total household electricity consumption.
+
+When configured, the integration integrates the sensor reading over time — only during the **solar+battery window** (outside the charging time slot) — to produce a daily kWh figure. This replaces the default estimation method, which derives consumption from battery discharge + grid import at min SOC.
+
+**When to configure it:**
+
+- You have a clamp meter, Shelly EM, or similar device measuring total house load.
+- You want predictive charging and charge delay to use real consumption data.
+- Your solar production varies significantly week to week (high-solar weeks cause the default estimation to underestimate demand).
+
+**How it works:**
+
+| Mode | Consumption source |
+|------|-------------------|
+| Sensor configured | Integration of the power sensor (W→kWh) during the solar+battery window |
+| No sensor | Battery discharge + grid import at min SOC (existing behaviour) |
+
+The integration accumulates energy during the solar+battery window only (i.e. outside the configured charging time slot). If no time slot is configured, it accumulates all day. The counter resets at midnight and survives HA restarts.
+
+The daily consumption figure feeds the same history that predictive charging and charge delay read — no additional configuration is needed in those sections.
+
+!!! tip "Supported units"
+    Both **W** and **kW** sensors are accepted. The integration reads the `unit_of_measurement` attribute and converts automatically.
+
 ![Main sensor configuration](../assets/screenshots/configuration/main-sensor.png){ width="600"  style="display: block; margin: 0 auto;"}
