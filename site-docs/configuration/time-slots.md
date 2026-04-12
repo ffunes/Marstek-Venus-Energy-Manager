@@ -1,38 +1,38 @@
-# Franjas horarias
+# Time slots
 
-Las franjas horarias definen ventanas de tiempo en las que la batería **está autorizada a descargar**. Fuera de estas ventanas, la batería solo carga (o permanece en espera).
+Time slots define windows during which the battery is **allowed to discharge**. Outside these windows, the battery only charges (or remains idle).
 
-## Cuándo usarlas
+## When to use them
 
-- Reservar energía para los picos de consumo vespertinos o nocturnos.
-- Optimizar el arbitraje tarifario (descarga en horas caras, carga en horas baratas).
-- Controlar la descarga en función de los días de la semana.
-
----
-
-## Configuración de una franja
-
-| Campo | Descripción |
-|---|---|
-| **Hora inicio / fin** | Ventana de la franja (p. ej. `14:00` – `18:00`) |
-| **Días** | Días de la semana en los que aplica |
-| **Aplicar a carga** | Si está activo, la franja también restringe la carga |
-| **Potencia objetivo de red** | Nivel de red al que el controlador regula durante la franja |
-
-### Potencia objetivo de red
-
-Por defecto `0 W` (flujo de red cero). Rango: `-500 W` a `+500 W`.
-
-| Valor | Efecto |
-|---|---|
-| `0 W` | Autoconsumo máximo, sin exportación |
-| `< 0` (p. ej. `-150 W`) | Mantiene exportación ligera (útil si la compensación es rentable) |
-| `> 0` (p. ej. `+200 W`) | Permite importación ligera (reduce ciclado de la batería) |
-
-![Formulario de configuración de franja horaria](../assets/screenshots/configuration/time-slot-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+- Reserve energy for evening or overnight consumption peaks.
+- Optimise tariff arbitrage (discharge during expensive hours, charge during cheap hours).
+- Control discharge by day of the week.
 
 ---
 
-## Franjas y carga predictiva
+## Configuring a time slot
 
-Cuando la carga predictiva está activa, el controlador puede usar las franjas como ventanas de carga desde la red. Consulta [Carga predictiva – Modo Franja Horaria](predictive-charging/time-slot.md) para más detalles.
+| Field | Description |
+|---|---|
+| **Start / end time** | Slot window (e.g. `14:00` – `18:00`) |
+| **Days** | Days of the week the slot applies to |
+| **Apply to charging** | If enabled, the slot also restricts charging |
+| **Target grid power** | Grid level the controller regulates toward during the slot |
+
+### Target grid power
+
+Default `0 W` (zero grid flow). Range: `-500 W` to `+500 W`.
+
+| Value | Effect |
+|---|---|
+| `0 W` | Maximum self-consumption, no export |
+| `< 0` (e.g. `-150 W`) | Maintains slight export (useful when feed-in tariff is profitable) |
+| `> 0` (e.g. `+200 W`) | Allows slight import (reduces battery cycling) |
+
+![Time slot configuration form](../assets/screenshots/configuration/time-slot-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+
+---
+
+## Time slots and predictive charging
+
+When predictive charging is active, the controller can use time slots as grid charging windows. See [Predictive charging – Time Slot mode](predictive-charging/time-slot.md) for details.

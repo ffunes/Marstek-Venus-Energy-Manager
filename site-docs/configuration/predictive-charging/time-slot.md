@@ -1,30 +1,30 @@
-# Carga predictiva — Modo Franja Horaria
+# Predictive charging — Time Slot mode
 
-Carga desde la red durante una **ventana horaria fija** (típicamente tarifa nocturna barata).
+Charges from the grid during a **fixed time window** (typically cheap overnight tariff).
 
-## Configuración
+## Configuration
 
-| Campo | Descripción |
+| Field | Description |
 |---|---|
-| **Ventana horaria** | Inicio y fin de la franja de carga (p. ej. `02:00` – `05:00`) |
-| **Sensor de previsión solar** | Sensor de producción solar del día actual en kWh (opcional) |
-| **Potencia ICP contratada** | Límite de la conexión de red (W). Asegura que carga + consumo doméstico no supere el ICP |
+| **Time window** | Start and end of the charging slot (e.g. `02:00` – `05:00`) |
+| **Solar forecast sensor** | Current-day production sensor in kWh (optional) |
+| **Contracted grid power (ICP)** | Grid connection limit (W). Ensures charging + household load does not trip the main breaker |
 
-!!! danger "Cambio importante en v1.6.0"
-    El campo de sensor de previsión solar ahora debe apuntar al sensor de **hoy** (p. ej. `sensor.solcast_pv_forecast_forecast_today`), no al de mañana.
+!!! danger "Breaking change in v1.6.0"
+    The solar forecast sensor field must now point to the **today** sensor (e.g. `sensor.solcast_pv_forecast_forecast_today`), not the tomorrow sensor.
 
-!!! note "Sin sensor solar"
-    Si no tienes paneles solares, deja vacío el sensor de previsión. El sistema cargará siempre que la energía de la batería sea insuficiente para cubrir el consumo esperado.
+!!! note "No solar sensor"
+    If you have no solar panels, leave the forecast sensor empty. The system will charge whenever battery energy is insufficient to cover expected consumption.
 
-![Formulario de configuración — Modo Franja Horaria](../../assets/screenshots/configuration/predictive-charging/time-slot-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuration form — Time Slot mode](../../assets/screenshots/configuration/predictive-charging/time-slot-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
-## Flujo de evaluación
+## Evaluation flow
 
-1. **Al entrar en el slot**: las baterías se mantienen en reposo durante 5 minutos para que el sensor de previsión solar tenga tiempo de actualizarse (especialmente relevante si el slot comienza a las 00:00).
-2. **5 minutos después**: el sistema evalúa el balance energético (`energía usable + previsión solar` vs. `consumo diario estimado`) y decide si cargar o no.
-3. Se envía una notificación con la decisión tomada.
-4. La carga continúa hasta que la batería alcanza el nivel calculado o finaliza la ventana.
+1. **On slot entry**: batteries are held idle for 5 minutes to allow the solar forecast sensor time to update (particularly relevant when the slot starts at 00:00).
+2. **5 minutes in**: the system evaluates the energy balance (`usable energy + solar forecast` vs. `estimated daily consumption`) and decides whether to charge.
+3. A notification is sent with the decision.
+4. Charging continues until the battery reaches the calculated level or the window ends.
 
-## Reevaluación por caída de SOC
+## SOC-drop re-evaluation
 
-Si el SOC cae un 30 % o más respecto al último punto de evaluación durante el slot (p. ej. por un consumo elevado), el sistema reevalúa el balance energético automáticamente. No se envía notificación adicional en estas reevaluaciones intermedias.
+If the SOC drops 30 % or more from the last evaluation point during the slot (e.g. due to high consumption), the system automatically re-evaluates the energy balance. No additional notification is sent for these mid-slot re-evaluations.

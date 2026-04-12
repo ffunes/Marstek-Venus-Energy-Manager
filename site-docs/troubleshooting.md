@@ -1,127 +1,127 @@
-# Solución de problemas
+# Troubleshooting
 
-## Compatibilidad con la app de Marstek
+## Marstek app compatibility
 
-**No es necesario realizar ningún cambio en la app de Marstek** para que la integración funcione — incluyendo desactivar el medidor de energía o modificar cualquier configuración. La integración opera junto a la app sin requerir ningún ajuste desde ella.
+You do **not** need to make any changes in the Marstek app for the integration to work — including disabling the energy meter setting or changing any configuration. The integration works alongside the app without requiring any app-side adjustments.
 
-Sin embargo, **no cambies ningún modo de operación ni configuración desde la app de Marstek mientras la integración de Home Assistant esté en ejecución**. Hacerlo romperá la compatibilidad y necesitarás deshabilitar y volver a habilitar la integración para restaurar el funcionamiento normal.
-
----
-
-## La batería no responde a los comandos
-
-1. Verifica que el conversor Modbus TCP (Elfin-EW11 o similar) está accesible por IP desde Home Assistant.
-2. Comprueba que el puerto configurado es correcto (por defecto `502`).
-3. Revisa que el switch **RS485 Control Mode** está activado.
-4. Asegúrate de que la versión de batería configurada coincide con el hardware real.
-
-!!! note "Delay para v3/vA/vD"
-    Las baterías v3, vA y vD requieren al menos 150 ms entre mensajes Modbus consecutivos. La integración lo aplica automáticamente según la versión configurada.
+However, **do not change any operating mode or setting from the Marstek app while the Home Assistant integration is running**. Doing so will break compatibility, and you will need to disable and re-enable the integration to restore normal operation.
 
 ---
 
-## El controlador PD oscila
+## Battery does not respond to commands
 
-El sistema cambia continuamente entre carga y descarga.
+1. Verify that the Modbus TCP converter (Elfin-EW11 or similar) is reachable by IP from Home Assistant.
+2. Check that the configured port is correct (default `502`).
+3. Make sure the **RS485 Control Mode** switch is enabled.
+4. Ensure the configured battery version matches the actual hardware.
 
-**Posibles causas y soluciones:**
+!!! note "Delay for v3/vA/vD"
+    v3, vA and vD batteries require at least 150 ms between consecutive Modbus messages. The integration applies this automatically based on the configured version.
 
-| Causa | Solución |
+---
+
+## PD controller oscillates
+
+The system continuously switches between charging and discharging.
+
+**Possible causes and solutions:**
+
+| Cause | Solution |
 |---|---|
-| Deadband demasiado pequeño | El ±40 W por defecto es adecuado para la mayoría de instalaciones |
-| Sensor de red con latencia alta | Usa un sensor con actualización frecuente (1–2 s) |
-| Cargas con arranque repentino | Configura la carga como [dispositivo excluido](configuration/excluded-devices.md) |
+| Deadband too small | The default ±40 W is appropriate for most installations |
+| Grid sensor with high latency | Use a sensor with frequent updates (1–2 s) |
+| Loads with sudden start-up | Configure the load as an [excluded device](configuration/excluded-devices.md) |
 
 ---
 
-## Los valores de SOC/potencia no se persisten tras reiniciar HA
+## SOC/power values are not persisted after HA restart
 
-A partir de la v1.5.0 este problema está corregido. Los cambios en sliders de SOC y potencia se guardan inmediatamente en la configuración y se restauran en cada reinicio.
+Fixed since v1.5.0. Changes to SOC and power sliders are saved immediately to the config entry and restored on every restart.
 
-Si persiste el problema, verifica que estás usando la versión **1.5.0** o superior.
+If the problem persists, verify you are using version **1.5.0** or later.
 
 ---
 
-## Recibo una notificación de alarma o fallo de batería
+## Battery alarm or fault notification received
 
-La integración monitoriza los registros `Alarm Status` y `Fault Status` de la batería (solo v2) cada 5 segundos. Cuando se activa un nuevo bit, aparece una notificación persistente en Home Assistant con el nombre exacto de la condición (p. ej. *BAT Overvoltage*, *Fan Abnormal Warning*). La notificación se descarta automáticamente cuando todas las condiciones se resuelven.
+The integration monitors the battery's `Alarm Status` and `Fault Status` registers (v2 only) every 5 seconds. When a new bit is set a persistent notification appears in Home Assistant with the exact condition name (e.g. *BAT Overvoltage*, *Fan Abnormal Warning*). The notification is automatically dismissed once all conditions clear.
 
-**Niveles de severidad de la notificación:**
+**Notification severity levels:**
 
-| Prefijo del título | Significado |
+| Title prefix | Meaning |
 |---|---|
-| 🚨 Battery Fault | Al menos un bit de fallo está activo — requiere atención inmediata |
-| ⚠️ Battery Warning | Al menos un bit de alarma está activo — conviene monitorizar la situación |
+| 🚨 Battery Fault | At least one fault bit is active — requires immediate attention |
+| ⚠️ Battery Warning | At least one alarm bit is active — monitor the situation |
 
-**Qué hacer al recibir una notificación:**
+**What to do when you receive a notification:**
 
-1. Consulta el sensor **`System Alarm Status`** en el dispositivo *Marstek Venus System* — sus atributos indican qué batería está afectada y qué condiciones están activas.
-2. Revisa los sensores **Alarm Status** y **Fault Status** individuales en el dispositivo de la batería afectada para ver el estado completo.
-3. Consulta la documentación de Marstek Venus o la app de Marstek para el código de fallo concreto.
-4. Si la condición no se resuelve sola, considera reiniciar la batería o contactar con el soporte de Marstek.
+1. Check the **`System Alarm Status`** sensor on the *Marstek Venus System* device — its attributes list which battery is affected and what conditions are active.
+2. Check the individual **Alarm Status** and **Fault Status** sensors on the affected battery device for the full current state.
+3. Consult the Marstek Venus documentation or the Marstek app for the specific fault code.
+4. If the condition does not clear automatically, consider restarting the battery or contacting Marstek support.
 
-!!! note "Solo baterías v2"
-    La monitorización de registros de alarma y fallo solo está disponible para hardware v2. Las baterías v3, vA y vD no exponen estos registros vía Modbus.
-
----
-
-## La carga predictiva no se activa
-
-1. Verifica que el sensor de previsión solar está disponible y tiene valor.
-2. Comprueba el atributo `price_data_status` del sensor `predictive_charging_active` (modo Precio Dinámico).
-3. Revisa las notificaciones de HA: la evaluación de las 00:05 reporta el resultado.
-4. Asegúrate de que el balance energético realmente requiere carga (puede que haya suficiente energía).
+!!! note "v2 batteries only"
+    Alarm and fault register monitoring is only available for v2 hardware. v3, vA and vD batteries do not expose these registers via Modbus.
 
 ---
 
-## El switch RS485 se reactiva solo tras reiniciar
+## Predictive charging does not activate
 
-Corregido en v1.5.0. La preferencia del usuario se persiste y se restaura en el arranque.
+1. Verify that the solar forecast sensor is available and has a value.
+2. Check the `price_data_status` attribute of the `predictive_charging_active` sensor (Dynamic Pricing mode).
+3. Review HA notifications: the 00:05 evaluation reports its result.
+4. Make sure the energy balance actually requires charging (there may already be enough energy).
 
 ---
 
-## El dispositivo de medida no está disponible o pierde conexión
+## RS485 switch re-enables itself after restart
 
-Si el sensor de red (por ejemplo, un medidor con conexión Wi-Fi inestable) se desconecta, el controlador se comporta de forma diferente según cómo falle el sensor.
+Fixed in v1.5.0. The user's preference is now persisted and restored at startup.
 
-### El sensor reporta `unavailable` o `unknown`
+---
 
-El bucle de control sale inmediatamente sin enviar ningún nuevo comando. Las baterías **mantienen el último nivel de potencia comandado** hasta que el sensor vuelva a estar disponible.
+## Metering device unavailable or losing connectivity
 
-### El sensor se congela (el valor deja de actualizarse)
+If the grid sensor (e.g. a power meter with a poor Wi-Fi connection) goes offline, the controller behaves differently depending on how the sensor fails.
 
-La integración detecta que la marca de tiempo del sensor no ha cambiado:
+### Sensor reports `unavailable` or `unknown`
 
-- Durante hasta **15 ciclos (~30 segundos)** mantiene el último comando sin cambios.
-- Pasado ese período de gracia, realiza un nuevo cálculo de seguridad usando el valor congelado, con el término derivativo suprimido para evitar picos de potencia.
+The control loop exits immediately without sending any new command. The batteries **hold their last commanded power level** until the sensor comes back online.
 
-### Resumen
+### Sensor freezes (value stops updating)
 
-| Estado del sensor | Comportamiento |
+The integration detects that the sensor's timestamp has not changed:
+
+- For up to **15 cycles (~30 seconds)** it keeps the last command unchanged.
+- After that grace period it performs a safety recalculation using the frozen value, with the derivative term suppressed to avoid power spikes.
+
+### Summary
+
+| Sensor state | Behaviour |
 |---|---|
-| `unavailable` / `unknown` | El bucle de control sale — las baterías mantienen la última potencia |
-| Valor congelado (sin nuevas lecturas) | ~30 s de gracia, luego recalcula con el valor obsoleto |
+| `unavailable` / `unknown` | Control loop skips — batteries hold last power level |
+| Frozen value (no new readings) | ~30 s grace period, then recalculates with stale value |
 
-!!! warning "Sin fallback automático a 0 W"
-    Si el medidor se pierde mientras la batería estaba descargando a, por ejemplo, 2000 W, **seguirá descargando a 2000 W** hasta que el medidor se recupere. No hay ningún temporizador integrado que lleve la batería a reposo. Considera mejorar la fiabilidad del Wi-Fi de tu medidor, o usar una alternativa cableada o Zigbee si los cortes son frecuentes.
-
----
-
-## Reportar un problema — Sensor de Resumen de Configuración
-
-Al abrir un informe de error o pedir ayuda, es muy útil compartir la configuración actual de la integración. El sensor **Resumen de Configuración** expone toda la configuración como atributos de la entidad.
-
-**Cómo activarlo:**
-
-1. Ve a **Configuración → Dispositivos y servicios → Marstek Venus Energy Manager**.
-2. Selecciona el dispositivo **Marstek Venus System**.
-3. Busca el sensor **Resumen de Configuración** (está oculto por defecto) y actívalo.
-4. Abre la tarjeta de detalle del sensor y comparte sus atributos (estado + atributos).
-
-El sensor es de solo lectura y diagnóstico. No afecta al comportamiento de la integración de ninguna manera.
+!!! warning "No automatic fallback to 0 W"
+    If the meter goes unavailable while the battery was, for example, discharging at 2000 W, it will **continue discharging at 2000 W** until the meter recovers. There is no built-in timeout that ramps the battery to idle. Consider improving the Wi-Fi reliability of your metering device, or using a wired/Zigbee alternative if dropouts are frequent.
 
 ---
 
-## Registros de depuración
+## Reporting an issue — Configuration Summary sensor
 
-Activa el nivel de log `debug` para la integración pulsando en "Enable debug logging" en la configuración de la integración. Una vez que lo hayas ejecutado durante el tiempo apropiado, desactívalo para no llenar los logs, y se creará un archivo de log con la información de depuración.
+When opening a bug report or asking for help, it is useful to share the current integration configuration. The **Configuration Summary** sensor exposes the complete setup as entity attributes.
+
+**How to enable it:**
+
+1. Go to **Settings → Devices & Services → Marstek Venus Energy Manager**.
+2. Select the **Marstek Venus System** device.
+3. Find the **Configuration Summary** sensor (it is hidden by default) and enable it.
+4. Open the sensor's detail card and share its attributes (state + attributes).
+
+The sensor is read-only and diagnostic. It does not affect integration behaviour in any way.
+
+---
+
+## Debug logging
+
+Enable `debug` for the integration by clicking in "Enable debug logging" button in the integration settings. Once you have run it for the appropriate time, disable it to avoid filling the logs, and a log file will be created with the debug information.

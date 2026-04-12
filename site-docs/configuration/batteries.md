@@ -1,62 +1,64 @@
-# Configuración de baterías
+# Battery configuration
 
-## Número de baterías
+## Number of batteries
 
-Selecciona cuántas unidades Marstek Venus tienes (1–6). La integración te pedirá configurar cada una por separado.
+Select how many Marstek Venus units you have (1–6). The integration will ask you to configure each one separately.
 
-![Control de número de baterías](../assets/screenshots/configuration/battery-slider.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Number of Batteries slider](../assets/screenshots/configuration/battery-slider.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
-## Parámetros por batería
 
-| Parámetro | Descripción | Valor por defecto |
+## Per-battery parameters
+
+| Parameter | Description | Default |
 |---|---|---|
-| **Nombre** | Nombre identificativo (p. ej. "Venus 1") | — |
-| **Host** | IP del conversor Modbus TCP | — |
-| **Puerto** | Puerto TCP Modbus | `502` |
-| **Versión** | Modelo de la batería | — |
-| **Potencia máx. carga/descarga** | Potencia nominal de la instalación | — |
-| **SOC máximo** | Detiene la carga al alcanzar este % | `100 %` |
-| **SOC mínimo** | Detiene la descarga al alcanzar este % | `12 %` |
-| **Histéresis de carga** | Margen para evitar ciclos rápidos cerca del límite | — |
-| **Umbral offgrid backup** | Carga offgrid mínima (W) para considerarse un evento de backup activo | `50 W` |
+| **Name** | Unique identifier (e.g. "Venus 1") | — |
+| **Host** | IP address of the Modbus TCP converter | — |
+| **Port** | Modbus TCP port | `502` |
+| **Version** | Battery model | — |
+| **Max charge/discharge power** | Rated power of your setup | — |
+| **Max SOC** | Stop charging at this percentage | `100 %` |
+| **Min SOC** | Stop discharging at this percentage | `12 %` |
+| **Charge hysteresis** | Margin to avoid rapid cycling near the charge limit | — |
+| **Backup offgrid threshold** | Minimum offgrid load (W) to be considered an active backup event | `50 W` |
 
-### Versiones de batería
+### Battery versions
 
-| Versión | Modelos |
+| Version | Models |
 |---|---|
 | `v1/v2` | Venus E v1, Venus E v2 |
 | `v3` | Venus E v3 |
 | `vA` | Venus A |
 | `vD` | Venus D |
 
-!!! warning "Potencia máxima 2500 W"
-    Usa el modo **2500 W** solo si tu instalación doméstica puede soportar esa potencia de forma segura.
+!!! warning "Maximum power 2500 W"
+    Only use **2500 W** mode if you are certain your domestic installation can safely handle that power level.
 
-![Formulario de conexión a la batería](../assets/screenshots/configuration/battery-connection-form.png){ width="650"  style="display: block; margin: 0 auto;"}
-![Formulario de configuración de batería](../assets/screenshots/configuration/battery-config-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Battery connection form](../assets/screenshots/configuration/battery-connection-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
----
-
-## SOC y límites de potencia en tiempo de ejecución
-
-Los valores de SOC máximo/mínimo y potencia máxima de carga/descarga se pueden ajustar en cualquier momento desde los sliders de la integración sin necesidad de reconfigurar. Los cambios se persisten y se restauran en cada reinicio de Home Assistant.
-
-![Sliders de SOC y potencia](../assets/screenshots/configuration/battery-runtime-sliders.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Battery configuration form](../assets/screenshots/configuration/battery-config-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
-## Umbral offgrid backup en tiempo de ejecución
+## SOC and power limits at runtime
 
-La entidad numérica **Umbral Offgrid Backup** (visible en la tarjeta de dispositivo de cada batería, entre las entidades de configuración) permite ajustar el umbral en cualquier momento sin entrar al flujo de opciones. Auméntalo si tu batería tiene cargas permanentes pequeñas en el puerto offgrid — como un switch PoE, router o cámaras IP — que de otro modo mantendrían la batería permanentemente excluida del control PD.
+Max/min SOC and max charge/discharge power values can be adjusted at any time using the integration's sliders without reconfiguring. Changes are persisted and restored on every Home Assistant restart.
 
-| Escenario | Umbral recomendado |
+![SOC and power sliders](../assets/screenshots/configuration/battery-runtime-sliders.png){ width="650"  style="display: block; margin: 0 auto;"}
+
+---
+
+## Backup offgrid threshold at runtime
+
+The **Backup Offgrid Threshold** number entity (visible on each battery's device card, under configuration entities) lets you adjust the threshold at any time without entering the options flow. Raise it if your battery has small permanent loads on its offgrid port — such as a PoE switch, router, or IP cameras — that would otherwise keep it permanently excluded from PD control.
+
+| Load scenario | Recommended threshold |
 |---|---|
-| Sin cargas permanentes en offgrid | `0 W` (cualquier carga activa la exclusión) |
-| Cargas pequeñas (router + switch, ~20–40 W) | `50 W` (valor por defecto) |
-| Cargas más pesadas (NAS, AP, cámaras, ~80–120 W) | `150 W` |
+| No permanent offgrid loads | `0 W` (any load triggers exclusion) |
+| Small standby loads (router + switch, ~20–40 W) | `50 W` (default) |
+| Heavier permanent loads (NAS, AP, cameras, ~80–120 W) | `150 W` |
 
-!!! tip "Cómo funciona"
-    Cuando el switch **Función Backup** está activado y la carga offgrid medida supera el umbral, la batería queda excluida del control PD y se gestiona de forma autónoma. Se aplica un período de enfriamiento de 5 minutos tras bajar del umbral, para evitar enviar comandos inmediatamente después de que termine un evento de backup.
+!!! tip "How it works"
+    When the **Backup Function** switch is ON and the measured offgrid load is **above** the threshold, the battery is excluded from PD control and manages itself autonomously. A 5-minute cooldown applies after the load drops back below the threshold, to avoid sending commands immediately after a backup event ends.
 

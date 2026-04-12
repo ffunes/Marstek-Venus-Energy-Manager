@@ -1,37 +1,37 @@
 # Peak shaving
 
-Reserva parte de la capacidad de la batería para satisfacer picos de demanda que superen un umbral de potencia configurable. En lugar de cubrir todo el consumo doméstico, la batería retiene energía y solo descarga para compensar la parte del consumo que supera el límite de pico — manteniendo capacidad en reserva para cuando realmente se necesita.
+Reserves a portion of battery capacity to cover demand spikes that exceed a configurable power threshold. Instead of the battery covering all household consumption, it holds back energy and only discharges to compensate the portion of demand above the peak limit — keeping capacity in reserve for when it is actually needed.
 
-## Comportamiento sin peak shaving
+## Behaviour without peak shaving
 
-El controlador PD cubre todo el consumo doméstico → la batería puede descargarse completamente si el consumo es alto y continuo.
+The PD controller covers all household consumption → the battery can fully discharge if consumption is high and sustained.
 
-## Comportamiento con peak shaving activo
+## Behaviour with peak shaving active
 
-Cuando el SOC está por debajo del umbral:
-- La batería **no** cubre todo el consumo.
-- Solo descarga para compensar la parte del consumo que supera el **límite de potencia de pico** configurado.
-
-```
-Potencia_batería = max(0, consumo_red - límite_pico)
-```
-
-## Ejemplo
+When SOC is below the threshold:
+- The battery does **not** cover all consumption.
+- It only discharges to compensate the portion of consumption that exceeds the configured **peak power limit**.
 
 ```
-Límite pico: 3 000 W
-Consumo actual: 4 500 W
-
-Potencia batería = 4 500 - 3 000 = 1 500 W
-La red cubre 3 000 W y la batería solo 1 500 W
+battery_power = max(0, grid_consumption - peak_limit)
 ```
 
-Si el consumo fuera de 2 000 W (< límite), la batería no descargaría nada.
+## Example
 
-## Cuándo usarlo
+```
+Peak limit: 3,000 W
+Current consumption: 4,500 W
 
-Útil cuando:
-- La red tiene un coste fijo por potencia máxima contratada y quieres limitar los picos.
-- Quieres asegurarte de tener reserva de batería para la noche.
+Battery power = 4,500 - 3,000 = 1,500 W
+Grid covers 3,000 W and the battery only 1,500 W
+```
 
-![Configuración de peak shaving](../assets/screenshots/features/peak-shaving-config.png){ width="650"  style="display: block; margin: 0 auto;"}
+If consumption were 2,000 W (< limit), the battery would not discharge at all.
+
+## When to use it
+
+Useful when:
+- The grid has a fixed cost per maximum contracted power and you want to limit peaks.
+- You want to ensure battery reserve for the night.
+
+![Peak shaving configuration](../assets/screenshots/features/peak-shaving-config.png){ width="650"  style="display: block; margin: 0 auto;"}

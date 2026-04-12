@@ -1,36 +1,36 @@
-# Configuración
+# Configuration
 
-La integración se configura íntegramente desde la interfaz de Home Assistant mediante un asistente de varios pasos.
+The integration is configured entirely from the Home Assistant UI through a multi-step wizard.
 
-## Pasos del asistente
+## Wizard steps
 
 ```mermaid
 flowchart TD
-    A[1. Sensor principal] --> B[2. Número de baterías]
-    B --> C[3. Config. por batería]
-    C --> D{¿Franjas horarias?}
-    D -- Sí --> E[4. Franjas horarias]
+    A[1. Main sensor] --> B[2. Number of batteries]
+    B --> C[3. Per-battery config]
+    C --> D{Time slots?}
+    D -- Yes --> E[4. Time slots]
     D -- No --> F
-    E --> F{¿Dispositivos excluidos?}
-    F -- Sí --> G[5. Dispositivos excluidos]
+    E --> F{Excluded devices?}
+    F -- Yes --> G[5. Excluded devices]
     F -- No --> H
-    G --> H{¿Carga predictiva?}
-    H -- Sí --> I[6. Modo de carga predictiva]
-    H -- No --> J[Fin]
+    G --> H{Predictive charging?}
+    H -- Yes --> I[6. Predictive charging mode]
+    H -- No --> J[Done]
     I --> J
 ```
 
-| Paso | Descripción | Obligatorio |
-|------|-------------|:-----------:|
-| [Sensor principal](main-sensor.md) | Sensor de consumo de red y sensor solar | ✅ |
-| Baterías | Número de unidades y configuración por batería | ✅ |
-| [Baterías](batteries.md) | IP, puerto, versión, límites de potencia y SOC | ✅ |
-| [Franjas horarias](time-slots.md) | Ventanas de descarga con parámetros por franja | ❌ |
-| [Dispositivos excluidos](excluded-devices.md) | Cargas pesadas a ignorar | ❌ |
-| [Carga predictiva](predictive-charging/index.md) | Carga desde la red cuando la previsión solar es insuficiente | ❌ |
-| [Opciones avanzadas](advanced.md) | Carga semanal, retraso solar, peak shaving | ❌ |
+| Step | Description | Required |
+|------|-------------|:--------:|
+| [Main sensor](main-sensor.md) | Grid consumption sensor and solar sensor | ✅ |
+| Batteries | Number of units and per-battery configuration | ✅ |
+| [Batteries](batteries.md) | IP, port, version, power limits and SOC | ✅ |
+| [Time slots](time-slots.md) | Discharge windows with per-slot parameters | ❌ |
+| [Excluded devices](excluded-devices.md) | Heavy loads to ignore | ❌ |
+| [Predictive charging](predictive-charging/index.md) | Grid charging when solar forecast is insufficient | ❌ |
+| [Advanced options](advanced.md) | Weekly charge, solar delay, peak shaving | ❌ |
 
-## Modificar la configuración
+## Modifying the configuration
 
-Una vez instalada, puedes modificar cualquier parámetro en:
-**Ajustes → Dispositivos y servicios → Marstek Venus Energy Manager → Configurar**
+Once installed, any parameter can be changed at:
+**Settings → Devices & Services → Marstek Venus Energy Manager → Configure**

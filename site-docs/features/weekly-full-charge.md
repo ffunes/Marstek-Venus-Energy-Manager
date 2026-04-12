@@ -1,22 +1,22 @@
-# Carga semanal completa
+# Weekly full charge
 
-Carga las baterías al **100 % una vez por semana** para equilibrar las celdas y mantener la salud de la batería (cell balancing).
+Charges batteries to **100% once a week** to balance the cells and maintain battery health (cell balancing).
 
-## Comportamiento
+## Behaviour
 
-1. El día configurado de la semana, si el SOC máximo habitual es inferior al 100 %, la integración eleva temporalmente el límite de corte de carga al 100 %.
-2. La batería carga hasta el 100 % de SOC.
-3. Una vez alcanzado el 100 %, el límite de SOC máximo vuelve automáticamente al valor configurado por el usuario.
+1. On the configured day of the week, if the usual max SOC is below 100%, the integration temporarily raises the charging cutoff limit to 100%.
+2. The battery charges until it reaches 100% SOC.
+3. Once 100% is reached, the max SOC limit automatically reverts to the user's configured value.
 
-## Interacción con el retraso de carga solar
+## Interaction with solar charge delay
 
-Si el [retraso de carga solar](solar-charge-delay.md) está activo, la carga semanal se postpone mientras la producción solar prevista sea suficiente para alcanzar el 100 %. La batería solo empieza a cargar desde la red cuando el modelo solar determina que el sol no completará la carga.
+If [solar charge delay](solar-charge-delay.md) is active, the weekly charge is postponed while the forecast solar production is sufficient to reach 100%. The battery only starts grid charging when the solar model determines that the sun will not complete the charge.
 
-## Registro Modbus implicado
+## Modbus register involved
 
-La función manipula el registro **44000** (charging cutoff) de la batería para elevar temporalmente el límite.
+This feature manipulates register **44000** (charging cutoff) to temporarily raise the limit.
 
 !!! info
-    Esta función está disponible para todas las versiones de batería compatibles (v2, v3, vA, vD).
+    This feature is available for all supported battery versions (v2, v3, vA, vD).
 
-![Configuración de carga semanal completa](../assets/screenshots/features/weekly-full-charge-config.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Weekly full charge configuration](../assets/screenshots/features/weekly-full-charge-config.png){ width="650"  style="display: block; margin: 0 auto;"}

@@ -1,119 +1,119 @@
-# Estimación del consumo diario
+# Daily consumption estimate
 
-La carga predictiva necesita saber cuánta energía consume tu hogar cada día para decidir si hace falta cargar desde la red. En lugar de usar un valor fijo, la integración calcula un **consumo estimado dinámico** a partir del historial real de los últimos 7 días.
+Predictive charging needs to know how much energy your home consumes each day to decide whether grid charging is needed. Instead of a fixed value, the integration calculates a **dynamic consumption estimate** from the real history of the past 7 days.
 
 ---
 
-## Qué mide el consumo estimado
+## What the estimate measures
 
-El consumo estimado de un día es la suma de dos componentes:
+The estimated consumption for a day is the sum of two components:
 
 ```
-Consumo del día = Descarga real de la batería + Demanda insatisfecha (red a min SOC)
+Day consumption = Actual battery discharge + Unmet demand (grid at min SOC)
 ```
 
-### 1. Descarga real de la batería
+### 1. Actual battery discharge
 
-La energía que la batería ha descargado durante el día, leída directamente de los coordinadores de cada batería (`total_daily_discharging_energy`). Este valor se resetea a medianoche según el reloj interno de la batería.
+The energy the battery has discharged during the day, read directly from each battery's coordinator (`total_daily_discharging_energy`). This value resets at midnight according to the battery's internal clock.
 
-### 2. Demanda insatisfecha — Red a SOC mínimo
+### 2. Unmet demand — Grid at min SOC
 
-Cuando **todas las baterías están al SOC mínimo** y ya no pueden descargar más, el hogar tiene que tirar de la red para cubrir su consumo. Esa energía importada de la red es consumo real del hogar que la batería no pudo atender.
+When **all batteries are at min SOC** and can no longer discharge, the household must draw from the grid to cover its consumption. That grid-imported energy is real household consumption the battery could not serve.
 
-La integración la acumula en tiempo real cada ciclo del controlador (~2,5 s) mientras se cumplan estas condiciones simultáneamente:
+The integration accumulates it in real time every controller cycle (~2.5 s) while all of these conditions are simultaneously met:
 
-| Condición | Detalle |
+| Condition | Detail |
 |---|---|
-| Todas las baterías en SOC mínimo | Ninguna batería disponible para descargar |
-| No hay carga de red activa | El sistema no está en modo carga predictiva/precio dinámico |
-| Dentro de una franja de descarga | Hay una franja activa, o no hay franjas configuradas |
-| La red está importando | El sensor de red lee un valor positivo |
+| All batteries at min SOC | No battery available to discharge |
+| No active grid charging | System is not in predictive/dynamic pricing charge mode |
+| Within a discharge window | A time slot is active, or no time slots are configured |
+| Grid is importing | Grid sensor reads a positive value |
 
-Cuando se cumplen todas las condiciones, el acumulador crece proporcionalmente a la importación de red:
+When all conditions are met, the accumulator grows proportionally to grid import:
 
 ```
-incremento (kWh) = potencia_red (W) × 2,5 s / 3 600 000
+increment (kWh) = grid_power (W) × 2.5 s / 3,600,000
 ```
 
-Este acumulador se expone como el sensor **`Grid at Min SOC`** (kWh) y se resetea a medianoche.
+This accumulator is exposed as the **`Grid at Min SOC`** sensor (kWh) and resets at midnight.
 
 ---
 
-## Captura diaria a las 23:55
+## Daily capture at 23:55
 
-Cada día a las **23:55 (hora local)** la integración guarda el consumo del día calculando:
+Every day at **23:55 (local time)** the integration saves the day's consumption by computing:
 
 ```
-valor_del_día = descarga_batería_acumulada + grid_at_min_soc_acumulado
+day_value = accumulated_battery_discharge + grid_at_min_soc_accumulated
 ```
 
-El valor solo se almacena si es ≥ 1,5 kWh (para descartar días sin datos significativos). Si es inferior, la entrada de ese día se omite del historial.
+The value is only stored if it is ≥ 1.5 kWh (to discard days without meaningful data). If lower, that day's entry is omitted from the history.
 
 ---
 
-## Historial de 7 días
+## 7-day history
 
-La integración mantiene un historial rodante de las últimas **7 entradas** con formato `(fecha, kWh)`. Este historial se persiste en disco para sobrevivir reinicios de Home Assistant.
+The integration maintains a rolling history of the last **7 entries** in `(date, kWh)` format. This history is persisted to disk so it survives Home Assistant restarts.
 
-### Valor de reserva
+### Fallback value
 
-Mientras no haya 7 días reales acumulados (p. ej. recién instalada la integración), las entradas que falten se rellenan con el valor de reserva **`DEFAULT_BASE_CONSUMPTION_KWH = 5,0 kWh`**. Este valor actúa solo como marcador temporal y se reemplaza en cuanto hay datos reales disponibles.
+While fewer than 7 real days have accumulated (e.g. just after installing the integration), missing entries are filled with the fallback value **`DEFAULT_BASE_CONSUMPTION_KWH = 5.0 kWh`**. This value acts only as a placeholder and is replaced as soon as real data is available.
 
-### Backfill desde el historial del recorder
+### Backfill from recorder history
 
-Al arrancar, la integración intenta recuperar automáticamente los días que le falten consultando el **recorder de Home Assistant**. Para cada día de los últimos 7, consulta:
+At startup, the integration automatically tries to recover any missing days by querying the **Home Assistant recorder**. For each of the past 7 days it queries:
 
-- `sensor.marstek_venus_system_daily_discharging_energy` — descarga de la batería
-- `sensor.marstek_venus_system_daily_grid_at_min_soc_energy` — demanda insatisfecha
+- `sensor.marstek_venus_system_daily_discharging_energy` — battery discharge
+- `sensor.marstek_venus_system_daily_grid_at_min_soc_energy` — unmet demand
 
-Y suma ambos valores exactamente igual que haría la captura de las 23:55. Esto garantiza que, aunque HA se haya reiniciado o la integración se acabe de instalar, el historial se construye con datos reales desde el primer momento.
-
----
-
-## Media móvil de 7 días
-
-El consumo estimado que usa la carga predictiva es la **media aritmética** de todos los valores del historial:
-
-```
-consumo_esperado = Σ(consumo_i) / n días
-```
-
-donde `n` puede ser menor de 7 si aún no hay suficientes días reales (los valores de reserva también cuentan en el promedio hasta ser reemplazados).
+And sums both values exactly as the 23:55 capture would. This ensures that even after an HA restart or a fresh installation, the history is built with real data from the very first moment.
 
 ---
 
-## Ejemplo completo
+## 7-day rolling average
+
+The consumption estimate used by predictive charging is the **arithmetic mean** of all values in the history:
 
 ```
-Lunes:  batería descargó 4,2 kWh + red a min SOC 0,8 kWh = 5,0 kWh
-Martes: batería descargó 5,1 kWh + red a min SOC 0,0 kWh = 5,1 kWh
-Miér:   batería descargó 3,8 kWh + red a min SOC 1,5 kWh = 5,3 kWh
-Jueves: batería descargó 4,5 kWh + red a min SOC 0,3 kWh = 4,8 kWh
-Vier:   batería descargó 4,9 kWh + red a min SOC 0,0 kWh = 4,9 kWh
-Sábado: batería descargó 6,1 kWh + red a min SOC 0,2 kWh = 6,3 kWh
-Domingo:batería descargó 5,5 kWh + red a min SOC 0,5 kWh = 6,0 kWh
-
-Consumo esperado = (5,0 + 5,1 + 5,3 + 4,8 + 4,9 + 6,3 + 6,0) / 7 = 5,34 kWh
+expected_consumption = Σ(consumption_i) / n days
 ```
 
-Sin el componente de red a min SOC (solo descarga), el promedio habría sido 4,87 kWh — un 9% menor, lo que podría haber llevado a no cargar lo suficiente.
+where `n` may be less than 7 if not enough real days have accumulated yet (fallback values also count in the average until replaced).
 
 ---
 
-## Por qué importa el componente de red a min SOC
+## Full example
 
-Sin este ajuste, los días en que la batería se vacía antes de medianoche quedan **subestimados** en el historial: solo se registra la descarga de la batería, pero el consumo real del hogar fue mayor. La media resultante infravaloraría el consumo, y el sistema cargaría menos de lo necesario la noche siguiente.
+```
+Monday:    battery discharged 4.2 kWh + grid at min SOC 0.8 kWh = 5.0 kWh
+Tuesday:   battery discharged 5.1 kWh + grid at min SOC 0.0 kWh = 5.1 kWh
+Wednesday: battery discharged 3.8 kWh + grid at min SOC 1.5 kWh = 5.3 kWh
+Thursday:  battery discharged 4.5 kWh + grid at min SOC 0.3 kWh = 4.8 kWh
+Friday:    battery discharged 4.9 kWh + grid at min SOC 0.0 kWh = 4.9 kWh
+Saturday:  battery discharged 6.1 kWh + grid at min SOC 0.2 kWh = 6.3 kWh
+Sunday:    battery discharged 5.5 kWh + grid at min SOC 0.5 kWh = 6.0 kWh
 
-Al sumar la energía que entró de la red mientras todas las baterías estaban en SOC mínimo dentro de una franja de descarga, el historial refleja el **consumo total real del hogar**, no solo lo que la batería pudo cubrir.
+Expected consumption = (5.0 + 5.1 + 5.3 + 4.8 + 4.9 + 6.3 + 6.0) / 7 = 5.34 kWh
+```
+
+Without the grid-at-min-SOC component (discharge only), the average would have been 4.87 kWh — 9% lower, which could have led to under-charging.
 
 ---
 
-## Sensor de diagnóstico
+## Why the grid-at-min-SOC component matters
 
-| Sensor | Descripción | Reset |
+Without this adjustment, days when the battery empties before midnight are **underestimated** in the history: only the battery discharge is recorded, but the household's real consumption was higher. The resulting average would undervalue consumption, causing the system to charge less than needed the following night.
+
+By adding the energy that entered from the grid while all batteries were at min SOC within a discharge window, the history reflects the **total real household consumption**, not just what the battery could cover.
+
+---
+
+## Diagnostic sensor
+
+| Sensor | Description | Reset |
 |---|---|---|
-| `sensor.marstek_venus_system_daily_grid_at_min_soc_energy` | Energía acumulada de la red durante periodos de SOC mínimo | Medianoche (hora local) |
+| `sensor.marstek_venus_system_daily_grid_at_min_soc_energy` | Grid energy accumulated during min SOC periods | Midnight (local time) |
 
-El sensor `binary_sensor.marstek_venus_system_predictive_charging_active` expone en sus atributos el historial de consumo de los últimos 7 días y el número de entradas reales vs. valores de reserva, útil para verificar el estado del aprendizaje.
+The `binary_sensor.marstek_venus_system_predictive_charging_active` sensor exposes the 7-day consumption history and the count of real vs. fallback entries in its attributes, useful to verify the learning status.
 
-![Atributos del historial de consumo en HA](../assets/screenshots/features/consumption-estimate-attributes.png){ width="700"  style="display: block; margin: 0 auto;"}
+![Consumption history attributes in HA](../assets/screenshots/features/consumption-estimate-attributes.png){ width="700"  style="display: block; margin: 0 auto;"}
