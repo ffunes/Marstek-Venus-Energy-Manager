@@ -672,7 +672,6 @@
       "system_daily_charging_energy": { "name": "Énergie de Charge Journalière du Système" },
       "system_daily_discharging_energy": { "name": "Énergie de Décharge Journalière du Système" },
       "system_daily_grid_at_min_soc_energy": { "name": "Réseau au SOC Min." },
-      "system_household_energy_today": { "name": "Énergie Domestique Aujourd'hui" },
       "system_alarm_status": { "name": "État d'Alarme du Système" },
       "device_name": { "name": "Nom du Dispositif" },
       "sn_code": { "name": "Numéro de Série" },

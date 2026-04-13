@@ -83,43 +83,6 @@ AGGREGATE_SENSOR_DEFINITIONS = [
 ]
 
 
-class HouseholdConsumptionSensor(SensorEntity):
-    """Tracks daily household energy consumption accumulated from a power sensor.
-
-    Integrates the configured household power sensor (W) over the solar+battery
-    window (outside charging_time_slot). Resets at midnight.
-    """
-
-    def __init__(self, controller) -> None:
-        """Initialize the sensor."""
-        self._controller = controller
-
-        self._attr_has_entity_name = True
-        self._attr_unique_id = "marstek_venus_system_household_energy_today"
-        self._attr_translation_key = "system_household_energy_today"
-        self._attr_native_unit_of_measurement = "kWh"
-        self._attr_device_class = SensorDeviceClass.ENERGY
-        self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-        self._attr_suggested_display_precision = 2
-        self._attr_icon = "mdi:home-lightning-bolt"
-        self._attr_should_poll = True
-
-    @property
-    def native_value(self) -> float:
-        """Return today's accumulated household energy consumption."""
-        return round(self._controller._household_energy_accumulator, 2)
-
-    @property
-    def device_info(self):
-        """Return device information for the system."""
-        return {
-            "identifiers": {(DOMAIN, "marstek_venus_system")},
-            "name": "Marstek Venus System",
-            "manufacturer": "Marstek",
-            "model": "Venus Multi-Battery System",
-        }
-
-
 class DailyGridAtMinSocSensor(SensorEntity):
     """Tracks daily grid energy imported when all batteries are at min SOC during a discharge window.
 
