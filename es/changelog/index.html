@@ -1,0 +1,1845 @@
+
+<!doctype html>
+<html lang="es" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Home Assistant custom integration for Marstek Venus battery systems">
+      
+      
+        <meta name="author" content="ffunes">
+      
+      
+        <link rel="canonical" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/changelog/">
+      
+      
+        <link rel="prev" href="../troubleshooting/">
+      
+      
+      
+        
+          <link rel="alternate" href="../../changelog/" hreflang="en">
+        
+          <link rel="alternate" href="./" hreflang="es">
+        
+      
+      
+      <link rel="icon" href="../../assets/logo.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Changelog - Marstek Venus Energy Manager</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Saltar a contenido
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Cabecera">
+    <a href="../" title="Marstek Venus Energy Manager" class="md-header__button md-logo" aria-label="Marstek Venus Energy Manager" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Marstek Venus Energy Manager
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Cambiar a modo oscuro / Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo oscuro / Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="green"  aria-label="Cambiar a modo claro / Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Cambiar a modo claro / Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="Seleccionar idioma">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../changelog/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="es" class="md-select__link">
+              Español
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Búsqueda" placeholder="Búsqueda" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Buscar">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Limpiar" aria-label="Limpiar" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Inicializando búsqueda
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ffunes/Marstek-Venus-Energy-Manager
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Pestañas" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Inicio
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../installation/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Instalación
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../configuration/" class="md-tabs__link">
+          
+  
+  
+  Configuración
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../features/pd-controller/" class="md-tabs__link">
+          
+  
+  
+  Funcionalidades
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../reference/architecture/" class="md-tabs__link">
+          
+  
+  
+  Referencia técnica
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../troubleshooting/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Solución de problemas
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navegación" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="Marstek Venus Energy Manager" class="md-nav__button md-logo" aria-label="Marstek Venus Energy Manager" data-md-component="logo">
+      
+  <img src="../../assets/logo.png" alt="logo">
+
+    </a>
+    Marstek Venus Energy Manager
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager" title="Ir al repositorio" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ffunes/Marstek-Venus-Energy-Manager
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inicio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Instalación
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuración
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Configuración
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resumen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/main-sensor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sensor principal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/batteries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Baterías
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/time-slots/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Franjas horarias
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/excluded-devices/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dispositivos excluidos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_3_6" id="__nav_3_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Carga predictiva
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_3_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Carga predictiva
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/predictive-charging/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Resumen
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/predictive-charging/time-slot/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modo Franja Horaria
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/predictive-charging/dynamic-pricing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modo Precio Dinámico
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/predictive-charging/real-time-price/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modo Precio en Tiempo Real
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/advanced/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Opciones avanzadas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Funcionalidades
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Funcionalidades
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/pd-controller/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Controlador PD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/multi-battery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Gestión multi-batería
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/consumption-estimate/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Estimación de consumo diario
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/weekly-full-charge/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Carga semanal completa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/peak-shaving/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Peak shaving
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/solar-charge-delay/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Retraso de carga solar
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../features/load-exclusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exclusión de cargas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Referencia técnica
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Referencia técnica
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Arquitectura
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/modbus-registers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Registros Modbus
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/entities/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Entidades HA
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Solución de problemas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+    <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager/edit/main/site-docs/changelog.es.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
+    </a>
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<!-- El changelog completo se mantiene en el archivo CHANGELOG.md del repositorio -->
+
+<h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
+<h2 id="163-2026-04-12">[1.6.3] - 2026-04-12<a class="headerlink" href="#163-2026-04-12" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Peak shaving ignored excluded devices with "included in consumption"</strong>: When a special device was configured with "consumption is included in the household consumption sensor", its power was subtracted from the grid reading before peak shaving evaluated the house load. This meant peak shaving never saw the device's consumption and would not discharge the battery to shave peaks caused by it. Peak shaving now calculates the estimated house load using the real grid reading (including excluded devices) and overrides the device exclusion when actively shaving or conserving, so the battery discharges to keep total grid import below the configured limit regardless of device exclusion settings.</li>
+<li><strong>Max price threshold "expected str" error on reconfigure</strong>: Reopening the predictive charging config (dynamic pricing or real-time price) after a threshold was already saved failed with "expected str". The stored value was a <code>float</code>, but the <code>TextSelector</code> schema expected a <code>str</code> default. Fixed by converting the stored value to <code>str()</code> before passing it as the schema default.</li>
+</ul>
+<h2 id="162-2026-04-10">[1.6.2] - 2026-04-10<a class="headerlink" href="#162-2026-04-10" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Max price threshold rejected small decimal values</strong>: The <code>NumberSelector</code> input for the max price threshold silently rounded values like <code>0.0008</code> to <code>0</code> due to browser-level precision loss in the HTML number input. Replaced with a <code>TextSelector</code> (free-text field) that preserves the exact value entered. Applies to both dynamic pricing and real-time price modes in the setup and options flows. Existing installations that stored a rounded value will need to re-enter the correct threshold in the options flow. Note: HA's attribute display in entity cards may round the value visually (e.g. <code>0.008</code> shown as <code>0.01</code>), but the full-precision value is stored correctly and can be verified in Developer Tools → States.</li>
+<li><strong>Dynamic pricing config flow did not advance</strong>: The config flow for dynamic pricing mode failed to proceed past the pricing step because the <code>NumberSelector</code> could not handle comma-separated decimals used in European locales. The <code>TextSelector</code> replacement accepts both comma and dot as decimal separators.</li>
+</ul>
+<h2 id="161-2026-04-10">[1.6.1] - 2026-04-10<a class="headerlink" href="#161-2026-04-10" title="Permanent link">&para;</a></h2>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Peak shaving renamed from "Capacity Protection"</strong>: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.</li>
+</ul>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Charge hysteresis threshold incorrect after weekly full charge</strong>: After a weekly full charge day completed (battery reaching 100 %), the hysteresis logic switched back to the configured max SOC (e.g. 80 %) as its reference instead of the 100 % target actually reached. This caused the re-charge threshold to be set at 70 % (80 % − 10 % hysteresis) rather than the expected 90 % (100 % − 10 %), blocking the battery from recharging even when well below the intended threshold. Fixed by tracking the SOC level that activated the hysteresis (<code>_hysteresis_base_soc</code>) and using it — rather than <code>max_soc</code> — as the base for the threshold calculation. The tracked value is cleared when the hysteresis deactivates, so normal charging days are unaffected.</li>
+<li><strong>Excessive state updates in HA database</strong> (<a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager/issues/96">#96</a>): Removed <code>force_update: True</code> from <code>battery_power</code> and <code>ac_power</code> sensor definitions across all battery versions (v2, v3, vA, vD). With this flag enabled, HA recorded a new database entry on every poll cycle (~every 2 seconds) even when the value hadn't changed, generating ~43,000 state entries per sensor per day and causing significant database growth. Now HA only records a state change when the value actually differs from the previous one.</li>
+<li><strong>Aggregate sensors double-triggering state writes</strong>: Aggregate sensors (multi-battery setups) had both <code>should_poll = True</code> and coordinator listener callbacks, causing redundant state writes on every poll cycle. Changed to <code>should_poll = False</code> since the listener callbacks are sufficient.</li>
+</ul>
+<h2 id="160-2026-04-07">[1.6.0] - 2026-04-07<a class="headerlink" href="#160-2026-04-07" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p>[!IMPORTANT]
+<strong>Breaking change — solar forecast sensor</strong>: The integration now uses <strong>today's</strong> solar forecast instead of tomorrow's. If you have the <em>Solar Charge Delay</em> or <em>Predictive Grid Charging</em> features configured, you must update the forecast sensor field to point to your integration's <strong>today</strong> sensor (e.g. <code>sensor.solcast_pv_forecast_forecast_today</code>) instead of the tomorrow sensor. The stored overnight forecast is no longer used and will be ignored on upgrade.</p>
+</blockquote>
+<h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Solar charge delay SOC setpoint</strong>: New optional feature that splits the morning charge into two phases. A dedicated checkbox enables it; when enabled, a slider (12–90 %, default 50 %) sets the target SOC. Below the setpoint the battery charges freely without any delay applied; once all batteries reach the setpoint the solar delay logic activates as usual. This guarantees a minimum charge level on deeply discharged batteries before the solar energy decision is made, while still maximising self-consumption for the remaining charge. The minimum is 12 % — the Venus battery minimum discharge SOC. Configurable during setup and from the options flow; the setpoint value is also exposed as a number entity (<em>Charge Delay SOC Setpoint</em>) on the system device card for runtime adjustment.</li>
+</ul>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Solar forecast now uses today's live value</strong>: The integration no longer captures and stores tomorrow's forecast at 23:00. Instead, it reads the configured sensor live on every evaluation. Today's forecast is updated multiple times throughout the day by most solar forecast integrations (Solcast, Forecast.Solar, etc.), becoming progressively more accurate as actual weather conditions develop. This removes the 23:00 nightly capture task and eliminates the stale-forecast problem that occurred after an HA restart or when the nightly window was missed.</li>
+<li><strong>Charge delay threshold is now a dynamic energy balance</strong>: The previous fixed threshold (forecast &lt; 1.5 × battery capacity → unlock) has been replaced with the same energy-balance calculation used by predictive charging: <code>(usable_energy + forecast) &lt; avg_daily_consumption</code>. This takes the current battery SOC into account — on a partly-charged morning the threshold is effectively lower — and uses real historical consumption data instead of an arbitrary capacity multiplier. The balance is only recalculated when the forecast value changes by more than 0.05 kWh, avoiding unnecessary computation on every controller cycle.</li>
+<li><strong>Charge delay re-evaluates forecast changes in real time</strong>: Because the forecast sensor is now read live, any intra-day update is automatically picked up. If the forecast degrades to the point where the energy balance turns negative (grid charging needed), the delay unlocks immediately and morning charging starts. If the forecast improves while the delay is still active, the system keeps waiting for solar. Once the delay is unlocked, it stays unlocked for the day.</li>
+<li><strong>Predictive charging (Time Slot mode) — initial evaluation delayed 5 minutes</strong>: The energy balance evaluation no longer runs at the exact instant the slot boundary is crossed. Instead the controller waits 5 minutes with the battery in idle before evaluating. This avoids a race condition when the slot starts at 00:00: at that moment the forecast sensor may still be reporting yesterday's final value before the integration resets it for the new day. The 5-minute hold ensures the sensor has updated before the charging decision is made.</li>
+<li><strong>Predictive charging (Time Slot mode) — pre-evaluation notification removed</strong>: The notification sent 1 hour before the slot start has been removed. A single notification is now sent at the moment the evaluation fires (5 minutes into the slot), reporting the actual decision: charge or no charge needed.</li>
+</ul>
+<h2 id="154-2026-04-06">[1.5.4] - 2026-04-06<a class="headerlink" href="#154-2026-04-06" title="Permanent link">&para;</a></h2>
+<h3 id="added_1">Added<a class="headerlink" href="#added_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Configurable backup offgrid load threshold</strong>: Each battery now has a user-configurable threshold (0–500 W, default 50 W) that determines when an offgrid load is treated as an active backup event. Batteries with small permanent loads on the offgrid port (e.g. a PoE switch, router, or cameras) were previously excluded from PD control indefinitely because any non-zero offgrid reading triggered backup mode. The threshold can be set during initial setup (per-battery limits page in the config flow) and adjusted at any time via a <strong>Backup Offgrid Threshold</strong> number entity on the battery device card — no reconfiguration required. Changes take effect immediately and survive restarts.</li>
+<li><strong>EV charger without power telemetry</strong> (new excluded-device option): A new checkbox — <em>EV charger without power telemetry</em> — is available when configuring an excluded device. When checked, the selected sensor is treated as a <strong>state sensor</strong> rather than a power sensor. The controller monitors it and reacts when the state changes to any recognised charging string (<code>Charging</code>, <code>Cargando</code>, <code>Cargando VE</code>, <code>Cargando Vehículo</code>, and case-insensitive variants). On detection, the battery enters a <strong>5-minute full pause</strong> (both charge and discharge set to 0 W, PD state frozen) so the vehicle receives the maximum available current without competition. Once the pause expires the battery may still <strong>charge from solar surplus</strong> but will <strong>never discharge</strong> while the EV remains in a charging state. Normal operation resumes automatically when the sensor leaves the charging state.</li>
+</ul>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>Active Batteries</code> sensor always showing <code>Idle</code> when only one battery is available</strong>: <code>_select_batteries_for_operation</code> returned early for the single-battery case without updating the <code>_active_charge_batteries</code> / <code>_active_discharge_batteries</code> tracking lists, so the diagnostic sensor always saw empty lists and displayed <code>Idle</code> regardless of actual charge/discharge state.</li>
+<li><strong>Backup exclusion logic not applied consistently during shutdown</strong>: The <code>async_unload_entry</code> shutdown handler used a hardcoded <code>!= 0</code> check for the offgrid power sensor instead of the per-battery threshold, meaning batteries with small permanent offgrid loads would incorrectly skip shutdown register writes and be left in an uncontrolled state on integration unload.</li>
+</ul>
+<p>Thanks to <strong><a href="https://github.com/hdcasey">@hdcasey</a></strong> for reporting and fixing the first two issues.</p>
+<h2 id="153-2026-04-05">[1.5.3] - 2026-04-05<a class="headerlink" href="#153-2026-04-05" title="Permanent link">&para;</a></h2>
+<h3 id="added_2">Added<a class="headerlink" href="#added_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Proactive battery alarm notifications (v2 only)</strong>: The integration now monitors the <code>Alarm Status</code> (register 36000) and <code>Fault Status</code> (register 36100) registers every 5 seconds and sends a Home Assistant persistent notification the moment a new alarm or fault bit is set. The notification is titled <strong>"Battery Fault/Warning: \&lt;name&gt;"</strong> and lists both the newly triggered conditions and all currently active ones. When all alarms and faults clear, the notification is automatically dismissed. Notifications are scoped per battery (separate notification ID per battery name) so multi-battery setups report each device independently. v3, vA and vD batteries do not expose these registers via Modbus and are not affected.</li>
+<li><strong>System Alarm Status sensor</strong> (<code>sensor.marstek_venus_system_alarm_status</code>, <strong>v2 only</strong>): New sensor on the <em>Marstek Venus System</em> device that aggregates the alarm state across all batteries. State is <code>OK</code> when no conditions are active, <code>Warning</code> when one or more alarm bits are set but no fault bits, and <code>Fault</code> when at least one fault bit is active on any battery. The <code>extra_state_attributes</code> dictionary exposes per-battery detail — each key is the battery name and the value is a list of active condition labels (e.g. <code>[Fault] BAT Overvoltage</code>, <code>[Alarm] Fan Abnormal Warning</code>) — so the exact source and nature of each event is visible without opening individual battery sensors. The sensor is only populated for v2 batteries.</li>
+<li><strong>Shared alarm/fault bit-description constants</strong> (<code>FAULT_BIT_DESCRIPTIONS</code>, <code>ALARM_BIT_DESCRIPTIONS</code> in <code>const.py</code>): The 32-bit description maps previously duplicated inline inside <code>SENSOR_DEFINITIONS</code> are now standalone module-level dicts. The existing per-battery <code>Alarm Status</code> and <code>Fault Status</code> sensors reference these constants, eliminating the duplication and making future updates to alarm labels a single-point change.</li>
+<li><strong>Solar Surplus switch per excluded device</strong>: Each excluded device now gets a dedicated switch entity (<code>Solar Surplus – &lt;device name&gt;</code>) that toggles the <code>allow_solar_surplus</code> flag at runtime without entering the options flow. When ON, the battery yields solar surplus to that device (e.g. EV charger) instead of charging itself — solar goes to the device first and the battery will not discharge to power it either. When OFF, the battery charges normally with any available solar surplus. The switch is controllable from HA automations, enabling priority changes based on schedules, battery SOC, EV connection state, or any other condition.</li>
+</ul>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>strings.json now in English</strong>: The base translation file (<code>strings.json</code>) has been converted to English to serve as the proper fallback language for Home Assistant installations using a language without a dedicated translation file.</li>
+</ul>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>German translation fix</strong>: Corrected <code>round_trip_efficiency_total</code> label from "Gesamte Hin- und Rückfahreffizienz" to "Gesamtwirkungsgrad".</li>
+</ul>
+<h2 id="152-2026-04-04">[1.5.2] - 2026-04-04<a class="headerlink" href="#152-2026-04-04" title="Permanent link">&para;</a></h2>
+<h3 id="added_3">Added<a class="headerlink" href="#added_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Configuration Summary diagnostic sensor</strong>: New hidden sensor (<code>Configuration Summary</code>) on the Marstek Venus System device that exposes the complete integration configuration as entity attributes. Intended for support purposes — enable it from the entity registry, then share the state card to provide a full picture of the system setup at a glance. Attributes are organised in sections: general (grid sensor, meter inversion, solar forecast sensor), per-battery settings (name, IP, version, power limits, SOC thresholds, hysteresis), time slots, predictive charging (mode, time slot, contracted power, price sensor and thresholds), weekly full charge, charge delay, capacity protection, PD controller parameters, and excluded devices. The sensor is disabled by default and categorised as diagnostic.</li>
+<li><strong>Backup function exclusion from PD control</strong>: When the <strong>Backup Function</strong> switch is enabled on a battery <strong>and</strong> the <strong>AC Offgrid Power</strong> sensor reports a non-zero value, that battery is automatically excluded from PD controller writes. Having the switch on alone is not sufficient — the battery must actually be providing offgrid power. No power commands, force mode changes, or configuration register writes are sent while both conditions are met. A <strong>5-minute cooldown</strong> is applied after the offgrid load drops back to 0 W, keeping the battery excluded until the window expires to avoid sending commands immediately after a backup event ends. Turning the switch off clears the cooldown immediately. The battery continues to be polled normally so all read-only sensors remain up to date. This applies to all write paths: normal PD control, predictive grid charging, weekly full charge register writes, and the shutdown sequence. The AC Offgrid Power sensor (register 32302) has been added to v3, vA, and vD battery definitions so that the two-condition check works across all versions.</li>
+</ul>
+<h2 id="151-2026-04-01">[1.5.1] - 2026-04-01<a class="headerlink" href="#151-2026-04-01" title="Permanent link">&para;</a></h2>
+<h3 id="added_4">Added<a class="headerlink" href="#added_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Price-based discharge control for Dynamic Pricing and Real-Time Price modes</strong>: New optional checkbox in both pricing mode configurations that restricts battery discharge to periods when the current electricity price exceeds a configurable threshold. When enabled, the battery only discharges if the live price is strictly above the threshold (fixed <code>max_price_threshold</code> or a daily average price sensor). If discharge time slots are also configured, both conditions must be met — the price check acts as an additional gate on top of the existing time window restriction. Dynamic Pricing mode gains a new optional <code>dp_average_price_sensor</code> field (equivalent to the existing <code>average_price_sensor</code> in Real-Time Price mode) to support a dynamic discharge threshold.</li>
+<li><strong>Grid meter kW auto-detection and inverted sign support</strong>: The controller now automatically detects if the grid meter sensor reports in kW (via its <code>unit_of_measurement</code> attribute) and converts to Watts internally — no user action required. A new <strong>"Inverted meter sign"</strong> toggle has been added to the initial setup and options flow for meters that use the opposite sign convention (positive = export, negative = import).</li>
+</ul>
+<h2 id="150-2026-04-01">[1.5.0] - 2026-04-01<a class="headerlink" href="#150-2026-04-01" title="Permanent link">&para;</a></h2>
+<h3 id="added_5">Added<a class="headerlink" href="#added_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>New sensors for all battery versions (v2/v3/vA/vD)</strong>: Added device information sensors (<code>device_name</code>, <code>sn_code</code>, <code>software_version</code>, <code>bms_version</code>, <code>vms_version</code>, <code>ems_version</code>, <code>comm_module_firmware</code>, <code>mac_address</code>) where supported by each battery version. Added cell voltage sensors (<code>max_cell_voltage</code>, <code>min_cell_voltage</code>) for v3/vA/vD. Added WiFi and Cloud connectivity binary sensors (<code>wifi_status</code>, <code>cloud_status</code>) for all versions.</li>
+<li><strong>Battery Cycle Count sensor (v3/vA/vD)</strong>: Direct register-based cycle count sensor reading from the battery firmware for v3, vA, and vD batteries.</li>
+<li><strong>Calculated Battery Cycle Count sensor (all versions)</strong>: New derived sensor (<code>battery_cycle_count_calc</code>) available for all battery versions, calculated as <code>(total_discharge + total_charge) / 2 / battery_capacity</code>. Provides cycle count estimation for v2 batteries that lack a direct register, and a cross-check for other versions.</li>
+<li><strong>Dynamic Pricing Mode for Predictive Grid Charging</strong>: New charging mode that automatically selects the cheapest hours of the day to charge the batteries from the grid. Supports <strong>Nordpool</strong>, <strong>PVPC (ESIOS REE, Spain)</strong>, and <strong>CKW (Switzerland)</strong>. Configured through a new <code>predictive_charging_mode</code> step (choose between Time Slot or Dynamic Pricing) and a <code>dynamic_pricing_config</code> step (price integration type, price sensor, optional max price threshold, and ICP contracted power).</li>
+<li><strong>Automatic cheapest-hour selection</strong>: The controller calculates the energy deficit each day at 00:05 using the effective charge power (<code>min(ICP, total battery charge capacity)</code>), then picks the cheapest hours from the price forecast. When no deficit exists, the cheapest equivalent hours are still selected as informational reference.</li>
+<li><strong>Max price threshold filter</strong>: Optional ceiling that prevents charging even during cheap hours if prices exceed the configured limit. Unit matches the sensor (€/kWh for Nordpool/PVPC, CHF for CKW).</li>
+<li><strong>Daily 00:05 evaluation with retry logic</strong>: Evaluation runs just after midnight when price data for the day is already available. If price data is still unavailable at 00:05, the controller retries every 15 min within the first hour of the day. A <code>no_price_data</code> error is surfaced in the config flow if the selected sensor lacks the expected attributes.</li>
+<li><strong>Startup evaluation on integration restart</strong>: If Home Assistant restarts after the 00:05 window and no evaluation has been done yet for the current day, the controller runs a one-time evaluation automatically during startup (after a 15-second delay to allow the data coordinator to complete its first poll). This ensures the daily schedule is always built, even when HA is restarted mid-morning. The evaluation only considers slots up to 23:59 of the current day — tomorrow's slots are left to the normal 00:05 evaluation.</li>
+<li><strong><code>price_data_status</code> diagnostic attribute</strong>: The <code>predictive_charging_active</code> binary sensor exposes a <code>price_data_status</code> attribute showing whether the price sensor is being read correctly: <code>ok (N slots)</code>, <code>sensor_unavailable</code>, <code>no_slots</code>, or <code>not_evaluated</code>.</li>
+<li><strong><code>predictive_charging_active</code> binary sensor — dynamic pricing attributes</strong>: Always exposes the full evaluation result — <code>charging_needed</code> flag, selected hours with individual prices, average price, estimated cost, and evaluation timestamp. The schedule persists throughout the day it applies to (not cleared at midnight).</li>
+<li><strong>Real-Time Price mode for predictive grid charging</strong>: New third charging mode that reads the current electricity price every controller cycle (~2.5 s) and activates or deactivates grid charging immediately when the price crosses a configured threshold. Unlike Dynamic Pricing (which pre-selects the cheapest hours at 00:05), this mode requires no overnight evaluation and no price forecast — it reacts purely to the live price. Supports any HA sensor that exposes the current period price as its state (PVPC, Nordpool, CKW, or any other integration). Optionally accepts a daily average price sensor as a dynamic threshold instead of a fixed value, and evaluates the same solar/battery energy balance as other modes before starting to charge.</li>
+<li><strong>Solar forecast sensor optional in predictive charging</strong>: The solar forecast sensor field in both Time Slot and Dynamic Pricing configuration steps is now optional. Users without solar panels can leave it empty — the system will activate grid charging whenever the battery's usable energy is insufficient to cover expected daily consumption (same conservative logic already used when the sensor is unavailable or reports an error). Users with solar panels should still configure it so the system only charges when the forecast is insufficient.</li>
+<li><strong>Improved daily consumption estimate when battery reaches min SOC</strong>: The system now tracks grid energy imported during periods when all batteries are at minimum SOC and the battery would otherwise be discharging (within a configured discharge slot, or always if no slots are defined). This unmet demand is accumulated in a new sensor (<code>Grid at Min SOC</code>, kWh, resets at midnight) and added to the battery discharge when capturing the daily consumption figure used by predictive charging. This prevents the 7-day rolling average from underestimating consumption on days where the battery ran out before midnight, which previously caused the system to charge less than needed the following day. Grid import during intentional grid charging (predictive/dynamic pricing) is excluded from the accumulator.</li>
+<li><strong>Mid-day re-evaluation for dynamic pricing slots</strong>: When multiple cheap slots are selected at 00:05, the system now re-evaluates 1 hour before each subsequent slot whether charging is still needed. If the battery is sufficiently charged (solar + current SOC covers expected consumption), the slot is silently skipped. If charging is still needed, a notification is sent confirming the slot will activate. Re-evaluations are skipped automatically when a previous slot is still actively charging (back-to-back slots), and the per-day state is reset at midnight alongside the main schedule.</li>
+</ul>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>SOC and power limit sliders not persisted across restarts (complete fix)</strong>: Changes to <code>Min SOC</code>, <code>Max SOC</code>, <code>Max Charge Power</code>, and <code>Max Discharge Power</code> sliders were written to the battery hardware registers and updated in memory, but <code>config_entry.data</code> was never updated. On every HA restart, <code>async_setup_entry</code> overwrote the hardware registers with the original setup values, discarding any runtime changes. The partial fix in 1.4.0 (syncing coordinator attributes from polled register values) was ineffective because the startup sequence writes the stale config values to hardware <em>before</em> the first poll completes. Values are now persisted to <code>config_entry.data</code> immediately when a slider is changed, using the same pattern as the RS485 switch preference.</li>
+<li><strong>RS485 switch state not persisted across restarts</strong>: Disabling the RS485 Control Mode switch and restarting Home Assistant would re-enable it automatically. The user's preference is now saved to the config entry and restored on startup. The initial RS485 enable during integration load and the reconnection re-enable are both skipped when the user has explicitly disabled the switch.</li>
+<li><strong>v3/vA/vD batteries not accepting write commands</strong>: Inter-register write delay in the atomic power write sequence was hardcoded to 50 ms (v2 timing). v3/vA/vD firmware requires a minimum of 150 ms between consecutive Modbus messages; writes now use the version-specific timing from <code>MESSAGE_WAIT_MS</code>, matching the delay already applied to polling reads.</li>
+<li><strong>Non-responsive battery cooldown capped at 30 min</strong>: The exponential backoff for excluded batteries could grow to 30 minutes after repeated failures. The cap is now 5 minutes so a temporarily unresponsive battery is retried more frequently.</li>
+<li><strong>Dynamic pricing schedule cleared at midnight</strong>: The <code>_dynamic_pricing_evaluated_date</code> was stored as the evaluation date (day N), causing the schedule to be wiped at midnight — before any of the selected slots (day N+1 morning) could activate. The evaluated date is now stored as the date the slots belong to, so the schedule persists until the end of that day.</li>
+<li><strong>Charging hours underestimated when ICP &gt; battery charge capacity</strong>: <code>_calculate_charging_hours_needed</code> used only <code>max_contracted_power</code> (ICP) as the effective charge power. If the total battery charge capacity is lower than the ICP, the actual charge rate is limited by the batteries, not the ICP — resulting in too few hours being selected and the battery not reaching the target SOC. The calculation now uses <code>min(ICP, total battery charge capacity)</code>. Estimated cost in the schedule and notifications is also corrected accordingly.</li>
+<li><strong>Consumption history always showing 6 days instead of 7</strong>: The cleanup filter used a strict <code>&gt;</code> comparison (<code>d &gt; today − 7</code>), which excluded the entry for exactly 7 days ago. Replaced date-based cutoff with a trim to the 7 most recent entries (<code>[-7:]</code>) so the window is always exactly 7 entries.</li>
+<li><strong>Consumption history gaps filled with real-data average</strong>: When the startup backfill cannot find recorder data for a day (HA was down, or daily discharge was below the 1.5 kWh representativeness threshold), the missing entry is now filled with the average of the real entries already in the history instead of the fixed 5.0 kWh default. This prevents artificial inflation of the consumption estimate. On first run when no real data exists yet, 5.0 kWh is still used as a conservative bootstrap.</li>
+<li><strong>Modbus read/write operations now time out on half-open sockets</strong>: <code>async_read_register</code> and <code>async_write_register</code> now wrap their underlying pymodbus calls in <code>asyncio.wait_for(timeout=...)</code> using the client's configured timeout (default 10 s). Previously, a hung write or read on a half-open socket would block indefinitely, preventing the coordinator from recovering after a TCP connection drop. <code>asyncio.TimeoutError</code> is now treated the same as <code>ConnectionException</code>, triggering the existing reconnect-and-retry path.</li>
+<li><strong>Battery SOC hidden by efficiency sensor in device card</strong>: The Round-Trip Efficiency sensor shared the <code>battery</code> device class with the Battery SOC sensor, causing Home Assistant to display the efficiency percentage instead of the SOC in the top-right corner of the device card. The device class has been removed from the efficiency sensor.</li>
+</ul>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Predictive charging notifications reformatted</strong>: Both time-slot and dynamic pricing notifications now use a consistent emoji-based layout (🔋 battery, ☀️ solar, 📊 consumption, ⚡ deficit, ⏰ timing). All notifications show the effective charge power as <code>min(ICP, battery capacity)W (ICP: XW, batteries: YW)</code>. When dynamic pricing finds no deficit, the notification is clearly labelled as informational ("No charging will activate") and shows the cheapest reference hours without implying grid charging will occur.</li>
+<li><strong>Clarifying note on solar forecast sensor in secondary configuration steps</strong>: In the Time Slot, Dynamic Pricing, and Charge Delay configuration steps, the solar forecast sensor field now includes a note explaining that it is not required if the sensor was already configured in the initial setup step — it will be used automatically. The German, French, and Dutch translations of the Dynamic Pricing step were also missing this field entirely; it has been added.</li>
+</ul>
+<h3 id="removed">Removed<a class="headerlink" href="#removed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Unused <code>too_low</code> translation error key</strong>: Removed the orphaned <code>too_low</code> error string (previously defined in all translation files but never raised by the Python code) from EN, ES, DE, FR, and NL translations.</li>
+<li><strong><code>user_work_mode</code> removed from vA/vD batteries</strong>: The <code>user_work_mode</code> select entity (register 43000) is not supported on vA and vD hardware and has been removed from their definitions.</li>
+</ul>
+<h2 id="151-2026-04-01_1">[1.5.1] - 2026-04-01<a class="headerlink" href="#151-2026-04-01_1" title="Permanent link">&para;</a></h2>
+<h3 id="added_6">Added<a class="headerlink" href="#added_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Grid meter kW auto-detection and inverted sign support</strong>: The controller now automatically detects if the grid meter sensor reports in kW (via its <code>unit_of_measurement</code> attribute) and converts to Watts internally — no user action required. A new <strong>"Inverted meter sign"</strong> toggle has been added to the initial setup and options flow for meters that use the opposite sign convention (positive = export, negative = import).</li>
+</ul>
+<h2 id="141-2026-03-24">[1.4.1] - 2026-03-24<a class="headerlink" href="#141-2026-03-24" title="Permanent link">&para;</a></h2>
+<h3 id="added_7">Added<a class="headerlink" href="#added_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Support for up to 6 batteries</strong>: The battery count slider in both the initial setup and options flow now allows selecting 1–6 batteries (previously capped at 4). No architectural changes were required as the control loop and power distribution are fully dynamic.</li>
+<li><strong>Non-responsive battery detection</strong>: The control loop now detects when a battery acknowledges a discharge command (registers written correctly) but fails to deliver power. After 3 consecutive cycles with actual output below 10% of the commanded value, the battery is excluded from the active pool with a warning log entry. It is automatically retried after a cooldown period that doubles on each repeated failure (5 → 10 → 20 → 30 min cap) and resets to 5 min after a successful delivery cycle. This prevents a single non-responsive battery from destabilising the PD controller and causing the remaining batteries to oscillate.</li>
+<li><strong>Non-Responsive Batteries diagnostic sensor</strong>: New sensor on the Marstek Venus System device showing which batteries are currently excluded due to non-responsive behaviour. State is <code>None</code> when all batteries are healthy, or a comma-separated list of excluded battery names. Attributes expose per-battery details: exclusion status, cooldown duration, and remaining cooldown minutes. Available in EN, ES, DE, FR, NL.</li>
+</ul>
+<h2 id="140-2026-03-21">[1.4.0] - 2026-03-21<a class="headerlink" href="#140-2026-03-21" title="Permanent link">&para;</a></h2>
+<h3 id="added_8">Added<a class="headerlink" href="#added_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Unified Solar Charge Delay</strong>: New dedicated config step (<code>Charge Delay</code>) that replaces the previous weekly-charge-specific delay flag. When enabled, the delay applies <strong>every day</strong>: charging is held back while solar production is forecast to cover the required energy, and unlocked automatically once the energy balance tips. The target SOC is 100% on the configured weekly full charge day, or the configured <code>max_soc</code> on all other days. Discharge in configured time slots is unaffected.</li>
+<li><strong>Unified charge delay config step</strong>: Two new steps in both ConfigFlow and OptionsFlow — a gate step (<code>Configure charge delay</code>) and a configuration step with a <code>Safety margin (hours)</code> slider (1–5 h, step 0.5 h, default 1 h) and an optional <code>Solar forecast sensor</code> field (only shown if not already configured in the predictive charging step).</li>
+<li><strong>Charge Delay Status diagnostic sensor</strong>: New <code>Charge Delay Status</code> sensor on the Marstek Venus System device, replacing the separate weekly and solar delay sensors. State reports <code>Idle</code>, <code>Waiting for solar</code>, <code>Delayed (~HH:MM est.)</code>, <code>Charging allowed</code>, or <code>Disabled</code>. Attributes expose <code>target_soc</code>, <code>safety_margin_min</code>, <code>forecast_kwh</code>, <code>solar_t_start</code>, <code>solar_t_end</code>, <code>energy_needed_kwh</code>, <code>remaining_solar_kwh</code>, <code>remaining_consumption_kwh</code>, <code>net_solar_kwh</code>, <code>charge_time_h</code>, <code>estimated_unlock_time</code>, and <code>unlock_reason</code>. Populated on every control cycle, not only when a charge attempt is gated.</li>
+<li><strong>Accurate estimated unlock time</strong>: The <code>estimated_unlock_time</code> attribute is now calculated as the earliest of two triggers — the time-backup threshold (<code>T_end − charge_time − safety_margin</code>) and the energy-balance crossing point, found via a binary search (40-iteration bisection, &lt;1 s precision) on the sinusoidal solar production model. On good solar days, this reflects the energy-balance unlock ~1–2 hours earlier than the conservative time-backup estimate.</li>
+<li><strong>Capacity Protection Mode (Peak Shaving)</strong>: New feature that conserves battery energy when SOC drops below a configurable threshold (30–100%). Instead of discharging to cover all household consumption, the battery only discharges to offset consumption that exceeds a configurable peak limit (2500–8000W). When house load is below the limit, the battery stays idle; when it exceeds the limit, the battery discharges only the excess. Solar charging continues unaffected. Configurable in both initial setup and options flow, with a runtime toggle switch and adjustable number entities for SOC threshold and peak limit.</li>
+<li><strong>Charge Delay switch</strong>: New <code>Charge Delay</code> switch on the Marstek Venus System device to enable/disable the charge delay feature at runtime without reconfiguring the integration. Only visible when charge delay is configured.</li>
+<li><strong>Capacity Protection switch</strong>: New <code>Capacity Protection</code> switch on the Marstek Venus System device to enable/disable the feature at runtime without reconfiguring the integration. State persists across restarts.</li>
+<li><strong>Capacity Protection Active diagnostic sensor</strong>: New <code>Capacity Protection Active</code> binary sensor (diagnostic) that turns ON when the protection is actively intervening (SOC below threshold). Attributes expose real-time diagnostic data: <code>avg_soc</code>, <code>soc_threshold</code>, <code>peak_limit_w</code>, <code>estimated_house_load_w</code>, <code>action</code> (<code>shaving</code>/<code>conserving</code>/<code>charging</code>/<code>idle</code>/<code>disabled</code>), <code>original_target_w</code>, and <code>adjusted_target_w</code>.</li>
+<li><strong>Capacity Protection number entities</strong>: <code>Capacity Protection SOC Threshold</code> and <code>Peak Limit Protection</code> number entities on the system device for runtime tuning without reconfiguration. Only visible when the feature is enabled.</li>
+<li><strong>Charge Delay Margin number entity</strong>: New <code>Charge Delay Margin</code> slider on the Marstek Venus System device to adjust the safety margin at runtime without reconfiguring the integration. Displayed in hours (1–5 h, step 0.5 h); stored internally in minutes.</li>
+<li><strong>Entity name and state translations</strong>: All system-level entities (switches, sensors, binary sensors) now use Home Assistant's translation system. Entity names (<code>Manual Mode</code>, <code>Charge Delay</code>, <code>Discharge Window</code>, etc.) and sensor state values (<code>Idle</code>, <code>Disabled</code>, <code>Charging allowed</code>, <code>Waiting for solar</code>, <code>Delayed</code>, <code>Active</code>, <code>Inactive</code>, etc.) are now displayed in the user's configured HA language. Supported languages: English, Spanish, German, French, Dutch.</li>
+</ul>
+<h3 id="removed_1">Removed<a class="headerlink" href="#removed_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Force Full Charge button removed</strong>: The <code>Force Full Charge</code> button has been replaced by the new <code>Charge Delay</code> switch (see above).</li>
+</ul>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Solar T_start detection rewritten</strong>: The mechanism that detects when solar production begins (used by the Charge Delay feature) has been replaced. The previous approach accumulated daily battery charging energy and triggered at a 0.1 kWh threshold — unreliable because grid charging energy was included in the counter. The new primary mechanism triggers when grid power ≤ 0 W and total battery power ≤ 0 W simultaneously (solar is covering at least the full house load with no battery contribution). A new astronomical fallback kicks in 30 minutes after the estimated sunrise (calculated from HA latitude, longitude, and day of year) if the primary condition has not fired, handling high-consumption days where grid power never reaches zero.</li>
+<li><strong>Solar forecast corrected by 15 % before use</strong>: A conservative 15 % reduction is applied internally to the captured solar forecast before it is used by the Charge Delay and Predictive Charging algorithms. The raw sensor value is still shown in the <code>forecast_kwh</code> diagnostic attribute; only the internal calculation uses the adjusted value.</li>
+<li><strong>Weekly full charge config simplified</strong>: The <code>weekly_full_charge_config</code> step now contains only the day-of-week selector. The delay toggle, safety margin, and solar forecast sensor have been moved to the new dedicated <code>Charge Delay</code> steps, which apply to both the weekly 100% charge and the daily max_soc charge.</li>
+<li><strong>Solar forecast captured every night</strong>: The forecast capture at 23:00 now runs every night (previously only the night before the weekly charge day). The stored value is used the next morning by the delay logic, ensuring the forecast is always from the previous evening — before the sensor resets to the next day's data at midnight.</li>
+<li><strong>Delay uses stored forecast</strong>: The charge delay algorithm no longer reads the solar forecast sensor live. It uses the value captured the previous night, which corresponds to the current day's production. Live reads would return the <em>next</em> day's forecast after midnight.</li>
+</ul>
+<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Feature entities disappearing after disabling switch</strong>: The <code>Charge Delay</code> sensor and <code>Capacity Protection</code> switch and status sensor were only registered at startup when their respective feature was enabled. Disabling the switch persisted the disabled state to config, so after a restart those entities would no longer appear. Registration now checks whether the feature is configured (key exists in config entry) rather than whether it is currently enabled, matching the pattern already used by the <code>Charge Delay</code> switch. Affected entities: <code>Charge Delay</code> sensor, <code>Capacity Protection</code> switch, <code>Capacity Protection Active</code> binary sensor.</li>
+<li><strong>Charge Delay sensor renamed</strong>: The <code>Charge Delay Status</code> sensor has been renamed to <code>Charge Delay</code> across all supported languages (EN, ES, DE, FR, NL) for brevity.</li>
+<li><strong>Configuration changes not surviving restart</strong>: Changes to <code>Min SOC</code>, <code>Max SOC</code>, <code>Max Charge Power</code>, and <code>Max Discharge Power</code> via the UI were written to the battery's Modbus registers but not persisted to <code>config_entry.data</code>. After a restart, the coordinator re-initialised from the original setup values. The coordinator now syncs these attributes from the polled register values after every data refresh, treating the hardware as the source of truth. Separately, the enabled/disabled state of the <code>Charge Delay</code> and <code>Capacity Protection</code> switches was being saved correctly, but the related entities were not registered when the feature was disabled — making the saved state effectively invisible after a restart. This is resolved by the entity registration fix described above.</li>
+<li><strong>Solar forecast sensor not shown in initial setup</strong>: The solar forecast sensor field was missing from the first configuration step. It is now included as an optional field alongside the consumption sensor, making it available to both Predictive Grid Charging and Charge Delay without requiring re-entry in each feature's step.</li>
+<li><strong>Safety Margin description and defaults incorrect in README</strong>: The documented range (10–120 min) and default (40 min) did not match the actual implementation (30–180 min, default 180 min). The description incorrectly stated it was an extra buffer for underperformance; the correct meaning is "minutes before sunset by which charging must be complete — higher values unlock charging earlier".</li>
+<li><strong>V3 Battery SOC register reverted</strong>: Register 34002 (scale 0.1, introduced in v1.3.0) is not supported on Venus C v3 batteries and caused incorrect readings. SOC is now read again from register 37005 (scale 1, precision 1 decimal) as in versions prior to 1.3.0.</li>
+<li><strong>Delay evaluation too infrequent</strong>: The charge delay status was only computed when the PD controller attempted to charge the battery. On days where the battery stayed in equilibrium (deadband), the <code>Charge Delay Status</code> sensor remained stale and showed <code>target_soc: Unknown</code>. Delay evaluation now runs proactively on every 2-second control cycle regardless of charging activity.</li>
+</ul>
+<h2 id="134-2026-03-17">[1.3.4] - 2026-03-17<a class="headerlink" href="#134-2026-03-17" title="Permanent link">&para;</a></h2>
+<h3 id="improved">Improved<a class="headerlink" href="#improved" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Stale sensor detection for PD controller</strong>: The control loop now detects when the consumption sensor hasn't updated between cycles (common with sensors reporting every 5s or slower) and skips PD recalculation to avoid acting on stale data. Sensor history is only populated with real readings, preventing duplicate values from diluting the moving average. The derivative term now uses the actual elapsed time between sensor updates instead of a fixed 2s, eliminating derivative spikes that caused oscillation with slow sensors. A safety valve forces recalculation (proportional only, derivative suppressed) if the sensor stops updating for ~30 seconds.</li>
+</ul>
+<h2 id="133-2026-03-17">[1.3.3] - 2026-03-17<a class="headerlink" href="#133-2026-03-17" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Hassfest manifest validation</strong>: Removed unsupported <code>icon</code> field from <code>manifest.json</code> and added <code>recorder</code> to <code>after_dependencies</code> to declare the integration's usage of the recorder component.</li>
+</ul>
+<h2 id="132-2026-03-17">[1.3.2] - 2026-03-17<a class="headerlink" href="#132-2026-03-17" title="Permanent link">&para;</a></h2>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Min charge/discharge power slider range increased</strong>: The maximum value for <code>Min Charge Power</code> and <code>Min Discharge Power</code> in both the PD Advanced options flow and the number entities has been raised from 500W to 2000W, allowing higher idle thresholds for systems with large PV Systems.</li>
+</ul>
+<h2 id="131-2026-03-12">[1.3.1] - 2026-03-12<a class="headerlink" href="#131-2026-03-12" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_8">Fixed<a class="headerlink" href="#fixed_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>System SOC decimal precision for v3 batteries</strong>: The <code>System SOC</code> aggregate sensor now displays one decimal place when any battery in the system is a v3/vA/vD model, matching the higher-resolution SOC readings provided by those batteries.</li>
+</ul>
+<h2 id="130-2026-03-12">[1.3.0] - 2026-03-12<a class="headerlink" href="#130-2026-03-12" title="Permanent link">&para;</a></h2>
+<h3 id="added_9">Added<a class="headerlink" href="#added_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Venus A and Venus D battery support</strong>: New battery models <code>A</code> (Venus A, max 1200W) and <code>D</code> (Venus D, max 2200W) for hybrid inverter setups. Both models share the same Modbus register map and include MPPT power sensors (mppt1–mppt4, enabled by default) for monitoring solar input channels.</li>
+<li><strong>Dynamic power slider limits in config flow</strong>: The battery configuration wizard now adapts the charge/discharge power sliders to the selected model's maximum (Ev2/Ev3: 2500W, A: 1200W, D: 2200W). The battery setup step has been split into two screens: connection details (name, IP, port, model) and power limits.</li>
+<li><strong>Battery model version labels updated</strong>: Version labels in the configuration flow now read <code>Ev2</code>, <code>Ev3</code>, <code>A</code>, and <code>D</code> for clarity.</li>
+<li><strong>Weekly Full Charge Delay (Solar-Aware)</strong>: New optional feature that delays the weekly 100% charge until solar production is forecast to be insufficient. Instead of charging to 100% from midnight, the system evaluates the solar forecast and only unlocks the full charge when remaining solar energy won't cover household consumption plus the energy needed to reach 100%. Uses a sinusoidal solar production model with T_start detection from actual battery charging data and solar noon calculated from Home Assistant's configured longitude. Includes configurable safety margins and automatic fallback for days with no forecast data.</li>
+<li><strong>Solar forecast capture for delay feature</strong>: When the delay feature is enabled, the integration captures the next-day solar forecast at 23:00 and persists it across restarts using HA Store, ensuring the forecast is available on the target day.</li>
+<li><strong>Weekly Full Charge diagnostic sensor</strong>: New <code>Weekly Full Charge</code> diagnostic sensor on the Marstek Venus System device showing the current charge status (<code>Idle</code>, <code>Waiting for solar</code>, <code>Delayed (HH:MM est.)</code>, <code>Charging to 100%</code>, <code>Complete</code>). Attributes expose full calculation details: forecast kWh, solar T_start/T_end, energy needed, remaining solar/consumption, net solar, charge time estimate, estimated unlock time, and unlock reason.</li>
+<li><strong>Force Full Charge button</strong>: New button on the Marstek Venus System device to trigger an immediate 100% charge on any day, bypassing the weekly schedule and delay logic. Resets automatically on day change.</li>
+<li><strong>Configurable safety margin for delay feature</strong>: The delay safety margin (time buffer before estimated end of solar production) is now configurable in both config and options flow (10-120 minutes, default 40 min). Previously hardcoded at 40 minutes.</li>
+</ul>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>System Charge/Discharge Power uses AC power</strong>: The <code>System Charge Power</code> and <code>System Discharge Power</code> aggregate sensors now read from each battery's <code>AC Power</code> register instead of <code>Battery Power</code>, reflecting the actual AC-side power flow.</li>
+<li><strong>V3 Battery SOC register upgraded</strong>: V3 batteries now read SOC from register 34002 (scale 0.1, precision 2 decimals) instead of 37005 (scale 1, precision 1 decimal), providing higher resolution readings.</li>
+<li><strong>Removed unused Charge to SOC entity</strong>: The <code>charge_to_soc</code> number entity (register 42011) was not used by any integration logic and has been removed from both V2 and V3 definitions.</li>
+<li><strong>Translation files completed</strong>: Added missing <code>apply_to_charge</code> field translations to EN, DE, FR and NL. Added missing <code>enable_weekly_full_charge_delay</code>, <code>solar_forecast_sensor</code> and <code>delay_safety_margin_min</code> translations to DE, FR and NL (both config and options flow).</li>
+</ul>
+<h3 id="fixed_9">Fixed<a class="headerlink" href="#fixed_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>RS485 control mode not re-enabled after reconnection</strong>: When a battery's TCP connection was lost and re-established (e.g., WiFi drop, options flow reload), RS485 control mode was not re-enabled. The battery silently ignored all power commands until a manual restart. <code>async_reconnect_fresh()</code> now automatically re-enables RS485 after every successful reconnection, with a user-override flag to respect manual RS485 disabling via the switch entity.</li>
+<li><strong>First battery RS485 disabled after options flow reload</strong>: On reload, the first battery attempted to reconnect before the V3 firmware released the previous TCP slot, causing the initial connection to fail. RS485 was only enabled on successful connection, leaving the first battery uncontrolled until health monitoring reconnected (without re-enabling RS485). Added a 1-second retry delay for failed initial connections.</li>
+<li><strong>Individual battery Stored Energy sensor not visible</strong>: The <code>MarstekVenusStoredEnergySensor</code> entities were created but immediately discarded due to a <code>lambda entities: None</code> callback. Sensors are now properly registered through the sensor platform setup.</li>
+<li><strong>Consumption history not populated without predictive charging</strong>: The daily consumption capture (needed for the delay feature's average calculation) was only scheduled when predictive charging was enabled. Now also scheduled when the weekly full charge delay is enabled.</li>
+<li><strong>Grid charging falsely triggering solar T_start detection</strong>: <code>total_daily_charging_energy</code> includes grid charging energy, which could falsely indicate solar production start. T_start detection now only activates after 07:00 to avoid overnight grid charging interference.</li>
+</ul>
+<h2 id="121-2026-03-06">[1.2.1] - 2026-03-06<a class="headerlink" href="#121-2026-03-06" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_10">Fixed<a class="headerlink" href="#fixed_10" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Max charge/discharge power changes from UI ignored by control loop</strong>: Changing <code>Max Charge Power</code> or <code>Max Discharge Power</code> number entities wrote to the Modbus register but did not update the coordinator attributes used by the PD controller. The initial config flow values were used forever. Changes now take effect immediately.</li>
+</ul>
+<h2 id="120-2026-03-04">[1.2.0] - 2026-03-04<a class="headerlink" href="#120-2026-03-04" title="Permanent link">&para;</a></h2>
+<h3 id="added_10">Added<a class="headerlink" href="#added_10" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Solar surplus mode for excluded devices</strong>: New <code>allow_solar_surplus</code> option in excluded device configuration. When the battery is <strong>charging</strong>, no adjustment is applied — the PD controller sees real grid power and naturally reduces charging to leave solar for the device. When the battery is <strong>discharging</strong>, full exclusion applies so the battery won't drain to power the device. Recommended for high-consumption devices like EV chargers.</li>
+<li><strong>Native config entities</strong>: Exposed key configuration parameters as Home Assistant entities, eliminating the need to run the full Options Flow wizard for routine adjustments:</li>
+<li><strong>PD controller number entities</strong>: Kp, Kd, deadband, max power change, direction hysteresis, min charge/discharge power — all hot-reloadable without integration restart.</li>
+<li><strong>Max Contracted Power number entity</strong>: Editable from the UI when predictive charging is enabled.</li>
+<li><strong>Weekly Full Charge Day select entity</strong>: Pick the balancing day directly from the UI.</li>
+<li><strong>Time Slot switches</strong>: Enable/disable individual no-discharge time slots on the fly.</li>
+<li><strong>Excluded Devices Config sensor</strong>: Read-only diagnostic showing the number of excluded devices, with per-device details (sensor entity, included_in_consumption, allow_solar_surplus) as attributes.</li>
+<li><strong>Discharge Window diagnostic sensor</strong>: Real-time sensor showing whether the system is currently inside an allowed discharge time slot. Displays "Active (Slot N)", "Inactive", or "No slots". Attributes include all slot configuration details (schedule, days, enabled, apply_to_charge, target_grid_power). Replaces the per-slot Time Slot Info sensors.</li>
+<li><strong>Battery load sharing</strong>: Intelligent battery selection that uses the minimum number of batteries needed to keep each one operating in its optimal efficiency zone. Based on the Venus efficiency curve, batteries activate when total power exceeds 60% of combined capacity (peak efficiency ~91% at 1000-1500W). Features:</li>
+<li><strong>Discharge priority</strong>: Highest SOC first (drain fullest battery).</li>
+<li><strong>Charge priority</strong>: Lowest SOC first (fill emptiest battery).</li>
+<li><strong>SOC hysteresis (5%)</strong>: Active battery stays selected until another exceeds it by 5% SOC.</li>
+<li><strong>Energy hysteresis (2.5 kWh)</strong>: Tiebreaker uses lifetime energy with 2.5 kWh advantage for active battery, balancing long-term wear.</li>
+<li><strong>Power hysteresis (±100W)</strong>: Activates 2nd battery at 60% capacity threshold, deactivates at 50% to prevent ping-pong with fluctuating loads.</li>
+<li>Applies to all modes: normal PD control, solar charging, and predictive grid charging.</li>
+<li><strong>Active Batteries diagnostic sensor</strong>: Real-time sensor showing which batteries are currently active in load sharing. Displays "Discharging: Venus 1", "Charging: Venus 2", or "Idle". Attributes include per-battery SOC, lifetime discharged/charged energy, and active battery counts. Only created for multi-battery setups.</li>
+</ul>
+<h3 id="improved_1">Improved<a class="headerlink" href="#improved_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Modbus TCP connection management</strong>: Overhauled the Modbus connection lifecycle to prevent permanent battery disconnection (especially on V3, which only accepts one TCP connection). Reconnection now creates a fresh pymodbus client instance every time — closing the old socket first (sending TCP FIN to release the battery's connection slot), then connecting with <code>reconnect_delay=0</code> to disable pymodbus's internal auto-reconnect which grew exponentially up to 300 seconds. Added coordinator-level connection health monitoring: after 3 consecutive failed poll cycles a fresh reconnection is triggered; after 5 failures, polling is suspended for 2 minutes to avoid flooding unreachable batteries. Normal 1.5s polling resumes automatically on recovery. The PD control loop now skips unreachable batteries via <code>coordinator.is_available</code> instead of writing to dead connections.</li>
+<li><strong>Automatic reconnection in Modbus retry loops</strong>: When a <code>ConnectionException</code> or <code>ModbusIOException</code> occurs during a read or write operation, the client now immediately attempts to create a fresh TCP connection instead of retrying on the dead socket. If reconnection succeeds, the operation is retried once; if it fails, retries are aborted immediately. This dramatically reduces recovery time after WiFi drops — the integration reconnects on the first failed operation instead of waiting for 3 poll cycles.</li>
+<li><strong>Immediate unavailability detection</strong>: The coordinator now marks a battery as unavailable (<code>_is_connected = False</code>) on the first poll cycle where all reads fail, instead of waiting for 5 consecutive failures. The control loop stops sending writes to unreachable batteries immediately, preventing log noise and wasted Modbus operations.</li>
+<li><strong>Connection error log reduction</strong>: <code>ConnectionException</code> and <code>ModbusIOException</code> errors during read/write operations are now logged at DEBUG level instead of ERROR with full traceback. "Failed after N attempts" messages also downgraded to DEBUG. This eliminates the 60,000+ error log entries that occurred during a WiFi disconnection event.</li>
+</ul>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Minimum charge/discharge power moved to PD controller settings</strong>: <code>min_charge_power</code> and <code>min_discharge_power</code> are now global PD controller parameters instead of per-time-slot settings. They apply uniformly regardless of the active time slot. Existing installations will use the default (0 = disabled) until reconfigured via Options → PD Advanced.</li>
+<li><strong>Predictive Charging switch logic inverted</strong>: The switch is now ON when predictive charging is enabled (default) and OFF when overridden/paused. Previously, it was an "Override" switch with inverted semantics. New unique_id (<code>_predictive_charging</code>) — the old <code>_override_predictive_charging</code> entity should be manually deleted from HA.</li>
+<li><strong>Entity reorganization</strong>: Restructured the Marstek Venus System device page for clearer HA UI layout:</li>
+<li><strong>Controls</strong>: Manual Mode, Predictive Charging (inverted logic), Time Slot switches, Weekly Full Charge Day select — all without <code>EntityCategory</code> so they appear in the Controls section.</li>
+<li><strong>Diagnostic</strong>: Discharge Window sensor (new), Predictive Charging Active binary sensor.</li>
+<li><strong>Configuration</strong>: PD controller parameters only (Kp, Kd, deadband, etc.).</li>
+<li><strong>Removed per-slot Time Slot Info sensors and Predictive Charging Config sensor</strong>: Replaced by the single Discharge Window diagnostic sensor. Old entities (<code>*_time_slot_N_info</code>, <code>*_config_predictive_charging_slot</code>) should be manually deleted from HA.</li>
+<li><strong>Max charge/discharge power config flow selector</strong>: Replaced the dropdown with only two options (800W / 2500W) with a slider ranging from 800W to 2500W in 50W increments, both in initial setup and options flow.</li>
+</ul>
+<h3 id="fixed_11">Fixed<a class="headerlink" href="#fixed_11" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>write_register()</code> refresh never executed</strong>: The <code>async_request_refresh()</code> call after a successful register write was dead code — it sat after <code>return True</code> inside the <code>async with self.lock</code> block and was never reached. Restructured the method so the refresh executes outside the lock after a successful write.</li>
+<li><strong>First execution ignores time slot restrictions</strong>: After integration reload/reconfiguration, the first control cycle sent power to batteries without checking time slot restrictions. This caused a brief discharge pulse (~2.5s) even when the current day/time was outside any configured slot, which was then corrected to 0W on the next cycle. The first execution now checks <code>_is_operation_allowed()</code> before sending any power commands.</li>
+<li><strong>Charge/discharge power limits swapped</strong>: The PD controller clamped charging power using <code>max_discharge_power</code> and vice versa. This caused charging to be limited to the discharge limit (e.g., 800W instead of 2500W) and discharge to use the charge limit. Both clamp conditions now use the correct limit for their direction.</li>
+</ul>
+<h2 id="111-2026-02-27">[1.1.1] - 2026-02-27<a class="headerlink" href="#111-2026-02-27" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_12">Fixed<a class="headerlink" href="#fixed_12" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Incorrect time slot translations</strong>: Fixed descriptions in English, German, French, and Dutch that incorrectly stated batteries "will NOT discharge" during slots. The correct behavior is the opposite — batteries are ALLOWED to discharge during configured slots and blocked outside them. Spanish translations were already correct.</li>
+</ul>
+<h2 id="110-2026-02-27">[1.1.0] - 2026-02-27<a class="headerlink" href="#110-2026-02-27" title="Permanent link">&para;</a></h2>
+<h3 id="added_11">Added<a class="headerlink" href="#added_11" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Configurable target grid power per time slot</strong>: The PD controller can now regulate toward a user-defined grid power target instead of the fixed 0W. Each time slot includes a <code>target_grid_power</code> field (range: -500W to +500W, default: 0W). Negative values target slight export (e.g. -150W), positive values allow slight import. Outside of active time slots, the controller defaults to 0W. This enables economic optimization for tariff setups where feed-in is more valuable than self-consumption.</li>
+<li><strong>Minimum charge/discharge power per time slot</strong>: Each time slot can now define <code>min_charge_power</code> and <code>min_discharge_power</code> thresholds (range: 0-500W, default: 0W = disabled). When the PD controller output is below the configured minimum, the controller stays idle instead of operating at inefficient low power levels. This reduces micro-cycling, unnecessary battery wear, and improves roundtrip efficiency.</li>
+<li><strong>Time slot overlap validation</strong>: The config flow now rejects time slots that overlap with existing ones on shared days. Also prevents midnight-crossing slots (start &gt;= end) to avoid day-ambiguity — users must create two separate slots for overnight periods instead.</li>
+<li><strong>Midnight-crossing slot runtime logic removed</strong>: Simplified <code>_is_operation_allowed()</code> and <code>_get_active_slot()</code> to remove dead midnight-crossing code, since midnight-crossing slots are now rejected at configuration time.</li>
+</ul>
+<h2 id="104-2026-02-26">[1.0.4] - 2026-02-26<a class="headerlink" href="#104-2026-02-26" title="Permanent link">&para;</a></h2>
+<h3 id="added_12">Added<a class="headerlink" href="#added_12" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>V3 battery support</strong>: Version-specific Modbus register maps, entity definitions, and timing for V3 firmware.</li>
+<li>V3 packet correction: Automatically fixes malformed MBAP length bytes in V3 exception responses that caused pymodbus timeouts.</li>
+<li>Automatic reconnection in Modbus retry loops: Both read and write operations now reconnect if the TCP connection is lost mid-retry (skipped during shutdown to avoid occupying the single TCP slot).</li>
+</ul>
+<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Platform files (<code>button.py</code>, <code>number.py</code>, <code>select.py</code>, <code>switch.py</code>) now use coordinator's version-specific entity definitions instead of importing hardcoded V2 lists.</li>
+<li><code>ManualModeSwitch</code> uses <code>coordinator.get_register()</code> instead of hardcoded register addresses, making it version-aware.</li>
+<li>Bumped <code>pymodbus</code> requirement from <code>&gt;=3.0.0</code> to <code>&gt;=3.5.0</code>.</li>
+<li>Version-specific Modbus timing: V2 uses 50ms, V3 uses 150ms between messages.</li>
+<li>RS485 control mode disable now writes the correct <code>command_off</code> value (<code>0x55BB</code>) instead of <code>0</code>, which V3 firmware rejects with Modbus Exception 3.</li>
+</ul>
+<h3 id="fixed_13">Fixed<a class="headerlink" href="#fixed_13" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Race condition during reload</strong>: Control loop and coordinator refresh continued running during <code>async_unload_entry</code>, causing "Not connected" write errors. Fixed by cancelling timers at the start of unload, adding a shutdown flag to suppress expected errors and skip operations, and reordering the unload sequence to: cancel timers → set shutdown flag → wait for in-flight ops → unload platforms → write shutdown registers → disconnect.</li>
+<li><strong>Reconfiguration fails randomly with connection error</strong>: In-flight coordinator polls could survive the shutdown <code>disconnect()</code> and automatically reconnect via Modbus retry logic, occupying the battery's single TCP connection slot. The new <code>async_setup_entry</code> would then fail with <code>[Errno 111] Connect call failed</code>. Fixed by exiting Modbus read/write retries immediately during shutdown and adding an early exit check in the coordinator poll cycle.</li>
+<li><strong>Options flow connection validation</strong>: Reconfiguration now temporarily closes the coordinator's active connection under lock, tests with a fresh connection, and reconnects the coordinator, instead of opening a second Modbus TCP connection (which the firmware rejects since it only supports one simultaneous connection).</li>
+<li><strong>V3 Modbus serialization</strong>: Polling reads now acquire the coordinator lock, preventing interleaving with control loop writes on the same TCP connection. V3 firmware mishandled concurrent requests, causing transaction ID mismatches ("extra data") and written values not being applied. New <code>write_power_atomic()</code> method writes all power registers and reads feedback under a single lock acquisition.</li>
+</ul>
+<h2 id="103-2026-02-22">[1.0.3] - 2026-02-22<a class="headerlink" href="#103-2026-02-22" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_14">Fixed<a class="headerlink" href="#fixed_14" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fix <code>KeyError</code> for <code>force_mode</code> when <code>data_type</code> is missing (PR #3 by @openschwall).</li>
+</ul>
+<h2 id="102-2026-02-20">[1.0.2] - 2026-02-20<a class="headerlink" href="#102-2026-02-20" title="Permanent link">&para;</a></h2>
+<h3 id="fixed_15">Fixed<a class="headerlink" href="#fixed_15" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Remove redundant <code>_write_config_to_batteries()</code> call during options flow. The function opened a second Modbus TCP connection while the coordinator was still holding the first one, causing "Not connected" errors on V3 batteries. The reload already applies all configuration values via <code>async_setup_entry()</code>.</li>
+<li>Fix <code>async_close()</code> in Modbus client attempting to <code>await</code> the synchronous <code>close()</code> method, which caused "object NoneType can't be used in 'await' expression" errors on every reload.</li>
+<li>Fix "Unable to remove unknown job listener" error on reload by switching <code>homeassistant_started</code> listener from <code>async_listen_once</code> to <code>async_listen</code>. The one-time listener auto-removed itself after firing, causing <code>async_on_unload</code> to fail when trying to cancel it during reload.</li>
+<li>Run startup consumption backfill immediately on reload instead of waiting for <code>homeassistant_started</code> (which never fires again after boot).</li>
+</ul>
+<h2 id="101-2026-02-18">[1.0.1] - 2026-02-18<a class="headerlink" href="#101-2026-02-18" title="Permanent link">&para;</a></h2>
+<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Remove V3-exclusive entity definitions to match V2 register footprint.</li>
+<li>Deleted 20 entity definitions from the V3 definition lists (sensors, binary sensors, selects, buttons) that had no equivalent in V2.</li>
+<li>This reduces V3 Modbus-polled registers from ~38 to ~22, which should significantly cut options flow reload time for V3 users.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Volver al principio
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pie" >
+        
+          
+          <a href="../troubleshooting/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Solución de problemas">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Anterior
+              </span>
+              <div class="md-ellipsis">
+                Solución de problemas
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://buymeacoffee.com/ffunes" target="_blank" rel="noopener" title="buymeacoffee.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M152-16c-13.3 0-24 10.7-24 24 0 38.9 23.4 59.4 39.1 73.1l1.1 1C184.5 96.4 192 103.9 192 120c0 13.3 10.7 24 24 24s24-10.7 24-24c0-38.9-23.4-59.4-39.1-73.1l-1.1-1C183.5 31.7 176 24.1 176 8c0-13.3-10.7-24-24-24M96 192c-17.7 0-32 14.3-32 32v192c0 53 43 96 96 96h192c41.8 0 77.4-26.7 90.5-64h5.5c70.7 0 128-57.3 128-128s-57.3-128-128-128zm352 192V256c35.3 0 64 28.7 64 64s-28.7 64-64 64M288 8c0-13.3-10.7-24-24-24S240-5.3 240 8c0 38.9 23.4 59.4 39.1 73.1l1.1 1C296.5 96.4 304 103.9 304 120c0 13.3 10.7 24 24 24s24-10.7 24-24c0-38.9-23.4-59.4-39.1-73.1l-1.1-1C295.5 31.7 288 24.1 288 8"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.expand", "navigation.top", "navigation.footer", "toc.follow", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotate", "content.code.copy", "content.action.edit"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copiado al portapapeles", "clipboard.copy": "Copiar al portapapeles", "search.result.more.one": "1 m\u00e1s en esta p\u00e1gina", "search.result.more.other": "# m\u00e1s en esta p\u00e1gina", "search.result.none": "No se encontraron documentos", "search.result.one": "1 documento encontrado", "search.result.other": "# documentos encontrados", "search.result.placeholder": "Teclee para comenzar b\u00fasqueda", "search.result.term.missing": "Falta", "select.version": "Seleccionar versi\u00f3n"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
