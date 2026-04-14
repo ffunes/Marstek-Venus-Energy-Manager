@@ -1,41 +1,41 @@
-# Carga predictiva
+# Predictive charging
 
-La carga predictiva es una función **opcional** que carga las baterías desde la red cuando el balance energético previsto para el día siguiente es negativo.
+Predictive charging is an **optional** feature that charges batteries from the grid when the expected energy balance for the following day is negative.
 
-## Lógica de decisión
+## Decision logic
 
 ```
-Si (Batería utilizable + Previsión solar) < Consumo esperado:
-    Cargar desde la red la diferencia exacta
-Si no:
-    No cargar (ahorro económico)
+If (Usable battery + Solar forecast) < Expected consumption:
+    Charge from grid the exact deficit
+Else:
+    Do not charge (cost saving)
 ```
 
-- **Batería utilizable**: energía actual por encima del SOC mínimo configurado.
-- **Previsión solar**: producción estimada del día siguiente (sensor Solcast/Forecast.Solar).
-- **Consumo esperado**: media móvil de 7 días. Ver [Estimación del consumo diario](../../features/consumption-estimate.md).
+- **Usable battery**: energy currently stored above the configured min SOC.
+- **Solar forecast**: estimated production for tomorrow (Solcast/Forecast.Solar sensor).
+- **Expected consumption**: 7-day rolling average. See [Daily consumption estimate](../../features/consumption-estimate.md).
 
 ---
 
-## Modos disponibles
+## Available modes
 
-| Modo | Descripción |
+| Mode | Description |
 |---|---|
-| [Franja Horaria](time-slot.md) | Carga durante una ventana fija (p. ej. tarifa nocturna) |
-| [Precio Dinámico](dynamic-pricing.md) | Selecciona automáticamente las horas más baratas del día |
-| [Precio en Tiempo Real](real-time-price.md) | Activa/desactiva la carga en función del precio actual |
+| [Time Slot](time-slot.md) | Charges during a fixed window (e.g. overnight off-peak tariff) |
+| [Dynamic Pricing](dynamic-pricing.md) | Automatically selects the cheapest hours of the day |
+| [Real-Time Price](real-time-price.md) | Activates/deactivates charging based on the current price |
 
-![Selector de modo de carga predictiva](../../assets/screenshots/configuration/predictive-charging/mode-selector.png){ width="600"  style="display: block; margin: 0 auto;"}
+![Predictive charging mode selector](../../assets/screenshots/configuration/predictive-charging/mode-selector.png){ width="600"  style="display: block; margin: 0 auto;"}
 
 ---
 
-## Notificaciones
+## Notifications
 
-La integración envía notificaciones de Home Assistant:
+The integration sends Home Assistant notifications:
 
-- **1 hora antes** del inicio del slot: análisis del balance energético y decisión de carga.
-- **Al inicio del slot**: confirmación de que la carga ha comenzado.
+- **1 hour before** the slot starts: energy balance analysis and charging decision.
+- **When the slot starts**: confirmation that charging has begun.
 
-Usa el switch **Override Predictive Charging** para cancelar la carga predictiva en cualquier momento.
+Use the **Override Predictive Charging** switch to cancel predictive charging at any time.
 
-![Notificación de carga predictiva en HA](../../assets/screenshots/configuration/predictive-charging/notification-example.png){ width="500"  style="display: block; margin: 0 auto;"}
+![Predictive charging notification](../../assets/screenshots/configuration/predictive-charging/notification-example.png){ width="500"  style="display: block; margin: 0 auto;"}

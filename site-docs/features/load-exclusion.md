@@ -1,43 +1,43 @@
-# Exclusión de cargas
+# Load exclusion
 
-Ver [Dispositivos excluidos](../configuration/excluded-devices.md) para la configuración.
+See [Excluded devices](../configuration/excluded-devices.md) for configuration.
 
-## Cómo funciona internamente
+## How it works internally
 
-Cuando un dispositivo excluido está activo, el controlador resta su potencia del consumo de red antes de calcular el ajuste del controlador PD:
+When an excluded device is active, the controller subtracts its power from the grid consumption before computing the PD controller adjustment:
 
 ```
-consumo_efectivo = consumo_red - potencia_excluida
-error = consumo_efectivo - target_grid_power
+effective_consumption = grid_consumption - excluded_power
+error = effective_consumption - target_grid_power
 ```
 
-Esto hace que la batería "ignore" esa carga y no intente compensarla.
+This causes the battery to "ignore" that load and not try to compensate it.
 
-### Si el dispositivo NO está incluido en el sensor principal
+### If the device is NOT included in the main sensor
 
-La integración **suma** la potencia del dispositivo excluido al consumo de red medido (porque el sensor principal no la ve) y luego la resta, resultando en el mismo consumo efectivo neto.
+The integration **adds** the excluded device's power to the measured grid consumption (because the main sensor does not see it) and then subtracts it, resulting in the same net effective consumption.
 
-## Opción "Permitir excedente solar"
+## "Allow solar surplus" option
 
-Cuando está activa, si el sistema opera con excedente solar (la batería está cargando por excedente), la exclusión no se aplica para la parte de carga. En otras palabras: la batería no cargará para compensar el consumo de este dispositivo cuando ya hay excedente solar disponible.
+When active, if the system is operating on solar surplus (battery is charging from surplus), the exclusion does not apply to the charging side. In other words: the battery will not charge to compensate this device's consumption when solar surplus is already available.
 
-Esta opción es la base para la **prioridad batería vs. carga del VE**:
+This is the basis for **EV vs. battery charging priority**:
 
-| Modo | ¿La batería carga con solar? | ¿La batería descarga para el dispositivo? |
+| Mode | Battery charges with solar? | Battery discharges for device? |
 |---|---|---|
-| Excluido, excedente OFF | Sí | No |
-| Excluido, excedente ON | **No** — el solar va primero al dispositivo | No |
+| Excluded, surplus OFF | Yes | No |
+| Excluded, surplus ON | **No** — solar goes to device first | No |
 
-### Switch de excedente solar (control en tiempo real)
+### Solar Surplus switch (runtime control)
 
-Cada dispositivo excluido dispone de una entidad switch **Solar Surplus** dedicada que permite cambiar este comportamiento en tiempo real sin reconfigurar la integración. Úsalo en automatizaciones de HA para cambiar la prioridad dinámicamente:
+Each excluded device gets a dedicated **Solar Surplus** switch entity that toggles this behaviour at runtime without reconfiguring the integration. Use it in HA automations to change priority dynamically:
 
 ```yaml
-# Ejemplo: priorizar el VE cuando está conectado
+# Example: prioritise EV when connected
 automation:
   trigger:
     - platform: state
-      entity_id: binary_sensor.ev_conectado
+      entity_id: binary_sensor.ev_connected
       to: "on"
   action:
     - service: switch.turn_on
@@ -45,16 +45,16 @@ automation:
         entity_id: switch.solar_surplus_wallbox_power
 ```
 
-![Sensor de potencia de dispositivo excluido en HA](../assets/screenshots/features/load-exclusion-entities.png){ width="700"  style="display: block; margin: 0 auto;"}
+![Excluded device power sensor in HA](../assets/screenshots/features/load-exclusion-entities.png){ width="700"  style="display: block; margin: 0 auto;"}
 
-## Cargador VE sin telemetría de potencia
+## EV charger without power telemetry
 
-Para cargadores VE que solo exponen un sensor de estado (sin lectura de potencia en tiempo real), existe la opción **Cargador VE sin telemetría de potencia**. En lugar de leer vatios, el controlador monitoriza el estado del sensor y reacciona ante cualquier cadena de carga (`Charging`, `Cargando`, etc.).
+For EV chargers that only expose a state sensor (no real-time power reading), a dedicated **EV charger without power telemetry** option is available. Instead of reading watts, the controller monitors the sensor state and reacts to any charging string (`Charging`, `Cargando`, etc.).
 
-| Fase | Comportamiento de la batería |
+| Phase | Battery behaviour |
 |---|---|
-| Estado VE → Cargando (primeros 5 min) | 0 W — carga y descarga bloqueadas, estado PD congelado |
-| VE cargando (después de 5 min) | Se permite cargar con excedente solar; descarga siempre bloqueada |
-| Estado VE → cualquier otro valor | Operación normal |
+| EV state → Charging (first 5 min) | 0 W — both charge and discharge blocked, PD state frozen |
+| EV charging (after 5 min) | Charging from solar surplus allowed; discharge always blocked |
+| EV state → anything else | Normal operation |
 
-Ver [Cargador VE sin telemetría de potencia](../configuration/excluded-devices.md#cargador-ve-sin-telemetría-de-potencia) en la referencia de configuración para los detalles de configuración.
+See [EV charger without power telemetry](../configuration/excluded-devices.md#ev-charger-without-power-telemetry) in the configuration reference for setup details.

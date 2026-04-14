@@ -1,86 +1,86 @@
-# Dispositivos excluidos
+# Excluded devices
 
-Permite "enmascarar" cargas pesadas para que la batería no intente cubrirlas.
+Allows you to "mask" heavy loads so the battery does not try to cover them.
 
-## Caso de uso típico
+## Typical use case
 
-Si tienes un cargador de vehículo eléctrico de 7 kW y una batería de 2,5 kW, sin exclusión la batería intentará compensar todo el consumo del cargador y se agotará rápidamente. Con la exclusión activa, el controlador ignora esa potencia y la batería solo gestiona el resto del hogar.
+If you have a 7 kW EV charger and a 2.5 kW battery, without exclusion the battery will try to compensate the full charger load and drain quickly. With exclusion active, the controller ignores that power and the battery only manages the rest of the household.
 
 ---
 
-## Configuración de un dispositivo excluido
+## Configuring an excluded device
 
-| Campo | Descripción |
+| Field | Description |
 |---|---|
-| **Sensor del dispositivo** | Entidad HA que mide la potencia del dispositivo (p. ej. `sensor.wallbox_power`), o un sensor de estado para cargadores VE sin telemetría de potencia. |
-| **Incluido en el consumo** | Marca si tu sensor principal **ya** incluye esta carga |
-| **Permitir excedente solar** | Si está activo, la batería no cargará para compensar este dispositivo cuando hay excedente solar. También puede activarse en tiempo real desde una entidad switch (ver más abajo). |
-| **Cargador VE sin telemetría de potencia** | Marca si el sensor es un sensor de estado que indica `Charging`/`Cargando` en lugar de un valor en vatios. Ver [Cargador VE sin telemetría](#cargador-ve-sin-telemetría-de-potencia) más abajo. |
+| **Device sensor** | HA entity measuring the device's power (e.g. `sensor.wallbox_power`), or a state sensor for EV chargers without power telemetry. |
+| **Included in consumption** | Check if your main sensor **already** includes this load |
+| **Allow solar surplus** | If enabled, the battery will not charge to compensate this device when there is a solar surplus. Can also be toggled at runtime via a switch entity (see below). |
+| **EV charger without power telemetry** | Check if the sensor is a state sensor that reads `Charging` (or a localised equivalent) instead of a watt value. See [EV charger without power telemetry](#ev-charger-without-power-telemetry) below. |
 
-### ¿Incluido en el consumo?
+### Included in consumption?
 
 ```
-Sensor principal lee: toda la casa
-Cargador VE forma parte de "toda la casa" → ✅ Incluido en el consumo
+Main sensor reads: whole house
+EV charger is part of "whole house" → ✅ Included in consumption
 
-Sensor principal lee: solo circuito doméstico
-Cargador VE está en circuito separado → ❌ No incluido en el consumo
+Main sensor reads: only domestic circuit
+EV charger is on a separate circuit → ❌ Not included in consumption
 ```
 
-La integración usa esta configuración para calcular correctamente el consumo neto sin el dispositivo excluido.
+The integration uses this setting to correctly calculate the net consumption without the excluded device.
 
-![Formulario de dispositivo excluido](../assets/screenshots/configuration/excluded-device-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Excluded device form](../assets/screenshots/configuration/excluded-device-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
-## Switch de excedente solar
+## Solar Surplus switch
 
-Por cada dispositivo excluido se crea automáticamente una entidad switch **Solar Surplus – \<nombre del dispositivo\>** que refleja el ajuste *Permitir excedente solar* y puede activarse en cualquier momento sin entrar en el flujo de opciones.
+For each excluded device a **Solar Surplus** switch entity is automatically created (`Solar Surplus – <device name>`). It mirrors the *Allow solar surplus* setting and can be toggled at any time without entering the options flow.
 
-Esto permite cambiar la prioridad de carga desde automatizaciones — por ejemplo:
+This makes it possible to change the charging priority from automations — for example:
 
-- Activar cuando el VE está conectado, para que el solar cargue primero el coche.
-- Desactivar a una hora programada para que la batería capture el excedente de la mañana.
-- Reaccionar al SOC de la batería: activar por encima del 80 %, desactivar por debajo del 50 %.
+- Turn ON when the EV is connected, so solar charges the car first.
+- Turn OFF at a scheduled time to let the battery capture morning surplus.
+- React to battery SOC: turn ON above 80 %, turn OFF below 50 %.
 
-El estado del switch se persiste en la entrada de configuración y sobrevive reinicios.
+The switch state is persisted in the config entry and survives restarts.
 
 ---
 
-## Cargador VE sin telemetría de potencia
+## EV charger without power telemetry
 
-Algunas integraciones de cargadores de vehículo eléctrico no exponen un sensor de potencia en tiempo real — solo informan del **estado de carga** (p. ej. `Charging`, `Idle`, `Disconnected`). Esta opción está diseñada para esos cargadores.
+Some EV charger integrations do not expose a real-time power sensor — they only report a **charging state** (e.g. `Charging`, `Idle`, `Disconnected`). This option is designed for those chargers.
 
-Cuando está activa, el campo **Sensor del dispositivo** debe apuntar a la entidad de estado, no a un sensor de potencia. El controlador reconoce cualquier estado que contenga `charg` o `cargand` (sin distinguir mayúsculas), lo que cubre:
+When enabled, the **Device sensor** field must point to the state entity, not a power sensor. The controller recognises any state that contains `charg` or `cargand` (case-insensitive), covering:
 
-- `Charging` (la mayoría de integraciones en inglés)
-- `Cargando`, `Cargando VE`, `Cargando Vehículo` (español)
+- `Charging` (most English-language integrations)
+- `Cargando`, `Cargando VE`, `Cargando Vehículo` (Spanish)
 
-### Comportamiento cuando el VE empieza a cargar
+### Behaviour when the EV starts charging
 
 ```
-t = 0  Estado VE → "Charging" detectado
-       Batería forzada a 0 W (carga Y descarga bloqueadas)
-       Estado del controlador PD congelado
+t = 0  EV state → "Charging" detected
+       Battery immediately set to 0 W (charge AND discharge blocked)
+       PD state frozen
 
-t = 5 min  Pausa finalizada
-           La batería puede cargar con excedente solar
-           La descarga permanece bloqueada mientras el VE sigue cargando
+t = 5 min  Pause expires
+           Battery may charge from solar surplus
+           Battery discharge remains permanently blocked while EV is charging
 
-t = N  Estado VE → cualquier otro valor (Idle / Disconnected / …)
-       Operación normal reanudada
+t = N  EV state → any other value (Idle / Disconnected / …)
+       Normal operation resumes
 ```
 
-### ¿Por qué la pausa de 5 minutos?
+### Why the 5-minute pause?
 
-Cuando un cargador VE se activa, negocia la corriente disponible con el coche durante una breve fase de handshake. Cualquier descarga de la batería durante esa ventana puede reducir temporalmente la capacidad de red aparente, haciendo que el cargador se estabilice en una corriente más baja. La pausa da tiempo al handshake para completarse antes de que la batería actúe.
+When an EV charger activates it negotiates the available current with the car over a brief handshake. Any battery discharge during this window can temporarily reduce the apparent grid capacity, causing the charger to settle at a lower current. The pause gives the handshake time to complete before the battery does anything.
 
-### Comparativa con la opción estándar de excedente solar
+### Comparison with the standard Solar Surplus option
 
-| | Exclusión estándar + Excedente solar | VE sin telemetría |
+| | Standard exclusion + Solar Surplus | EV without telemetry |
 |---|---|---|
-| Requiere sensor de potencia | Sí | No |
-| La batería descarga para el VE | Nunca | Nunca |
-| La batería carga con solar mientras el VE carga | Sí | Sí (tras pausa de 5 min) |
-| Pausa inicial de 5 minutos | No | Sí |
-| Reacciona automáticamente al estado del VE | No | Sí |
+| Needs a power sensor | Yes | No |
+| Battery discharges for EV | Never | Never |
+| Battery charges from solar when EV charges | Yes | Yes (after 5-min pause) |
+| Initial 5-min pause | No | Yes |
+| Reacts to EV state changes | No | Yes (automatic) |
