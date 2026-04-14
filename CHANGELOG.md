@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+### Fixed
+- **Dynamic pricing notification showed wrong "needed" value**: When no grid charging was required, the "Available ≥ X kWh needed" line always displayed the same value on both sides due to a broken formula (`abs(deficit) + consumption` algebraically equals `total_available` when no deficit exists). Fixed to show the actual average consumption. A second notification path (no price slots found) also omitted the numeric consumption value entirely ("≥ needed"); fixed to include it.
+
 ### Added
 - **Dynamic pricing — evening re-evaluation**: A new late-day check activates once per day when solar production is winding down (1.5 h before the estimated T_end, or at 16:00 on days with no detected solar start). If the batteries have not reached their target SOC and the remaining solar is insufficient to cover the gap, the integration searches for cheap price slots between now and midnight and schedules them for grid charging. New slots are merged into the existing morning schedule if one exists, or a new schedule is created. A dedicated persistent notification ("Predictive Charging: Evening re-evaluation") is sent listing the slots added and the estimated deficit. This catches the common scenario where the morning forecast was optimistic (more clouds or more household consumption than expected) and the batteries end up under-charged by end of day.
 

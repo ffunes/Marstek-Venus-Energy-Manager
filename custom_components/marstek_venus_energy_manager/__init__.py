@@ -3546,7 +3546,7 @@ class ChargeDischargeController:
                     f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
                     f"☀️ Solar forecast: {solar_str}\n"
                     f"📊 Consumption: {consumption_str}\n\n"
-                    f"Available: {decision_data.get('total_available_kwh', 0):.2f} kWh ≥ needed\n"
+                    f"✅ Available: {decision_data.get('total_available_kwh', 0):.2f} kWh ≥ {avg_consumption:.2f} kWh needed\n"
                     f"No grid charging required."
                 )
             else:
@@ -3583,7 +3583,7 @@ class ChargeDischargeController:
                     f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
                     f"☀️ Solar forecast: {solar_str}\n"
                     f"📊 Consumption: {consumption_str}\n"
-                    f"✅ Available: {decision_data.get('total_available_kwh', 0):.2f} kWh ≥ {abs(energy_deficit) + decision_data.get('avg_consumption_kwh', 0):.2f} kWh needed\n\n"
+                    f"✅ Available: {decision_data.get('total_available_kwh', 0):.2f} kWh ≥ {decision_data.get('avg_consumption_kwh', 0):.2f} kWh needed\n\n"
                     f"💰 Cheapest hours today (informational):\n{slot_lines}\n\n"
                     f"Average price: {schedule.average_price:.4f} {unit}\n"
                     f"{threshold_line}"
