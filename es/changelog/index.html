@@ -1410,6 +1410,9 @@
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
+<p><strong>Integration Status sensor</strong>: New sensor (<code>sensor.marstek_venus_system_integration_status</code>) showing at a glance what the integration is currently doing. It reflects the highest-priority active mode and updates every poll cycle. Possible states: <code>Charging from Grid</code> (predictive grid charging active), <code>Weekly Full Charge</code> (charging to 100 %), <code>Charge Delayed</code>, <code>Waiting for Solar</code>, <code>Charging to Setpoint</code>, <code>Capacity Protection</code>, <code>No-Discharge Window</code> (inside a configured time slot), <code>Charging</code>, <code>Discharging</code>, <code>Standby</code> (within deadband, no action needed), <code>Manual Mode</code>, and <code>Initializing</code>. Fully translated into EN, ES, DE, FR, and NL.</p>
+</li>
+<li>
 <p><strong>Dynamic pricing — evening re-evaluation</strong>: A new late-day check activates once per day when solar production is winding down (1.5 h before the estimated T_end, or at 16:00 on days with no detected solar start). If the batteries have not reached their target SOC and the remaining solar is insufficient to cover the gap, the integration searches for cheap price slots between now and midnight and schedules them for grid charging. New slots are merged into the existing morning schedule if one exists, or a new schedule is created. A dedicated persistent notification ("Predictive Charging: Evening re-evaluation") is sent listing the slots added and the estimated deficit. This catches the common scenario where the morning forecast was optimistic (more clouds or more household consumption than expected) and the batteries end up under-charged by end of day.</p>
 </li>
 <li>
