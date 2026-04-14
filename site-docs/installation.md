@@ -1,55 +1,55 @@
-# Instalación
+# Installation
 
-## Requisitos
+## Requirements
 
 ### Hardware
 
-| Componente | Descripción |
+| Component | Description |
 |---|---|
-| Batería | Marstek Venus E v2/v3, Venus A o Venus D |
-| Conversor Modbus | Dispositivo RS485 → Modbus TCP (p. ej. Elfin-EW11) — **solo necesario para Venus E v2**. Las Venus E v3, Venus A y Venus D se conectan por Ethernet y soportan Modbus TCP de forma nativa. |
-| Sensor de red | Sensor HA que mide el consumo total de la red (p. ej. Shelly EM3, Neurio, contador inteligente) |
+| Battery | Marstek Venus E v2/v3, Venus A or Venus D |
+| Modbus converter | RS485 → Modbus TCP device (e.g. Elfin-EW11) — **Venus E v2 only**. Venus E v3, Venus A and Venus D connect via Ethernet and support Modbus TCP natively. |
+| Grid sensor | HA sensor measuring total grid consumption (e.g. Shelly EM3, Neurio, smart meter integration) |
 
 ### Software
 
-- Home Assistant **2024.1.0** o superior
-- (Opcional) Sensor de previsión solar para la carga predictiva (Solcast, Forecast.Solar, etc.)
+- Home Assistant **2024.1.0** or later
+- (Optional) Solar forecast sensor for predictive charging (Solcast, Forecast.Solar, etc.)
 
-### Red
+### Network
 
-La batería debe ser accesible desde Home Assistant por IP en el mismo segmento de red o mediante enrutamiento.
-
----
-
-## Instalación con HACS (recomendado)
-
-1. Haz clic en el botón para añadir el repositorio a HACS:
-
-    [![Añadir a HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ffunes&repository=Marstek-Venus-Energy-Manager&category=integration)
-
-2. Busca **"Marstek Venus Energy Manager"** e instala.
-3. Reinicia Home Assistant.
-
-![Búsqueda en HACS](assets/screenshots/installation/hacs-search.png){ width="700"  style="display: block; margin: 0 auto;"}
+The battery must be reachable from Home Assistant by IP on the same network segment or via routing.
 
 ---
 
-## Instalación manual
+## Installation via HACS (recommended)
 
-1. Descarga el zip de la última release desde [GitHub Releases](https://github.com/ffunes/Marstek-Venus-Energy-Manager/releases).
-2. Extrae la carpeta `marstek_venus_energy_manager`.
-3. Cópiala en el directorio `custom_components/` de Home Assistant.
-4. Reinicia Home Assistant.
+1. Click the button to add the repository to HACS:
+
+    [![Add to HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=ffunes&repository=Marstek-Venus-Energy-Manager&category=integration)
+
+2. Search for **"Marstek Venus Energy Manager"** and install.
+3. Restart Home Assistant.
+
+![HACS search](assets/screenshots/installation/hacs-search.png){ width="700"  style="display: block; margin: 0 auto;"}
 
 ---
 
-## Añadir la integración
+## Manual installation
 
-Después de instalar y reiniciar:
+1. Download the zip from the latest release at [GitHub Releases](https://github.com/ffunes/Marstek-Venus-Energy-Manager/releases).
+2. Extract the `marstek_venus_energy_manager` folder.
+3. Copy it to the `custom_components/` directory of your Home Assistant instance.
+4. Restart Home Assistant.
 
-1. Ve a **Ajustes** → **Dispositivos y servicios**.
-2. Pulsa **+ AÑADIR INTEGRACIÓN**.
-3. Busca **Marstek Venus Energy Manager**.
-4. Sigue el [asistente de configuración](configuration/index.md).
+---
 
-![Añadir integración en HA](assets/screenshots/installation/add-integration.png){ width="600"  style="display: block; margin: 0 auto;"}
+## Adding the integration
+
+After installing and restarting:
+
+1. Go to **Settings** → **Devices & Services**.
+2. Click **+ ADD INTEGRATION**.
+3. Search for **Marstek Venus Energy Manager**.
+4. Follow the [configuration wizard](configuration/index.md).
+
+![Add integration in HA](assets/screenshots/installation/add-integration.png){ width="600"  style="display: block; margin: 0 auto;"}

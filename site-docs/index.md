@@ -1,48 +1,48 @@
 # Marstek Venus Energy Manager
 
-**Marstek Venus Energy Manager** es una integración personalizada para Home Assistant que monitoriza y controla baterías Marstek Venus (series E v2/v3, Venus A y Venus D) mediante Modbus TCP.
+**Marstek Venus Energy Manager** is a custom Home Assistant integration to monitor and control Marstek Venus batteries (E v2/v3, Venus A and Venus D series) via Modbus TCP.
 
 <div class="grid cards" markdown>
 
--   :material-battery-charging: **Control dinámico de potencia**
+-   :material-battery-charging: **Dynamic power control**
 
-    Controlador PD que mantiene el flujo de red cerca de cero para maximizar el autoconsumo.
+    PD controller that keeps grid flow near zero to maximise self-consumption.
 
--   :material-calendar-clock: **Carga predictiva**
+-   :material-calendar-clock: **Predictive charging**
 
-    Carga automática desde la red cuando la previsión solar no cubre el consumo esperado.
+    Automatic grid charging when the solar forecast falls short of expected consumption.
 
--   :material-battery-sync: **Multi-batería**
+-   :material-battery-sync: **Multi-battery**
 
-    Gestión inteligente de hasta 6 baterías con distribución óptima de carga.
+    Intelligent management of up to 6 batteries with optimal power distribution.
 
--   :material-tune: **Altamente configurable**
+-   :material-tune: **Highly configurable**
 
-    Franjas horarias, dispositivos excluidos, peak shaving, carga semanal completa y más.
+    Time slots, excluded devices, peak shaving, weekly full charge and more.
 
 </div>
 
-## Características principales
+## Key features
 
-- **Controlador PD (Zero Export/Import)**: ajusta en tiempo real la potencia de la batería para mantener el intercambio con la red próximo a cero.
-- **Carga predictiva**: tres modos (franja horaria, precio dinámico, precio en tiempo real) que cargan desde la red solo cuando el balance energético lo requiere. Utiliza una media móvil de 7 días del consumo real del hogar para decidir si es necesario cargar desde la red.
-- **Gestión multi-batería**: selección inteligente con prioridades de SOC, histéresis de energía y eficiencia por zona de operación.
-- **Franjas de descarga**: define ventanas horarias y niveles objetivo de red por franja.
-- **Peak shaving**: reserva capacidad de la batería para satisfacer picos de demanda que superen un umbral de potencia configurable.
-- **Carga semanal completa**: carga al 100% una vez por semana para equilibrar celdas.
-- **Retraso de carga solar**: pospone la carga matutina de la batería (solar y desde la red) mientras la producción solar prevista es suficiente para cubrir la energía restante necesaria.
-- **Exclusión de cargas**: excluye dispositivos de alta potencia (p. ej. cargadores de VE) para que el controlador no intente compensar su consumo.
-- **Notificaciones proactivas de alarmas (solo baterías v2)**: monitoriza los registros de fallos y alarmas de la batería cada 5 segundos y envía una notificación de Home Assistant en el momento en que se detecta una nueva condición, con el nombre exacto del fallo o alarma. El sensor de sistema `System Alarm Status` (`OK` / `Warning` / `Fault`) ofrece una vista rápida del estado de todas las baterías.
+- **PD Controller (Zero Export/Import)**: adjusts battery power in real time to keep grid exchange close to zero.
+- **Predictive charging**: three modes (time slot, dynamic pricing, real-time price) that charge from the grid only when the energy balance requires it. Uses a 7-day rolling average of real household consumption to decide whether grid charging is needed.
+- **Multi-battery management**: smart selection with SOC priorities, energy hysteresis and efficiency zone operation.
+- **Discharge time slots**: define time windows and per-slot target grid power levels.
+- **Peak shaving**: reserves battery capacity to cover demand spikes above a configurable power threshold.
+- **Weekly full charge**: charges to 100% once a week for cell balancing.
+- **Solar charge delay**: postpones morning battery charging (both solar and grid) while expected solar production is enough to cover the remaining energy needed.
+- **Load exclusion**: exclude high-power devices (e.g. EV chargers) so the controller does not try to compensate their consumption.
+- **Proactive alarm notifications (v2 batteries only)**: monitors battery fault and alarm registers every 5 seconds and sends a Home Assistant notification the moment a new condition is detected, with the exact fault or alarm name. A system-level `System Alarm Status` sensor (`OK` / `Warning` / `Fault`) provides an at-a-glance view across all batteries.
 
-## Aviso de responsabilidad
+## Disclaimer
 
-!!! danger "Exención de responsabilidad"
-    Este software se proporciona "tal cual", sin garantía de ningún tipo. El uso es bajo tu propio riesgo. El desarrollador no asume ninguna responsabilidad por daños a baterías, inversores, instalación eléctrica, pérdidas económicas o lesiones personales.
+!!! danger "Liability disclaimer"
+    This software is provided "as is", without warranty of any kind. Use is at your own risk. The developer assumes no responsibility for damage to batteries, inverters, electrical installations, financial losses or personal injury.
 
-    **Si no aceptas estos términos, NO instales ni uses esta integración.**
+    **If you do not agree to these terms, DO NOT install or use this integration.**
 
-## Soporte
+## Support
 
-Si encuentras útil esta integración, puedes apoyar el proyecto:
+If you find this integration useful, you can support the project:
 
 <a href="https://buymeacoffee.com/ffunes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="40" width="145"></a>

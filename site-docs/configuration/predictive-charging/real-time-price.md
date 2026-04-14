@@ -1,80 +1,80 @@
-# Carga predictiva — Modo Precio en Tiempo Real
+# Predictive charging — Real-Time Price mode
 
-Activa o desactiva la carga desde la red en cada ciclo del controlador (~2,5 s) en función del **precio actual de la electricidad**.
+Activates or deactivates grid charging every controller cycle (~2.5 s) based on the **current electricity price**.
 
-A diferencia del Modo Precio Dinámico, no requiere previsión de precios ni evaluación nocturna. Reacciona puramente al precio en curso.
+Unlike Dynamic Pricing mode, it requires no price forecast and no overnight evaluation. It reacts purely to the live price.
 
-## Configuración
+## Configuration
 
-| Campo | Descripción |
+| Field | Description |
 |---|---|
-| **Sensor de precio** | Cualquier sensor HA con el precio del periodo actual (PVPC, Nordpool, CKW…) |
-| **Umbral fijo de precio** | Precio por debajo del cual se activa la carga |
-| **Sensor de precio medio diario** | (Opcional) Umbral dinámico en lugar del valor fijo |
-| **Descargar solo cuando el precio supere el umbral** | (Opcional) Descarga condicionada al precio actual — ver abajo |
+| **Price sensor** | Any HA sensor with the current period price (PVPC, Nordpool, CKW…) |
+| **Fixed price threshold** | Price below which grid charging activates |
+| **Daily average price sensor** | (Optional) Dynamic threshold instead of a fixed value |
+| **Only discharge when price exceeds threshold** | (Optional) Price-gated discharge — see below |
 
-![Formulario de configuración — Modo Precio en Tiempo Real](../../assets/screenshots/configuration/predictive-charging/real-time-price-form.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuration form — Real-Time Price mode](../../assets/screenshots/configuration/predictive-charging/real-time-price-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
-## Comportamiento de carga
+## Charging behaviour
 
-Cada ciclo (~2,5 s) el controlador evalúa si arrancar o detener la carga desde la red:
+Every cycle (~2.5 s) the controller evaluates whether to start or stop grid charging:
 
 ```
-Si precio_actual ≤ umbral:
-    Y si (batería + solar) < consumo_esperado:
-        → Activar carga desde la red
-Si precio_actual > umbral:
-    → Desactivar carga desde la red
+If current_price ≤ threshold:
+    And if (battery + solar) < expected_consumption:
+        → Activate grid charging
+If current_price > threshold:
+    → Deactivate grid charging
 ```
 
-El balance energético (batería + solar vs. consumo esperado) se evalúa igualmente antes de arrancar la carga, igual que en los otros modos.
+The energy balance (battery + solar vs. expected consumption) is evaluated before starting charging, the same as in other modes.
 
-### Determinación del umbral de carga
+### Threshold resolution
 
-El umbral se resuelve en este orden de prioridad:
+The threshold is resolved in this priority order:
 
-1. **Sensor de precio medio diario** — si está configurado y disponible, su valor es el umbral dinámico.
-2. **Umbral fijo de precio** — valor numérico estático configurado en el flujo de configuración.
+1. **Daily average price sensor** — if configured and available, its value is the dynamic threshold.
+2. **Fixed price threshold** — static numeric value configured in the setup flow.
 
-Si ninguno está disponible, el modo no actúa.
+If neither is available, the mode does not act.
 
 ---
 
-## Control de descarga por precio
+## Price-based discharge control
 
-La opción **"Descargar solo cuando el precio supere el umbral"** añade una condición adicional al comportamiento de descarga, independiente de la carga.
+The **"Only discharge when price exceeds threshold"** option adds an extra condition to discharge behaviour, independent of charging.
 
-Cuando está activa, en **cada ciclo del controlador (~2,5 s)** se comprueba si el precio actual justifica la descarga usando el mismo umbral que para la carga:
-
-```
-Si precio_actual > umbral:
-    → Descarga permitida (el controlador PD opera con normalidad)
-Si precio_actual ≤ umbral:
-    → Descarga BLOQUEADA (la batería se mantiene en espera)
-```
-
-La lógica inversa a la de carga: se carga cuando el precio es bajo, se descarga cuando es alto.
-
-### Interacción con franjas horarias
-
-Si tienes franjas de descarga configuradas, **ambas condiciones deben cumplirse**:
+When active, **every controller cycle (~2.5 s)** checks whether the current price justifies discharge using the same threshold as for charging:
 
 ```
-Descarga permitida = dentro_de_franja_horaria AND precio_actual > umbral
+If current_price > threshold:
+    → Discharge allowed (PD controller operates normally)
+If current_price ≤ threshold:
+    → Discharge BLOCKED (battery holds)
 ```
 
-### Efecto en el controlador PD
+The inverse logic of charging: charge when price is low, discharge when price is high.
 
-Cuando la descarga está bloqueada por precio, el controlador congela completamente su estado (potencia a 0, sin actualización del término derivativo), igual que ocurre durante una restricción de franja horaria. La batería se reactiva sin perturbaciones en cuanto el precio supera el umbral.
+### Interaction with time slots
+
+If discharge time slots are configured, **both conditions must be met**:
+
+```
+Discharge allowed = within_time_slot AND current_price > threshold
+```
+
+### Effect on the PD controller
+
+When discharge is blocked by price, the controller completely freezes its state (power to 0, no derivative term update), the same as during a time slot restriction. The battery resumes smoothly as soon as the price exceeds the threshold.
 
 ---
 
-## Diferencias respecto a Precio Dinámico
+## Differences from Dynamic Pricing
 
-| Característica | Precio Dinámico | Precio Tiempo Real |
+| Feature | Dynamic Pricing | Real-Time Price |
 |---|---|---|
-| Previsión de precios necesaria | ✅ | ❌ |
-| Evaluación nocturna (00:05) | ✅ | ❌ |
-| Reacción al precio en vivo | ❌ | ✅ |
-| Selección de horas óptimas | ✅ | ❌ |
-| Umbral de descarga | Media del día (calculada a las 00:05) | Umbral configurable (fijo o sensor dinámico) |
+| Price forecast required | ✅ | ❌ |
+| Overnight evaluation (00:05) | ✅ | ❌ |
+| Reacts to live price | ❌ | ✅ |
+| Optimal hour selection | ✅ | ❌ |
+| Discharge threshold | Daily average (calculated at 00:05) | Configurable threshold (fixed or dynamic sensor) |

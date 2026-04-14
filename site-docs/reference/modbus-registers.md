@@ -1,40 +1,40 @@
-# Registros Modbus
+# Modbus registers
 
-Referencia completa de los registros Modbus utilizados por la integración para cada versión de batería.
+Complete reference of the Modbus registers used by the integration for each battery version.
 
-!!! info "Documento de referencia completo"
-    La tabla completa de registros está disponible en [`docs/registers.md`](../../docs/registers.md) del repositorio.
+!!! info "Full reference document"
+    The complete register table is available in [`docs/registers.md`](../../docs/registers.md) in the repository.
 
-## Versiones de firmware
+## Firmware versions
 
-| Código | Modelo |
+| Code | Model |
 |---|---|
 | `a` | Venus A |
 | `d` | Venus D |
 | `e_v12` | Venus E v1/v2 |
 | `e_v3` | Venus E v3 |
 
-## Tipos de datos
+## Data types
 
-| Tipo | Tamaño | Descripción |
+| Type | Size | Description |
 |---|---|---|
-| `uint16` | 2 bytes | Entero sin signo de 16 bits |
-| `int16` | 2 bytes | Entero con signo de 16 bits |
-| `uint32` | 4 bytes | Entero sin signo de 32 bits |
-| `int32` | 4 bytes | Entero con signo de 32 bits |
-| `uint48` | 6 bytes | Entero sin signo de 48 bits |
-| `uint64` | 8 bytes | Entero sin signo de 64 bits |
-| `char` | variable | Cadena de texto |
-| `bit` | — | Campo de bits / flags |
+| `uint16` | 2 bytes | Unsigned 16-bit integer |
+| `int16` | 2 bytes | Signed 16-bit integer |
+| `uint32` | 4 bytes | Unsigned 32-bit integer |
+| `int32` | 4 bytes | Signed 32-bit integer |
+| `uint48` | 6 bytes | Unsigned 48-bit integer |
+| `uint64` | 8 bytes | Unsigned 64-bit integer |
+| `char` | variable | Text string |
+| `bit` | — | Bit field / flags |
 
-## Registros clave
+## Key registers
 
-| Registro | Nombre | Descripción |
+| Register | Name | Description |
 |---|---|---|
-| 32104 | `battery_soc` | Estado de carga (%) — Venus E v3 |
-| 34002 | `battery_soc` | Estado de carga (%) — Venus A/D/E v2 |
-| 32102 | `battery_power` | Potencia de la batería (W) — Venus E v3 |
-| 30001 | `battery_power` | Potencia de la batería (W) — Venus A/D/E v2 |
-| 44000 | — | Corte de carga (manipulado por carga semanal completa) |
+| 32104 | `battery_soc` | State of charge (%) — Venus E v3 |
+| 34002 | `battery_soc` | State of charge (%) — Venus A/D/E v2 |
+| 32102 | `battery_power` | Battery power (W) — Venus E v3 |
+| 30001 | `battery_power` | Battery power (W) — Venus A/D/E v2 |
+| 44000 | — | Charging cutoff (manipulated by weekly full charge) |
 
-Para la tabla completa consulta el [documento de registros](../../docs/registers.md).
+For the full table see the [register reference document](../../docs/registers.md).

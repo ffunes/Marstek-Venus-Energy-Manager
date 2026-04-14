@@ -1,50 +1,50 @@
-# Arquitectura
+# Architecture
 
-## Componentes principales
+## Main components
 
 ```mermaid
 flowchart TD
-    GS[Sensor de red HA] --> CC[ChargeDischargeController\n__init__.py]
-    CC --> PD[Algoritmo PD]
-    PD --> DIST[Distribución de potencia\nmulti-batería]
-    DIST --> MW[Escritura Modbus]
-    MW --> BAT1[Batería 1]
-    MW --> BAT2[Batería 2..4]
+    GS[HA Grid Sensor] --> CC[ChargeDischargeController\n__init__.py]
+    CC --> PD[PD Algorithm]
+    PD --> DIST[Power distribution\nmulti-battery]
+    DIST --> MW[Modbus write]
+    MW --> BAT1[Battery 1]
+    MW --> BAT2[Battery 2..4]
 
-    COORD[MarstekVenusDataUpdateCoordinator\ncoordinator.py] --> MR[Lectura Modbus]
+    COORD[MarstekVenusDataUpdateCoordinator\ncoordinator.py] --> MR[Modbus read]
     MR --> BAT1
     MR --> BAT2
-    COORD --> EU[Actualización de entidades HA]
+    COORD --> EU[HA entity updates]
 
     MC[MarstekModbusClient\nmodbus_client.py] --> MW
     MC --> MR
 ```
 
-## Módulos
+## Modules
 
-| Archivo | Clase principal | Responsabilidad |
+| File | Main class | Responsibility |
 |---|---|---|
-| `__init__.py` | `ChargeDischargeController` | Bucle de control principal (cada 2,5 s), algoritmo PD, distribución multi-batería |
-| `coordinator.py` | `MarstekVenusDataUpdateCoordinator` | Polling periódico de datos Modbus, actualización de entidades |
-| `modbus_client.py` | `MarstekModbusClient` | Comunicación TCP asíncrona con pymodbus, reintentos con backoff |
-| `config_flow.py` | — | Asistente de configuración multi-paso en HA UI |
-| `const.py` | — | Definiciones de todos los registros Modbus y entidades |
-| `aggregate_sensors.py` | — | Sensores agregados del sistema (suma de todas las baterías) |
-| `calculated_sensors.py` | — | Sensores derivados calculados (ciclos, estimaciones) |
+| `__init__.py` | `ChargeDischargeController` | Main control loop (every 2.5 s), PD algorithm, multi-battery distribution |
+| `coordinator.py` | `MarstekVenusDataUpdateCoordinator` | Periodic Modbus data polling, entity updates |
+| `modbus_client.py` | `MarstekModbusClient` | Async TCP communication via pymodbus, retries with backoff |
+| `config_flow.py` | — | Multi-step configuration wizard in HA UI |
+| `const.py` | — | All Modbus register and entity definitions |
+| `aggregate_sensors.py` | — | System aggregate sensors (sum across all batteries) |
+| `calculated_sensors.py` | — | Derived calculated sensors (cycle count, estimates) |
 
-## Flujo de datos
+## Data flow
 
 ```
-Sensor de red → Controlador (PD) → Distribución de potencia → Escritura Modbus → Baterías
-                      ↑
-Coordinador → Lectura Modbus → Actualización de entidades
+Grid sensor → Controller (PD) → Power distribution → Modbus write → Batteries
+                    ↑
+Coordinator → Modbus read → Entity updates
 ```
 
-## Intervalos de polling
+## Polling intervals
 
-| Intervalo | Período | Registros |
+| Interval | Period | Registers |
 |---|---|---|
-| `high` | 2 s | Potencia, SOC |
-| `medium` | 5 s | Tensión, corriente, temperatura |
-| `low` | 30 s | Energía acumulada, alarmas |
-| `very_low` | 300 s | Info de dispositivo, firmware |
+| `high` | 2 s | Power, SOC |
+| `medium` | 5 s | Voltage, current, temperature |
+| `low` | 30 s | Accumulated energy, alarms |
+| `very_low` | 300 s | Device info, firmware |

@@ -1,5 +1,5 @@
 # Changelog
 
-<!-- El changelog completo se mantiene en el archivo CHANGELOG.md del repositorio -->
+<!-- The full changelog is maintained in CHANGELOG.md in the repository -->
 
 --8<-- "CHANGELOG.md"

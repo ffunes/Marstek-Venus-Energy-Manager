@@ -1,82 +1,82 @@
-# Entidades de Home Assistant
+# Home Assistant entities
 
-La integración crea automáticamente entidades para cada batería configurada y sensores agregados del sistema completo.
+The integration automatically creates entities for each configured battery and aggregated sensors for the whole system.
 
-## Sensores (por batería)
+## Sensors (per battery)
 
-| Entidad | Descripción | Unidad |
+| Entity | Description | Unit |
 |---|---|---|
-| `sensor.*_battery_soc` | Estado de carga | % |
-| `sensor.*_battery_power` | Potencia actual | W |
-| `sensor.*_battery_voltage` | Tensión | V |
-| `sensor.*_battery_current` | Corriente | A |
-| `sensor.*_battery_temperature` | Temperatura | °C |
-| `sensor.*_total_charging_energy` | Energía total cargada | kWh |
-| `sensor.*_total_discharging_energy` | Energía total descargada | kWh |
-| `sensor.*_battery_cycle_count` | Ciclos (registros, v3/vA/vD) | — |
-| `sensor.*_battery_cycle_count_calc` | Ciclos calculados (todos) | — |
-| `sensor.*_max_cell_voltage` | Tensión máx. de celda (v3/vA/vD) | V |
-| `sensor.*_min_cell_voltage` | Tensión mín. de celda (v3/vA/vD) | V |
-| `sensor.*_alarm_status` | Condiciones de alarma activas (v2) — diagnóstico | texto |
-| `sensor.*_fault_status` | Condiciones de fallo activas (v2) — diagnóstico | texto |
+| `sensor.*_battery_soc` | State of charge | % |
+| `sensor.*_battery_power` | Current power | W |
+| `sensor.*_battery_voltage` | Voltage | V |
+| `sensor.*_battery_current` | Current | A |
+| `sensor.*_battery_temperature` | Temperature | °C |
+| `sensor.*_total_charging_energy` | Total charging energy | kWh |
+| `sensor.*_total_discharging_energy` | Total discharging energy | kWh |
+| `sensor.*_battery_cycle_count` | Cycle count (register, v3/vA/vD) | — |
+| `sensor.*_battery_cycle_count_calc` | Calculated cycle count (all versions) | — |
+| `sensor.*_max_cell_voltage` | Max cell voltage (v3/vA/vD) | V |
+| `sensor.*_min_cell_voltage` | Min cell voltage (v3/vA/vD) | V |
+| `sensor.*_alarm_status` | Active alarm conditions (v2) — diagnostic | text |
+| `sensor.*_fault_status` | Active fault conditions (v2) — diagnostic | text |
 
-## Sensores de información de dispositivo
+## Device information sensors
 
-| Entidad | Descripción |
+| Entity | Description |
 |---|---|
-| `sensor.*_device_name` | Nombre del dispositivo |
-| `sensor.*_sn_code` | Número de serie |
-| `sensor.*_software_version` | Versión de firmware |
-| `sensor.*_bms_version` | Versión BMS |
-| `sensor.*_mac_address` | Dirección MAC |
+| `sensor.*_device_name` | Device name |
+| `sensor.*_sn_code` | Serial number |
+| `sensor.*_software_version` | Firmware version |
+| `sensor.*_bms_version` | BMS version |
+| `sensor.*_mac_address` | MAC address |
 
-## Sensores binarios
+## Binary sensors
 
-| Entidad | Descripción |
+| Entity | Description |
 |---|---|
-| `binary_sensor.*_wifi_status` | Estado WiFi |
-| `binary_sensor.*_cloud_status` | Estado Cloud |
-| `binary_sensor.marstek_venus_system_predictive_charging_active` | Carga predictiva activa (sistema) |
+| `binary_sensor.*_wifi_status` | WiFi status |
+| `binary_sensor.*_cloud_status` | Cloud status |
+| `binary_sensor.marstek_venus_system_predictive_charging_active` | Predictive charging active (system) |
 
-## Números (sliders)
+## Numbers (sliders)
 
-| Entidad | Descripción | Rango |
+| Entity | Description | Range |
 |---|---|---|
-| `number.*_max_soc` | SOC máximo | 0–100 % |
-| `number.*_min_soc` | SOC mínimo | 0–100 % |
-| `number.*_max_charge_power` | Potencia máx. de carga | W |
-| `number.*_max_discharge_power` | Potencia máx. de descarga | W |
+| `number.*_max_soc` | Maximum SOC | 0–100 % |
+| `number.*_min_soc` | Minimum SOC | 0–100 % |
+| `number.*_max_charge_power` | Max charge power | W |
+| `number.*_max_discharge_power` | Max discharge power | W |
 
-## Selectores
+## Selects
 
-| Entidad | Opciones |
+| Entity | Options |
 |---|---|
 | `select.*_force_mode` | None / Charge / Discharge |
 
 ## Switches
 
-| Entidad | Descripción |
+| Entity | Description |
 |---|---|
-| `switch.*_rs485_control` | Modo control RS485 |
-| `switch.*_backup_function` | Función de reserva — cuando está activo **y** la potencia AC offgrid ≠ 0 W, la batería queda excluida del control PD (no se envían comandos de escritura) |
-| `switch.marstek_venus_system_override_predictive_charging` | Cancelar carga predictiva |
+| `switch.*_rs485_control` | RS485 control mode |
+| `switch.*_backup_function` | Backup function — when enabled **and** AC offgrid power ≠ 0 W, the battery is excluded from PD control (no write commands sent) |
+| `switch.marstek_venus_system_override_predictive_charging` | Override predictive charging |
 
-## Botones
+## Buttons
 
-| Entidad | Descripción |
+| Entity | Description |
 |---|---|
-| `button.*_reset` | Reset del dispositivo |
+| `button.*_reset` | Device reset |
 
-## Sensores agregados del sistema
+## System aggregate sensors
 
-Disponibles bajo el prefijo `sensor.marstek_venus_system_*`, suman los valores de todas las baterías:
+Available under the `sensor.marstek_venus_system_*` prefix, summing values across all batteries:
 
-- `system_battery_power` — Potencia total del sistema
-- `system_battery_soc` — SOC promedio del sistema
-- `system_total_charging_energy` — Energía total cargada (sistema)
-- `system_total_discharging_energy` — Energía total descargada (sistema)
-- `grid_at_min_soc` — Importación de red durante periodos en SOC mínimo (kWh)
-- `system_alarm_status` — Estado de alarma agregado de todas las baterías (`OK` / `Warning` / `Fault`); los atributos listan las condiciones activas por batería
-- `household_energy_today` — Consumo energético del hogar acumulado hoy a partir del sensor de potencia opcional, durante la franja solar+batería (kWh). Solo presente cuando hay un sensor de consumo del hogar configurado. Se reinicia a medianoche.
+- `system_battery_power` — Total system power
+- `system_battery_soc` — System average SOC
+- `system_total_charging_energy` — Total system charging energy
+- `system_total_discharging_energy` — Total system discharging energy
+- `grid_at_min_soc` — Grid import during min SOC periods (kWh)
+- `system_alarm_status` — Aggregated alarm state across all batteries (`OK` / `Warning` / `Fault`); attributes list active conditions per battery
+- `household_energy_today` — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.
 
-![Lista de entidades en Home Assistant](../assets/screenshots/reference/entities-list.png){ width="700"  style="display: block; margin: 0 auto;"}
+![Entity list in Home Assistant](../assets/screenshots/reference/entities-list.png){ width="700"  style="display: block; margin: 0 auto;"}

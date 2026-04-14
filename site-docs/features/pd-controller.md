@@ -1,68 +1,68 @@
-# Controlador PD
+# PD Controller
 
-El controlador PD (Proporcional-Derivativo) es el núcleo de la integración. Se ejecuta cada **2,5 segundos** y ajusta la potencia de la batería para mantener el flujo de red cercano al objetivo configurado (por defecto, 0 W).
+The PD (Proportional-Derivative) controller is the core of the integration. It runs every **2.5 seconds** and adjusts battery power to keep grid flow close to the configured target (default: 0 W).
 
-## Algoritmo
+## Algorithm
 
 ```
 error = grid_power - target_power
 
 P = Kp × error
-D = Kd × (error - error_anterior) / dt
+D = Kd × (error - previous_error) / dt
 
-ajuste = P + D
-nueva_potencia = potencia_actual + ajuste
+adjustment = P + D
+new_power = current_power + adjustment
 ```
 
-### Parámetros por defecto
+### Default parameters
 
-| Parámetro | Valor | Descripción |
+| Parameter | Value | Description |
 |---|---|---|
-| `Kp` | `0.65` | Ganancia proporcional |
-| `Kd` | `0.5` | Ganancia derivativa |
-| Deadband | `±40 W` | Zona muerta: ignora errores pequeños |
-| Rate limit | `±500 W/ciclo` | Límite de cambio por ciclo |
+| `Kp` | `0.65` | Proportional gain |
+| `Kd` | `0.5` | Derivative gain |
+| Deadband | `±40 W` | Dead zone: ignores small errors |
+| Rate limit | `±500 W/cycle` | Maximum change per cycle |
 
-## Mecanismos de estabilización
+## Stabilisation mechanisms
 
-### Deadband (zona muerta)
+### Deadband (dead zone)
 
-Si el error es menor de ±40 W, el controlador no ajusta la potencia. Evita micro-oscilaciones continuas por ruido del sensor.
+If the error is less than ±40 W, the controller does not adjust power. This prevents continuous micro-oscillations caused by sensor noise.
 
 ### Rate limiting
 
-El cambio de potencia se limita a ±500 W por ciclo para suavizar las transiciones y proteger la batería de cambios bruscos.
+Power changes are limited to ±500 W per cycle to smooth transitions and protect the battery from abrupt changes.
 
-### Detección de oscilaciones
+### Oscillation detection
 
-El controlador monitoriza reversiones de dirección (carga↔descarga) frecuentes. Si detecta oscilación sostenida, reduce temporalmente la ganancia efectiva.
+The controller monitors frequent direction reversals (charge↔discharge). If sustained oscillation is detected, the effective gain is temporarily reduced.
 
-### Histéresis direccional
+### Directional hysteresis
 
-Evita cambios de dirección por variaciones de carga momentáneas (como el arranque de electrodomésticos). El controlador requiere que el error supere un umbral durante varios ciclos antes de cambiar de carga a descarga o viceversa.
+Prevents direction changes from momentary load variations (such as appliance start-ups). The controller requires the error to exceed a threshold for several cycles before switching from charging to discharging or vice versa.
 
-## Exclusión por función de reserva
+## Backup function exclusion
 
-Una batería queda excluida del controlador PD cuando se cumplen **las dos** condiciones siguientes:
+A battery is excluded from the PD controller when **both** of the following are true:
 
-1. El switch **Función de reserva** (`switch.*_backup_function`) está activado.
-2. El sensor **Potencia AC offgrid** (`sensor.*_ac_offgrid_power`) reporta un valor distinto de 0 W, lo que confirma que la batería está proporcionando energía offgrid activamente.
+1. The **Backup Function** switch (`switch.*_backup_function`) is enabled.
+2. The **AC Offgrid Power** sensor (`sensor.*_ac_offgrid_power`) reports a non-zero value — confirming the battery is actually providing offgrid power.
 
-Tener el switch activado por sí solo no es suficiente. Si el switch está activo pero la potencia AC offgrid lee 0 W (la batería no está sirviendo ninguna carga offgrid), la batería sigue participando en el control PD con normalidad.
+Having the switch on alone is not sufficient. If the switch is on but AC offgrid power reads 0 W (the battery is not actively serving an offgrid load), it continues to participate in PD control normally.
 
-Mientras está excluida, el controlador no envía ningún comando de potencia, cambio de modo forzado ni escritura de registros de configuración. La batería sigue siendo consultada con normalidad, por lo que todos los sensores de solo lectura (SOC, potencia, temperatura, etc.) se mantienen actualizados.
+While excluded, the controller sends no power commands, force mode changes, or configuration register writes to the battery. The battery continues to be polled normally so all read-only sensors (SOC, power, temperature, etc.) remain up to date.
 
-### Cooldown post-backup
+### Post-backup cooldown
 
-Cuando la carga offgrid vuelve a 0 W, la batería no se reincorpora inmediatamente al control PD. Se aplica un **cooldown de 5 minutos** que mantiene la batería excluida tras el fin del evento de reserva, evitando enviar comandos de escritura a una batería que puede estar aún estabilizándose.
+When the offgrid load drops back to 0 W, the battery does not re-enter PD control immediately. A **5-minute cooldown** keeps the battery excluded after the backup event ends. This avoids sending write commands to a battery that may still be settling after a backup episode.
 
-Desactivar el switch de **Función de reserva** elimina el cooldown de forma inmediata.
+Turning the **Backup Function** switch off clears the cooldown immediately.
 
 !!! info
-    La exclusión también aplica a las escrituras de registro de la carga semanal completa y a la secuencia de apagado.
+    This exclusion also covers the weekly full charge register writes and the shutdown sequence.
 
-## Potencia objetivo por franja
+## Per-slot target power
 
-Cada [franja horaria](../configuration/time-slots.md) puede tener su propia **potencia objetivo de red** (`target_grid_power`), permitiendo distintas estrategias según el momento del día.
+Each [time slot](../configuration/time-slots.md) can have its own **target grid power** (`target_grid_power`), allowing different strategies at different times of day.
 
-![Entidades del controlador PD en Home Assistant](../assets/screenshots/features/pd-controller-entities.png){ width="700"  style="display: block; margin: 0 auto;"}
+![PD controller entities in Home Assistant](../assets/screenshots/features/pd-controller-entities.png){ width="700"  style="display: block; margin: 0 auto;"}

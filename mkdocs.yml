@@ -11,7 +11,7 @@ site_dir: _site
 
 theme:
   name: material
-  language: es
+  language: en
   logo: assets/logo.png
   favicon: assets/logo.png
   palette:
@@ -49,40 +49,40 @@ plugins:
   - i18n:
       docs_structure: suffix
       languages:
-        - locale: es
-          default: true
-          name: Español
-          build: true
         - locale: en
+          default: true
           name: English
           build: true
+        - locale: es
+          name: Español
+          build: true
           nav_translations:
-            Inicio: Home
-            Instalación: Installation
-            Configuración: Configuration
-            Resumen: Overview
-            Sensor principal: Main sensor
-            Baterías: Batteries
-            Franjas horarias: Time slots
-            Dispositivos excluidos: Excluded devices
-            Carga predictiva: Predictive charging
-            Modo Franja Horaria: Time Slot mode
-            Modo Precio Dinámico: Dynamic Pricing mode
-            Modo Precio en Tiempo Real: Real-Time Price mode
-            Opciones avanzadas: Advanced options
-            Funcionalidades: Features
-            Controlador PD: PD Controller
-            Gestión multi-batería: Multi-battery management
-            Estimación de consumo diario: Daily consumption estimate
-            Carga semanal completa: Weekly full charge
+            Home: Inicio
+            Installation: Instalación
+            Configuration: Configuración
+            Overview: Resumen
+            Main sensor: Sensor principal
+            Batteries: Baterías
+            Time slots: Franjas horarias
+            Excluded devices: Dispositivos excluidos
+            Predictive charging: Carga predictiva
+            Time Slot mode: Modo Franja Horaria
+            Dynamic Pricing mode: Modo Precio Dinámico
+            Real-Time Price mode: Modo Precio en Tiempo Real
+            Advanced options: Opciones avanzadas
+            Features: Funcionalidades
+            PD Controller: Controlador PD
+            Multi-battery management: Gestión multi-batería
+            Daily consumption estimate: Estimación de consumo diario
+            Weekly full charge: Carga semanal completa
             Peak shaving: Peak shaving
-            Retraso de carga solar: Solar charge delay
-            Exclusión de cargas: Load exclusion
-            Referencia técnica: Technical reference
-            Arquitectura: Architecture
-            Registros Modbus: Modbus registers
-            Entidades HA: HA entities
-            Solución de problemas: Troubleshooting
+            Solar charge delay: Retraso de carga solar
+            Load exclusion: Exclusión de cargas
+            Technical reference: Referencia técnica
+            Architecture: Arquitectura
+            Modbus registers: Registros Modbus
+            HA entities: Entidades HA
+            Troubleshooting: Solución de problemas
             Changelog: Changelog
 
 extra:
@@ -118,31 +118,31 @@ markdown_extensions:
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 nav:
-  - Inicio: index.md
-  - Instalación: installation.md
-  - Configuración:
-      - Resumen: configuration/index.md
-      - Sensor principal: configuration/main-sensor.md
-      - Baterías: configuration/batteries.md
-      - Franjas horarias: configuration/time-slots.md
-      - Dispositivos excluidos: configuration/excluded-devices.md
-      - Carga predictiva:
-          - Resumen: configuration/predictive-charging/index.md
-          - Modo Franja Horaria: configuration/predictive-charging/time-slot.md
-          - Modo Precio Dinámico: configuration/predictive-charging/dynamic-pricing.md
-          - Modo Precio en Tiempo Real: configuration/predictive-charging/real-time-price.md
-      - Opciones avanzadas: configuration/advanced.md
-  - Funcionalidades:
-      - Controlador PD: features/pd-controller.md
-      - Gestión multi-batería: features/multi-battery.md
-      - Estimación de consumo diario: features/consumption-estimate.md
-      - Carga semanal completa: features/weekly-full-charge.md
+  - Home: index.md
+  - Installation: installation.md
+  - Configuration:
+      - Overview: configuration/index.md
+      - Main sensor: configuration/main-sensor.md
+      - Batteries: configuration/batteries.md
+      - Time slots: configuration/time-slots.md
+      - Excluded devices: configuration/excluded-devices.md
+      - Predictive charging:
+          - Overview: configuration/predictive-charging/index.md
+          - Time Slot mode: configuration/predictive-charging/time-slot.md
+          - Dynamic Pricing mode: configuration/predictive-charging/dynamic-pricing.md
+          - Real-Time Price mode: configuration/predictive-charging/real-time-price.md
+      - Advanced options: configuration/advanced.md
+  - Features:
+      - PD Controller: features/pd-controller.md
+      - Multi-battery management: features/multi-battery.md
+      - Daily consumption estimate: features/consumption-estimate.md
+      - Weekly full charge: features/weekly-full-charge.md
       - Peak shaving: features/peak-shaving.md
-      - Retraso de carga solar: features/solar-charge-delay.md
-      - Exclusión de cargas: features/load-exclusion.md
-  - Referencia técnica:
-      - Arquitectura: reference/architecture.md
-      - Registros Modbus: reference/modbus-registers.md
-      - Entidades HA: reference/entities.md
-  - Solución de problemas: troubleshooting.md
+      - Solar charge delay: features/solar-charge-delay.md
+      - Load exclusion: features/load-exclusion.md
+  - Technical reference:
+      - Architecture: reference/architecture.md
+      - Modbus registers: reference/modbus-registers.md
+      - HA entities: reference/entities.md
+  - Troubleshooting: troubleshooting.md
   - Changelog: changelog.md

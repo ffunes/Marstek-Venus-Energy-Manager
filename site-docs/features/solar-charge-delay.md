@@ -1,50 +1,50 @@
-# Retraso de carga solar
+# Solar charge delay
 
-!!! danger "Cambio importante en v1.6.0"
-    La integración ahora usa la previsión **del día de hoy** en lugar de la del día siguiente. Si tienes esta función configurada, debes actualizar el sensor de previsión solar en los ajustes para que apunte al sensor de **hoy** (p. ej. `sensor.solcast_pv_forecast_forecast_today`) en lugar del de mañana.
+!!! danger "Breaking change in v1.6.0"
+    The integration now uses **today's** solar forecast instead of tomorrow's. If you have this feature configured, you must update the solar forecast sensor in settings to point to the **today** sensor (e.g. `sensor.solcast_pv_forecast_forecast_today`) instead of the tomorrow sensor.
 
-Retrasa la carga matutina de la batería (tanto solar como desde la red) mientras la producción solar prevista sea suficiente para cubrir la energía necesaria. Evita cargar la batería a primera hora —ya sea con solar o con red— cuando el sol podrá hacerlo más tarde.
+Delays morning battery charging (both from solar and from the grid) while the expected solar production is sufficient to cover the required energy. Avoids charging the battery early — whether from solar or the grid — when the sun will be able to do it later.
 
-## Aplicación
+## When it applies
 
-- Carga matutina normal (cuando la batería se ha descargado durante la noche).
-- Carga semanal al 100 % (espera a que el sol complete la carga antes de recurrir a la red).
+- Morning charge after the battery has discharged overnight.
+- Weekly 100% charge (waits for the sun to complete the charge before resorting to the grid).
 
-## Modelo solar
+## Solar model
 
-La integración usa un **modelo sinusoidal** basado en la previsión solar del día actual para estimar la producción hora a hora a lo largo del día. Compara la producción acumulada esperada desde la hora actual hasta el anochecer con la energía que falta por cargar.
+The integration uses a **sinusoidal model** based on the current day's solar forecast to estimate hour-by-hour solar production throughout the day. It compares the expected cumulative production from the current hour until sunset with the remaining energy needed.
 
 ```
-Si producción_solar_restante >= energía_a_cargar:
-    Esperar (el sol lo cargará)
-Si no:
-    Iniciar carga (solar o desde la red)
+If remaining_solar_production >= energy_to_charge:
+    Wait (the sun will charge it)
+Else:
+    Start charging (solar or grid)
 ```
 
-## Previsión en tiempo real
+## Live forecast
 
-La integración lee el sensor de previsión solar en tiempo real, sin captura ni almacenamiento nocturno. La mayoría de integraciones de previsión solar (Solcast, Forecast.Solar, etc.) actualizan su sensor del día actual varias veces a lo largo del día, siendo progresivamente más precisas conforme se conocen las condiciones meteorológicas reales.
+The integration reads the solar forecast sensor live, with no nightly capture or storage. Most solar forecast integrations (Solcast, Forecast.Solar, etc.) update their today sensor multiple times throughout the day, becoming progressively more accurate as actual weather conditions develop.
 
-Cada vez que el valor del sensor cambia en más de 0,05 kWh, la integración reevalúa el balance energético:
+Every time the sensor value changes by more than 0.05 kWh, the integration re-evaluates the energy balance:
 
-- **La previsión empeora** hasta que `(energía_usable + previsión) < consumo_diario_medio` → desbloquea el retraso y la carga comienza de inmediato.
-- **La previsión mejora** mientras el retraso sigue activo → el sistema sigue esperando a que el sol cargue la batería.
+- **Forecast degrades** until `(usable_energy + forecast) < avg_daily_consumption` → the delay unlocks and charging starts immediately.
+- **Forecast improves** while the delay is still active → the system keeps waiting for the sun to charge the battery.
 
-Una vez que el retraso se desbloquea, permanece desbloqueado el resto del día.
+Once the delay is unlocked it stays unlocked for the rest of the day.
 
-## SOC de arranque del retraso
+## SOC setpoint
 
-Un SOC de setpoint opcional (12–90 %, desactivado por defecto) divide la carga en dos fases:
+An optional SOC setpoint (12–90 %, disabled by default) splits charging into two phases:
 
-1. **Por debajo del setpoint** — la batería carga libremente (solar y red), el retraso está inactivo. Estado del sensor: `Charging to setpoint`.
-2. **En el setpoint o por encima** — se activa la lógica de retraso solar y decide si continuar cargando o esperar.
+1. **Below the setpoint** — the battery charges freely (solar and grid), the delay is inactive. Sensor state: `Charging to setpoint`.
+2. **At or above the setpoint** — the solar delay logic activates and decides whether to keep charging or wait.
 
-Esto es útil cuando la batería está muy descargada y necesita un mínimo garantizado antes de que entre en juego la decisión solar. Por ejemplo, con un setpoint del 50 % la batería carga hasta el 50 % sin restricciones; a partir de ahí, el sistema evalúa si la producción solar restante es suficiente para completar la carga y espera si lo es.
+This is useful when the battery is deeply discharged and needs a guaranteed minimum charge before the solar decision is made. For example, with a setpoint of 50 % the battery charges to 50 % without restrictions; above 50 % the system evaluates whether remaining solar production is enough to complete the charge and waits if it is.
 
-El setpoint se habilita con un checkbox independiente en la configuración. Si está desactivado, el retraso aplica desde el primer momento de carga. El valor mínimo es el 12 %, correspondiente al SOC mínimo de descarga de las baterías Venus.
+The setpoint is enabled with a dedicated checkbox in the configuration. When disabled, the delay applies from the very start of charging. The minimum value is 12 % — the minimum discharge SOC of the Venus batteries.
 
-## Requisitos
+## Requirements
 
-- Sensor de previsión solar configurado en el [paso inicial](../configuration/main-sensor.md).
+- Solar forecast sensor configured in the [initial setup step](../configuration/main-sensor.md).
 
-![Atributos del retraso de carga solar](../assets/screenshots/features/solar-charge-delay-attributes.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Solar charge delay attributes](../assets/screenshots/features/solar-charge-delay-attributes.png){ width="650"  style="display: block; margin: 0 auto;"}
