@@ -1409,13 +1409,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sensores-agregados-del-sistema" class="md-nav__link">
+  <a href="#sensores-del-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sensores agregados del sistema
+        Sensores del sistema
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Sensores del sistema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estado-de-la-integracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado de la integración
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sensores-agregados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensores agregados
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1593,13 +1621,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sensores-agregados-del-sistema" class="md-nav__link">
+  <a href="#sensores-del-sistema" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Sensores agregados del sistema
+        Sensores del sistema
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Sensores del sistema">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#estado-de-la-integracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Estado de la integración
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sensores-agregados" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensores agregados
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1846,7 +1902,68 @@
 </tr>
 </tbody>
 </table>
-<h2 id="sensores-agregados-del-sistema">Sensores agregados del sistema<a class="headerlink" href="#sensores-agregados-del-sistema" title="Permanent link">&para;</a></h2>
+<h2 id="sensores-del-sistema">Sensores del sistema<a class="headerlink" href="#sensores-del-sistema" title="Permanent link">&para;</a></h2>
+<h3 id="estado-de-la-integracion">Estado de la integración<a class="headerlink" href="#estado-de-la-integracion" title="Permanent link">&para;</a></h3>
+<p><code>sensor.marstek_venus_system_integration_status</code> muestra de un vistazo qué está haciendo la integración en cada momento. Refleja el modo activo de mayor prioridad:</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Charging from Grid</code></td>
+<td>Carga predictiva desde la red activa</td>
+</tr>
+<tr>
+<td><code>Weekly Full Charge</code></td>
+<td>Cargando al 100 % para equilibrado de celdas</td>
+</tr>
+<tr>
+<td><code>Charge Delayed</code></td>
+<td>Carga bloqueada, esperando el momento óptimo según previsión solar</td>
+</tr>
+<tr>
+<td><code>Waiting for Solar</code></td>
+<td>Retraso de carga: esperando que comience la producción solar</td>
+</tr>
+<tr>
+<td><code>Charging to Setpoint</code></td>
+<td>Retraso de carga: cargando hasta el SOC mínimo configurado</td>
+</tr>
+<tr>
+<td><code>Capacity Protection</code></td>
+<td>Descarga limitada por SOC bajo (peak shaving activo)</td>
+</tr>
+<tr>
+<td><code>No-Discharge Window</code></td>
+<td>Dentro de una franja horaria sin descarga configurada</td>
+</tr>
+<tr>
+<td><code>Charging</code></td>
+<td>Cargando (excedente solar u otro)</td>
+</tr>
+<tr>
+<td><code>Discharging</code></td>
+<td>Descargando para cubrir el consumo del hogar</td>
+</tr>
+<tr>
+<td><code>Standby</code></td>
+<td>Sistema equilibrado dentro de la banda muerta, sin acción necesaria</td>
+</tr>
+<tr>
+<td><code>Manual Mode</code></td>
+<td>Modo manual activo — la integración no envía comandos automáticos</td>
+</tr>
+<tr>
+<td><code>Initializing</code></td>
+<td>Primer ciclo del controlador aún no completado</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sensores-agregados">Sensores agregados<a class="headerlink" href="#sensores-agregados" title="Permanent link">&para;</a></h3>
 <p>Disponibles bajo el prefijo <code>sensor.marstek_venus_system_*</code>, suman los valores de todas las baterías:</p>
 <ul>
 <li><code>system_battery_power</code> — Potencia total del sistema</li>

@@ -702,6 +702,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Sensor de consumo del hogar (opcional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crear-un-sensor-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crear un sensor helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1550,6 +1567,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Sensor de consumo del hogar (opcional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#crear-un-sensor-helper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crear un sensor helper
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1619,7 +1653,7 @@
 <p>Déjalo desactivado si no estás seguro.</p>
 <hr />
 <h2 id="sensor-de-prevision-solar-opcional">Sensor de previsión solar <em>(opcional)</em><a class="headerlink" href="#sensor-de-prevision-solar-opcional" title="Permanent link">&para;</a></h2>
-<p>Sensor que proporciona la producción solar estimada para mañana, en <strong>kWh</strong> o <strong>Wh</strong>.</p>
+<p>Sensor que proporciona la producción solar estimada para hoy, en <strong>kWh</strong> o <strong>Wh</strong>.</p>
 <p>Configurarlo aquí lo pone a disposición de:</p>
 <ul>
 <li><strong>Carga predictiva</strong> (modos Franja Horaria y Precio Dinámico)</li>
@@ -1660,6 +1694,56 @@
 <div class="admonition tip">
 <p class="admonition-title">Unidades admitidas</p>
 <p>Se aceptan sensores en <strong>W</strong> y en <strong>kW</strong>. La integración lee el atributo <code>unit_of_measurement</code> y convierte automáticamente.</p>
+</div>
+<h3 id="crear-un-sensor-helper">Crear un sensor helper<a class="headerlink" href="#crear-un-sensor-helper" title="Permanent link">&para;</a></h3>
+<p>El consumo del hogar es el balance de todos los flujos de potencia:</p>
+<p><strong>Consumo del hogar = Potencia de red + Producción solar + Descarga batería − Carga batería</strong></p>
+<p>Sin el término de batería, cuando carga estaríamos infracalculando el consumo y cuando descarga lo estaríamos sobreestimando.</p>
+<p>Si tu contador y la batería exponen estos valores como sensores separados, combínalos mediante un <strong>helper de plantilla</strong> en Home Assistant.</p>
+<p><strong>Ir a:</strong> Configuración → Dispositivos y servicios → Helpers → Crear helper → Plantilla → Sensor de plantilla</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">potencia_red</span>      <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.TU_SENSOR_POTENCIA_RED&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">potencia_solar</span>    <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.TU_SENSOR_POTENCIA_SOLAR&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">descarga_bateria</span>  <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.marstek_venus_system_potencia_de_descarga_del_sistema&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">carga_bateria</span>     <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.marstek_venus_system_potencia_de_carga_del_sistema&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="cp">{{</span> <span class="o">(</span><span class="nv">potencia_red</span> <span class="o">+</span> <span class="nv">potencia_solar</span> <span class="o">+</span> <span class="nv">descarga_bateria</span> <span class="o">-</span> <span class="nv">carga_bateria</span><span class="o">)</span> <span class="o">|</span> <span class="nf">round</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">}}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Descripción</th>
+<th>Ejemplo de entidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>potencia_red</code></td>
+<td>Intercambio con la red (positivo = importar, negativo = exportar)</td>
+<td><code>sensor.shellypro3em_energy_meter_2_power</code></td>
+</tr>
+<tr>
+<td><code>potencia_solar</code></td>
+<td>Producción solar total</td>
+<td><code>sensor.shellypro3em_energy_meter_1_power</code></td>
+</tr>
+<tr>
+<td><code>descarga_bateria</code></td>
+<td>Potencia de descarga de la batería (positivo, W)</td>
+<td><code>sensor.marstek_venus_system_potencia_de_descarga_del_sistema</code></td>
+</tr>
+<tr>
+<td><code>carga_bateria</code></td>
+<td>Potencia de carga de la batería (positivo, W)</td>
+<td><code>sensor.marstek_venus_system_potencia_de_carga_del_sistema</code></td>
+</tr>
+</tbody>
+</table>
+<p>Establece la <strong>unidad de medida</strong> como <code>W</code> y la <strong>clase de dispositivo</strong> como <code>power</code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Varias ramas solares</p>
+<p>Si tienes más de un inversor o string solar y no dispones de un sensor agregado único, súmalos:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">potencia_solar</span> <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.STRING_SOLAR_1&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="o">+</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.STRING_SOLAR_2&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+</code></pre></div></p>
 </div>
 <p><img alt="Configuración del sensor principal" src="../../../assets/screenshots/configuration/main-sensor.png" style="display: block; margin: 0 auto;" width="600" /></p>
 

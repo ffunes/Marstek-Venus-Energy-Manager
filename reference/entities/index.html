@@ -1409,13 +1409,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#system-aggregate-sensors" class="md-nav__link">
+  <a href="#system-sensors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        System aggregate sensors
+        System sensors
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="System sensors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregate-sensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregate sensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1593,13 +1621,41 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#system-aggregate-sensors" class="md-nav__link">
+  <a href="#system-sensors" class="md-nav__link">
     <span class="md-ellipsis">
       
-        System aggregate sensors
+        System sensors
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="System sensors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#integration-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aggregate-sensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Aggregate sensors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1846,7 +1902,68 @@
 </tr>
 </tbody>
 </table>
-<h2 id="system-aggregate-sensors">System aggregate sensors<a class="headerlink" href="#system-aggregate-sensors" title="Permanent link">&para;</a></h2>
+<h2 id="system-sensors">System sensors<a class="headerlink" href="#system-sensors" title="Permanent link">&para;</a></h2>
+<h3 id="integration-status">Integration Status<a class="headerlink" href="#integration-status" title="Permanent link">&para;</a></h3>
+<p><code>sensor.marstek_venus_system_integration_status</code> shows at a glance what the integration is currently doing. It reflects the highest-priority active mode:</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Charging from Grid</code></td>
+<td>Predictive grid charging is active</td>
+</tr>
+<tr>
+<td><code>Weekly Full Charge</code></td>
+<td>Charging to 100 % for cell balancing</td>
+</tr>
+<tr>
+<td><code>Charge Delayed</code></td>
+<td>Charging blocked, waiting for optimal time based on solar forecast</td>
+</tr>
+<tr>
+<td><code>Waiting for Solar</code></td>
+<td>Charge delay: waiting for solar production to start</td>
+</tr>
+<tr>
+<td><code>Charging to Setpoint</code></td>
+<td>Charge delay: charging to the configured minimum SOC</td>
+</tr>
+<tr>
+<td><code>Capacity Protection</code></td>
+<td>Discharge limited due to low SOC (peak shaving active)</td>
+</tr>
+<tr>
+<td><code>No-Discharge Window</code></td>
+<td>Inside a configured no-discharge time slot</td>
+</tr>
+<tr>
+<td><code>Charging</code></td>
+<td>Charging (solar surplus or other)</td>
+</tr>
+<tr>
+<td><code>Discharging</code></td>
+<td>Discharging to cover home consumption</td>
+</tr>
+<tr>
+<td><code>Standby</code></td>
+<td>System balanced within deadband, no action needed</td>
+</tr>
+<tr>
+<td><code>Manual Mode</code></td>
+<td>Manual mode active — integration sends no automatic commands</td>
+</tr>
+<tr>
+<td><code>Initializing</code></td>
+<td>First controller cycle not yet completed</td>
+</tr>
+</tbody>
+</table>
+<h3 id="aggregate-sensors">Aggregate sensors<a class="headerlink" href="#aggregate-sensors" title="Permanent link">&para;</a></h3>
 <p>Available under the <code>sensor.marstek_venus_system_*</code> prefix, summing values across all batteries:</p>
 <ul>
 <li><code>system_battery_power</code> — Total system power</li>

@@ -702,6 +702,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Household consumption sensor (optional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-helper-sensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a helper sensor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1550,6 +1567,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Household consumption sensor (optional)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creating-a-helper-sensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Creating a helper sensor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1619,7 +1653,7 @@
 <p>Leave it disabled if you are unsure.</p>
 <hr />
 <h2 id="solar-forecast-sensor-optional">Solar forecast sensor <em>(optional)</em><a class="headerlink" href="#solar-forecast-sensor-optional" title="Permanent link">&para;</a></h2>
-<p>Sensor providing tomorrow's estimated solar production in <strong>kWh</strong> or <strong>Wh</strong>.</p>
+<p>Sensor providing today's estimated solar production in <strong>kWh</strong> or <strong>Wh</strong>.</p>
 <p>Configuring it here makes it available to:</p>
 <ul>
 <li><strong>Predictive charging</strong> (Time Slot and Dynamic Pricing modes)</li>
@@ -1660,6 +1694,56 @@
 <div class="admonition tip">
 <p class="admonition-title">Supported units</p>
 <p>Both <strong>W</strong> and <strong>kW</strong> sensors are accepted. The integration reads the <code>unit_of_measurement</code> attribute and converts automatically.</p>
+</div>
+<h3 id="creating-a-helper-sensor">Creating a helper sensor<a class="headerlink" href="#creating-a-helper-sensor" title="Permanent link">&para;</a></h3>
+<p>Household consumption is the balance of all power flows:</p>
+<p><strong>House consumption = Grid power + Solar power + Battery discharge − Battery charge</strong></p>
+<p>Without the battery term, charging would undercount consumption and discharging would overcount it.</p>
+<p>If your meter and battery expose these as separate sensors, combine them using a <strong>Template helper</strong> in Home Assistant.</p>
+<p><strong>Go to:</strong> Settings → Devices &amp; Services → Helpers → Create Helper → Template → Template sensor</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">grid_power</span>    <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.YOUR_GRID_POWER_SENSOR&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">solar_power</span>   <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.YOUR_SOLAR_POWER_SENSOR&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">bat_discharge</span> <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.YOUR_BATTERY_DISCHARGE_SENSOR&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">bat_charge</span>    <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.YOUR_BATTERY_CHARGE_SENSOR&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="cp">{{</span> <span class="o">(</span><span class="nv">grid_power</span> <span class="o">+</span> <span class="nv">solar_power</span> <span class="o">+</span> <span class="nv">bat_discharge</span> <span class="o">-</span> <span class="nv">bat_charge</span><span class="o">)</span> <span class="o">|</span> <span class="nf">round</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">}}</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+<th>Example entity</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>grid_power</code></td>
+<td>Grid exchange (positive = import, negative = export)</td>
+<td><code>sensor.shellypro3em_energy_meter_2_power</code></td>
+</tr>
+<tr>
+<td><code>solar_power</code></td>
+<td>Total solar production</td>
+<td><code>sensor.shellypro3em_energy_meter_1_power</code></td>
+</tr>
+<tr>
+<td><code>bat_discharge</code></td>
+<td>Battery discharge power (positive, W)</td>
+<td><code>sensor.marstek_venus_system_system_discharge_power</code></td>
+</tr>
+<tr>
+<td><code>bat_charge</code></td>
+<td>Battery charge power (positive, W)</td>
+<td><code>sensor.marstek_venus_system_system_charge_power</code></td>
+</tr>
+</tbody>
+</table>
+<p>Set the <strong>unit of measurement</strong> to <code>W</code> and the <strong>device class</strong> to <code>power</code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Multiple solar strings</p>
+<p>If you have more than one inverter or solar branch and no single aggregated sensor, sum them:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">{%</span> <span class="k">set</span> <span class="nv">solar_power</span> <span class="o">=</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.SOLAR_STRING_1&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="o">+</span> <span class="nv">states</span><span class="o">(</span><span class="s1">&#39;sensor.SOLAR_STRING_2&#39;</span><span class="o">)</span> <span class="o">|</span> <span class="nf">float</span><span class="o">(</span><span class="m">0</span><span class="o">)</span> <span class="cp">%}</span>
+</code></pre></div></p>
 </div>
 <p><img alt="Main sensor configuration" src="../../assets/screenshots/configuration/main-sensor.png" style="display: block; margin: 0 auto;" width="600" /></p>
 

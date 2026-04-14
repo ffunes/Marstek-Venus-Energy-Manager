@@ -1406,11 +1406,7 @@
 <!-- The full changelog is maintained in CHANGELOG.md in the repository -->
 
 <h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
-<h2 id="unreleased">[Unreleased]<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
-<ul>
-<li><strong>Dynamic pricing notification showed wrong "needed" value</strong>: When no grid charging was required, the "Available ≥ X kWh needed" line always displayed the same value on both sides due to a broken formula (<code>abs(deficit) + consumption</code> algebraically equals <code>total_available</code> when no deficit exists). Fixed to show the actual average consumption. A second notification path (no price slots found) also omitted the numeric consumption value entirely ("≥ needed"); fixed to include it.</li>
-</ul>
+<h2 id="164-2026-04-14">[1.6.4] - 2026-04-14<a class="headerlink" href="#164-2026-04-14" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
@@ -1431,6 +1427,11 @@
 <li><strong>New diagnostic attributes</strong> on <code>binary_sensor.marstek_venus_system_predictive_charging_active</code>: <code>consumption_source</code> (<code>household_sensor</code> or <code>battery_discharge</code>), <code>household_consumption_sensor</code> (entity ID), <code>household_consumption_battery_window_kwh</code>, and <code>household_accumulator_date</code>.</li>
 <li>The accumulator survives HA restarts and reloads via persistent storage (previously used binary sensor attributes, which were lost on config entry reload).</li>
 <li>Backfill on startup queries the recorder for the configured sensor's history to fill in consumption data for past days, using the same time-window filter.</li>
+<li>Documentation updated with a step-by-step guide on how to create the household consumption sensor as a Template helper (combining grid, solar, and battery power readings).</li>
+</ul>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Dynamic pricing notification showed wrong "needed" value</strong>: When no grid charging was required, the "Available ≥ X kWh needed" line always displayed the same value on both sides due to a broken formula (<code>abs(deficit) + consumption</code> algebraically equals <code>total_available</code> when no deficit exists). Fixed to show the actual average consumption. A second notification path (no price slots found) also omitted the numeric consumption value entirely ("≥ needed"); fixed to include it.</li>
 </ul>
 <h2 id="163-2026-04-12">[1.6.3] - 2026-04-12<a class="headerlink" href="#163-2026-04-12" title="Permanent link">&para;</a></h2>
 <h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
