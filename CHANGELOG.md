@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.5] - 2026-04-15
+
+### Fixed
+- **Predictive charging slot blocked normal battery discharge**: When the predictive grid charging time slot overlapped with the normal discharge window, the integration sent conflicting commands to batteries every cycle — first idle (0 W) from the predictive handler, then discharge from the PD controller. Batteries could not ramp up, triggering the non-responsive detection after 3 consecutive failures and excluding them from the pool for 5 minutes. This affected three scenarios: (1) the 5-minute entry wait before evaluation, (2) the user override, and (3) after all batteries reached max\_soc. Fixed by never sending idle commands from the predictive charging handler when `grid_charging_active` is False — PD control handles normal operation instead. When charging completes (max\_soc reached) or the user overrides, `grid_charging_active` is deactivated and PD re-initializes cleanly on the same cycle with no idle gap. The same fix was applied to the dynamic pricing override path.
+
 ## [1.6.4] - 2026-04-14
 
 ### Added

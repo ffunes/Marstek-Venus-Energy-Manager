@@ -2517,9 +2517,10 @@ class ChargeDischargeController:
         # Get available batteries (respecting max_soc)
         available_batteries = self._get_available_batteries(is_charging=True)
         if not available_batteries:
-            _LOGGER.info("Predictive charging: No batteries available (all at max_soc)")
-            for coordinator in self.coordinators:
-                await self._set_battery_power(coordinator, 0, 0)
+            _LOGGER.info("Predictive charging complete: all batteries at max_soc - resuming normal operation")
+            self.grid_charging_active = False
+            self._grid_charging_initialized = False
+            self.first_execution = True
             return
         
         # Calculate max available charging power from batteries
@@ -4042,11 +4043,13 @@ class ChargeDischargeController:
                 await self._handle_predictive_grid_charging()
                 return
 
-        # Phase 5: Override active — block discharge
+        # Phase 5: Override active — resume normal PD control
         if self.predictive_charging_overridden:
-            for coordinator in self.coordinators:
-                await self._set_battery_power(coordinator, 0, 0)
-            return
+            if self.grid_charging_active:
+                self.grid_charging_active = False
+                self._grid_charging_initialized = False
+                self._current_price_slot_active = False
+                self.first_execution = True
 
         # Not in a cheap slot — fall through to normal PD control (no return here)
 
@@ -4172,9 +4175,11 @@ class ChargeDischargeController:
 
         if in_time_window:
             if self.predictive_charging_overridden:
-                _LOGGER.debug("Predictive charging overridden by user - batteries idle")
-                for coordinator in self.coordinators:
-                    await self._set_battery_power(coordinator, 0, 0)
+                _LOGGER.debug("Predictive charging overridden by user - continuing normal operation")
+                if self.grid_charging_active:
+                    self.grid_charging_active = False
+                    self._grid_charging_initialized = False
+                    self.first_execution = True
                 return
 
             current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self.coordinators if c.data) / len(self.coordinators)
@@ -4193,11 +4198,9 @@ class ChargeDischargeController:
                 wait_elapsed_s = (datetime.now() - self._slot_entry_time).total_seconds()
                 if wait_elapsed_s < 5 * 60:
                     _LOGGER.debug(
-                        "Predictive charging: holding idle during entry wait (%.0f / 300 s)",
+                        "Predictive charging: waiting for forecast sensor (%.0f / 300 s) - normal operation continues",
                         wait_elapsed_s,
                     )
-                    for coordinator in self.coordinators:
-                        await self._set_battery_power(coordinator, 0, 0)
                     return
 
             should_reevaluate = (
@@ -4227,9 +4230,7 @@ class ChargeDischargeController:
                 await self._handle_predictive_grid_charging()
                 return
             else:
-                _LOGGER.info("In predictive charging slot but condition NOT met - blocking discharge")
-                for coordinator in self.coordinators:
-                    await self._set_battery_power(coordinator, 0, 0)
+                _LOGGER.info("In predictive charging slot but charging not needed - continuing normal operation")
                 return
         else:
             if self.grid_charging_active or self._grid_charging_initialized:
@@ -4372,8 +4373,8 @@ class ChargeDischargeController:
             if self.predictive_charging_mode == PREDICTIVE_MODE_DYNAMIC_PRICING:
                 await self._handle_dynamic_pricing_predictive_charging()
                 # Dynamic pricing falls through to normal PD control when not in a slot;
-                # it only returns early when actively charging or overridden.
-                if self.grid_charging_active or self.predictive_charging_overridden:
+                # it only returns early when actively charging.
+                if self.grid_charging_active:
                     return
             elif self.predictive_charging_mode == PREDICTIVE_MODE_REALTIME_PRICE:
                 await self._handle_realtime_price_predictive_charging()
