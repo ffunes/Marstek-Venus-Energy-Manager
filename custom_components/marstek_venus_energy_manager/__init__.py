@@ -270,6 +270,8 @@ class ChargeDischargeController:
         self.weekly_full_charge_complete = False  # True when ALL batteries reach 100%
         self.last_checked_weekday = None  # Track day transitions for reset logic
         self.weekly_full_charge_registers_written = False  # True when register 44000 set to 100%
+        self._weekly_charge_needs_restore = False  # True when day changed mid-charge and hardware restore is pending
+        self._weekly_charge_saved_max_soc: dict[str, int] = {}  # coordinator.name → original max_soc before writing 100%
 
         # Unified Charge Delay state
         # Backward compat: new key takes priority, fallback to old keys
@@ -345,6 +347,24 @@ class ChargeDischargeController:
 
     def update_pd_parameters(self):
         """Re-read PD controller parameters from config_entry.data (hot-reload)."""
+        # Update weekly full charge settings; reset completion state if day changed
+        new_weekly_day = self.config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
+        new_weekly_enabled = self.config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False)
+        day_changed = new_weekly_day != self.weekly_full_charge_day
+        feature_disabled = self.weekly_full_charge_enabled and not new_weekly_enabled
+        if day_changed or feature_disabled:
+            _LOGGER.info("Weekly Full Charge: %s - resetting completion state",
+                         f"day changed from {self.weekly_full_charge_day.upper()} to {new_weekly_day.upper()}"
+                         if day_changed else "feature disabled")
+            # If registers were written for a charge still in progress, schedule a hardware restore
+            if self.weekly_full_charge_registers_written and not self.weekly_full_charge_complete:
+                _LOGGER.info("Weekly Full Charge: Mid-charge abort detected - hardware restore pending")
+                self._weekly_charge_needs_restore = True
+            self.weekly_full_charge_complete = False
+            self.weekly_full_charge_registers_written = False
+        self.weekly_full_charge_enabled = new_weekly_enabled
+        self.weekly_full_charge_day = new_weekly_day
+
         self.deadband = self.config_entry.data.get(CONF_PD_DEADBAND, DEFAULT_PD_DEADBAND)
         self.kp = self.config_entry.data.get(CONF_PD_KP, DEFAULT_PD_KP)
         self.kd = self.config_entry.data.get(CONF_PD_KD, DEFAULT_PD_KD)
@@ -1421,6 +1441,34 @@ class ChargeDischargeController:
         - Restore register 44000 to configured max_soc when complete
         - Re-enable hysteresis after completion
         """
+        # Mid-charge abort: day changed (or feature disabled) while registers were already at 100%.
+        # Restore hardware cutoff to max_soc before anything else.
+        if self._weekly_charge_needs_restore:
+            _LOGGER.info("Weekly Full Charge: Restoring hardware cutoff registers after mid-charge abort")
+            for coordinator in self.coordinators:
+                cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
+                if self._is_backup_function_active(coordinator):
+                    continue
+                if cutoff_reg is None:
+                    _LOGGER.debug("%s: No hardware cutoff register to restore (v3 battery)", coordinator.name)
+                    continue
+                try:
+                    # Use the saved value captured before writing 100%; fall back to current max_soc
+                    # only if no saved value exists (e.g. HA restarted mid-charge).
+                    original_max_soc = self._weekly_charge_saved_max_soc.get(
+                        coordinator.name, coordinator.max_soc
+                    )
+                    max_soc_value = int(original_max_soc / 0.1)
+                    await coordinator.write_register(cutoff_reg, max_soc_value, do_refresh=False)
+                    await asyncio.sleep(0.1)
+                    _LOGGER.info("%s: Restored hardware cutoff to %d%% after mid-charge abort",
+                                 coordinator.name, original_max_soc)
+                except Exception as e:
+                    _LOGGER.error("%s: Failed to restore charging cutoff register: %s", coordinator.name, e)
+            self._weekly_charge_saved_max_soc.clear()
+            self._weekly_charge_needs_restore = False
+            self._weekly_charge_status["state"] = "Idle"
+
         if not self.weekly_full_charge_enabled and not self._force_full_charge:
             return
         if not self._is_weekly_full_charge_active():
@@ -1453,15 +1501,22 @@ class ChargeDischargeController:
 
                 # v2 batteries: write hardware register
                 try:
+                    # Save original max_soc before overwriting the hardware register
+                    self._weekly_charge_saved_max_soc[coordinator.name] = coordinator.max_soc
                     # Write 1000 to register 44000 (100% = 1000 in register scale)
                     await coordinator.write_register(cutoff_reg, 1000, do_refresh=False)
                     await asyncio.sleep(0.1)
-                    _LOGGER.debug("%s: Set hardware charging cutoff to 100%%", coordinator.name)
+                    _LOGGER.debug("%s: Set hardware charging cutoff to 100%% (saved original max_soc=%d%%)",
+                                  coordinator.name, coordinator.max_soc)
                 except Exception as e:
                     _LOGGER.error("%s: Failed to write charging cutoff register: %s", coordinator.name, e)
 
             self.weekly_full_charge_registers_written = True
             self._weekly_charge_status["state"] = "Charging to 100%"
+            # Persist registers_written immediately so that if HA restarts mid-charge
+            # the stored state reflects the hardware being at 100%, enabling the
+            # day-change abort logic to correctly set _weekly_charge_needs_restore.
+            asyncio.create_task(self._save_weekly_charge_state())
 
         # Check if all batteries reached 100%
         all_batteries_full = all(
@@ -1490,19 +1545,29 @@ class ChargeDischargeController:
 
                 # v2: restore hardware register
                 try:
-                    max_soc_value = int(coordinator.max_soc / 0.1)  # Convert to register value
+                    original_max_soc = self._weekly_charge_saved_max_soc.get(
+                        coordinator.name, coordinator.max_soc
+                    )
+                    max_soc_value = int(original_max_soc / 0.1)  # Convert to register value
                     await coordinator.write_register(cutoff_reg, max_soc_value, do_refresh=False)
                     await asyncio.sleep(0.1)
                     _LOGGER.debug("%s: Restored hardware cutoff to %d%% (reg=%d)",
-                                coordinator.name, coordinator.max_soc, max_soc_value)
+                                coordinator.name, original_max_soc, max_soc_value)
                 except Exception as e:
                     _LOGGER.error("%s: Failed to restore charging cutoff register: %s", coordinator.name, e)
+
+            self._weekly_charge_saved_max_soc.clear()
 
             # Re-enable hysteresis for batteries that have it configured
             for coordinator in self.coordinators:
                 if coordinator.enable_charge_hysteresis:
                     coordinator._hysteresis_active = True
-                    _LOGGER.debug("%s: Re-enabled hysteresis after weekly full charge", coordinator.name)
+                    # Set base SOC to current level (~100% after full charge) so the threshold
+                    # is "actual peak SOC - hysteresis" (e.g. 90%), not "max_soc - hysteresis" (e.g. 70%)
+                    current_soc = coordinator.data.get("battery_soc", 100) if coordinator.data else 100
+                    coordinator._hysteresis_base_soc = current_soc
+                    _LOGGER.debug("%s: Re-enabled hysteresis after weekly full charge (base SOC: %.1f%%)",
+                                  coordinator.name, coordinator._hysteresis_base_soc)
 
             # Persist the completion state so it survives HA restarts
             await self._save_weekly_charge_state()
