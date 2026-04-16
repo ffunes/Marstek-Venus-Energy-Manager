@@ -1883,7 +1883,7 @@ CONFIG_NUMBER_DEFINITIONS = [
     {
         "key": CONF_CAPACITY_PROTECTION_SOC_THRESHOLD,
         "name": "Capacity Protection SOC Threshold",
-        "min": 30,
+        "min": 20,
         "max": 100,
         "step": 1,
         "unit": "%",

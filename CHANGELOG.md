@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.6.6] - 2026-04-16
+
+### Changed
+- **Peak shaving SOC threshold minimum lowered to 20 %**: The minimum selectable value for the peak shaving SOC threshold has been reduced from 30 % to 20 %, both in the setup/options flow slider and in the corresponding number entity (`number.marstek_venus_system_capacity_protection_soc_threshold`). This allows configuring peak shaving to activate at lower SOC levels than previously permitted.
+
 ## [1.6.5] - 2026-04-15
 
 ### Fixed
