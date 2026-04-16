@@ -1023,7 +1023,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required("capacity_protection_soc_threshold", default=DEFAULT_CAPACITY_PROTECTION_SOC):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=30, max=100, step=1,
+                                min=20, max=100, step=1,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="%",
                             )
@@ -2288,7 +2288,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required("capacity_protection_soc_threshold", default=current_soc):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=30, max=100, step=1,
+                                min=20, max=100, step=1,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="%",
                             )
