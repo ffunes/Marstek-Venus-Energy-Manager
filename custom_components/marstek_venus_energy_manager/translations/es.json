@@ -799,7 +799,8 @@
       "delay_safety_margin_min": { "name": "Margen Retraso de Carga" },
       "delay_soc_setpoint": { "name": "SOC Setpoint Retraso de Carga" },
       "capacity_protection_limit": { "name": "Límite Pico Reducción de Picos" },
-      "backup_offgrid_threshold": { "name": "Umbral Offgrid Backup" }
+      "backup_offgrid_threshold": { "name": "Umbral Offgrid Backup" },
+      "predictive_safety_margin_kwh": { "name": "Margen de Seguridad Previsión Solar" }
     },
     "button": {
       "reset_device": { "name": "Reiniciar Dispositivo" }

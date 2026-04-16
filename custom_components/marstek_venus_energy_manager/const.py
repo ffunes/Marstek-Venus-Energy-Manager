@@ -1906,4 +1906,15 @@ CONFIG_NUMBER_DEFINITIONS = [
         "icon": "mdi:flash-alert",
         "condition": CONF_CAPACITY_PROTECTION_ENABLED,
     },
+    {
+        "key": CONF_PREDICTIVE_SAFETY_MARGIN_KWH,
+        "name": "Solar Forecast Safety Margin",
+        "min": 0.0,
+        "max": 20.0,
+        "step": 0.1,
+        "unit": "kWh",
+        "default": DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
+        "icon": "mdi:solar-power-variant",
+        "condition": CONF_ENABLE_PREDICTIVE_CHARGING,
+    },
 ]

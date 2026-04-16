@@ -799,7 +799,8 @@
       "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
       "delay_soc_setpoint": { "name": "SOC-drempel Laadvertraging" },
       "capacity_protection_limit": { "name": "Piekbegrenzing Limiet" },
-      "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" }
+      "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" },
+      "predictive_safety_margin_kwh": { "name": "Veiligheidsmarge Zonneprognose" }
     },
     "button": {
       "reset_device": { "name": "Apparaat Resetten" }

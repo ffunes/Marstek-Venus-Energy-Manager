@@ -799,7 +799,8 @@
       "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
       "delay_soc_setpoint": { "name": "SOC-Schwellwert Ladungsverzögerung" },
       "capacity_protection_limit": { "name": "Spitzenlastkappung Limit" },
-      "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" }
+      "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" },
+      "predictive_safety_margin_kwh": { "name": "Sicherheitspuffer Solarprognose" }
     },
     "button": {
       "reset_device": { "name": "Gerät zurücksetzen" }
