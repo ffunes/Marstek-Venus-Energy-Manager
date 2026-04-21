@@ -458,6 +458,20 @@ SENSOR_DEFINITIONS = [
         "precision": 0,
         "scan_interval": "very_low",
     },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
+    },
 
 ]
 
@@ -506,8 +520,21 @@ SELECT_DEFINITIONS = [
             "Charge": 1,
             "Discharge": 2
         }
-    }
-    
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {
+            "manual": 0,
+            "anti_feed": 1,
+            "trade_mode": 2,
+        },
+    },
 ]
 
 # Definitions for switch controls that can be toggled on/off
@@ -963,6 +990,20 @@ SENSOR_DEFINITIONS_V3 = [
         "precision": 0,
         "scan_interval": "very_low",
     },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
+    },
 ]
 
 BINARY_SENSOR_DEFINITIONS_V3 = [
@@ -1001,6 +1042,16 @@ SELECT_DEFINITIONS_V3 = [
         "scan_interval": "high",
         "data_type": "uint16",
         "options": {"stop": 0, "charge": 1, "discharge": 2},
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
     },
 ]
 
@@ -1438,6 +1489,20 @@ SENSOR_DEFINITIONS_VA = [
         "precision": 3,
         "scan_interval": "medium",
     },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
+    },
 ]
 
 # Venus D has the same sensor registers as Venus A
@@ -1482,6 +1547,16 @@ SELECT_DEFINITIONS_VA = [
         "data_type": "uint16",
         "options": {"stop": 0, "charge": 1, "discharge": 2},
     },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
+    },
 ]
 
 SELECT_DEFINITIONS_VD = [
@@ -1493,6 +1568,16 @@ SELECT_DEFINITIONS_VD = [
         "scan_interval": "high",
         "data_type": "uint16",
         "options": {"standby": 0, "charge": 1, "discharge": 2},
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
     },
 ]
 
@@ -1706,6 +1791,8 @@ CONF_MANUAL_MODE_ENABLED = "manual_mode_enabled"
 CONF_PREDICTIVE_CHARGING_OVERRIDDEN = "predictive_charging_overridden"
 CONF_WEEKLY_FULL_CHARGE_DAY = "weekly_full_charge_day"
 CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
+CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY = "weekly_full_charge_skip_delay"
+DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY = False
 CONF_ENABLE_CHARGE_DELAY = "enable_charge_delay"
 CONF_DELAY_SAFETY_MARGIN_MIN = "delay_safety_margin_min"
 DEFAULT_DELAY_SAFETY_MARGIN_MIN = 60

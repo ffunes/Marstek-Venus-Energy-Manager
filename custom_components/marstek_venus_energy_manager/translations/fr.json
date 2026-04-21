@@ -216,10 +216,12 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine"
+          "weekly_full_charge_day": "Jour de la semaine",
+          "weekly_full_charge_skip_delay": "Désactiver le retard de charge le jour de charge complète"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
+          "weekly_full_charge_skip_delay": "Lorsqu'activé, le retard de charge solaire est ignoré le jour de charge complète et la charge commence immédiatement. Rester plus longtemps à 100% améliore l'équilibrage des cellules."
         }
       },
       "charge_delay": {
@@ -538,10 +540,12 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine"
+          "weekly_full_charge_day": "Jour de la semaine",
+          "weekly_full_charge_skip_delay": "Désactiver le retard de charge le jour de charge complète"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
+          "weekly_full_charge_skip_delay": "Lorsqu'activé, le retard de charge solaire est ignoré le jour de charge complète et la charge commence immédiatement. Rester plus longtemps à 100% améliore l'équilibrage des cellules."
         }
       },
       "charge_delay": {
@@ -754,6 +758,7 @@
       "vms_version": { "name": "Version VMS" },
       "comm_module_firmware": { "name": "Firmware Module Communication" },
       "mac_address": { "name": "Adresse MAC" },
+      "wifi_signal_strength": { "name": "Force du Signal WiFi" },
       "battery_cycle_count": { "name": "Cycles Batterie" },
       "battery_cycle_count_calc": { "name": "Cycles Batterie (Calculé)" }
     },
@@ -765,7 +770,14 @@
     },
     "select": {
       "force_mode": { "name": "Mode Forcé" },
-      "user_work_mode": { "name": "Mode de Fonctionnement" },
+      "user_work_mode": {
+        "name": "Mode de Fonctionnement",
+        "state": {
+          "manual": "Manuel",
+          "anti_feed": "Autoconsommation",
+          "trade_mode": "Optimisation IA"
+        }
+      },
       "weekly_full_charge_day": {
         "name": "Jour de Charge Complète Hebdomadaire",
         "state": {

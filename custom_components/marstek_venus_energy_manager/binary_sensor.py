@@ -61,6 +61,7 @@ class MarstekVenusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_icon = definition.get("icon")
+        self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
 
     @property

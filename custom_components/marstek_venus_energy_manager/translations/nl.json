@@ -216,10 +216,12 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week"
+          "weekly_full_charge_day": "Dag van de week",
+          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
+          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
         }
       },
       "charge_delay": {
@@ -538,10 +540,12 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week"
+          "weekly_full_charge_day": "Dag van de week",
+          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
+          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
         }
       },
       "charge_delay": {
@@ -754,6 +758,7 @@
       "vms_version": { "name": "VMS-versie" },
       "comm_module_firmware": { "name": "Firmware Communicatiemodule" },
       "mac_address": { "name": "MAC-adres" },
+      "wifi_signal_strength": { "name": "WiFi-signaalsterkte" },
       "battery_cycle_count": { "name": "Batterijcycli" },
       "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" }
     },
@@ -765,7 +770,14 @@
     },
     "select": {
       "force_mode": { "name": "Geforceerde Modus" },
-      "user_work_mode": { "name": "Werkmodus" },
+      "user_work_mode": {
+        "name": "Werkmodus",
+        "state": {
+          "manual": "Handmatig",
+          "anti_feed": "Eigen verbruik",
+          "trade_mode": "AI-optimalisatie"
+        }
+      },
       "weekly_full_charge_day": {
         "name": "Dag voor Wekelijkse Volledige Lading",
         "state": {
