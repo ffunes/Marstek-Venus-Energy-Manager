@@ -217,11 +217,11 @@
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
           "weekly_full_charge_day": "Dag van de week",
-          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
+          "enable_balance_monitor": "Celbalancemonitor inschakelen"
         },
         "data_description": {
           "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
+          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
         }
       },
       "charge_delay": {
@@ -541,11 +541,11 @@
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
           "weekly_full_charge_day": "Dag van de week",
-          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
+          "enable_balance_monitor": "Celbalancemonitor inschakelen"
         },
         "data_description": {
           "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
+          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
         }
       },
       "charge_delay": {
@@ -760,7 +760,29 @@
       "mac_address": { "name": "MAC-adres" },
       "wifi_signal_strength": { "name": "WiFi-signaalsterkte" },
       "battery_cycle_count": { "name": "Batterijcycli" },
-      "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" }
+      "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" },
+      "cell_delta": { "name": "Celdelta" },
+      "balance_status": {
+        "name": "Balansstatus",
+        "state": {
+          "green": "Gebalanceerd",
+          "yellow": "Geringe onbalans",
+          "orange": "Matige onbalans",
+          "red": "Hoge onbalans",
+          "unknown": "Onbekend"
+        }
+      },
+      "delta_trend": {
+        "name": "Balans Trend",
+        "state": {
+          "rising": "Stijgend",
+          "stable": "Stabiel",
+          "falling": "Dalend",
+          "unknown": "Onbekend"
+        }
+      },
+      "last_balance_read": { "name": "Laatste Balansmeting" },
+      "delta_avg_4w": { "name": "Delta Gemiddelde (4 metingen)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Piekbegrenzing Actief" },

@@ -37,8 +37,8 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
-    CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY,
-    DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY,
+    CONF_ENABLE_BALANCE_MONITOR,
+    DEFAULT_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
@@ -886,7 +886,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
-            self.config_data[CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY] = user_input.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = user_input.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
             return await self.async_step_charge_delay()
 
         return self.async_show_form(
@@ -901,7 +901,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
-                    vol.Required(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, default=DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY): bool,
+                    vol.Required(CONF_ENABLE_BALANCE_MONITOR, default=DEFAULT_ENABLE_BALANCE_MONITOR): bool,
                 }
             ),
         )
@@ -2133,12 +2133,12 @@ class OptionsFlowHandler(OptionsFlow):
         """Configure weekly full charge day in options flow."""
         existing_config = self.config_entry.data
         current_day = existing_config.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
-        current_skip_delay = existing_config.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+        current_balance = existing_config.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
 
         if user_input is not None:
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
-            self.config_data[CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY] = user_input.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = user_input.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
             return await self._save_and_finish()
 
         return self.async_show_form(
@@ -2153,7 +2153,7 @@ class OptionsFlowHandler(OptionsFlow):
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
-                    vol.Required(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, default=current_skip_delay): bool,
+                    vol.Required(CONF_ENABLE_BALANCE_MONITOR, default=current_balance): bool,
                 }
             ),
         )

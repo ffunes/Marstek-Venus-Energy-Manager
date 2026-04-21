@@ -217,11 +217,11 @@
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
           "weekly_full_charge_day": "Jour de la semaine",
-          "weekly_full_charge_skip_delay": "Désactiver le retard de charge le jour de charge complète"
+          "enable_balance_monitor": "Activer le moniteur d'équilibrage des cellules"
         },
         "data_description": {
           "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "weekly_full_charge_skip_delay": "Lorsqu'activé, le retard de charge solaire est ignoré le jour de charge complète et la charge commence immédiatement. Rester plus longtemps à 100% améliore l'équilibrage des cellules."
+          "enable_balance_monitor": "Lorsqu'activé, le système analyse l'équilibre de tension des cellules après chaque charge complète et alerte en cas de déséquilibre détecté. Contourne également le retard de charge solaire ce jour-là afin que la batterie atteigne 100% et reste en charge d'entretien tant qu'il y a du soleil."
         }
       },
       "charge_delay": {
@@ -541,11 +541,11 @@
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
           "weekly_full_charge_day": "Jour de la semaine",
-          "weekly_full_charge_skip_delay": "Désactiver le retard de charge le jour de charge complète"
+          "enable_balance_monitor": "Activer le moniteur d'équilibrage des cellules"
         },
         "data_description": {
           "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "weekly_full_charge_skip_delay": "Lorsqu'activé, le retard de charge solaire est ignoré le jour de charge complète et la charge commence immédiatement. Rester plus longtemps à 100% améliore l'équilibrage des cellules."
+          "enable_balance_monitor": "Lorsqu'activé, le système analyse l'équilibre de tension des cellules après chaque charge complète et alerte en cas de déséquilibre détecté. Contourne également le retard de charge solaire ce jour-là afin que la batterie atteigne 100% et reste en charge d'entretien tant qu'il y a du soleil."
         }
       },
       "charge_delay": {
@@ -760,7 +760,29 @@
       "mac_address": { "name": "Adresse MAC" },
       "wifi_signal_strength": { "name": "Force du Signal WiFi" },
       "battery_cycle_count": { "name": "Cycles Batterie" },
-      "battery_cycle_count_calc": { "name": "Cycles Batterie (Calculé)" }
+      "battery_cycle_count_calc": { "name": "Cycles Batterie (Calculé)" },
+      "cell_delta": { "name": "Delta Cellule" },
+      "balance_status": {
+        "name": "État d'Équilibrage",
+        "state": {
+          "green": "Équilibré",
+          "yellow": "Déséquilibre mineur",
+          "orange": "Déséquilibre modéré",
+          "red": "Déséquilibre élevé",
+          "unknown": "Inconnu"
+        }
+      },
+      "delta_trend": {
+        "name": "Tendance d'Équilibrage",
+        "state": {
+          "rising": "Croissante",
+          "stable": "Stable",
+          "falling": "Décroissante",
+          "unknown": "Inconnu"
+        }
+      },
+      "last_balance_read": { "name": "Dernière Lecture d'Équilibrage" },
+      "delta_avg_4w": { "name": "Delta Moyen (4 lectures)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Écrêtement de Pointe Actif" },

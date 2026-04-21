@@ -30,6 +30,7 @@
 - **Franjas de descarga**: define ventanas horarias y niveles objetivo de red por franja.
 - **Peak shaving**: reserva capacidad de la batería para satisfacer picos de demanda que superen un umbral de potencia configurable.
 - **Carga semanal completa**: carga al 100% una vez por semana para equilibrar celdas.
+- **Monitor de equilibrio de celdas**: mide la diferencia de tensión entre la celda más y menos cargada después de cada carga completa; hace seguimiento de la tendencia de desequilibrio a lo largo del tiempo, envía alertas ante desequilibrios moderados o altos y bloquea la descarga durante el periodo de reposo en circuito abierto.
 - **Retraso de carga solar**: pospone la carga matutina de la batería (solar y desde la red) mientras la producción solar prevista es suficiente para cubrir la energía restante necesaria.
 - **Exclusión de cargas**: excluye dispositivos de alta potencia (p. ej. cargadores de VE) para que el controlador no intente compensar su consumo.
 - **Notificaciones proactivas de alarmas (solo baterías v2)**: monitoriza los registros de fallos y alarmas de la batería cada 5 segundos y envía una notificación de Home Assistant en el momento en que se detecta una nueva condición, con el nombre exacto del fallo o alarma. El sensor de sistema `System Alarm Status` (`OK` / `Warning` / `Fault`) ofrece una vista rápida del estado de todas las baterías.

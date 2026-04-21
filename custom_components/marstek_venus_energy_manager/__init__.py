@@ -31,8 +31,8 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
-    CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY,
-    DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY,
+    CONF_ENABLE_BALANCE_MONITOR,
+    DEFAULT_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
@@ -284,9 +284,10 @@ class ChargeDischargeController:
         self._delay_safety_margin_h = config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._delay_soc_setpoint_enabled = config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._weekly_full_charge_skip_delay = config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+        self._balance_monitor_enabled = config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
         self._predictive_safety_margin_kwh: float = config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_unlocked = False       # True when delay has been unlocked today
+        self._balance_monitor = None  # Set from async_setup_entry after monitor is created
         self._charge_delay_last_date = None       # For daily reset
         self._charge_delay_forecast_cache = None  # Last forecast value used for balance check
         self._charge_delay_balance_needs_charge = True  # Cached balance result (conservative default)
@@ -380,7 +381,7 @@ class ChargeDischargeController:
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
         self._delay_soc_setpoint_enabled = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._weekly_full_charge_skip_delay = self.config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+        self._balance_monitor_enabled = self.config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
         self._predictive_safety_margin_kwh = self.config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_status["soc_setpoint"] = self._delay_soc_setpoint if self._delay_soc_setpoint_enabled else None
         self.charge_delay_enabled = self.config_entry.data.get(
@@ -557,7 +558,7 @@ class ChargeDischargeController:
                 weekly_100_unlocked = weekly_charge_active and (
                     not self.charge_delay_enabled
                     or self._charge_delay_unlocked
-                    or self._weekly_full_charge_overrides_delay()
+                    or self._balance_monitor_overrides_delay()
                 )
 
                 # Update hysteresis state if enabled
@@ -805,15 +806,14 @@ class ChargeDischargeController:
                 _LOGGER.debug("Weekly Full Charge: No persisted state found")
                 return
 
-            from datetime import datetime
+            from datetime import date
 
-            now = datetime.now()
-            current_weekday = now.weekday()
-            target_weekday = WEEKDAY_MAP[self.weekly_full_charge_day]
+            today_iso = date.today().isoformat()
+            stored_date = data.get("date")
 
-            # Only restore state if we're still on the completion day
-            stored_completion_day = data.get("completion_weekday")
-            if stored_completion_day == current_weekday == target_weekday:
+            # Only restore state if saved on the same calendar date (prevents last week's
+            # completion from being incorrectly restored on the same weekday next week)
+            if stored_date == today_iso:
                 self.weekly_full_charge_complete = data.get("complete", False)
                 self.weekly_full_charge_registers_written = data.get("registers_written", False)
                 # Restore delay state
@@ -823,7 +823,8 @@ class ChargeDischargeController:
                             self.weekly_full_charge_complete, self.weekly_full_charge_registers_written,
                             self._charge_delay_unlocked)
             else:
-                _LOGGER.debug("Weekly Full Charge: Stored state is for different day - ignoring")
+                _LOGGER.debug("Weekly Full Charge: Stored state is from %s, today is %s - ignoring",
+                              stored_date, today_iso)
 
         except Exception as e:
             _LOGGER.error("Weekly Full Charge: Failed to load persisted state: %s", e)
@@ -834,13 +835,13 @@ class ChargeDischargeController:
             return
 
         try:
-            from datetime import datetime
+            from datetime import date, datetime
             now = datetime.now()
 
             data = {
                 "complete": self.weekly_full_charge_complete,
                 "registers_written": self.weekly_full_charge_registers_written,
-                "completion_weekday": now.weekday(),
+                "date": date.today().isoformat(),
                 "timestamp": now.isoformat(),
                 # Delay state
                 "delay_unlocked": self._charge_delay_unlocked,
@@ -1120,9 +1121,9 @@ class ChargeDischargeController:
             return round(sum(c.max_soc for c in self.coordinators) / len(self.coordinators))
         return 100
 
-    def _weekly_full_charge_overrides_delay(self) -> bool:
+    def _balance_monitor_overrides_delay(self) -> bool:
         """Return True when the full-charge-day skip-delay option is active for the current day."""
-        return self._weekly_full_charge_skip_delay and self._is_weekly_full_charge_active()
+        return self._balance_monitor_enabled and self._is_weekly_full_charge_active()
 
     def _is_charge_delayed(self) -> bool:
         """Unified gate: check if charging should be delayed based on solar forecast.
@@ -1135,7 +1136,7 @@ class ChargeDischargeController:
             return False
 
         # Skip delay entirely on the weekly full charge day when opted in
-        if self._weekly_full_charge_overrides_delay():
+        if self._balance_monitor_overrides_delay():
             self._charge_delay_status["state"] = "Charging allowed"
             return False
 
@@ -1492,7 +1493,7 @@ class ChargeDischargeController:
         # Check if unified charge delay is active - if so, don't write registers yet
         # Skip delay logic when force button was pressed
         if (self.charge_delay_enabled and not self._charge_delay_unlocked
-                and not self._force_full_charge and not self._weekly_full_charge_overrides_delay()):
+                and not self._force_full_charge and not self._balance_monitor_overrides_delay()):
             return  # Delay is handled by _is_charge_delayed() in _is_operation_allowed()
 
         # Write register 44000 to 100% on first activation (v2 only - v3 uses software enforcement)
@@ -2983,6 +2984,11 @@ class ChargeDischargeController:
                 coordinator.name
             )
             return False
+
+        # Hold discharge while balance monitor waits for OCV stabilisation
+        if coordinator.balance_hold and discharge_power > 0:
+            _LOGGER.debug("[%s] Balance hold active — discharge suppressed", coordinator.name)
+            discharge_power = 0
 
         # Determine expected force mode
         if charge_power > 0:
@@ -4517,6 +4523,13 @@ class ChargeDischargeController:
             self._accumulator_last_save_monotonic = _now_mono
             self._save_accumulators()
 
+        # === BALANCE MONITOR ===
+        # Run before manual mode and PD control checks so readings are never gated
+        # by deadband, stale sensor, or any other early return in the control loop.
+        if self._balance_monitor is not None:
+            for coordinator in self.coordinators:
+                await self._balance_monitor.async_process(coordinator)
+
         # === MANUAL MODE CHECK (highest priority) ===
         # If manual mode is enabled, skip all automatic control logic
         if self.manual_mode_enabled:
@@ -5371,11 +5384,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(unsub_refresh)
 
+    # Set up balance monitor if enabled
+    balance_monitor = None
+    if entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR):
+        from .balance_monitor import BalanceMonitor
+        balance_monitor = BalanceMonitor(hass, entry, controller)
+        await balance_monitor.async_setup()
+        for coordinator in coordinators:
+            await balance_monitor.async_restore_coordinator(coordinator)
+        controller._balance_monitor = balance_monitor
+
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinators": coordinators,
         "controller": controller,
         "unsub_control": unsub_control,
         "unsub_refresh": unsub_refresh,
+        "balance_monitor": balance_monitor,
     }
 
     # Listen for config entry updates so config entities refresh their state

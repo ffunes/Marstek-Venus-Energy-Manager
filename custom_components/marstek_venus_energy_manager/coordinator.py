@@ -88,7 +88,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self._entity_registry = None
         self.rs485_user_disabled = False  # Set by RS485 switch when user explicitly disables
         self._config_entry = None  # Set after creation to allow persisting rs485_user_disabled
-        self._shadow_selects: dict = {}  # Persisted overrides for registers with buggy readback
+        self.balance_hold = False  # Set by BalanceMonitor to prevent discharge during OCV rest
 
         # Load version-specific definitions
         if self.battery_version == "v3":
@@ -332,6 +332,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         dependency_keys_set = {dep_key for defn in all_definitions_for_deps
                             for dep_key in defn.get("dependency_keys", {}).values()
                             if dep_key}
+        # Cell voltage keys are always needed by the balance monitor
+        dependency_keys_set.update({"max_cell_voltage", "min_cell_voltage"})
 
         # Set client unit ID for this battery
         self.client.unit_id = 1

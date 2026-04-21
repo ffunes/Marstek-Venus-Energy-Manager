@@ -20,6 +20,18 @@ The integration automatically creates entities for each configured battery and a
 | `sensor.*_alarm_status` | Active alarm conditions (v2) — diagnostic | text |
 | `sensor.*_fault_status` | Active fault conditions (v2) — diagnostic | text |
 
+## Cell balance monitor sensors (per battery)
+
+Only present when the [cell balance monitor](../features/cell-balance-monitor.md) is enabled in the weekly full charge configuration.
+
+| Entity | Description | Unit |
+|---|---|---|
+| `sensor.*_cell_delta` | Voltage spread between max and min cell at last OCV reading | mV |
+| `sensor.*_balance_status` | Balance result: `green` / `yellow` / `orange` / `red` | — |
+| `sensor.*_delta_trend` | Trend over last formal readings: `rising` / `stable` / `falling` | — |
+| `sensor.*_last_balance_read` | Timestamp of the last reading | timestamp |
+| `sensor.*_delta_avg_4w` | Rolling average of the last 4 formal readings | mV |
+
 ## Device information sensors
 
 | Entity | Description |

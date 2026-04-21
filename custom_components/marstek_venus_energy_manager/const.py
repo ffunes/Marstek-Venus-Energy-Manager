@@ -1793,6 +1793,25 @@ CONF_WEEKLY_FULL_CHARGE_DAY = "weekly_full_charge_day"
 CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
 CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY = "weekly_full_charge_skip_delay"
 DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY = False
+CONF_ENABLE_BALANCE_MONITOR = "enable_balance_monitor"
+DEFAULT_ENABLE_BALANCE_MONITOR = False
+
+# Cell Balance Monitor
+BALANCE_STORAGE_KEY = "balance_history"
+BALANCE_STORAGE_VERSION = 1
+BALANCE_THRESHOLD_YELLOW = 50    # mV — above this: yellow
+BALANCE_THRESHOLD_ORANGE = 100   # mV — above this: orange
+BALANCE_THRESHOLD_RED = 150      # mV — above this: red
+BALANCE_OCV_WAIT_SECONDS = 900   # 15 min rest before reading
+BALANCE_ORANGE_HOLD_SECONDS = 9000  # 2.5 h passive balancing hold
+BALANCE_COOLDOWN_HOURS = 12      # min hours between formal readings
+BALANCE_OPPORTUNISTIC_COOLDOWN_HOURS = 24
+BALANCE_POWER_STABLE_POLLS = 5   # consecutive polls < 50 W to confirm rest
+BALANCE_POWER_REST_THRESHOLD_W = 50
+BALANCE_VOLTAGE_SETTLING_THRESHOLD_V = 0.005  # vmax must be falling < 5 mV/poll
+BALANCE_HISTORY_MAX = 52         # ~1 year of weekly readings
+BALANCE_RED_CONSECUTIVE_ALERT = 2
+BALANCE_TREND_ALERT_AVG_MV = 75.0   # avg must exceed this to fire a rising-trend alert
 CONF_ENABLE_CHARGE_DELAY = "enable_charge_delay"
 CONF_DELAY_SAFETY_MARGIN_MIN = "delay_safety_margin_min"
 DEFAULT_DELAY_SAFETY_MARGIN_MIN = 60

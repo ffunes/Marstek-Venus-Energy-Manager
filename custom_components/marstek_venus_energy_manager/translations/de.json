@@ -217,11 +217,11 @@
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
           "weekly_full_charge_day": "Wochentag",
-          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
+          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
         },
         "data_description": {
           "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
+          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
         }
       },
       "charge_delay": {
@@ -541,11 +541,11 @@
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
           "weekly_full_charge_day": "Wochentag",
-          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
+          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
         },
         "data_description": {
           "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
+          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
         }
       },
       "charge_delay": {
@@ -760,7 +760,29 @@
       "mac_address": { "name": "MAC-Adresse" },
       "wifi_signal_strength": { "name": "WLAN-Signalstärke" },
       "battery_cycle_count": { "name": "Batteriezyklen" },
-      "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" }
+      "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" },
+      "cell_delta": { "name": "Zellendelta" },
+      "balance_status": {
+        "name": "Balance-Status",
+        "state": {
+          "green": "Balanciert",
+          "yellow": "Geringe Unbalance",
+          "orange": "Moderate Unbalance",
+          "red": "Hohe Unbalance",
+          "unknown": "Unbekannt"
+        }
+      },
+      "delta_trend": {
+        "name": "Balance-Trend",
+        "state": {
+          "rising": "Steigend",
+          "stable": "Stabil",
+          "falling": "Fallend",
+          "unknown": "Unbekannt"
+        }
+      },
+      "last_balance_read": { "name": "Letzte Balance-Messung" },
+      "delta_avg_4w": { "name": "Delta-Durchschnitt (4 Messungen)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Spitzenlastkappung Aktiv" },
