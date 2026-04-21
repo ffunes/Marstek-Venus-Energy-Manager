@@ -216,10 +216,12 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag"
+          "weekly_full_charge_day": "Wochentag",
+          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
+          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
         }
       },
       "charge_delay": {
@@ -538,10 +540,12 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag"
+          "weekly_full_charge_day": "Wochentag",
+          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
+          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
         }
       },
       "charge_delay": {

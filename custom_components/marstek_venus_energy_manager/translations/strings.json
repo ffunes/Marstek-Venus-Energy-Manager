@@ -216,10 +216,12 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week"
+          "weekly_full_charge_day": "Day of the week",
+          "weekly_full_charge_skip_delay": "Disable charge delay on full charge day"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
+          "weekly_full_charge_skip_delay": "When enabled, the solar charge delay is bypassed on the full charge day so charging starts immediately. Staying at 100% for longer improves cell balancing."
         }
       },
       "charge_delay": {
@@ -536,10 +538,12 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week"
+          "weekly_full_charge_day": "Day of the week",
+          "weekly_full_charge_skip_delay": "Disable charge delay on full charge day"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
+          "weekly_full_charge_skip_delay": "When enabled, the solar charge delay is bypassed on the full charge day so charging starts immediately. Staying at 100% for longer improves cell balancing."
         }
       },
       "charge_delay": {

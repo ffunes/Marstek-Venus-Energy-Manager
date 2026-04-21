@@ -216,10 +216,12 @@
         "title": "Configuración de carga completa semanal",
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana"
+          "weekly_full_charge_day": "Día de la semana",
+          "weekly_full_charge_skip_delay": "Desactivar el retraso de carga el día de carga completa"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
+          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
+          "weekly_full_charge_skip_delay": "Al activar esta opción, el retraso de carga solar se omite el día de carga completa y la carga comienza de inmediato. Permanecer más tiempo al 100% mejora el balanceo de celdas."
         }
       },
       "charge_delay": {
@@ -538,10 +540,12 @@
         "title": "Configuración de carga completa semanal",
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana"
+          "weekly_full_charge_day": "Día de la semana",
+          "weekly_full_charge_skip_delay": "Desactivar el retraso de carga el día de carga completa"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
+          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
+          "weekly_full_charge_skip_delay": "Al activar esta opción, el retraso de carga solar se omite el día de carga completa y la carga comienza de inmediato. Permanecer más tiempo al 100% mejora el balanceo de celdas."
         }
       },
       "charge_delay": {
