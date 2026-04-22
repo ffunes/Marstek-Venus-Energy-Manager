@@ -276,8 +276,17 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
                 "total_available_kwh": decision.get("total_available_kwh"),
                 "energy_deficit_kwh": decision.get("energy_deficit_kwh"),
                 "solar_forecast_kwh": decision.get("solar_forecast_kwh"),
+                "solar_surplus_kwh": decision.get("solar_surplus_kwh"),
+                "grid_charge_kwh": decision.get("grid_charge_kwh"),
                 "decision_reason": decision.get("reason"),
             })
+
+        # Per-battery grid-only SOC targets (set at charge initialisation, None when not charging)
+        if hasattr(self.controller, '_predictive_charge_target_soc') and self.controller._predictive_charge_target_soc:
+            attrs["predictive_target_soc_pct"] = {
+                c.name: round(v, 1)
+                for c, v in self.controller._predictive_charge_target_soc.items()
+            }
 
         # Dynamic pricing attributes
         attrs["pricing_mode"] = self.controller.predictive_charging_mode

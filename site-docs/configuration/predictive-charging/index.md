@@ -17,6 +17,26 @@ Else:
 
 ---
 
+## Charge target
+
+When charging is triggered, the integration does not charge all the way to `max_soc` from the grid. Instead it calculates a **grid-only target SOC** — enough to cover only what solar will not be able to provide during the day:
+
+```
+solar_surplus = max(0, solar_forecast − estimated_consumption)
+grid_charge   = max(0, gap_to_max − solar_surplus)
+target_soc    = current_soc + grid_charge / capacity × 100
+```
+
+`gap_to_max` is the kWh distance from the current SOC to `max_soc`. Solar output in excess of household demand charges the battery the rest of the way during the day.
+
+**Example**: the battery needs 5 kWh to reach max_soc. Solar forecast is 13 kWh, expected consumption is 10 kWh — a surplus of 3 kWh available for the battery. The integration charges only **2 kWh** from the grid; solar handles the remaining 3 kWh during the day.
+
+### Multi-battery systems
+
+In systems with multiple batteries at different SOC levels the grid charge is distributed **proportionally to each battery's individual gap to max_soc**. A battery further from full receives a larger share; a battery already close to full relies mostly on solar for its remainder. This prevents overcharging any single unit from the grid and minimises total grid import.
+
+---
+
 ## Available modes
 
 | Mode | Description |
