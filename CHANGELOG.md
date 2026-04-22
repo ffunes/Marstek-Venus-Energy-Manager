@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.7.0b2] - 2026-04-22
+
+### Fixed
+- **Price-based discharge control bypassed in dynamic pricing mode**: When the system was inside a cheap-slot window but decided not to activate grid charging (informational schedule with no deficit, charge delay active, or pre-evaluation skip), the handler returned early before setting `_price_based_discharge_blocked`. The battery would then discharge even with *"Discharge only when price exceeds daily average"* enabled. Fixed by converting the three early-return paths into fall-through branches so the discharge control block always runs.
 
 ## [1.7.0b1] - 2026-04-21
 
@@ -14,7 +18,6 @@
 - **User Work Mode select**: New select entity (register 43000) available for all battery versions, with options `Manual`, `Self Consumption` (anti feed-in), and `AI Optimization` (trade mode). Disabled by default. Fully translated into EN, ES, DE, FR, and NL.
 
 ### Fixed
-- **Price-based discharge control bypassed in dynamic pricing mode**: When the system was inside a cheap-slot window but decided not to activate grid charging (informational schedule with no deficit, charge delay active, or pre-evaluation skip), the handler returned early before setting `_price_based_discharge_blocked`. The battery would then discharge even with *"Discharge only when price exceeds daily average"* enabled. Fixed by converting the three early-return paths into fall-through branches so the discharge control block always runs.
 - **`enabled_by_default: false` was ignored**: Modbus register entities (sensor, select, binary sensor, switch, number, button) did not propagate the `enabled_by_default` flag from their definition to the HA entity registry. All Modbus entity classes now set `_attr_entity_registry_enabled_default` from the definition, so entities marked `enabled_by_default: false` are correctly disabled in the registry for new installations.
 - **User Work Mode displayed wrong option due to battery firmware bug**: The battery's Modbus register for user work mode returns an incorrect value on readback. The integration now uses a persistent shadow state — the last value written is stored in config entry data and used for display instead of the polled register value. The shadow survives HA restarts. The register is still written correctly so the battery operates in the selected mode.
 - **Predictive charging starts despite switch being off (time slot mode)**: When the predictive charging switch was turned off during an active time slot, charging stopped correctly. However, when the slot ended, the override flag was silently reset to `False` in memory — so on the next slot cycle the switch appeared on again and charging started. The auto-reset on slot exit has been removed; the override now persists until the user explicitly turns the switch back on.
