@@ -4284,39 +4284,41 @@ class ChargeDischargeController:
                         "Dynamic pricing: inside cheap slot window but charging not needed "
                         "(solar/battery sufficient) — skipping"
                     )
-                    return
+                    # Fall through to discharge control below (do not return early)
 
                 # Respect charge delay: if configured and still active, hold until it unlocks
-                if self._is_charge_delayed():
+                elif self._is_charge_delayed():
                     _LOGGER.info(
                         "Dynamic pricing: inside cheap slot window but charge delay is active — holding"
                     )
-                    return
+                    # Fall through to discharge control below (do not return early)
 
-                # Find which slot we're entering
-                current_slot = next(
-                    (s for s in self._dynamic_pricing_schedule.selected_slots if s.start <= now < s.end),
-                    None
-                )
-
-                # Skip if pre-evaluation decided charging is no longer needed for this slot
-                if current_slot and self._dp_pre_evaluated_slots.get(current_slot.start) is False:
-                    _LOGGER.info(
-                        "Dynamic pricing: skipping slot %s — pre-evaluation found sufficient energy",
-                        current_slot.start.strftime("%H:%M")
+                else:
+                    # Find which slot we're entering
+                    current_slot = next(
+                        (s for s in self._dynamic_pricing_schedule.selected_slots if s.start <= now < s.end),
+                        None
                     )
-                    return
 
-                # Entering a cheap slot
-                self._current_price_slot_active = True
-                self._grid_charging_initialized = False
-                self.grid_charging_active = True
-                if current_slot:
-                    await self._send_dynamic_pricing_slot_start_notification(current_slot)
-                _LOGGER.info(
-                    "Dynamic pricing: entering cheap slot %s",
-                    current_slot.start.strftime("%H:%M") if current_slot else "unknown"
-                )
+                    # Skip if pre-evaluation decided charging is no longer needed for this slot
+                    if current_slot and self._dp_pre_evaluated_slots.get(current_slot.start) is False:
+                        _LOGGER.info(
+                            "Dynamic pricing: skipping slot %s — pre-evaluation found sufficient energy",
+                            current_slot.start.strftime("%H:%M")
+                        )
+                        # Fall through to discharge control below (do not return early)
+
+                    else:
+                        # Entering a cheap slot
+                        self._current_price_slot_active = True
+                        self._grid_charging_initialized = False
+                        self.grid_charging_active = True
+                        if current_slot:
+                            await self._send_dynamic_pricing_slot_start_notification(current_slot)
+                        _LOGGER.info(
+                            "Dynamic pricing: entering cheap slot %s",
+                            current_slot.start.strftime("%H:%M") if current_slot else "unknown"
+                        )
 
             elif not in_slot and self._current_price_slot_active:
                 # Exiting a cheap slot

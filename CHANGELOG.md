@@ -17,6 +17,7 @@
 
 ### Fixed
 - **AC Offgrid Power wraps to ~65000 W when solar panels are connected to the backup port**: On firmware 148+, the battery reports negative values on the AC Offgrid Power register when solar panels feed power through the backup port. The register was decoded as `uint16`, causing a 16-bit wraparound (e.g. −100 W → 65436 W). This falsely triggered the backup-active guard, stopping PD control entirely. Fixed by decoding the register as `int16` for v2 and v3 hardware variants.
+- **Price-based discharge control bypassed in dynamic pricing mode**: When the system was inside a cheap-slot window but decided not to activate grid charging (informational schedule with no deficit, charge delay active, or pre-evaluation skip), the handler returned early before setting `_price_based_discharge_blocked`. The battery would then discharge even with *"Discharge only when price exceeds daily average"* enabled. Fixed by converting the three early-return paths into fall-through branches so the discharge control block always runs.
 
 ## [1.7.0b1] - 2026-04-21
 
