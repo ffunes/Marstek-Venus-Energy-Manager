@@ -1,6 +1,11 @@
 # Changelog
 
 
+## [1.7.0b2] - 2026-04-22
+
+### Fixed
+- **AC Offgrid Power wraps to ~65000 W when solar panels are connected to the backup port**: On firmware 148+, the battery reports negative values on the AC Offgrid Power register when solar panels feed power through the backup port. The register was decoded as `uint16`, causing a 16-bit wraparound (e.g. −100 W → 65436 W). This falsely triggered the backup-active guard, stopping PD control entirely. Fixed by decoding the register as `int16` for v2 and v3 hardware variants.
+
 ## [1.7.0b1] - 2026-04-21
 
 ### Added
