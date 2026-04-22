@@ -212,6 +212,7 @@ class ChargeDischargeController:
         self._grid_charging_initialized = False  # Flag for initialization
         self._last_decision_data = None  # Store last decision for diagnostics
         self._slot_entry_time = None  # When we first entered the time slot (for 5-min delay)
+        self._predictive_charge_target_soc: Optional[dict] = None  # Per-battery grid-only SOC targets {coordinator: target_%}
 
         # Real-time Price Mode state
         self.average_price_sensor = config_entry.data.get(CONF_AVERAGE_PRICE_SENSOR, None)
@@ -595,6 +596,20 @@ class ChargeDischargeController:
                     effective_max_soc = 100
                     _LOGGER.debug("%s: Weekly Full Charge active - effective_max_soc=100%% (configured: %d%%)",
                                  coordinator.name, coordinator.max_soc)
+                elif self.grid_charging_active and self._predictive_charge_target_soc is not None:
+                    # Predictive grid charging: per-battery target so each battery
+                    # charges only the portion solar cannot cover for its individual gap
+                    per_battery_target = self._predictive_charge_target_soc.get(coordinator)
+                    if per_battery_target is not None:
+                        effective_max_soc = min(coordinator.max_soc, per_battery_target)
+                        _LOGGER.debug(
+                            "%s: Predictive grid charging - effective_max_soc=%.1f%% "
+                            "(target=%.1f%%, configured=%d%%)",
+                            coordinator.name, effective_max_soc,
+                            per_battery_target, coordinator.max_soc,
+                        )
+                    else:
+                        effective_max_soc = coordinator.max_soc
                 else:
                     effective_max_soc = coordinator.max_soc
 
@@ -2477,6 +2492,13 @@ class ChargeDischargeController:
         )
 
         # === STEP 7: Return Complete Decision Data ===
+        # Grid-only charge split: how much comes from grid vs solar
+        _max_soc_values = [c.max_soc for c in coordinators_with_data]
+        _config_max_soc = min(_max_soc_values) if _max_soc_values else 95
+        _gap_to_max_kwh = max(0.0, (_config_max_soc - avg_soc) / 100.0 * total_capacity_kwh)
+        solar_surplus_kwh = max(0.0, solar_forecast_kwh - avg_consumption_kwh)
+        grid_charge_kwh = max(0.0, _gap_to_max_kwh - solar_surplus_kwh)
+
         return {
             "should_charge": should_charge,
             "solar_forecast_kwh": solar_forecast_kwh,
@@ -2490,6 +2512,8 @@ class ChargeDischargeController:
             "total_available_kwh": total_available_kwh,
             "energy_deficit_kwh": energy_deficit_kwh,
             "days_in_history": days_in_history,
+            "solar_surplus_kwh": solar_surplus_kwh,
+            "grid_charge_kwh": grid_charge_kwh,
             "consumption_source": "household_sensor" if self.household_consumption_sensor else "battery_discharge",
             "reason": (
                 f"Energy deficit: {energy_deficit_kwh:.2f} kWh "
@@ -2689,6 +2713,66 @@ class ChargeDischargeController:
 
         return self._check_time_window()
 
+    def _compute_predictive_target_soc(self) -> Optional[dict]:
+        """Calculate per-battery grid-only SOC targets for predictive charging.
+
+        Each battery's share of grid charge is proportional to its gap to max_soc,
+        so batteries with a larger gap get more grid charge and batteries that are
+        already near max_soc rely mostly on solar.
+
+          total_gap     = Σ (max_soc_i - soc_i) / 100 × capacity_i
+          solar_surplus = max(0, solar_forecast - consumption_forecast)
+          grid_charge   = max(0, total_gap - solar_surplus)
+          share_i       = (gap_i / total_gap) × grid_charge
+          target_soc_i  = min(max_soc_i, soc_i + share_i / capacity_i × 100)
+
+        Returns dict {coordinator: target_soc_%} or None if data is insufficient
+        (callers fall back to max_soc behaviour when None is returned).
+        """
+        decision_data = self._last_decision_data
+        if not decision_data:
+            return None
+
+        coordinators_with_data = [c for c in self.coordinators if c.data]
+        if not coordinators_with_data:
+            return None
+
+        solar_forecast_kwh = decision_data.get("solar_forecast_kwh") or 0.0
+        avg_consumption_kwh = decision_data.get("avg_consumption_kwh", 0.0)
+
+        # Per-battery gap to max_soc (kWh)
+        gaps: dict = {}
+        for c in coordinators_with_data:
+            capacity = c.data.get("battery_total_energy", 0)
+            current_soc = c.data.get("battery_soc", 0)
+            gaps[c] = max(0.0, (c.max_soc - current_soc) / 100.0 * capacity)
+
+        total_gap_kwh = sum(gaps.values())
+        if total_gap_kwh <= 0:
+            return None
+
+        solar_surplus_kwh = max(0.0, solar_forecast_kwh - avg_consumption_kwh)
+        grid_charge_kwh = max(0.0, total_gap_kwh - solar_surplus_kwh)
+
+        targets: dict = {}
+        for c in coordinators_with_data:
+            capacity = c.data.get("battery_total_energy", 0)
+            current_soc = c.data.get("battery_soc", 0)
+            if capacity <= 0:
+                targets[c] = c.max_soc
+                continue
+            share_kwh = (gaps[c] / total_gap_kwh) * grid_charge_kwh
+            target = min(c.max_soc, current_soc + (share_kwh / capacity) * 100.0)
+            targets[c] = max(target, current_soc)  # never go below current SOC
+
+        _LOGGER.info(
+            "Predictive charging: per-battery grid-only targets "
+            "(solar_surplus=%.2f kWh, grid_charge=%.2f kWh / total_gap=%.2f kWh): %s",
+            solar_surplus_kwh, grid_charge_kwh, total_gap_kwh,
+            {c.name: f"{v:.1f}%" for c, v in targets.items()},
+        )
+        return targets
+
     async def _handle_predictive_grid_charging(self):
         """
         Handle predictive grid charging mode.
@@ -2735,6 +2819,7 @@ class ChargeDischargeController:
             self.previous_power = -min(max_battery_charge, target_power)  # Start at max charge
             self._grid_charging_initialized = True
             self.first_execution = False  # Mark as initialized to avoid conflicts
+            self._predictive_charge_target_soc = self._compute_predictive_target_soc()
             _LOGGER.info("Initialized predictive charging: target=%dW, initial_charge=%dW",
                         target_power, abs(self.previous_power))
         
@@ -3615,12 +3700,22 @@ class ChargeDischargeController:
                 if slot_str else "⏰ Charging now from grid\n"
             )
 
+        grid_charge = decision_data.get("grid_charge_kwh")
+        solar_surplus = decision_data.get("solar_surplus_kwh")
+        if grid_charge is not None and solar_surplus is not None:
+            # When charging triggers, solar_surplus ≤ gap_to_max, so solar will contribute exactly solar_surplus to battery
+            charge_split_line = (
+                f"🔌 Grid: {grid_charge:.2f} kWh — solar will charge the remaining {solar_surplus:.2f} kWh\n"
+            )
+        else:
+            charge_split_line = f"⚡ Deficit: {energy_deficit:.2f} kWh\n"
+
         message = (
             f"⚡ Energy deficit — grid charging needed\n\n"
             f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
             f"☀️ Solar forecast: {solar_str}\n"
             f"📊 Consumption: {consumption_str}\n"
-            f"⚡ Deficit: {energy_deficit:.2f} kWh\n\n"
+            f"{charge_split_line}\n"
             f"{timing_line}"
             f"Max charge power: {power_str}"
         )
