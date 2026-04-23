@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensores",
           "batteries": "Baterías",
-          "time_slots": "Franjas sin descarga",
+          "time_slots": "Franjas de operación",
           "excluded_devices": "Dispositivos excluidos",
           "predictive_charging": "Carga predictiva",
           "weekly_full_charge": "Carga completa semanal",

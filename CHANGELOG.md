@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0b3] - 2026-04-23
+
+### Changed
+- **Options menu label: "No-discharge time slots" → "Discharge time slots"**: The menu entry in the options flow was misleading — it read as a window where the battery is *prevented* from discharging, but the feature actually defines the only windows where discharging *is allowed*. The label now matches the step title and description already used inside the step. Updated in all six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`).
+
+### Fixed
+- **Price-based discharge control ignored while battery is in steady-state discharge**: Even after the handler correctly set `_price_based_discharge_blocked`, the enforcement at line 5121 could be skipped by the deadband or stale-sensor early-returns in the main control loop. When the system was in equilibrium (grid ≈ 0 W, battery actively discharging) and the price dropped below the daily average, the flag was set but the function exited through the deadband path before applying it — leaving the battery discharging until the load changed enough to exit the deadband. Fixed by inserting a dedicated enforcement block immediately after the predictive-charging dispatcher, before any sensor-dependent early-returns.
+
 ## [1.7.0b2] - 2026-04-22
 
 ### Changed

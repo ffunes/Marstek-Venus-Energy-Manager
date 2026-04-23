@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensors",
           "batteries": "Batteries",
-          "time_slots": "No-discharge time slots",
+          "time_slots": "Discharge time slots",
           "excluded_devices": "Excluded devices",
           "predictive_charging": "Predictive charging",
           "weekly_full_charge": "Weekly full charge",

@@ -4693,6 +4693,24 @@ class ChargeDischargeController:
                 if self.grid_charging_active:
                     return
 
+        # === Price-based discharge block: enforce BEFORE deadband / stale early-returns ===
+        # The DP/RT handlers set _price_based_discharge_blocked each cycle (line ~4355/4426).
+        # Without this guard the deadband and stale-sensor paths would return early without
+        # stopping a running discharge, leaving the battery draining until grid error grows
+        # large enough to exit the deadband.
+        if self._price_based_discharge_blocked and self.previous_power < 0:
+            _LOGGER.info(
+                "ChargeDischargeController: Price-based discharge block active — "
+                "stopping discharge (was %.0fW), holding at 0W",
+                abs(self.previous_power),
+            )
+            for coordinator in self.coordinators:
+                await self._set_battery_power(coordinator, 0, 0)
+            self.previous_power = 0
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            return
+
         # === Continue with normal PD control ===
         consumption_state = self.hass.states.get(self.consumption_sensor)
         sensor_raw = self._apply_meter_transform(consumption_state)

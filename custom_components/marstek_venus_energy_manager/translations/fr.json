@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Capteurs",
           "batteries": "Batteries",
-          "time_slots": "Créneaux sans décharge",
+          "time_slots": "Plages horaires de décharge",
           "excluded_devices": "Appareils exclus",
           "predictive_charging": "Charge prédictive",
           "weekly_full_charge": "Charge complète hebdomadaire",

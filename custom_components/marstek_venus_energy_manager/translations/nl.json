@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensoren",
           "batteries": "Batterijen",
-          "time_slots": "Ontladingsblokkering tijdsloten",
+          "time_slots": "Ontladingstijdslots",
           "excluded_devices": "Uitgesloten apparaten",
           "predictive_charging": "Voorspellend laden",
           "weekly_full_charge": "Wekelijkse volledige lading",

@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensoren",
           "batteries": "Batterien",
-          "time_slots": "Entladungssperrzeiten",
+          "time_slots": "Entladungs-Zeitfenster",
           "excluded_devices": "Ausgeschlossene Geräte",
           "predictive_charging": "Prädiktive Ladung",
           "weekly_full_charge": "Wöchentliche Vollladung",
