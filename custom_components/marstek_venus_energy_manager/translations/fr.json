@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Écrêtement de Pointe" },
       "backup_function": { "name": "Fonction de Secours" },
       "rs485_control_mode": { "name": "Mode de Contrôle RS485" },
-      "automation_charging_active": { "name": "Charge par Prix Externe" }
+      "automation_charging_active": { "name": "Charge par Prix Externe" },
+      "excluded_device_enabled": { "name": "{device} – Actif" },
+      "excluded_device_solar_surplus": { "name": "{device} – Surplus Solaire" },
+      "time_slot": { "name": "Plage Horaire {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Fin de Charge Externe" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Appareils Exclus" },
       "discharge_window": {
         "name": "Fenêtre de Décharge",
         "state": {
@@ -788,7 +790,8 @@
       "capacity_protection_active": { "name": "Écrêtement de Pointe Actif" },
       "predictive_charging_active": { "name": "Charge Prédictive Active" },
       "wifi_status": { "name": "État WiFi" },
-      "cloud_status": { "name": "État Cloud" }
+      "cloud_status": { "name": "État Cloud" },
+      "charge_hysteresis": { "name": "Hystérésis de Charge" }
     },
     "select": {
       "force_mode": { "name": "Mode Forcé" },
@@ -823,16 +826,16 @@
       "charge_to_soc": { "name": "Charger jusqu'à SOC" },
       "pd_controller_kp": { "name": "PD Kp" },
       "pd_controller_kd": { "name": "PD Kd" },
-      "pd_controller_deadband": { "name": "Bande Morte PD" },
-      "pd_controller_max_power_change": { "name": "Changement de Puissance Max. PD" },
-      "pd_controller_direction_hysteresis": { "name": "Hystérésis de Direction PD" },
-      "pd_min_charge_power": { "name": "Puissance Min. de Charge PD" },
-      "pd_min_discharge_power": { "name": "Puissance Min. de Décharge PD" },
+      "pd_controller_deadband": { "name": "PD Bande Morte" },
+      "pd_controller_max_power_change": { "name": "PD Changement de Puissance Max." },
+      "pd_controller_direction_hysteresis": { "name": "PD Hystérésis de Direction" },
+      "pd_min_charge_power": { "name": "PD Puissance Min. de Charge" },
+      "pd_min_discharge_power": { "name": "PD Puissance Min. de Décharge" },
       "max_contracted_power": { "name": "Puissance Contractuelle Max." },
-      "capacity_protection_soc_threshold": { "name": "Seuil SOC Écrêtement de Pointe" },
-      "delay_safety_margin_min": { "name": "Marge Retard de Charge" },
-      "delay_soc_setpoint": { "name": "SOC Seuil Retard de Charge" },
-      "capacity_protection_limit": { "name": "Limite Écrêtement de Pointe" },
+      "capacity_protection_soc_threshold": { "name": "Écrêtement de Pointe – Seuil SOC" },
+      "delay_safety_margin_min": { "name": "Retard de Charge – Marge" },
+      "delay_soc_setpoint": { "name": "Retard de Charge – SOC Seuil" },
+      "capacity_protection_limit": { "name": "Écrêtement de Pointe – Limite" },
       "backup_offgrid_threshold": { "name": "Seuil Offgrid Backup" },
       "predictive_safety_margin_kwh": { "name": "Marge de Sécurité Prévision Solaire" }
     },

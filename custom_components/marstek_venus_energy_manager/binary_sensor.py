@@ -62,6 +62,8 @@ class MarstekVenusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_class = definition.get("device_class")
         self._attr_icon = definition.get("icon")
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
+        if definition.get("category") == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_should_poll = False
 
     @property
@@ -94,7 +96,8 @@ class ChargeHysteresisActiveSensor(RestoreEntity, BinarySensorEntity):
         """Initialize the hysteresis sensor."""
         self.coordinator = coordinator
 
-        self._attr_name = f"{coordinator.name} Charge Hysteresis Active"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "charge_hysteresis"
         self._attr_unique_id = f"{coordinator.host}_charge_hysteresis_active"
         self._attr_icon = "mdi:battery-lock"
         self._attr_should_poll = True

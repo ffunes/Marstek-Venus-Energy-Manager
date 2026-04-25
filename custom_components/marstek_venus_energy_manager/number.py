@@ -212,7 +212,6 @@ class MarstekBackupThresholdNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_min_value = 0
         self._attr_native_max_value = 500
         self._attr_native_step = 10
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_should_poll = False
 
     @property

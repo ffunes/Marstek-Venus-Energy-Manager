@@ -102,11 +102,6 @@ async def async_setup_entry(
         for definition in CYCLE_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusCycleSensor(coordinator, definition))
 
-    # Add excluded devices diagnostic sensor
-    excluded_devices = entry.data.get("excluded_devices", [])
-    if excluded_devices:
-        entities.append(ExcludedDevicesConfigSensor(hass, entry))
-
     # Add discharge window diagnostic sensor (always, even without slots)
     entities.append(DischargeWindowSensor(hass, entry))
 
@@ -170,6 +165,10 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = definition.get("unit")
         self._attr_icon = definition.get("icon")
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
+        if definition.get("category") == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        if "precision" in definition and (definition.get("unit") or definition.get("state_class")):
+            self._attr_suggested_display_precision = definition["precision"]
         self._attr_should_poll = False
 
     @property
@@ -213,49 +212,6 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
-        }
-
-
-class ExcludedDevicesConfigSensor(SensorEntity):
-    """Read-only sensor showing excluded devices configuration."""
-
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Initialize the excluded devices config sensor."""
-        self.hass = hass
-        self.entry = entry
-
-        self._attr_has_entity_name = True
-        self._attr_translation_key = "excluded_devices"
-        self._attr_unique_id = f"{entry.entry_id}_config_excluded_devices"
-        self._attr_icon = "mdi:devices"
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_should_poll = False
-
-    @property
-    def native_value(self) -> int:
-        """Return the number of excluded devices."""
-        return len(self.entry.data.get("excluded_devices", []))
-
-    @property
-    def extra_state_attributes(self) -> dict:
-        """Return excluded device details."""
-        devices = self.entry.data.get("excluded_devices", [])
-        attrs = {"count": len(devices)}
-        for i, device in enumerate(devices):
-            prefix = f"device_{i + 1}"
-            attrs[f"{prefix}_sensor"] = device.get("power_sensor")
-            attrs[f"{prefix}_included_in_consumption"] = device.get("included_in_consumption", True)
-            attrs[f"{prefix}_allow_solar_surplus"] = device.get("allow_solar_surplus", False)
-        return attrs
-
-    @property
-    def device_info(self):
-        """Return device information for the system."""
-        return {
-            "identifiers": {(DOMAIN, "marstek_venus_system")},
-            "name": "Marstek Venus System",
-            "manufacturer": "Marstek",
-            "model": "Venus Multi-Battery System",
         }
 
 
@@ -713,6 +669,7 @@ class IntegrationStatusSensor(SensorEntity):
         self._attr_translation_key = "integration_status"
         self._attr_unique_id = f"{entry.entry_id}_integration_status"
         self._attr_icon = "mdi:home-battery"
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_should_poll = True
 
     def _is_outside_discharge_window(self) -> bool:

@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .balance_monitor import BalanceMonitor, BalanceSensorGroup
@@ -58,6 +59,7 @@ class _BalanceBaseSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_should_poll = False
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(self, coordinator: Any, init: dict) -> None:
         self._coordinator = coordinator

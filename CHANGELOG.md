@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.7.0b4] - 2026-04-24
+
+### Added
+- **Per-device enable/disable switch for excluded devices**: Each excluded device now gets a dedicated `{Device} – Enabled` switch entity. Turning it off removes the device from all power calculations (charge offset, adjustment, and EV-charger state checks) without deleting it from the configuration. The state is persisted in config entry data and survives HA restarts. Useful for temporarily pausing a device (e.g. a car charger that is unplugged for days) without having to re-enter the options flow.
+
+### Removed
+- **Excluded Devices diagnostic sensor**: The `Excluded Devices` sensor (which reported the count and details of excluded devices as attributes) has been removed. The same information is now directly visible through the per-device `{Device} – Enabled` and `{Device} – Solar Surplus` switch entities added in this release.
+
+### Changed
+- **WiFi Status and Cloud Status moved to diagnostic category**: Both binary sensors now appear under Diagnostics in the HA device page. The `category: diagnostic` field was already present in their definitions but was not being read by the binary sensor platform — fixed by applying the same pattern already used for regular sensors.
+- **Version and connectivity sensors disabled by default**: Software Version, BMS Version, EMS Version, Comm Module Firmware, WiFi Signal Strength, WiFi Status, and Cloud Status are now disabled by default across all hardware variants. They can be enabled individually from the entity registry if needed.
+- **Charge Hysteresis binary sensor now translated**: The sensor was previously named `{Battery} Charge Hysteresis Active` in hard-coded English. It now uses a translation key (`charge_hysteresis`) and `has_entity_name`, so the name is rendered in the user's language without redundant "Active" suffix. Updated in all six translation files.
+- **Backup Offgrid Threshold moved from Configuration to Controls**: The number entity is no longer grouped under Configuration in the HA device page and appears directly in the main controls section.
+- **Cell voltage sensors always display 3 decimal places**: Max Cell Voltage and Min Cell Voltage previously dropped trailing zeros (e.g. `3.2 V` instead of `3.200 V`). The display precision is now set to 3 decimal places, matching the measurement resolution.
+- **Several per-battery sensors moved to diagnostic category**: The following sensors are now grouped under Diagnostics in the HA device page: Fault Status, Alarm Status, Round-Trip Efficiency, Battery Cycle Count, Cell Delta, Delta Average (4-week), Balance Status, Delta Trend, and Last Balance Read.
+- **Integration Status sensor moved to diagnostic category**: The sensor is now grouped under the Diagnostic section in the HA device page, keeping the main entity list focused on operational entities.
+- **Time Slot switch now translated**: The switch was previously named `Time Slot {N}` in hard-coded English. It now uses a translation key (`time_slot`) with a `{slot_number}` placeholder, so the name is rendered in the user's language. Updated in all six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`).
+- **Solar Surplus switch renamed and translated**: The switch was previously named `Solar Surplus – {device}` (hard-coded English). It is now `{device} – Solar Surplus`, using a translation key (`excluded_device_solar_surplus`) with a device placeholder. The name inversion ensures all switches for the same excluded device sort together in the HA entity list — `{device} – Enabled` immediately followed by `{device} – Solar Surplus` — instead of all Solar Surplus switches grouping away from the Enabled ones. All six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`) have been updated.
+- **Number entity names aligned with feature prefixes**: Several number entities were renamed so that related entities sort together in the HA entity list, examples:
+  - `delay_safety_margin_min`: `Charge Delay Margin` → `Charge Delay Safety Margin`
+  - `delay_soc_setpoint`: `Charge Delay SOC` → `Charge Delay SOC Setpoint`
+
 ## [1.7.0b3] - 2026-04-23
 
 ### Changed

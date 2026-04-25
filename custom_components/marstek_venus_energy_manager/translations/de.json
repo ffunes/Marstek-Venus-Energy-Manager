@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Spitzenlastkappung" },
       "backup_function": { "name": "Backup-Funktion" },
       "rs485_control_mode": { "name": "RS485-Steuermodus" },
-      "automation_charging_active": { "name": "Laden nach externem Preis" }
+      "automation_charging_active": { "name": "Laden nach externem Preis" },
+      "excluded_device_enabled": { "name": "{device} – Aktiv" },
+      "excluded_device_solar_surplus": { "name": "{device} – Solarüberschuss" },
+      "time_slot": { "name": "Zeitfenster {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Ende Externes Laden" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Ausgeschlossene Geräte" },
       "discharge_window": {
         "name": "Entladefenster",
         "state": {
@@ -788,7 +790,8 @@
       "capacity_protection_active": { "name": "Spitzenlastkappung Aktiv" },
       "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" },
       "wifi_status": { "name": "WLAN-Status" },
-      "cloud_status": { "name": "Cloud-Status" }
+      "cloud_status": { "name": "Cloud-Status" },
+      "charge_hysteresis": { "name": "Ladehysterese" }
     },
     "select": {
       "force_mode": { "name": "Betriebsmodus erzwingen" },
@@ -830,8 +833,8 @@
       "pd_min_discharge_power": { "name": "PD Min. Entladeleistung" },
       "max_contracted_power": { "name": "Max. Vertragsleistung" },
       "capacity_protection_soc_threshold": { "name": "Spitzenlastkappung SOC-Schwelle" },
-      "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
-      "delay_soc_setpoint": { "name": "SOC-Schwellwert Ladungsverzögerung" },
+      "delay_safety_margin_min": { "name": "Ladungsverzögerung – Puffer" },
+      "delay_soc_setpoint": { "name": "Ladungsverzögerung – SOC-Schwellwert" },
       "capacity_protection_limit": { "name": "Spitzenlastkappung Limit" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" },
       "predictive_safety_margin_kwh": { "name": "Sicherheitspuffer Solarprognose" }

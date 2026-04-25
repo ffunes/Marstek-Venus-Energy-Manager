@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Piekbegrenzing" },
       "backup_function": { "name": "Back-upfunctie" },
       "rs485_control_mode": { "name": "RS485-besturingsmodus" },
-      "automation_charging_active": { "name": "Laden op Externe Prijs" }
+      "automation_charging_active": { "name": "Laden op Externe Prijs" },
+      "excluded_device_enabled": { "name": "{device} – Actief" },
+      "excluded_device_solar_surplus": { "name": "{device} – Zonne-overschot" },
+      "time_slot": { "name": "Tijdslot {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Einde Extern Laden" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Uitgesloten Apparaten" },
       "discharge_window": {
         "name": "Ontlaadvenster",
         "state": {
@@ -788,7 +790,8 @@
       "capacity_protection_active": { "name": "Piekbegrenzing Actief" },
       "predictive_charging_active": { "name": "Voorspellend Laden Actief" },
       "wifi_status": { "name": "WiFi-status" },
-      "cloud_status": { "name": "Cloudstatus" }
+      "cloud_status": { "name": "Cloudstatus" },
+      "charge_hysteresis": { "name": "Laadhysterese" }
     },
     "select": {
       "force_mode": { "name": "Geforceerde Modus" },
@@ -829,9 +832,9 @@
       "pd_min_charge_power": { "name": "PD Min. Laadvermogen" },
       "pd_min_discharge_power": { "name": "PD Min. Ontlaadvermogen" },
       "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
-      "capacity_protection_soc_threshold": { "name": "SOC Drempel Piekbegrenzing" },
-      "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
-      "delay_soc_setpoint": { "name": "SOC-drempel Laadvertraging" },
+      "capacity_protection_soc_threshold": { "name": "Piekbegrenzing – SOC Drempel" },
+      "delay_safety_margin_min": { "name": "Laadvertraging – Marge" },
+      "delay_soc_setpoint": { "name": "Laadvertraging – SOC-drempel" },
       "capacity_protection_limit": { "name": "Piekbegrenzing Limiet" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" },
       "predictive_safety_margin_kwh": { "name": "Veiligheidsmarge Zonneprognose" }

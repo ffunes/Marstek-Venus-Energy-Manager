@@ -2590,6 +2590,8 @@ class ChargeDischargeController:
 
         delta = 0.0
         for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
             if device.get("ev_charger_no_telemetry", False):
                 continue
             power_sensor = device.get("power_sensor")
@@ -3166,6 +3168,8 @@ class ChargeDischargeController:
         total_adjustment = 0.0
         included_adjustment = 0.0  # Track included_in_consumption portion separately
         for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
             # EV chargers in no-telemetry mode expose a state sensor, not a numeric
             # power sensor – their behaviour is handled by _check_ev_charger_state().
             if device.get("ev_charger_no_telemetry", False):
@@ -3240,6 +3244,8 @@ class ChargeDischargeController:
         ev_charging_active = False
 
         for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
             if not device.get("ev_charger_no_telemetry", False):
                 continue
 

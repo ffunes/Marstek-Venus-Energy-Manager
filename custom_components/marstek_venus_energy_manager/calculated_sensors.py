@@ -4,6 +4,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,6 +47,7 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, SensorEntity):
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
         self._attr_icon = definition.get("icon")
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_should_poll = False
         self._dependency_keys = definition["dependency_keys"]
 
@@ -142,6 +144,7 @@ class MarstekVenusCycleSensor(CoordinatorEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_state_class = definition.get("state_class")
         self._attr_icon = definition.get("icon")
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_should_poll = False
         self._dependency_keys = definition["dependency_keys"]
 

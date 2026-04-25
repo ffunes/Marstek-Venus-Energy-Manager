@@ -659,13 +659,15 @@
       "capacity_protection": { "name": "Peak Shaving" },
       "backup_function": { "name": "Backup Function" },
       "rs485_control_mode": { "name": "RS485 Control Mode" },
-      "automation_charging_active": { "name": "External Price Charging" }
+      "automation_charging_active": { "name": "External Price Charging" },
+      "excluded_device_enabled": { "name": "{device} – Enabled" },
+      "excluded_device_solar_surplus": { "name": "{device} – Solar Surplus" },
+      "time_slot": { "name": "Time Slot {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "External Charging End Time" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Excluded Devices" },
       "discharge_window": {
         "name": "Discharge Window",
         "state": {
@@ -783,7 +785,8 @@
       "capacity_protection_active": { "name": "Peak Shaving Active" },
       "predictive_charging_active": { "name": "Predictive Charging Active" },
       "wifi_status": { "name": "WiFi Status" },
-      "cloud_status": { "name": "Cloud Status" }
+      "cloud_status": { "name": "Cloud Status" },
+      "charge_hysteresis": { "name": "Charge Hysteresis" }
     },
     "select": {
       "force_mode": { "name": "Force Mode" },
