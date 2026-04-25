@@ -824,6 +824,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#objetivo-de-carga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objetivo de carga
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Objetivo de carga">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sistemas-multibateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sistemas multibatería
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#modos-disponibles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1475,6 +1503,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#objetivo-de-carga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Objetivo de carga
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Objetivo de carga">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sistemas-multibateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sistemas multibatería
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#modos-disponibles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1534,6 +1590,17 @@
 <li><strong>Previsión solar</strong>: producción estimada del día siguiente (sensor Solcast/Forecast.Solar).</li>
 <li><strong>Consumo esperado</strong>: media móvil de 7 días. Ver <a href="../../features/consumption-estimate/">Estimación del consumo diario</a>.</li>
 </ul>
+<hr />
+<h2 id="objetivo-de-carga">Objetivo de carga<a class="headerlink" href="#objetivo-de-carga" title="Permanent link">&para;</a></h2>
+<p>Cuando se activa la carga predictiva, la batería no se carga hasta <code>max_soc</code> desde la red. En su lugar, la integración calcula un <strong>SOC objetivo de red</strong> — el mínimo necesario para cubrir únicamente lo que la solar no podrá aportar durante el día:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>excedente_solar = max(0, previsión_solar − consumo_estimado)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>carga_red       = max(0, hueco_hasta_max − excedente_solar)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>soc_objetivo    = soc_actual + carga_red / capacidad × 100
+</code></pre></div>
+<p><code>hueco_hasta_max</code> es la distancia en kWh desde el SOC actual hasta <code>max_soc</code>. La producción solar en exceso sobre el consumo del hogar carga la batería el resto del camino durante el día.</p>
+<p><strong>Ejemplo</strong>: la batería necesita 5 kWh para llegar a max_soc. La previsión solar es de 13 kWh y el consumo estimado es de 10 kWh — un excedente de 3 kWh disponible para la batería. La integración carga solo <strong>2 kWh</strong> desde la red; la solar gestiona los 3 kWh restantes durante el día.</p>
+<h3 id="sistemas-multibateria">Sistemas multibatería<a class="headerlink" href="#sistemas-multibateria" title="Permanent link">&para;</a></h3>
+<p>En sistemas con varias baterías a distintos niveles de SOC, la carga de red se distribuye <strong>proporcionalmente al hueco individual de cada batería hasta max_soc</strong>. Una batería más lejos del máximo recibe una mayor parte; una batería ya próxima al máximo se apoya principalmente en la solar. Esto evita sobrecargar una única unidad desde la red y minimiza la importación total.</p>
 <hr />
 <h2 id="modos-disponibles">Modos disponibles<a class="headerlink" href="#modos-disponibles" title="Permanent link">&para;</a></h2>
 <table>

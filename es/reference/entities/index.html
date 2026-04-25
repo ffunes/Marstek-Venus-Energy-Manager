@@ -1343,6 +1343,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sensores-del-monitor-de-equilibrio-de-celdas-por-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensores del monitor de equilibrio de celdas (por batería)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sensores-de-informacion-de-dispositivo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1555,6 +1566,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sensores-del-monitor-de-equilibrio-de-celdas-por-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensores del monitor de equilibrio de celdas (por batería)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sensores-de-informacion-de-dispositivo" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1760,6 +1782,44 @@
 <td><code>sensor.*_fault_status</code></td>
 <td>Condiciones de fallo activas (v2) — diagnóstico</td>
 <td>texto</td>
+</tr>
+</tbody>
+</table>
+<h2 id="sensores-del-monitor-de-equilibrio-de-celdas-por-bateria">Sensores del monitor de equilibrio de celdas (por batería)<a class="headerlink" href="#sensores-del-monitor-de-equilibrio-de-celdas-por-bateria" title="Permanent link">&para;</a></h2>
+<p>Solo presentes cuando el <a href="../../features/cell-balance-monitor/">monitor de equilibrio de celdas</a> está activado en la configuración de carga semanal completa.</p>
+<table>
+<thead>
+<tr>
+<th>Entidad</th>
+<th>Descripción</th>
+<th>Unidad</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensor.*_cell_delta</code></td>
+<td>Diferencia de tensión entre la celda máxima y mínima en la última lectura OCV</td>
+<td>mV</td>
+</tr>
+<tr>
+<td><code>sensor.*_balance_status</code></td>
+<td>Resultado del equilibrio: <code>green</code> / <code>yellow</code> / <code>orange</code> / <code>red</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>sensor.*_delta_trend</code></td>
+<td>Tendencia en las últimas lecturas formales: <code>rising</code> / <code>stable</code> / <code>falling</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>sensor.*_last_balance_read</code></td>
+<td>Marca de tiempo de la última lectura</td>
+<td>timestamp</td>
+</tr>
+<tr>
+<td><code>sensor.*_delta_avg_4w</code></td>
+<td>Media de las últimas 4 lecturas formales</td>
+<td>mV</td>
 </tr>
 </tbody>
 </table>

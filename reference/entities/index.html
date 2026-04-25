@@ -1343,7 +1343,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cell-balance-monitor-sensors-per-battery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell balance monitor sensors (per battery)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#device-information-sensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device information sensors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#device-information-sensors_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Device information sensors
@@ -1365,6 +1387,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#binary-sensors_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary sensors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#numbers-sliders" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1376,7 +1409,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#numbers-sliders_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers (sliders)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#selects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selects_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Selects
@@ -1555,7 +1610,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cell-balance-monitor-sensors-per-battery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell balance monitor sensors (per battery)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#device-information-sensors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Device information sensors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#device-information-sensors_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Device information sensors
@@ -1577,6 +1654,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#binary-sensors_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binary sensors
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#numbers-sliders" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1588,7 +1676,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#numbers-sliders_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers (sliders)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#selects" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selects
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selects_1" class="md-nav__link">
     <span class="md-ellipsis">
       
         Selects
@@ -1763,107 +1873,89 @@
 </tr>
 </tbody>
 </table>
+<h2 id="cell-balance-monitor-sensors-per-battery">Cell balance monitor sensors (per battery)<a class="headerlink" href="#cell-balance-monitor-sensors-per-battery" title="Permanent link">&para;</a></h2>
+<p>Only present when the <a href="../../features/cell-balance-monitor/">cell balance monitor</a> is enabled in the weekly full charge configuration.</p>
+<table>
+<thead>
+<tr>
+<th>Entity</th>
+<th>Description</th>
+<th>Unit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sensor.*_cell_delta</code></td>
+<td>Voltage spread between max and min cell at last OCV reading</td>
+<td>mV</td>
+</tr>
+<tr>
+<td><code>sensor.*_balance_status</code></td>
+<td>Balance result: <code>green</code> / <code>yellow</code> / <code>orange</code> / <code>red</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>sensor.*_delta_trend</code></td>
+<td>Trend over last formal readings: <code>rising</code> / <code>stable</code> / <code>falling</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>sensor.*_last_balance_read</code></td>
+<td>Timestamp of the last reading</td>
+<td>timestamp</td>
+</tr>
+<tr>
+<td><code>sensor.*_delta_avg_4w</code></td>
+<td>Rolling average of the last 4 formal readings</td>
+<td>mV</td>
+</tr>
+</tbody>
+</table>
 <h2 id="device-information-sensors">Device information sensors<a class="headerlink" href="#device-information-sensors" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Entity</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>sensor.*_device_name</code></td>
-<td>Device name</td>
-</tr>
-<tr>
-<td><code>sensor.*_sn_code</code></td>
-<td>Serial number</td>
-</tr>
-<tr>
-<td><code>sensor.*_software_version</code></td>
-<td>Firmware version</td>
-</tr>
-<tr>
-<td><code>sensor.*_bms_version</code></td>
-<td>BMS version</td>
-</tr>
-<tr>
-<td><code>sensor.*_mac_address</code></td>
-<td>MAC address</td>
-</tr>
-</tbody>
-</table>
+<h2 id="device-information-sensors_1">Device information sensors<a class="headerlink" href="#device-information-sensors_1" title="Permanent link">&para;</a></h2>
+<p>| Entity | Description |
+| Entity | Description |
+|---|---|
+| <code>sensor.*_device_name</code> | Device name |
+| <code>sensor.*_sn_code</code> | Serial number |
+| <code>sensor.*_software_version</code> | Firmware version |
+| <code>sensor.*_bms_version</code> | BMS version |
+| <code>sensor.*_mac_address</code> | MAC address |
+| <code>sensor.*_device_name</code> | Device name |
+| <code>sensor.*_sn_code</code> | Serial number |
+| <code>sensor.*_software_version</code> | Firmware version |
+| <code>sensor.*_bms_version</code> | BMS version |
+| <code>sensor.*_mac_address</code> | MAC address |</p>
 <h2 id="binary-sensors">Binary sensors<a class="headerlink" href="#binary-sensors" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Entity</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>binary_sensor.*_wifi_status</code></td>
-<td>WiFi status</td>
-</tr>
-<tr>
-<td><code>binary_sensor.*_cloud_status</code></td>
-<td>Cloud status</td>
-</tr>
-<tr>
-<td><code>binary_sensor.marstek_venus_system_predictive_charging_active</code></td>
-<td>Predictive charging active (system)</td>
-</tr>
-</tbody>
-</table>
+<h2 id="binary-sensors_1">Binary sensors<a class="headerlink" href="#binary-sensors_1" title="Permanent link">&para;</a></h2>
+<p>| Entity | Description |
+| Entity | Description |
+|---|---|
+| <code>binary_sensor.*_wifi_status</code> | WiFi status |
+| <code>binary_sensor.*_cloud_status</code> | Cloud status |
+| <code>binary_sensor.marstek_venus_system_predictive_charging_active</code> | Predictive charging active (system) |
+| <code>binary_sensor.*_wifi_status</code> | WiFi status |
+| <code>binary_sensor.*_cloud_status</code> | Cloud status |
+| <code>binary_sensor.marstek_venus_system_predictive_charging_active</code> | Predictive charging active (system) |</p>
 <h2 id="numbers-sliders">Numbers (sliders)<a class="headerlink" href="#numbers-sliders" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Entity</th>
-<th>Description</th>
-<th>Range</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>number.*_max_soc</code></td>
-<td>Maximum SOC</td>
-<td>0–100 %</td>
-</tr>
-<tr>
-<td><code>number.*_min_soc</code></td>
-<td>Minimum SOC</td>
-<td>0–100 %</td>
-</tr>
-<tr>
-<td><code>number.*_max_charge_power</code></td>
-<td>Max charge power</td>
-<td>W</td>
-</tr>
-<tr>
-<td><code>number.*_max_discharge_power</code></td>
-<td>Max discharge power</td>
-<td>W</td>
-</tr>
-</tbody>
-</table>
+<h2 id="numbers-sliders_1">Numbers (sliders)<a class="headerlink" href="#numbers-sliders_1" title="Permanent link">&para;</a></h2>
+<p>| Entity | Description | Range |
+| Entity | Description | Range |
+|---|---|---|
+| <code>number.*_max_soc</code> | Maximum SOC | 0–100 % |
+| <code>number.*_min_soc</code> | Minimum SOC | 0–100 % |
+| <code>number.*_max_charge_power</code> | Max charge power | W |
+| <code>number.*_max_discharge_power</code> | Max discharge power | W |
+| <code>number.*_max_soc</code> | Maximum SOC | 0–100 % |
+| <code>number.*_min_soc</code> | Minimum SOC | 0–100 % |
+| <code>number.*_max_charge_power</code> | Max charge power | W |
+| <code>number.*_max_discharge_power</code> | Max discharge power | W |</p>
 <h2 id="selects">Selects<a class="headerlink" href="#selects" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Entity</th>
-<th>Options</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>select.*_force_mode</code></td>
-<td>None / Charge / Discharge</td>
-</tr>
-</tbody>
-</table>
+<h2 id="selects_1">Selects<a class="headerlink" href="#selects_1" title="Permanent link">&para;</a></h2>
+<p>| Entity | Options |
+| Entity | Options |
+|---|---|
+| <code>select.*_force_mode</code> | None / Charge / Discharge |</p>
 <h2 id="switches">Switches<a class="headerlink" href="#switches" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
@@ -1973,8 +2065,16 @@
 <li><code>grid_at_min_soc</code> — Grid import during min SOC periods (kWh)</li>
 <li><code>system_alarm_status</code> — Aggregated alarm state across all batteries (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); attributes list active conditions per battery</li>
 <li><code>household_energy_today</code> — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.</li>
+<li><code>system_battery_power</code> — Total system power</li>
+<li><code>system_battery_soc</code> — System average SOC</li>
+<li><code>system_total_charging_energy</code> — Total system charging energy</li>
+<li><code>system_total_discharging_energy</code> — Total system discharging energy</li>
+<li><code>grid_at_min_soc</code> — Grid import during min SOC periods (kWh)</li>
+<li><code>system_alarm_status</code> — Aggregated alarm state across all batteries (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); attributes list active conditions per battery</li>
+<li><code>household_energy_today</code> — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.</li>
 </ul>
-<p><img alt="Entity list in Home Assistant" src="../assets/screenshots/reference/entities-list.png" style="display: block; margin: 0 auto;" width="700" /></p>
+<p><img alt="Entity list in Home Assistant" src="../assets/screenshots/reference/entities-list.png" style="display: block; margin: 0 auto;" width="700" />
+<img alt="Entity list in Home Assistant" src="../assets/screenshots/reference/entities-list.png" style="display: block; margin: 0 auto;" width="700" /></p>
 
 
 

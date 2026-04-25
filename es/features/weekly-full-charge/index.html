@@ -1114,6 +1114,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#monitor-de-equilibrio-de-celdas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor de equilibrio de celdas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interaccion-con-el-retraso-de-carga-solar" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1472,6 +1483,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#monitor-de-equilibrio-de-celdas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor de equilibrio de celdas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interaccion-con-el-retraso-de-carga-solar" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1526,8 +1548,12 @@
 <li>La batería carga hasta el 100 % de SOC.</li>
 <li>Una vez alcanzado el 100 %, el límite de SOC máximo vuelve automáticamente al valor configurado por el usuario.</li>
 </ol>
+<h2 id="monitor-de-equilibrio-de-celdas">Monitor de equilibrio de celdas<a class="headerlink" href="#monitor-de-equilibrio-de-celdas" title="Permanent link">&para;</a></h2>
+<p>El paso de configuración de carga semanal completa incluye una opción para activar el <strong>monitor de equilibrio de celdas</strong>. Cuando está activo, la integración mide la diferencia de tensión entre la celda más y menos cargada después de cada carga completa, para hacer seguimiento de la salud de la batería a lo largo del tiempo.</p>
+<p>Consulta <a href="../cell-balance-monitor/">Monitor de equilibrio de celdas</a> para más detalles.</p>
 <h2 id="interaccion-con-el-retraso-de-carga-solar">Interacción con el retraso de carga solar<a class="headerlink" href="#interaccion-con-el-retraso-de-carga-solar" title="Permanent link">&para;</a></h2>
 <p>Si el <a href="../solar-charge-delay/">retraso de carga solar</a> está activo, la carga semanal se postpone mientras la producción solar prevista sea suficiente para alcanzar el 100 %. La batería solo empieza a cargar desde la red cuando el modelo solar determina que el sol no completará la carga.</p>
+<p>Cuando el monitor de equilibrio de celdas está activado, el retraso de carga solar se omite automáticamente el día de la carga semanal para que la batería permanezca en flotación mientras haya sol disponible, dando más tiempo a las celdas para equilibrarse pasivamente antes de tomar la lectura OCV.</p>
 <h2 id="registro-modbus-implicado">Registro Modbus implicado<a class="headerlink" href="#registro-modbus-implicado" title="Permanent link">&para;</a></h2>
 <p>La función manipula el registro <strong>44000</strong> (charging cutoff) de la batería para elevar temporalmente el límite.</p>
 <div class="admonition info">

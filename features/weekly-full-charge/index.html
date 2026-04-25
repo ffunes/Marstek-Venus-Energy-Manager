@@ -1114,6 +1114,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#behaviour_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cell-balance-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell balance monitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interaction-with-solar-charge-delay" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1472,6 +1494,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#behaviour_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cell-balance-monitor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cell balance monitor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#interaction-with-solar-charge-delay" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1521,20 +1565,27 @@
 <h1 id="weekly-full-charge">Weekly full charge<a class="headerlink" href="#weekly-full-charge" title="Permanent link">&para;</a></h1>
 <p>Charges batteries to <strong>100% once a week</strong> to balance the cells and maintain battery health (cell balancing).</p>
 <h2 id="behaviour">Behaviour<a class="headerlink" href="#behaviour" title="Permanent link">&para;</a></h2>
+<h2 id="behaviour_1">Behaviour<a class="headerlink" href="#behaviour_1" title="Permanent link">&para;</a></h2>
 <ol>
 <li>On the configured day of the week, if the usual max SOC is below 100%, the integration temporarily raises the charging cutoff limit to 100%.</li>
 <li>The battery charges until it reaches 100% SOC.</li>
 <li>Once 100% is reached, the max SOC limit automatically reverts to the user's configured value.</li>
 </ol>
+<h2 id="cell-balance-monitor">Cell balance monitor<a class="headerlink" href="#cell-balance-monitor" title="Permanent link">&para;</a></h2>
+<p>The weekly full charge configuration step includes an option to enable the <strong>cell balance monitor</strong>. When enabled, the integration measures the voltage spread between the strongest and weakest cell after each full charge to track battery health over time.</p>
+<p>See <a href="../cell-balance-monitor/">Cell balance monitor</a> for full details.</p>
 <h2 id="interaction-with-solar-charge-delay">Interaction with solar charge delay<a class="headerlink" href="#interaction-with-solar-charge-delay" title="Permanent link">&para;</a></h2>
 <p>If <a href="../solar-charge-delay/">solar charge delay</a> is active, the weekly charge is postponed while the forecast solar production is sufficient to reach 100%. The battery only starts grid charging when the solar model determines that the sun will not complete the charge.</p>
+<p>When the cell balance monitor is enabled, the solar charge delay is automatically bypassed on the weekly full charge day so the battery stays in float as long as solar is available — giving the cells more time to balance passively before the OCV reading is taken.</p>
 <h2 id="modbus-register-involved">Modbus register involved<a class="headerlink" href="#modbus-register-involved" title="Permanent link">&para;</a></h2>
 <p>This feature manipulates register <strong>44000</strong> (charging cutoff) to temporarily raise the limit.</p>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>This feature is available for all supported battery versions (v2, v3, vA, vD).</p>
+<p>This feature is available for all supported battery versions (v2, v3, vA, vD).
+This feature is available for all supported battery versions (v2, v3, vA, vD).</p>
 </div>
-<p><img alt="Weekly full charge configuration" src="../../assets/screenshots/features/weekly-full-charge-config.png" style="display: block; margin: 0 auto;" width="650" /></p>
+<p><img alt="Weekly full charge configuration" src="../../assets/screenshots/features/weekly-full-charge-config.png" style="display: block; margin: 0 auto;" width="650" />
+<img alt="Weekly full charge configuration" src="../../assets/screenshots/features/weekly-full-charge-config.png" style="display: block; margin: 0 auto;" width="650" /></p>
 
 
 
