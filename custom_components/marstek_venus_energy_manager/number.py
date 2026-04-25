@@ -60,6 +60,7 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_min_value = definition["min"]
         self._attr_native_max_value = definition["max"]
         self._attr_native_step = definition["step"]
+        self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
         self._register = definition["register"]
         self._scale = definition.get("scale", 1.0)  # Scale factor for register conversion
@@ -211,7 +212,6 @@ class MarstekBackupThresholdNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_min_value = 0
         self._attr_native_max_value = 500
         self._attr_native_step = 10
-        self._attr_entity_category = EntityCategory.CONFIG
         self._attr_should_poll = False
 
     @property

@@ -88,6 +88,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self._entity_registry = None
         self.rs485_user_disabled = False  # Set by RS485 switch when user explicitly disables
         self._config_entry = None  # Set after creation to allow persisting rs485_user_disabled
+        self.balance_hold = False  # Set by BalanceMonitor to prevent discharge during OCV rest
 
         # Load version-specific definitions
         if self.battery_version == "v3":
@@ -257,6 +258,15 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         new_data["batteries"] = batteries
         self.hass.config_entries.async_update_entry(self._config_entry, data=new_data)
 
+    def set_shadow_select(self, key: str, value: int) -> None:
+        """Store a written select value to override buggy register readbacks."""
+        self._shadow_selects[key] = value
+        self.persist_battery_config(f"shadow_select_{key}", value)
+
+    def get_shadow_select(self, key: str) -> int | None:
+        """Return the last-written value for a shadowed select, or None."""
+        return self._shadow_selects.get(key)
+
     def get_register(self, key: str) -> int | None:
         """Get register address for this battery's version.
 
@@ -322,6 +332,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         dependency_keys_set = {dep_key for defn in all_definitions_for_deps
                             for dep_key in defn.get("dependency_keys", {}).values()
                             if dep_key}
+        # Cell voltage keys are always needed by the balance monitor
+        dependency_keys_set.update({"max_cell_voltage", "min_cell_voltage"})
 
         # Set client unit ID for this battery
         self.client.unit_id = 1

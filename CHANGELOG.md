@@ -1,12 +1,74 @@
 # Changelog
 
-## [1.6.7] - 2026-04-20
+## [1.7.0b4] - 2026-04-24
 
 ### Added
-- **Disable charge delay on full charge day**: New checkbox in the weekly full charge configuration step ("Disable charge delay on full charge day"). When enabled, the solar charge delay is bypassed entirely on the weekly full charge day — charging starts immediately without waiting for the solar balance to unlock it. Staying at 100 % for longer helps balance the battery cells. Available in both the initial setup wizard and the options flow. Disabled by default (existing behaviour is preserved).
+- **Per-device enable/disable switch for excluded devices**: Each excluded device now gets a dedicated `{Device} – Enabled` switch entity. Turning it off removes the device from all power calculations (charge offset, adjustment, and EV-charger state checks) without deleting it from the configuration. The state is persisted in config entry data and survives HA restarts. Useful for temporarily pausing a device (e.g. a car charger that is unplugged for days) without having to re-enter the options flow.
+
+### Removed
+- **Excluded Devices diagnostic sensor**: The `Excluded Devices` sensor (which reported the count and details of excluded devices as attributes) has been removed. The same information is now directly visible through the per-device `{Device} – Enabled` and `{Device} – Solar Surplus` switch entities added in this release.
+
+### Changed
+- **WiFi Status and Cloud Status moved to diagnostic category**: Both binary sensors now appear under Diagnostics in the HA device page. The `category: diagnostic` field was already present in their definitions but was not being read by the binary sensor platform — fixed by applying the same pattern already used for regular sensors.
+- **Version and connectivity sensors disabled by default**: Software Version, BMS Version, EMS Version, Comm Module Firmware, WiFi Signal Strength, WiFi Status, and Cloud Status are now disabled by default across all hardware variants. They can be enabled individually from the entity registry if needed.
+- **Charge Hysteresis binary sensor now translated**: The sensor was previously named `{Battery} Charge Hysteresis Active` in hard-coded English. It now uses a translation key (`charge_hysteresis`) and `has_entity_name`, so the name is rendered in the user's language without redundant "Active" suffix. Updated in all six translation files.
+- **Backup Offgrid Threshold moved from Configuration to Controls**: The number entity is no longer grouped under Configuration in the HA device page and appears directly in the main controls section.
+- **Cell voltage sensors always display 3 decimal places**: Max Cell Voltage and Min Cell Voltage previously dropped trailing zeros (e.g. `3.2 V` instead of `3.200 V`). The display precision is now set to 3 decimal places, matching the measurement resolution.
+- **Several per-battery sensors moved to diagnostic category**: The following sensors are now grouped under Diagnostics in the HA device page: Fault Status, Alarm Status, Round-Trip Efficiency, Battery Cycle Count, Cell Delta, Delta Average (4-week), Balance Status, Delta Trend, and Last Balance Read.
+- **Integration Status sensor moved to diagnostic category**: The sensor is now grouped under the Diagnostic section in the HA device page, keeping the main entity list focused on operational entities.
+- **Time Slot switch now translated**: The switch was previously named `Time Slot {N}` in hard-coded English. It now uses a translation key (`time_slot`) with a `{slot_number}` placeholder, so the name is rendered in the user's language. Updated in all six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`).
+- **Solar Surplus switch renamed and translated**: The switch was previously named `Solar Surplus – {device}` (hard-coded English). It is now `{device} – Solar Surplus`, using a translation key (`excluded_device_solar_surplus`) with a device placeholder. The name inversion ensures all switches for the same excluded device sort together in the HA entity list — `{device} – Enabled` immediately followed by `{device} – Solar Surplus` — instead of all Solar Surplus switches grouping away from the Enabled ones. All six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`) have been updated.
+- **Number entity names aligned with feature prefixes**: Several number entities were renamed so that related entities sort together in the HA entity list, examples:
+  - `delay_safety_margin_min`: `Charge Delay Margin` → `Charge Delay Safety Margin`
+  - `delay_soc_setpoint`: `Charge Delay SOC` → `Charge Delay SOC Setpoint`
+
+## [1.7.0b3] - 2026-04-23
+
+### Changed
+- **Options menu label: "No-discharge time slots" → "Discharge time slots"**: The menu entry in the options flow was misleading — it read as a window where the battery is *prevented* from discharging, but the feature actually defines the only windows where discharging *is allowed*. The label now matches the step title and description already used inside the step. Updated in all six translation files (`en`, `es`, `de`, `fr`, `nl`, `strings`).
 
 ### Fixed
+- **Price-based discharge control ignored while battery is in steady-state discharge**: Even after the handler correctly set `_price_based_discharge_blocked`, the enforcement at line 5121 could be skipped by the deadband or stale-sensor early-returns in the main control loop. When the system was in equilibrium (grid ≈ 0 W, battery actively discharging) and the price dropped below the daily average, the flag was set but the function exited through the deadband path before applying it — leaving the battery discharging until the load changed enough to exit the deadband. Fixed by inserting a dedicated enforcement block immediately after the predictive-charging dispatcher, before any sensor-dependent early-returns.
+
+## [1.7.0b2] - 2026-04-22
+
+### Changed
+- **Predictive charging: grid-only SOC target**: When predictive charging activates, the battery is no longer charged all the way to `max_soc` from the grid. Instead, the integration calculates how much solar will remain after covering expected household consumption (*solar surplus*) and charges from the grid only the portion solar cannot cover:
+
+  ```
+  solar_surplus = max(0, solar_forecast − estimated_consumption)
+  grid_charge   = max(0, gap_to_max − solar_surplus)
+  target_soc    = current_soc + grid_charge / capacity × 100
+  ```
+
+  where `gap_to_max` is the kWh distance from the current SOC to `max_soc`. Solar output in excess of household demand charges the battery the rest of the way during the day. If solar surplus equals or exceeds the gap, no grid charging is needed and the trigger condition (`energy_deficit > 0`) already prevents it. Applies to all three modes (time slot, dynamic pricing, real-time price).
+
+  In systems with multiple batteries at different SOC levels, the grid charge is distributed **proportionally to each battery's individual gap to max_soc**. A battery further from full receives a larger share of the grid charge; a battery already close to full relies mostly on solar for its remainder. This avoids overloading any single battery from the grid and minimises total grid import.
+
+### Fixed
+- **AC Offgrid Power wraps to ~65000 W when solar panels are connected to the backup port**: On firmware 148+, the battery reports negative values on the AC Offgrid Power register when solar panels feed power through the backup port. The register was decoded as `uint16`, causing a 16-bit wraparound (e.g. −100 W → 65436 W). This falsely triggered the backup-active guard, stopping PD control entirely. Fixed by decoding the register as `int16` for v2 and v3 hardware variants.
+- **Price-based discharge control bypassed in dynamic pricing mode**: When the system was inside a cheap-slot window but decided not to activate grid charging (informational schedule with no deficit, charge delay active, or pre-evaluation skip), the handler returned early before setting `_price_based_discharge_blocked`. The battery would then discharge even with *"Discharge only when price exceeds daily average"* enabled. Fixed by converting the three early-return paths into fall-through branches so the discharge control block always runs.
+
+## [1.7.0b1] - 2026-04-21
+
+### Added
+- **Cell balance monitor**: New optional feature (enabled in the weekly full charge configuration step) that tracks the voltage spread between the strongest and weakest cell after each weekly full charge. When enabled, the battery is held at rest for 15 minutes after reaching 100 % SOC so the cell voltages can settle to their true open-circuit values; then a formal reading is taken. Thresholds are fixed at 50 / 100 / 150 mV (green / yellow → orange / red). An orange reading triggers an additional 2.5-hour passive balancing hold before a follow-up reading; red on two consecutive full charges fires a "possible degraded cell" alert.
+- **Opportunistic readings**: Outside the weekly full charge day, if the battery reaches 100 % SOC and power is already below 50 W, a lightweight reading is taken without holding discharge — useful on days with heavy solar generation. Limited to once every 24 hours.
+- **Five new sensor entities per battery**: `Cell Voltage Delta (mV)`, `Balance Status` (green / yellow / orange / red), `Delta Trend` (rising / stable / falling), `Last Balance Read` (timestamp), and `4-Week Average Delta (mV)`. Values are restored from persistent storage on HA restart.
+- **Rising-trend notification**: If the 4-week rolling average of formal readings exceeds 75 mV and the trend is rising, a persistent notification is sent to prompt the user to monitor battery health.
+- **Discharge blocking during OCV wait**: While waiting for the cell voltages to settle, the battery is prevented from discharging so that the reading reflects true open-circuit conditions. Discharge resumes automatically once the reading is complete (or after the 2.5-hour orange hold).
+- **Balance history persistence**: All readings (formal, follow-up, opportunistic) are stored in a per-entry JSON store and survive HA restarts and reloads.
+- **WiFi Signal Strength sensor**: New diagnostic sensor (register 30303, dBm) available for all battery versions. Disabled by default.
+- **User Work Mode select**: New select entity (register 43000) available for all battery versions, with options `Manual`, `Self Consumption` (anti feed-in), and `AI Optimization` (trade mode). Disabled by default. Fully translated into EN, ES, DE, FR, and NL.
+
+### Fixed
+- **`enabled_by_default: false` was ignored**: Modbus register entities (sensor, select, binary sensor, switch, number, button) did not propagate the `enabled_by_default` flag from their definition to the HA entity registry. All Modbus entity classes now set `_attr_entity_registry_enabled_default` from the definition, so entities marked `enabled_by_default: false` are correctly disabled in the registry for new installations.
+- **User Work Mode displayed wrong option due to battery firmware bug**: The battery's Modbus register for user work mode returns an incorrect value on readback. The integration now uses a persistent shadow state — the last value written is stored in config entry data and used for display instead of the polled register value. The shadow survives HA restarts. The register is still written correctly so the battery operates in the selected mode.
+- **Predictive charging starts despite switch being off (time slot mode)**: When the predictive charging switch was turned off during an active time slot, charging stopped correctly. However, when the slot ended, the override flag was silently reset to `False` in memory — so on the next slot cycle the switch appeared on again and charging started. The auto-reset on slot exit has been removed; the override now persists until the user explicitly turns the switch back on.
+- **Predictive charging starts despite switch being off (real-time price mode)**: The real-time price handler never consulted `predictive_charging_overridden` before activating charging. If the price dropped below the threshold while the switch was off, charging would start regardless. The handler now checks the override at the top of every cycle and stops any active charging immediately if it is set.
 - **v3 batteries: weekly full charge interrupted after HA restart when charge delay was enabled**: After a Home Assistant restart on the weekly full charge day, `_charge_delay_unlocked` was correctly restored from persistent storage but was then immediately overwritten to `False` by the daily-reset block, because `_charge_delay_last_date` is an in-memory variable that always starts as `None` after a restart. For v2 batteries this had no visible effect (the hardware cutoff register at 100 % remained set regardless of software state), but for v3 batteries the software-enforced `effective_max_soc` dropped back to the user's configured limit, stopping the charge mid-way. Fixed by only resetting `_charge_delay_unlocked` on a genuine day change (`_charge_delay_last_date is not None`); on the first cycle after a restart the restored value from storage is preserved.
+- **Dynamic pricing: Nordpool prices off by factor 100**: The Nordpool price parser was dividing sensor values by 100, based on a wrong assumption that the integration reports in ct/kWh. The Nordpool integration reports directly in €/kWh (e.g. 0.072), so the stored slot prices were 100× too small (0.00072). This caused cheapest-slot selection to be correct (relative order unchanged) but made the `max_price_threshold` filter never trigger, and broke the price-based discharge control — which compares the live sensor price (€/kWh scale) against the daily average computed from slots (was ct/kWh scale). Fixed by removing the division.
+- **Excluded devices not subtracted from household consumption history**: The daily household energy accumulator (used by predictive grid charging to estimate typical consumption) integrated the raw household consumption sensor reading without accounting for excluded devices. Devices marked as *included in consumption sensor* (i.e. the home sensor sees them, but the battery is configured to ignore them) were counted toward the consumption the battery was expected to cover, causing predictive charging to overestimate demand and charge from the grid unnecessarily. Fixed by applying the same per-device correction at accumulation time: power from `included_in_consumption=True` devices is subtracted from the reading and power from `included_in_consumption=False` devices (not visible to the home sensor but covered by the battery) is added. The same correction is now applied in the historical backfill path (`_backfill_household_from_history`), which queries each excluded device's recorder history for past days and adjusts the integrated value accordingly — so consumption history populated after a restart is also accurate.
 
 ## [1.6.6] - 2026-04-16
 

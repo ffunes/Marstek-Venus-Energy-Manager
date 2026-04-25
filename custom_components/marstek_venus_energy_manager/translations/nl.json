@@ -217,11 +217,11 @@
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
           "weekly_full_charge_day": "Dag van de week",
-          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
+          "enable_balance_monitor": "Celbalancemonitor inschakelen"
         },
         "data_description": {
           "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
+          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
         }
       },
       "charge_delay": {
@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensoren",
           "batteries": "Batterijen",
-          "time_slots": "Ontladingsblokkering tijdsloten",
+          "time_slots": "Ontladingstijdslots",
           "excluded_devices": "Uitgesloten apparaten",
           "predictive_charging": "Voorspellend laden",
           "weekly_full_charge": "Wekelijkse volledige lading",
@@ -541,11 +541,11 @@
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
           "weekly_full_charge_day": "Dag van de week",
-          "weekly_full_charge_skip_delay": "Oplaadvertraging uitschakelen op de volledige laaddag"
+          "enable_balance_monitor": "Celbalancemonitor inschakelen"
         },
         "data_description": {
           "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "weekly_full_charge_skip_delay": "Wanneer ingeschakeld, wordt de zonne-oplaadvertraging overgeslagen op de volledige laaddag en begint het laden direct. Langer op 100% blijven verbetert de celbalancering."
+          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
         }
       },
       "charge_delay": {
@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Piekbegrenzing" },
       "backup_function": { "name": "Back-upfunctie" },
       "rs485_control_mode": { "name": "RS485-besturingsmodus" },
-      "automation_charging_active": { "name": "Laden op Externe Prijs" }
+      "automation_charging_active": { "name": "Laden op Externe Prijs" },
+      "excluded_device_enabled": { "name": "{device} – Actief" },
+      "excluded_device_solar_surplus": { "name": "{device} – Zonne-overschot" },
+      "time_slot": { "name": "Tijdslot {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Einde Extern Laden" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Uitgesloten Apparaten" },
       "discharge_window": {
         "name": "Ontlaadvenster",
         "state": {
@@ -758,18 +760,49 @@
       "vms_version": { "name": "VMS-versie" },
       "comm_module_firmware": { "name": "Firmware Communicatiemodule" },
       "mac_address": { "name": "MAC-adres" },
+      "wifi_signal_strength": { "name": "WiFi-signaalsterkte" },
       "battery_cycle_count": { "name": "Batterijcycli" },
-      "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" }
+      "battery_cycle_count_calc": { "name": "Batterijcycli (Berekend)" },
+      "cell_delta": { "name": "Celdelta" },
+      "balance_status": {
+        "name": "Balansstatus",
+        "state": {
+          "green": "Gebalanceerd",
+          "yellow": "Geringe onbalans",
+          "orange": "Matige onbalans",
+          "red": "Hoge onbalans",
+          "unknown": "Onbekend"
+        }
+      },
+      "delta_trend": {
+        "name": "Balans Trend",
+        "state": {
+          "rising": "Stijgend",
+          "stable": "Stabiel",
+          "falling": "Dalend",
+          "unknown": "Onbekend"
+        }
+      },
+      "last_balance_read": { "name": "Laatste Balansmeting" },
+      "delta_avg_4w": { "name": "Delta Gemiddelde (4 metingen)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Piekbegrenzing Actief" },
       "predictive_charging_active": { "name": "Voorspellend Laden Actief" },
       "wifi_status": { "name": "WiFi-status" },
-      "cloud_status": { "name": "Cloudstatus" }
+      "cloud_status": { "name": "Cloudstatus" },
+      "charge_hysteresis": { "name": "Laadhysterese" }
     },
     "select": {
       "force_mode": { "name": "Geforceerde Modus" },
-      "user_work_mode": { "name": "Werkmodus" },
+      "user_work_mode": {
+        "name": "Werkmodus",
+        "state": {
+          "manual": "Handmatig",
+          "anti_feed": "Eigen verbruik",
+          "trade_mode": "AI-optimalisatie"
+        }
+      },
       "weekly_full_charge_day": {
         "name": "Dag voor Wekelijkse Volledige Lading",
         "state": {
@@ -799,9 +832,9 @@
       "pd_min_charge_power": { "name": "PD Min. Laadvermogen" },
       "pd_min_discharge_power": { "name": "PD Min. Ontlaadvermogen" },
       "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
-      "capacity_protection_soc_threshold": { "name": "SOC Drempel Piekbegrenzing" },
-      "delay_safety_margin_min": { "name": "Marge Laadvertraging" },
-      "delay_soc_setpoint": { "name": "SOC-drempel Laadvertraging" },
+      "capacity_protection_soc_threshold": { "name": "Piekbegrenzing – SOC Drempel" },
+      "delay_safety_margin_min": { "name": "Laadvertraging – Marge" },
+      "delay_soc_setpoint": { "name": "Laadvertraging – SOC-drempel" },
       "capacity_protection_limit": { "name": "Piekbegrenzing Limiet" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Drempel" },
       "predictive_safety_margin_kwh": { "name": "Veiligheidsmarge Zonneprognose" }

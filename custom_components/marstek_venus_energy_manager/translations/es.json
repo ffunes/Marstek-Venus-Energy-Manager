@@ -217,11 +217,11 @@
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
           "weekly_full_charge_day": "Día de la semana",
-          "weekly_full_charge_skip_delay": "Desactivar el retraso de carga el día de carga completa"
+          "enable_balance_monitor": "Activar monitor de balance de celdas"
         },
         "data_description": {
           "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
-          "weekly_full_charge_skip_delay": "Al activar esta opción, el retraso de carga solar se omite el día de carga completa y la carga comienza de inmediato. Permanecer más tiempo al 100% mejora el balanceo de celdas."
+          "enable_balance_monitor": "Al activar esta opción, el sistema analiza el balance de voltaje de las celdas tras cada carga completa y genera alertas si se detecta desbalanceo. También omite el retraso de carga solar ese día para que la batería llegue al 100% y permanezca en flotación mientras haya sol."
         }
       },
       "charge_delay": {
@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensores",
           "batteries": "Baterías",
-          "time_slots": "Franjas sin descarga",
+          "time_slots": "Franjas de descarga",
           "excluded_devices": "Dispositivos excluidos",
           "predictive_charging": "Carga predictiva",
           "weekly_full_charge": "Carga completa semanal",
@@ -541,11 +541,11 @@
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
           "weekly_full_charge_day": "Día de la semana",
-          "weekly_full_charge_skip_delay": "Desactivar el retraso de carga el día de carga completa"
+          "enable_balance_monitor": "Activar monitor de balance de celdas"
         },
         "data_description": {
           "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
-          "weekly_full_charge_skip_delay": "Al activar esta opción, el retraso de carga solar se omite el día de carga completa y la carga comienza de inmediato. Permanecer más tiempo al 100% mejora el balanceo de celdas."
+          "enable_balance_monitor": "Al activar esta opción, el sistema analiza el balance de voltaje de las celdas tras cada carga completa y genera alertas si se detecta desbalanceo. También omite el retraso de carga solar ese día para que la batería llegue al 100% y permanezca en flotación mientras haya sol."
         }
       },
       "charge_delay": {
@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Reducción de Picos" },
       "backup_function": { "name": "Función de Respaldo" },
       "rs485_control_mode": { "name": "Modo de Control RS485" },
-      "automation_charging_active": { "name": "Carga por Precio Externo" }
+      "automation_charging_active": { "name": "Carga por Precio Externo" },
+      "excluded_device_enabled": { "name": "{device} – Activo" },
+      "excluded_device_solar_surplus": { "name": "{device} – Excedente Solar" },
+      "time_slot": { "name": "Franja Horaria {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Fin de Carga Externa" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Dispositivos Excluidos" },
       "discharge_window": {
         "name": "Ventana de Descarga",
         "state": {
@@ -758,18 +760,49 @@
       "vms_version": { "name": "Versión VMS" },
       "comm_module_firmware": { "name": "Firmware Módulo Comunicación" },
       "mac_address": { "name": "Dirección MAC" },
+      "wifi_signal_strength": { "name": "Intensidad de Señal WiFi" },
       "battery_cycle_count": { "name": "Ciclos de la Batería" },
-      "battery_cycle_count_calc": { "name": "Ciclos de la Batería (Calculado)" }
+      "battery_cycle_count_calc": { "name": "Ciclos de la Batería (Calculado)" },
+      "cell_delta": { "name": "Delta de Celda" },
+      "balance_status": {
+        "name": "Estado de Balance",
+        "state": {
+          "green": "Balanceado",
+          "yellow": "Desbalanceo leve",
+          "orange": "Desbalanceo moderado",
+          "red": "Desbalanceo alto",
+          "unknown": "Desconocido"
+        }
+      },
+      "delta_trend": {
+        "name": "Tendencia de Balance",
+        "state": {
+          "rising": "Creciente",
+          "stable": "Estable",
+          "falling": "Decreciente",
+          "unknown": "Desconocido"
+        }
+      },
+      "last_balance_read": { "name": "Última Lectura de Balance" },
+      "delta_avg_4w": { "name": "Delta Promedio (4 lecturas)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Reducción de Picos Activa" },
       "predictive_charging_active": { "name": "Carga Predictiva Activa" },
       "wifi_status": { "name": "Estado WiFi" },
-      "cloud_status": { "name": "Estado Cloud" }
+      "cloud_status": { "name": "Estado Cloud" },
+      "charge_hysteresis": { "name": "Histéresis de Carga" }
     },
     "select": {
       "force_mode": { "name": "Modo Forzado" },
-      "user_work_mode": { "name": "Modo de Trabajo" },
+      "user_work_mode": {
+        "name": "Modo de Trabajo",
+        "state": {
+          "manual": "Manual",
+          "anti_feed": "Consumo propio",
+          "trade_mode": "Optimización de la IA"
+        }
+      },
       "weekly_full_charge_day": {
         "name": "Día de Carga Completa Semanal",
         "state": {
@@ -793,16 +826,16 @@
       "charge_to_soc": { "name": "Cargar hasta SOC" },
       "pd_controller_kp": { "name": "PD Kp" },
       "pd_controller_kd": { "name": "PD Kd" },
-      "pd_controller_deadband": { "name": "Banda Muerta PD" },
-      "pd_controller_max_power_change": { "name": "Cambio Máximo de Potencia PD" },
-      "pd_controller_direction_hysteresis": { "name": "Histéresis de Dirección PD" },
-      "pd_min_charge_power": { "name": "Potencia Mínima de Carga PD" },
-      "pd_min_discharge_power": { "name": "Potencia Mínima de Descarga PD" },
+      "pd_controller_deadband": { "name": "PD Banda Muerta" },
+      "pd_controller_max_power_change": { "name": "PD Cambio Máximo Potencia" },
+      "pd_controller_direction_hysteresis": { "name": "PD Histéresis Dirección" },
+      "pd_min_charge_power": { "name": "PD Potencia Mínima Carga" },
+      "pd_min_discharge_power": { "name": "PD Potencia Mínima Descarga" },
       "max_contracted_power": { "name": "Potencia Máxima Contratada" },
-      "capacity_protection_soc_threshold": { "name": "Umbral SOC Reducción de Picos" },
-      "delay_safety_margin_min": { "name": "Margen Retraso de Carga" },
-      "delay_soc_setpoint": { "name": "SOC Setpoint Retraso de Carga" },
-      "capacity_protection_limit": { "name": "Límite Pico Reducción de Picos" },
+      "capacity_protection_soc_threshold": { "name": "Reducción de Picos – Umbral SOC" },
+      "delay_safety_margin_min": { "name": "Retraso de Carga – Margen" },
+      "delay_soc_setpoint": { "name": "Retraso de Carga – SOC Setpoint" },
+      "capacity_protection_limit": { "name": "Reducción de Picos – Límite" },
       "backup_offgrid_threshold": { "name": "Umbral Offgrid Backup" },
       "predictive_safety_margin_kwh": { "name": "Margen de Seguridad Previsión Solar" }
     },

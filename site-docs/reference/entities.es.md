@@ -20,6 +20,18 @@ La integración crea automáticamente entidades para cada batería configurada y
 | `sensor.*_alarm_status` | Condiciones de alarma activas (v2) — diagnóstico | texto |
 | `sensor.*_fault_status` | Condiciones de fallo activas (v2) — diagnóstico | texto |
 
+## Sensores del monitor de equilibrio de celdas (por batería)
+
+Solo presentes cuando el [monitor de equilibrio de celdas](../features/cell-balance-monitor.md) está activado en la configuración de carga semanal completa.
+
+| Entidad | Descripción | Unidad |
+|---|---|---|
+| `sensor.*_cell_delta` | Diferencia de tensión entre la celda máxima y mínima en la última lectura OCV | mV |
+| `sensor.*_balance_status` | Resultado del equilibrio: `green` / `yellow` / `orange` / `red` | — |
+| `sensor.*_delta_trend` | Tendencia en las últimas lecturas formales: `rising` / `stable` / `falling` | — |
+| `sensor.*_last_balance_read` | Marca de tiempo de la última lectura | timestamp |
+| `sensor.*_delta_avg_4w` | Media de las últimas 4 lecturas formales | mV |
+
 ## Sensores de información de dispositivo
 
 | Entidad | Descripción |

@@ -61,6 +61,9 @@ class MarstekVenusBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_icon = definition.get("icon")
+        self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
+        if definition.get("category") == "diagnostic":
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_should_poll = False
 
     @property
@@ -93,7 +96,8 @@ class ChargeHysteresisActiveSensor(RestoreEntity, BinarySensorEntity):
         """Initialize the hysteresis sensor."""
         self.coordinator = coordinator
 
-        self._attr_name = f"{coordinator.name} Charge Hysteresis Active"
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "charge_hysteresis"
         self._attr_unique_id = f"{coordinator.host}_charge_hysteresis_active"
         self._attr_icon = "mdi:battery-lock"
         self._attr_should_poll = True
@@ -275,8 +279,17 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
                 "total_available_kwh": decision.get("total_available_kwh"),
                 "energy_deficit_kwh": decision.get("energy_deficit_kwh"),
                 "solar_forecast_kwh": decision.get("solar_forecast_kwh"),
+                "solar_surplus_kwh": decision.get("solar_surplus_kwh"),
+                "grid_charge_kwh": decision.get("grid_charge_kwh"),
                 "decision_reason": decision.get("reason"),
             })
+
+        # Per-battery grid-only SOC targets (set at charge initialisation, None when not charging)
+        if hasattr(self.controller, '_predictive_charge_target_soc') and self.controller._predictive_charge_target_soc:
+            attrs["predictive_target_soc_pct"] = {
+                c.name: round(v, 1)
+                for c, v in self.controller._predictive_charge_target_soc.items()
+            }
 
         # Dynamic pricing attributes
         attrs["pricing_mode"] = self.controller.predictive_charging_mode

@@ -54,6 +54,7 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_options = list(definition["options"].keys())
+        self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
         self._options_map = definition["options"]
         self._register = definition["register"]
@@ -61,6 +62,12 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
     @property
     def current_option(self):
         """Return the current option."""
+        if self.definition.get("use_shadow_state"):
+            shadow = self.coordinator.get_shadow_select(self.definition["key"])
+            if shadow is not None:
+                for option, val in self._options_map.items():
+                    if val == shadow:
+                        return option
         if self.coordinator.data is None:
             return None
         value = self.coordinator.data.get(self.definition["key"])
@@ -73,6 +80,8 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         """Select an option."""
         value = self._options_map[option]
         await self.coordinator.write_register(self._register, value, do_refresh=True)
+        if self.definition.get("use_shadow_state"):
+            self.coordinator.set_shadow_select(self.definition["key"], value)
 
     @property
     def device_info(self):

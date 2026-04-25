@@ -217,11 +217,11 @@
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
           "weekly_full_charge_day": "Wochentag",
-          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
+          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
         },
         "data_description": {
           "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
+          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
         }
       },
       "charge_delay": {
@@ -316,7 +316,7 @@
         "menu_options": {
           "sensors": "Sensoren",
           "batteries": "Batterien",
-          "time_slots": "Entladungssperrzeiten",
+          "time_slots": "Entladungs-Zeitfenster",
           "excluded_devices": "Ausgeschlossene Geräte",
           "predictive_charging": "Prädiktive Ladung",
           "weekly_full_charge": "Wöchentliche Vollladung",
@@ -541,11 +541,11 @@
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
           "weekly_full_charge_day": "Wochentag",
-          "weekly_full_charge_skip_delay": "Ladeverzögerung am Vollladedag deaktivieren"
+          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
         },
         "data_description": {
           "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "weekly_full_charge_skip_delay": "Wenn aktiviert, wird die Solarladeverzögerung am Vollladedag übersprungen und das Laden beginnt sofort. Längere Zeit bei 100% verbessert den Zellenausgleich."
+          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
         }
       },
       "charge_delay": {
@@ -664,13 +664,15 @@
       "capacity_protection": { "name": "Spitzenlastkappung" },
       "backup_function": { "name": "Backup-Funktion" },
       "rs485_control_mode": { "name": "RS485-Steuermodus" },
-      "automation_charging_active": { "name": "Laden nach externem Preis" }
+      "automation_charging_active": { "name": "Laden nach externem Preis" },
+      "excluded_device_enabled": { "name": "{device} – Aktiv" },
+      "excluded_device_solar_surplus": { "name": "{device} – Solarüberschuss" },
+      "time_slot": { "name": "Zeitfenster {slot_number}" }
     },
     "time": {
       "automation_charging_end_time": { "name": "Ende Externes Laden" }
     },
     "sensor": {
-      "excluded_devices": { "name": "Ausgeschlossene Geräte" },
       "discharge_window": {
         "name": "Entladefenster",
         "state": {
@@ -758,18 +760,49 @@
       "vms_version": { "name": "VMS-Version" },
       "comm_module_firmware": { "name": "Kommunikationsmodul-Firmware" },
       "mac_address": { "name": "MAC-Adresse" },
+      "wifi_signal_strength": { "name": "WLAN-Signalstärke" },
       "battery_cycle_count": { "name": "Batteriezyklen" },
-      "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" }
+      "battery_cycle_count_calc": { "name": "Batteriezyklen (Berechnet)" },
+      "cell_delta": { "name": "Zellendelta" },
+      "balance_status": {
+        "name": "Balance-Status",
+        "state": {
+          "green": "Balanciert",
+          "yellow": "Geringe Unbalance",
+          "orange": "Moderate Unbalance",
+          "red": "Hohe Unbalance",
+          "unknown": "Unbekannt"
+        }
+      },
+      "delta_trend": {
+        "name": "Balance-Trend",
+        "state": {
+          "rising": "Steigend",
+          "stable": "Stabil",
+          "falling": "Fallend",
+          "unknown": "Unbekannt"
+        }
+      },
+      "last_balance_read": { "name": "Letzte Balance-Messung" },
+      "delta_avg_4w": { "name": "Delta-Durchschnitt (4 Messungen)" }
     },
     "binary_sensor": {
       "capacity_protection_active": { "name": "Spitzenlastkappung Aktiv" },
       "predictive_charging_active": { "name": "Prädiktives Laden Aktiv" },
       "wifi_status": { "name": "WLAN-Status" },
-      "cloud_status": { "name": "Cloud-Status" }
+      "cloud_status": { "name": "Cloud-Status" },
+      "charge_hysteresis": { "name": "Ladehysterese" }
     },
     "select": {
       "force_mode": { "name": "Betriebsmodus erzwingen" },
-      "user_work_mode": { "name": "Arbeitsmodus" },
+      "user_work_mode": {
+        "name": "Arbeitsmodus",
+        "state": {
+          "manual": "Manuell",
+          "anti_feed": "Eigenverbrauch",
+          "trade_mode": "KI-Optimierung"
+        }
+      },
       "weekly_full_charge_day": {
         "name": "Tag der wöchentlichen Vollladung",
         "state": {
@@ -800,8 +833,8 @@
       "pd_min_discharge_power": { "name": "PD Min. Entladeleistung" },
       "max_contracted_power": { "name": "Max. Vertragsleistung" },
       "capacity_protection_soc_threshold": { "name": "Spitzenlastkappung SOC-Schwelle" },
-      "delay_safety_margin_min": { "name": "Puffer Ladungsverzögerung" },
-      "delay_soc_setpoint": { "name": "SOC-Schwellwert Ladungsverzögerung" },
+      "delay_safety_margin_min": { "name": "Ladungsverzögerung – Puffer" },
+      "delay_soc_setpoint": { "name": "Ladungsverzögerung – SOC-Schwellwert" },
       "capacity_protection_limit": { "name": "Spitzenlastkappung Limit" },
       "backup_offgrid_threshold": { "name": "Backup Offgrid Schwellenwert" },
       "predictive_safety_margin_kwh": { "name": "Sicherheitspuffer Solarprognose" }

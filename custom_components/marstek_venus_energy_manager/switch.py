@@ -56,9 +56,10 @@ async def async_setup_entry(
     for index in range(len(time_slots)):
         entities.append(TimeSlotSwitch(hass, entry, index))
 
-    # Add solar surplus switches for excluded devices
+    # Add per-device enable/disable and solar surplus switches for excluded devices
     excluded_devices = entry.data.get("excluded_devices", [])
     for index in range(len(excluded_devices)):
+        entities.append(ExcludedDeviceEnabledSwitch(hass, entry, index))
         entities.append(ExcludedDeviceSolarSurplusSwitch(hass, entry, index))
 
     async_add_entities(entities)
@@ -78,6 +79,7 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_translation_key = definition["key"]
         self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
         self._attr_icon = definition.get("icon")
+        self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
         self._command_on = definition["command_on"]
         self._command_off = definition["command_off"]
@@ -198,7 +200,8 @@ class TimeSlotSwitch(SwitchEntity):
         self._slot_index = index
 
         self._attr_has_entity_name = True
-        self._attr_name = f"Time Slot {index + 1}"
+        self._attr_translation_key = "time_slot"
+        self._attr_translation_placeholders = {"slot_number": str(index + 1)}
         self._attr_unique_id = f"{entry.entry_id}_time_slot_{index}_enabled"
         self._attr_icon = "mdi:clock-outline"
         self._attr_should_poll = False
@@ -360,6 +363,86 @@ class ChargeDelaySwitch(SwitchEntity):
         }
 
 
+class ExcludedDeviceEnabledSwitch(SwitchEntity):
+    """Switch to enable/disable an individual excluded device at runtime.
+
+    ON  = Device is active — its power affects battery charge/discharge calculations.
+    OFF = Device is ignored — battery sees raw home sensor power for this device.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, index: int) -> None:
+        """Initialize the excluded device enabled switch."""
+        self.hass = hass
+        self.entry = entry
+        self._device_index = index
+
+        device = entry.data.get("excluded_devices", [])[index]
+        sensor_id = device.get("power_sensor", "")
+        friendly = sensor_id.replace("sensor.", "").replace("_", " ").title()
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "excluded_device_enabled"
+        self._attr_translation_placeholders = {"device": friendly}
+        self._attr_unique_id = f"{entry.entry_id}_excluded_device_enabled_{index}"
+        self._attr_icon = "mdi:power-plug-off"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if this excluded device is active."""
+        devices = self.entry.data.get("excluded_devices", [])
+        if self._device_index < len(devices):
+            return devices[self._device_index].get("enabled", True)
+        return False
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Return the power sensor entity as an attribute."""
+        devices = self.entry.data.get("excluded_devices", [])
+        if self._device_index >= len(devices):
+            return {}
+        device = devices[self._device_index]
+        return {
+            "power_sensor": device.get("power_sensor", ""),
+            "included_in_consumption": device.get("included_in_consumption", True),
+        }
+
+    async def _update_enabled(self, enabled: bool) -> None:
+        """Update enabled state for this device in config_entry.data."""
+        new_data = dict(self.entry.data)
+        devices = [dict(d) for d in new_data.get("excluded_devices", [])]
+        if self._device_index < len(devices):
+            devices[self._device_index]["enabled"] = enabled
+            new_data["excluded_devices"] = devices
+            self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+            state = "enabled" if enabled else "disabled"
+            _LOGGER.info(
+                "Excluded device %d (%s) %s",
+                self._device_index + 1,
+                devices[self._device_index].get("power_sensor", ""),
+                state,
+            )
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Enable this excluded device."""
+        await self._update_enabled(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable this excluded device."""
+        await self._update_enabled(False)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
 class ExcludedDeviceSolarSurplusSwitch(SwitchEntity):
     """Switch to toggle solar surplus priority for an excluded device at runtime.
 
@@ -380,7 +463,8 @@ class ExcludedDeviceSolarSurplusSwitch(SwitchEntity):
         friendly = sensor_id.replace("sensor.", "").replace("_", " ").title()
 
         self._attr_has_entity_name = True
-        self._attr_name = f"Solar Surplus – {friendly}"
+        self._attr_translation_key = "excluded_device_solar_surplus"
+        self._attr_translation_placeholders = {"device": friendly}
         self._attr_unique_id = f"{entry.entry_id}_solar_surplus_{index}"
         self._attr_icon = "mdi:solar-power-variant"
         self._attr_should_poll = False

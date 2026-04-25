@@ -403,7 +403,7 @@ SENSOR_DEFINITIONS = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "software_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "precision": 2,
         "scan_interval": "very_low",
@@ -415,7 +415,7 @@ SENSOR_DEFINITIONS = [
         "icon": "mdi:battery-check-outline",
         "category": "diagnostic",
         "key": "bms_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "precision": 0,
         "scan_interval": "very_low",
@@ -427,7 +427,7 @@ SENSOR_DEFINITIONS = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "ems_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "scale": 1,
         "precision": 0,
@@ -441,7 +441,7 @@ SENSOR_DEFINITIONS = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "comm_module_firmware",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "char",
         "precision": 0,
         "scan_interval": "very_low",
@@ -457,6 +457,20 @@ SENSOR_DEFINITIONS = [
         "data_type": "char",
         "precision": 0,
         "scan_interval": "very_low",
+    },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
     },
 
 ]
@@ -506,8 +520,21 @@ SELECT_DEFINITIONS = [
             "Charge": 1,
             "Discharge": 2
         }
-    }
-    
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {
+            "manual": 0,
+            "anti_feed": 1,
+            "trade_mode": 2,
+        },
+    },
 ]
 
 # Definitions for switch controls that can be toggled on/off
@@ -742,7 +769,7 @@ SENSOR_DEFINITIONS_V3 = [
         "state_class": "measurement",
         "key": "ac_offgrid_power",
         "enabled_by_default": True,
-        "data_type": "uint16",
+        "data_type": "int16",
         "precision": 0,
         "scan_interval": "high",
     },
@@ -908,7 +935,7 @@ SENSOR_DEFINITIONS_V3 = [
         "icon": "mdi:battery-check-outline",
         "category": "diagnostic",
         "key": "bms_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "precision": 0,
         "scan_interval": "very_low",
@@ -932,7 +959,7 @@ SENSOR_DEFINITIONS_V3 = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "ems_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "scale": 1,
         "precision": 0,
@@ -946,7 +973,7 @@ SENSOR_DEFINITIONS_V3 = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "comm_module_firmware",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "char",
         "precision": 0,
         "scan_interval": "very_low",
@@ -962,6 +989,20 @@ SENSOR_DEFINITIONS_V3 = [
         "data_type": "char",
         "precision": 0,
         "scan_interval": "very_low",
+    },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
     },
 ]
 
@@ -1001,6 +1042,16 @@ SELECT_DEFINITIONS_V3 = [
         "scan_interval": "high",
         "data_type": "uint16",
         "options": {"stop": 0, "charge": 1, "discharge": 2},
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
     },
 ]
 
@@ -1165,7 +1216,7 @@ SENSOR_DEFINITIONS_VA = [
         "state_class": "measurement",
         "key": "ac_offgrid_power",
         "enabled_by_default": True,
-        "data_type": "uint16",
+        "data_type": "int16",
         "precision": 0,
         "scan_interval": "high",
     },
@@ -1344,7 +1395,7 @@ SENSOR_DEFINITIONS_VA = [
         "icon": "mdi:battery-check-outline",
         "category": "diagnostic",
         "key": "bms_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "precision": 0,
         "scan_interval": "very_low",
@@ -1368,7 +1419,7 @@ SENSOR_DEFINITIONS_VA = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "ems_version",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "uint16",
         "scale": 1,
         "precision": 0,
@@ -1382,7 +1433,7 @@ SENSOR_DEFINITIONS_VA = [
         "icon": "mdi:ticket-confirmation-outline",
         "category": "diagnostic",
         "key": "comm_module_firmware",
-        "enabled_by_default": True,
+        "enabled_by_default": False,
         "data_type": "char",
         "precision": 0,
         "scan_interval": "very_low",
@@ -1438,6 +1489,20 @@ SENSOR_DEFINITIONS_VA = [
         "precision": 3,
         "scan_interval": "medium",
     },
+    {
+        "name": "WiFi Signal Strength",
+        "register": 30303,
+        "scale": -1,
+        "unit": "dBm",
+        "device_class": "signal_strength",
+        "state_class": "measurement",
+        "key": "wifi_signal_strength",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "category": "diagnostic",
+        "precision": 0,
+        "scan_interval": "low",
+    },
 ]
 
 # Venus D has the same sensor registers as Venus A
@@ -1482,6 +1547,16 @@ SELECT_DEFINITIONS_VA = [
         "data_type": "uint16",
         "options": {"stop": 0, "charge": 1, "discharge": 2},
     },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
+    },
 ]
 
 SELECT_DEFINITIONS_VD = [
@@ -1493,6 +1568,16 @@ SELECT_DEFINITIONS_VD = [
         "scan_interval": "high",
         "data_type": "uint16",
         "options": {"standby": 0, "charge": 1, "discharge": 2},
+    },
+    {
+        "name": "User Work Mode",
+        "register": 43000,
+        "key": "user_work_mode",
+        "enabled_by_default": False,
+        "data_type": "uint16",
+        "scan_interval": "high",
+        "use_shadow_state": True,
+        "options": {"manual": 0, "anti_feed": 1, "trade_mode": 2},
     },
 ]
 
@@ -1708,6 +1793,25 @@ CONF_WEEKLY_FULL_CHARGE_DAY = "weekly_full_charge_day"
 CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
 CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY = "weekly_full_charge_skip_delay"
 DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY = False
+CONF_ENABLE_BALANCE_MONITOR = "enable_balance_monitor"
+DEFAULT_ENABLE_BALANCE_MONITOR = False
+
+# Cell Balance Monitor
+BALANCE_STORAGE_KEY = "balance_history"
+BALANCE_STORAGE_VERSION = 1
+BALANCE_THRESHOLD_YELLOW = 50    # mV — above this: yellow
+BALANCE_THRESHOLD_ORANGE = 100   # mV — above this: orange
+BALANCE_THRESHOLD_RED = 150      # mV — above this: red
+BALANCE_OCV_WAIT_SECONDS = 900   # 15 min rest before reading
+BALANCE_ORANGE_HOLD_SECONDS = 9000  # 2.5 h passive balancing hold
+BALANCE_COOLDOWN_HOURS = 12      # min hours between formal readings
+BALANCE_OPPORTUNISTIC_COOLDOWN_HOURS = 24
+BALANCE_POWER_STABLE_POLLS = 5   # consecutive polls < 50 W to confirm rest
+BALANCE_POWER_REST_THRESHOLD_W = 50
+BALANCE_VOLTAGE_SETTLING_THRESHOLD_V = 0.005  # vmax must be falling < 5 mV/poll
+BALANCE_HISTORY_MAX = 52         # ~1 year of weekly readings
+BALANCE_RED_CONSECUTIVE_ALERT = 2
+BALANCE_TREND_ALERT_AVG_MV = 75.0   # avg must exceed this to fire a rising-trend alert
 CONF_ENABLE_CHARGE_DELAY = "enable_charge_delay"
 CONF_DELAY_SAFETY_MARGIN_MIN = "delay_safety_margin_min"
 DEFAULT_DELAY_SAFETY_MARGIN_MIN = 60

@@ -20,8 +20,22 @@ The integration automatically creates entities for each configured battery and a
 | `sensor.*_alarm_status` | Active alarm conditions (v2) — diagnostic | text |
 | `sensor.*_fault_status` | Active fault conditions (v2) — diagnostic | text |
 
+## Cell balance monitor sensors (per battery)
+
+Only present when the [cell balance monitor](../features/cell-balance-monitor.md) is enabled in the weekly full charge configuration.
+
+| Entity | Description | Unit |
+|---|---|---|
+| `sensor.*_cell_delta` | Voltage spread between max and min cell at last OCV reading | mV |
+| `sensor.*_balance_status` | Balance result: `green` / `yellow` / `orange` / `red` | — |
+| `sensor.*_delta_trend` | Trend over last formal readings: `rising` / `stable` / `falling` | — |
+| `sensor.*_last_balance_read` | Timestamp of the last reading | timestamp |
+| `sensor.*_delta_avg_4w` | Rolling average of the last 4 formal readings | mV |
+
+## Device information sensors
 ## Device information sensors
 
+| Entity | Description |
 | Entity | Description |
 |---|---|
 | `sensor.*_device_name` | Device name |
@@ -29,26 +43,44 @@ The integration automatically creates entities for each configured battery and a
 | `sensor.*_software_version` | Firmware version |
 | `sensor.*_bms_version` | BMS version |
 | `sensor.*_mac_address` | MAC address |
+| `sensor.*_device_name` | Device name |
+| `sensor.*_sn_code` | Serial number |
+| `sensor.*_software_version` | Firmware version |
+| `sensor.*_bms_version` | BMS version |
+| `sensor.*_mac_address` | MAC address |
 
 ## Binary sensors
+## Binary sensors
 
+| Entity | Description |
 | Entity | Description |
 |---|---|
 | `binary_sensor.*_wifi_status` | WiFi status |
 | `binary_sensor.*_cloud_status` | Cloud status |
 | `binary_sensor.marstek_venus_system_predictive_charging_active` | Predictive charging active (system) |
+| `binary_sensor.*_wifi_status` | WiFi status |
+| `binary_sensor.*_cloud_status` | Cloud status |
+| `binary_sensor.marstek_venus_system_predictive_charging_active` | Predictive charging active (system) |
 
 ## Numbers (sliders)
+## Numbers (sliders)
 
+| Entity | Description | Range |
 | Entity | Description | Range |
 |---|---|---|
 | `number.*_max_soc` | Maximum SOC | 0–100 % |
 | `number.*_min_soc` | Minimum SOC | 0–100 % |
 | `number.*_max_charge_power` | Max charge power | W |
 | `number.*_max_discharge_power` | Max discharge power | W |
+| `number.*_max_soc` | Maximum SOC | 0–100 % |
+| `number.*_min_soc` | Minimum SOC | 0–100 % |
+| `number.*_max_charge_power` | Max charge power | W |
+| `number.*_max_discharge_power` | Max discharge power | W |
 
 ## Selects
+## Selects
 
+| Entity | Options |
 | Entity | Options |
 |---|---|
 | `select.*_force_mode` | None / Charge / Discharge |
@@ -99,5 +131,13 @@ Available under the `sensor.marstek_venus_system_*` prefix, summing values acros
 - `grid_at_min_soc` — Grid import during min SOC periods (kWh)
 - `system_alarm_status` — Aggregated alarm state across all batteries (`OK` / `Warning` / `Fault`); attributes list active conditions per battery
 - `household_energy_today` — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.
+- `system_battery_power` — Total system power
+- `system_battery_soc` — System average SOC
+- `system_total_charging_energy` — Total system charging energy
+- `system_total_discharging_energy` — Total system discharging energy
+- `grid_at_min_soc` — Grid import during min SOC periods (kWh)
+- `system_alarm_status` — Aggregated alarm state across all batteries (`OK` / `Warning` / `Fault`); attributes list active conditions per battery
+- `household_energy_today` — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.
 
+![Entity list in Home Assistant](../assets/screenshots/reference/entities-list.png){ width="700"  style="display: block; margin: 0 auto;"}
 ![Entity list in Home Assistant](../assets/screenshots/reference/entities-list.png){ width="700"  style="display: block; margin: 0 auto;"}

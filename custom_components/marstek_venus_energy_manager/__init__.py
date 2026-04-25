@@ -31,8 +31,8 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
-    CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY,
-    DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY,
+    CONF_ENABLE_BALANCE_MONITOR,
+    DEFAULT_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
@@ -212,6 +212,7 @@ class ChargeDischargeController:
         self._grid_charging_initialized = False  # Flag for initialization
         self._last_decision_data = None  # Store last decision for diagnostics
         self._slot_entry_time = None  # When we first entered the time slot (for 5-min delay)
+        self._predictive_charge_target_soc: Optional[dict] = None  # Per-battery grid-only SOC targets {coordinator: target_%}
 
         # Real-time Price Mode state
         self.average_price_sensor = config_entry.data.get(CONF_AVERAGE_PRICE_SENSOR, None)
@@ -284,9 +285,10 @@ class ChargeDischargeController:
         self._delay_safety_margin_h = config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._delay_soc_setpoint_enabled = config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._weekly_full_charge_skip_delay = config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+        self._balance_monitor_enabled = config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
         self._predictive_safety_margin_kwh: float = config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_unlocked = False       # True when delay has been unlocked today
+        self._balance_monitor = None  # Set from async_setup_entry after monitor is created
         self._charge_delay_last_date = None       # For daily reset
         self._charge_delay_forecast_cache = None  # Last forecast value used for balance check
         self._charge_delay_balance_needs_charge = True  # Cached balance result (conservative default)
@@ -380,7 +382,7 @@ class ChargeDischargeController:
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
         self._delay_soc_setpoint_enabled = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._weekly_full_charge_skip_delay = self.config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY, DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY)
+        self._balance_monitor_enabled = self.config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
         self._predictive_safety_margin_kwh = self.config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_status["soc_setpoint"] = self._delay_soc_setpoint if self._delay_soc_setpoint_enabled else None
         self.charge_delay_enabled = self.config_entry.data.get(
@@ -557,7 +559,7 @@ class ChargeDischargeController:
                 weekly_100_unlocked = weekly_charge_active and (
                     not self.charge_delay_enabled
                     or self._charge_delay_unlocked
-                    or self._weekly_full_charge_overrides_delay()
+                    or self._balance_monitor_overrides_delay()
                 )
 
                 # Update hysteresis state if enabled
@@ -594,6 +596,20 @@ class ChargeDischargeController:
                     effective_max_soc = 100
                     _LOGGER.debug("%s: Weekly Full Charge active - effective_max_soc=100%% (configured: %d%%)",
                                  coordinator.name, coordinator.max_soc)
+                elif self.grid_charging_active and self._predictive_charge_target_soc is not None:
+                    # Predictive grid charging: per-battery target so each battery
+                    # charges only the portion solar cannot cover for its individual gap
+                    per_battery_target = self._predictive_charge_target_soc.get(coordinator)
+                    if per_battery_target is not None:
+                        effective_max_soc = min(coordinator.max_soc, per_battery_target)
+                        _LOGGER.debug(
+                            "%s: Predictive grid charging - effective_max_soc=%.1f%% "
+                            "(target=%.1f%%, configured=%d%%)",
+                            coordinator.name, effective_max_soc,
+                            per_battery_target, coordinator.max_soc,
+                        )
+                    else:
+                        effective_max_soc = coordinator.max_soc
                 else:
                     effective_max_soc = coordinator.max_soc
 
@@ -805,15 +821,14 @@ class ChargeDischargeController:
                 _LOGGER.debug("Weekly Full Charge: No persisted state found")
                 return
 
-            from datetime import datetime
+            from datetime import date
 
-            now = datetime.now()
-            current_weekday = now.weekday()
-            target_weekday = WEEKDAY_MAP[self.weekly_full_charge_day]
+            today_iso = date.today().isoformat()
+            stored_date = data.get("date")
 
-            # Only restore state if we're still on the completion day
-            stored_completion_day = data.get("completion_weekday")
-            if stored_completion_day == current_weekday == target_weekday:
+            # Only restore state if saved on the same calendar date (prevents last week's
+            # completion from being incorrectly restored on the same weekday next week)
+            if stored_date == today_iso:
                 self.weekly_full_charge_complete = data.get("complete", False)
                 self.weekly_full_charge_registers_written = data.get("registers_written", False)
                 # Restore delay state
@@ -823,7 +838,8 @@ class ChargeDischargeController:
                             self.weekly_full_charge_complete, self.weekly_full_charge_registers_written,
                             self._charge_delay_unlocked)
             else:
-                _LOGGER.debug("Weekly Full Charge: Stored state is for different day - ignoring")
+                _LOGGER.debug("Weekly Full Charge: Stored state is from %s, today is %s - ignoring",
+                              stored_date, today_iso)
 
         except Exception as e:
             _LOGGER.error("Weekly Full Charge: Failed to load persisted state: %s", e)
@@ -834,13 +850,13 @@ class ChargeDischargeController:
             return
 
         try:
-            from datetime import datetime
+            from datetime import date, datetime
             now = datetime.now()
 
             data = {
                 "complete": self.weekly_full_charge_complete,
                 "registers_written": self.weekly_full_charge_registers_written,
-                "completion_weekday": now.weekday(),
+                "date": date.today().isoformat(),
                 "timestamp": now.isoformat(),
                 # Delay state
                 "delay_unlocked": self._charge_delay_unlocked,
@@ -1120,9 +1136,9 @@ class ChargeDischargeController:
             return round(sum(c.max_soc for c in self.coordinators) / len(self.coordinators))
         return 100
 
-    def _weekly_full_charge_overrides_delay(self) -> bool:
+    def _balance_monitor_overrides_delay(self) -> bool:
         """Return True when the full-charge-day skip-delay option is active for the current day."""
-        return self._weekly_full_charge_skip_delay and self._is_weekly_full_charge_active()
+        return self._balance_monitor_enabled and self._is_weekly_full_charge_active()
 
     def _is_charge_delayed(self) -> bool:
         """Unified gate: check if charging should be delayed based on solar forecast.
@@ -1135,7 +1151,7 @@ class ChargeDischargeController:
             return False
 
         # Skip delay entirely on the weekly full charge day when opted in
-        if self._weekly_full_charge_overrides_delay():
+        if self._balance_monitor_overrides_delay():
             self._charge_delay_status["state"] = "Charging allowed"
             return False
 
@@ -1492,7 +1508,7 @@ class ChargeDischargeController:
         # Check if unified charge delay is active - if so, don't write registers yet
         # Skip delay logic when force button was pressed
         if (self.charge_delay_enabled and not self._charge_delay_unlocked
-                and not self._force_full_charge and not self._weekly_full_charge_overrides_delay()):
+                and not self._force_full_charge and not self._balance_monitor_overrides_delay()):
             return  # Delay is handled by _is_charge_delayed() in _is_operation_allowed()
 
         # Write register 44000 to 100% on first activation (v2 only - v3 uses software enforcement)
@@ -1933,6 +1949,65 @@ class ChargeDischargeController:
 
             prev_ts = ts
             prev_kw = power_kw
+
+        # Apply excluded-device adjustment using historical power data for each device.
+        # Mirrors the real-time logic in _excluded_devices_consumption_delta_kw():
+        #   included_in_consumption=True  → device is in home sensor but battery skips it → subtract
+        #   included_in_consumption=False → device not in home sensor but battery covers it → add
+        excluded_devices = self.config_entry.data.get("excluded_devices", [])
+        for device in excluded_devices:
+            if device.get("ev_charger_no_telemetry", False):
+                continue
+            power_sensor = device.get("power_sensor")
+            if not power_sensor:
+                continue
+            try:
+                dev_states_map = await recorder_instance.async_add_executor_job(
+                    history.state_changes_during_period,
+                    self.hass,
+                    start_time,
+                    end_time,
+                    power_sensor,
+                )
+            except Exception as e:
+                _LOGGER.debug("Excluded device backfill query failed for %s on %s: %s", power_sensor, target_date, e)
+                continue
+
+            dev_states = dev_states_map.get(power_sensor, [])
+            if not dev_states:
+                continue
+
+            dev_kwh = 0.0
+            prev_ts = None
+            prev_kw = None
+            for dev_state in dev_states:
+                if dev_state.state in ('unknown', 'unavailable'):
+                    prev_ts = None
+                    prev_kw = None
+                    continue
+                try:
+                    dev_w = float(dev_state.state)
+                except (ValueError, TypeError):
+                    prev_ts = None
+                    prev_kw = None
+                    continue
+                dev_unit = dev_state.attributes.get("unit_of_measurement", "W")
+                dev_kw = dev_w / 1000.0 if dev_unit == "W" else dev_w
+                ts = dev_state.last_updated
+                if prev_ts is not None and prev_kw is not None:
+                    mid_ts = prev_ts + (ts - prev_ts) / 2
+                    if _in_consumption_window(mid_ts):
+                        dt_hours = (ts - prev_ts).total_seconds() / 3600.0
+                        dev_kwh += max(0.0, prev_kw) * dt_hours
+                prev_ts = ts
+                prev_kw = dev_kw
+
+            if device.get("included_in_consumption", True):
+                energy_kwh -= dev_kwh
+            else:
+                energy_kwh += dev_kwh
+
+        energy_kwh = max(0.0, energy_kwh)
 
         if energy_kwh <= 0:
             _LOGGER.debug("Household backfill for %s: no energy accumulated", target_date)
@@ -2417,6 +2492,13 @@ class ChargeDischargeController:
         )
 
         # === STEP 7: Return Complete Decision Data ===
+        # Grid-only charge split: how much comes from grid vs solar
+        _max_soc_values = [c.max_soc for c in coordinators_with_data]
+        _config_max_soc = min(_max_soc_values) if _max_soc_values else 95
+        _gap_to_max_kwh = max(0.0, (_config_max_soc - avg_soc) / 100.0 * total_capacity_kwh)
+        solar_surplus_kwh = max(0.0, solar_forecast_kwh - avg_consumption_kwh)
+        grid_charge_kwh = max(0.0, _gap_to_max_kwh - solar_surplus_kwh)
+
         return {
             "should_charge": should_charge,
             "solar_forecast_kwh": solar_forecast_kwh,
@@ -2430,6 +2512,8 @@ class ChargeDischargeController:
             "total_available_kwh": total_available_kwh,
             "energy_deficit_kwh": energy_deficit_kwh,
             "days_in_history": days_in_history,
+            "solar_surplus_kwh": solar_surplus_kwh,
+            "grid_charge_kwh": grid_charge_kwh,
             "consumption_source": "household_sensor" if self.household_consumption_sensor else "battery_discharge",
             "reason": (
                 f"Energy deficit: {energy_deficit_kwh:.2f} kWh "
@@ -2490,6 +2574,45 @@ class ChargeDischargeController:
 
         return not self._check_time_window()
 
+    def _excluded_devices_consumption_delta_kw(self) -> float:
+        """Net kW correction to apply to the home sensor for excluded-device accounting.
+
+        Returns a value to ADD to the raw home sensor reading so the accumulator
+        reflects only the load the battery is expected to cover:
+          - included_in_consumption=True  → device IS in home sensor but battery skips it → subtract
+          - included_in_consumption=False → device NOT in home sensor but battery covers it → add
+        ev_charger_no_telemetry devices are skipped (no numeric power sensor).
+        Unavailable sensors are silently ignored.
+        """
+        excluded_devices = self.config_entry.data.get("excluded_devices", [])
+        if not excluded_devices:
+            return 0.0
+
+        delta = 0.0
+        for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
+            if device.get("ev_charger_no_telemetry", False):
+                continue
+            power_sensor = device.get("power_sensor")
+            if not power_sensor:
+                continue
+            state = self.hass.states.get(power_sensor)
+            if state is None or state.state in ("unknown", "unavailable"):
+                continue
+            try:
+                power_w = float(state.state)
+            except (ValueError, TypeError):
+                continue
+            unit = state.attributes.get("unit_of_measurement", "W")
+            device_kw = power_w / 1000.0 if unit == "W" else power_w
+            if device.get("included_in_consumption", True):
+                delta -= device_kw
+            else:
+                delta += device_kw
+
+        return delta
+
     async def _accumulate_household_consumption(self) -> None:
         """Integrate household power sensor → kWh accumulator (called every control cycle).
 
@@ -2522,6 +2645,10 @@ class ChargeDischargeController:
 
         unit = state.attributes.get("unit_of_measurement", "W")
         power_kw = power_w / 1000.0 if unit == "W" else power_w
+
+        # Adjust for excluded devices: remove power the battery doesn't cover and
+        # add power the battery covers that isn't visible to the home sensor.
+        power_kw += self._excluded_devices_consumption_delta_kw()
 
         now = monotonic()
         if self._household_last_accumulation_time is not None:
@@ -2588,6 +2715,66 @@ class ChargeDischargeController:
 
         return self._check_time_window()
 
+    def _compute_predictive_target_soc(self) -> Optional[dict]:
+        """Calculate per-battery grid-only SOC targets for predictive charging.
+
+        Each battery's share of grid charge is proportional to its gap to max_soc,
+        so batteries with a larger gap get more grid charge and batteries that are
+        already near max_soc rely mostly on solar.
+
+          total_gap     = Σ (max_soc_i - soc_i) / 100 × capacity_i
+          solar_surplus = max(0, solar_forecast - consumption_forecast)
+          grid_charge   = max(0, total_gap - solar_surplus)
+          share_i       = (gap_i / total_gap) × grid_charge
+          target_soc_i  = min(max_soc_i, soc_i + share_i / capacity_i × 100)
+
+        Returns dict {coordinator: target_soc_%} or None if data is insufficient
+        (callers fall back to max_soc behaviour when None is returned).
+        """
+        decision_data = self._last_decision_data
+        if not decision_data:
+            return None
+
+        coordinators_with_data = [c for c in self.coordinators if c.data]
+        if not coordinators_with_data:
+            return None
+
+        solar_forecast_kwh = decision_data.get("solar_forecast_kwh") or 0.0
+        avg_consumption_kwh = decision_data.get("avg_consumption_kwh", 0.0)
+
+        # Per-battery gap to max_soc (kWh)
+        gaps: dict = {}
+        for c in coordinators_with_data:
+            capacity = c.data.get("battery_total_energy", 0)
+            current_soc = c.data.get("battery_soc", 0)
+            gaps[c] = max(0.0, (c.max_soc - current_soc) / 100.0 * capacity)
+
+        total_gap_kwh = sum(gaps.values())
+        if total_gap_kwh <= 0:
+            return None
+
+        solar_surplus_kwh = max(0.0, solar_forecast_kwh - avg_consumption_kwh)
+        grid_charge_kwh = max(0.0, total_gap_kwh - solar_surplus_kwh)
+
+        targets: dict = {}
+        for c in coordinators_with_data:
+            capacity = c.data.get("battery_total_energy", 0)
+            current_soc = c.data.get("battery_soc", 0)
+            if capacity <= 0:
+                targets[c] = c.max_soc
+                continue
+            share_kwh = (gaps[c] / total_gap_kwh) * grid_charge_kwh
+            target = min(c.max_soc, current_soc + (share_kwh / capacity) * 100.0)
+            targets[c] = max(target, current_soc)  # never go below current SOC
+
+        _LOGGER.info(
+            "Predictive charging: per-battery grid-only targets "
+            "(solar_surplus=%.2f kWh, grid_charge=%.2f kWh / total_gap=%.2f kWh): %s",
+            solar_surplus_kwh, grid_charge_kwh, total_gap_kwh,
+            {c.name: f"{v:.1f}%" for c, v in targets.items()},
+        )
+        return targets
+
     async def _handle_predictive_grid_charging(self):
         """
         Handle predictive grid charging mode.
@@ -2634,6 +2821,7 @@ class ChargeDischargeController:
             self.previous_power = -min(max_battery_charge, target_power)  # Start at max charge
             self._grid_charging_initialized = True
             self.first_execution = False  # Mark as initialized to avoid conflicts
+            self._predictive_charge_target_soc = self._compute_predictive_target_soc()
             _LOGGER.info("Initialized predictive charging: target=%dW, initial_charge=%dW",
                         target_power, abs(self.previous_power))
         
@@ -2884,6 +3072,11 @@ class ChargeDischargeController:
             )
             return False
 
+        # Hold discharge while balance monitor waits for OCV stabilisation
+        if coordinator.balance_hold and discharge_power > 0:
+            _LOGGER.debug("[%s] Balance hold active — discharge suppressed", coordinator.name)
+            discharge_power = 0
+
         # Determine expected force mode
         if charge_power > 0:
             expected_force_mode = 1  # Charge
@@ -2975,6 +3168,8 @@ class ChargeDischargeController:
         total_adjustment = 0.0
         included_adjustment = 0.0  # Track included_in_consumption portion separately
         for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
             # EV chargers in no-telemetry mode expose a state sensor, not a numeric
             # power sensor – their behaviour is handled by _check_ev_charger_state().
             if device.get("ev_charger_no_telemetry", False):
@@ -3049,6 +3244,8 @@ class ChargeDischargeController:
         ev_charging_active = False
 
         for device in excluded_devices:
+            if not device.get("enabled", True):
+                continue
             if not device.get("ev_charger_no_telemetry", False):
                 continue
 
@@ -3129,8 +3326,7 @@ class ChargeDischargeController:
                         start = dt_util.as_local(start).replace(tzinfo=None)
                     if hasattr(end, "tzinfo") and end.tzinfo is not None:
                         end = dt_util.as_local(end).replace(tzinfo=None)
-                    # Nordpool reports values in ct/kWh — convert to €/kWh
-                    slots.append(PriceSlot(start=start, end=end, price=float(value) / 100.0))
+                    slots.append(PriceSlot(start=start, end=end, price=float(value)))
                 except Exception as exc:
                     _LOGGER.debug("Dynamic pricing: failed to parse Nordpool entry %s: %s", entry, exc)
         return slots
@@ -3198,12 +3394,7 @@ class ChargeDischargeController:
         return slots
 
     def _get_price_unit(self) -> str:
-        """Return the price unit label for the configured integration.
-
-        Nordpool and CKW sensors expose prices in sub-units (ct/kWh and Rp/kWh
-        respectively). We keep the values as-is and label them with the correct
-        unit so notifications and thresholds match what users see in the sensor.
-        """
+        """Return the price unit label for the configured integration."""
         if self.price_integration_type == PRICE_INTEGRATION_CKW:
             return "Rp/kWh"
         return "€/kWh"
@@ -3515,12 +3706,22 @@ class ChargeDischargeController:
                 if slot_str else "⏰ Charging now from grid\n"
             )
 
+        grid_charge = decision_data.get("grid_charge_kwh")
+        solar_surplus = decision_data.get("solar_surplus_kwh")
+        if grid_charge is not None and solar_surplus is not None:
+            # When charging triggers, solar_surplus ≤ gap_to_max, so solar will contribute exactly solar_surplus to battery
+            charge_split_line = (
+                f"🔌 Grid: {grid_charge:.2f} kWh — solar will charge the remaining {solar_surplus:.2f} kWh\n"
+            )
+        else:
+            charge_split_line = f"⚡ Deficit: {energy_deficit:.2f} kWh\n"
+
         message = (
             f"⚡ Energy deficit — grid charging needed\n\n"
             f"🔋 Battery: {avg_soc:.0f}% ({usable_energy:.2f} kWh usable)\n"
             f"☀️ Solar forecast: {solar_str}\n"
             f"📊 Consumption: {consumption_str}\n"
-            f"⚡ Deficit: {energy_deficit:.2f} kWh\n\n"
+            f"{charge_split_line}\n"
             f"{timing_line}"
             f"Max charge power: {power_str}"
         )
@@ -4089,39 +4290,41 @@ class ChargeDischargeController:
                         "Dynamic pricing: inside cheap slot window but charging not needed "
                         "(solar/battery sufficient) — skipping"
                     )
-                    return
+                    # Fall through to discharge control below (do not return early)
 
                 # Respect charge delay: if configured and still active, hold until it unlocks
-                if self._is_charge_delayed():
+                elif self._is_charge_delayed():
                     _LOGGER.info(
                         "Dynamic pricing: inside cheap slot window but charge delay is active — holding"
                     )
-                    return
+                    # Fall through to discharge control below (do not return early)
 
-                # Find which slot we're entering
-                current_slot = next(
-                    (s for s in self._dynamic_pricing_schedule.selected_slots if s.start <= now < s.end),
-                    None
-                )
-
-                # Skip if pre-evaluation decided charging is no longer needed for this slot
-                if current_slot and self._dp_pre_evaluated_slots.get(current_slot.start) is False:
-                    _LOGGER.info(
-                        "Dynamic pricing: skipping slot %s — pre-evaluation found sufficient energy",
-                        current_slot.start.strftime("%H:%M")
+                else:
+                    # Find which slot we're entering
+                    current_slot = next(
+                        (s for s in self._dynamic_pricing_schedule.selected_slots if s.start <= now < s.end),
+                        None
                     )
-                    return
 
-                # Entering a cheap slot
-                self._current_price_slot_active = True
-                self._grid_charging_initialized = False
-                self.grid_charging_active = True
-                if current_slot:
-                    await self._send_dynamic_pricing_slot_start_notification(current_slot)
-                _LOGGER.info(
-                    "Dynamic pricing: entering cheap slot %s",
-                    current_slot.start.strftime("%H:%M") if current_slot else "unknown"
-                )
+                    # Skip if pre-evaluation decided charging is no longer needed for this slot
+                    if current_slot and self._dp_pre_evaluated_slots.get(current_slot.start) is False:
+                        _LOGGER.info(
+                            "Dynamic pricing: skipping slot %s — pre-evaluation found sufficient energy",
+                            current_slot.start.strftime("%H:%M")
+                        )
+                        # Fall through to discharge control below (do not return early)
+
+                    else:
+                        # Entering a cheap slot
+                        self._current_price_slot_active = True
+                        self._grid_charging_initialized = False
+                        self.grid_charging_active = True
+                        if current_slot:
+                            await self._send_dynamic_pricing_slot_start_notification(current_slot)
+                        _LOGGER.info(
+                            "Dynamic pricing: entering cheap slot %s",
+                            current_slot.start.strftime("%H:%M") if current_slot else "unknown"
+                        )
 
             elif not in_slot and self._current_price_slot_active:
                 # Exiting a cheap slot
@@ -4207,6 +4410,16 @@ class ChargeDischargeController:
 
         if threshold is None:
             _LOGGER.debug("Real-time price: no threshold configured, skipping")
+            return
+
+        # Override active — stop any active charging and do not start new
+        if self.predictive_charging_overridden:
+            if self._realtime_price_charging or self.grid_charging_active:
+                self._realtime_price_charging = False
+                self.grid_charging_active = False
+                self._grid_charging_initialized = False
+                self.previous_power = 0
+                self.previous_error = 0
             return
 
         price_is_cheap = current_price <= threshold
@@ -4340,9 +4553,6 @@ class ChargeDischargeController:
                     {"notification_id": "predictive_charging_evaluation"},
                 )
 
-            if self.predictive_charging_overridden:
-                self.predictive_charging_overridden = False
-
             self._slot_entry_time = None
 
     async def _send_predictive_charging_notification(
@@ -4416,6 +4626,13 @@ class ChargeDischargeController:
             self._accumulator_last_save_monotonic = _now_mono
             self._save_accumulators()
 
+        # === BALANCE MONITOR ===
+        # Run before manual mode and PD control checks so readings are never gated
+        # by deadband, stale sensor, or any other early return in the control loop.
+        if self._balance_monitor is not None:
+            for coordinator in self.coordinators:
+                await self._balance_monitor.async_process(coordinator)
+
         # === MANUAL MODE CHECK (highest priority) ===
         # If manual mode is enabled, skip all automatic control logic
         if self.manual_mode_enabled:
@@ -4481,6 +4698,24 @@ class ChargeDischargeController:
                 # so we only reach here when outside the slot (normal PD control).
                 if self.grid_charging_active:
                     return
+
+        # === Price-based discharge block: enforce BEFORE deadband / stale early-returns ===
+        # The DP/RT handlers set _price_based_discharge_blocked each cycle (line ~4355/4426).
+        # Without this guard the deadband and stale-sensor paths would return early without
+        # stopping a running discharge, leaving the battery draining until grid error grows
+        # large enough to exit the deadband.
+        if self._price_based_discharge_blocked and self.previous_power < 0:
+            _LOGGER.info(
+                "ChargeDischargeController: Price-based discharge block active — "
+                "stopping discharge (was %.0fW), holding at 0W",
+                abs(self.previous_power),
+            )
+            for coordinator in self.coordinators:
+                await self._set_battery_power(coordinator, 0, 0)
+            self.previous_power = 0
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            return
 
         # === Continue with normal PD control ===
         consumption_state = self.hass.states.get(self.consumption_sensor)
@@ -5139,6 +5374,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Restore persisted RS485 user preference and store entry reference for future persistence
         coordinator._config_entry = entry
         coordinator.rs485_user_disabled = battery_config.get("rs485_user_disabled", False)
+        coordinator._shadow_selects = {
+            k[len("shadow_select_"):]: v
+            for k, v in battery_config.items()
+            if k.startswith("shadow_select_")
+        }
 
         # Connect and fetch initial data
         try:
@@ -5265,11 +5505,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(unsub_refresh)
 
+    # Set up balance monitor if enabled
+    balance_monitor = None
+    if entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR):
+        from .balance_monitor import BalanceMonitor
+        balance_monitor = BalanceMonitor(hass, entry, controller)
+        await balance_monitor.async_setup()
+        for coordinator in coordinators:
+            await balance_monitor.async_restore_coordinator(coordinator)
+        controller._balance_monitor = balance_monitor
+
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinators": coordinators,
         "controller": controller,
         "unsub_control": unsub_control,
         "unsub_refresh": unsub_refresh,
+        "balance_monitor": balance_monitor,
     }
 
     # Listen for config entry updates so config entities refresh their state
