@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.1] - 2026-04-26
+
+### Fixed
+- **Spurious warning on v3 weekly full charge**: Each time a weekly full charge activated on a v3 battery, a `WARNING`-level log entry appeared stating that software enforcement would be used (instead of the hardware cutoff register). This is expected behaviour for v3 hardware and does not indicate a problem. The message has been downgraded to `DEBUG` so it only appears when debug logging is explicitly enabled.
+
 ## [1.7.0] - 2026-04-25
 
 ### Added
