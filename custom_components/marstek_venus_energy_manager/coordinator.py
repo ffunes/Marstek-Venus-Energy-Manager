@@ -19,6 +19,7 @@ from .const import (
     MESSAGE_WAIT_MS,
 )
 from .modbus_client import MarstekModbusClient
+from .alarm_notifier import AlarmNotifier
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +73,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self.lock = asyncio.Lock()
         self._is_shutting_down = False  # Flag to suppress errors during shutdown
 
-        # Alarm state tracking — detect new bits so we only notify on changes
-        self._previous_alarm_status: int = 0
-        self._previous_fault_status: int = 0
+        # Alarm/fault notifications (owns its own previous-bit state)
+        self._alarm_notifier = AlarmNotifier(hass, name)
 
         # Connection health monitoring
         self._consecutive_failures = 0
@@ -494,7 +494,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self.data.update(updated_data)
 
         # Detect new alarm/fault bits and send HA notifications
-        await self._check_alarm_changes()
+        await self._alarm_notifier.check(
+            self.data.get("alarm_status") or 0,
+            self.data.get("fault_status") or 0,
+        )
 
         # Sync control attributes from polled register values so that changes made
         # via the UI (number entities) survive HA restarts. The hardware register is
@@ -532,101 +535,6 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             # Default to sensor if not found
             return "sensor"
-
-    async def _check_alarm_changes(self) -> None:
-        """Detect newly-set alarm/fault bits and send HA persistent notifications."""
-        if self.data is None:
-            return
-
-        alarm_status: int = self.data.get("alarm_status") or 0
-        fault_status: int = self.data.get("fault_status") or 0
-
-        new_alarm_bits = alarm_status & ~self._previous_alarm_status
-        new_fault_bits = fault_status & ~self._previous_fault_status
-        all_cleared = (
-            (self._previous_alarm_status or self._previous_fault_status)
-            and alarm_status == 0
-            and fault_status == 0
-        )
-
-        if new_fault_bits or new_alarm_bits:
-            await self._send_alarm_notification(alarm_status, fault_status, new_alarm_bits, new_fault_bits)
-        elif all_cleared:
-            await self.hass.services.async_call(
-                "persistent_notification",
-                "dismiss",
-                {"notification_id": f"battery_alarm_{self.name}"},
-            )
-
-        self._previous_alarm_status = alarm_status
-        self._previous_fault_status = fault_status
-
-    async def _send_alarm_notification(
-        self,
-        alarm_status: int,
-        fault_status: int,
-        new_alarm_bits: int,
-        new_fault_bits: int,
-    ) -> None:
-        """Send a persistent notification for new alarm or fault bits."""
-        from .const import ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS
-
-        def active_labels(value: int, descriptions: dict) -> list[str]:
-            return [descriptions[b] for b in range(32) if (value & (1 << b)) and b in descriptions]
-
-        is_fault = bool(fault_status)
-        header_emoji = "🚨" if is_fault else "⚠️"
-        severity = "Fault" if is_fault else "Warning"
-
-        # Build message sections
-        sections: list[str] = []
-
-        # Status header line
-        status_line = f"{header_emoji} {'Fault' if is_fault else 'Warning'} detected on {self.name}"
-        sections.append(status_line)
-        sections.append("")  # blank line
-
-        # Newly triggered conditions
-        if new_fault_bits:
-            new_faults = active_labels(new_fault_bits, FAULT_BIT_DESCRIPTIONS)
-            sections.append(f"🆕 New faults:")
-            for label in new_faults:
-                sections.append(f"  🔴 {label}")
-
-        if new_alarm_bits:
-            new_alarms = active_labels(new_alarm_bits, ALARM_BIT_DESCRIPTIONS)
-            sections.append(f"🆕 New alarms:")
-            for label in new_alarms:
-                sections.append(f"  🟡 {label}")
-
-        # All currently active conditions (context — may include earlier ones)
-        all_faults = active_labels(fault_status, FAULT_BIT_DESCRIPTIONS)
-        all_alarms = active_labels(alarm_status, ALARM_BIT_DESCRIPTIONS)
-        extra_faults = [l for l in all_faults if l not in active_labels(new_fault_bits, FAULT_BIT_DESCRIPTIONS)]
-        extra_alarms = [l for l in all_alarms if l not in active_labels(new_alarm_bits, ALARM_BIT_DESCRIPTIONS)]
-
-        if extra_faults or extra_alarms:
-            sections.append("")
-            sections.append("⚡ Also active:")
-            for label in extra_faults:
-                sections.append(f"  🔴 {label}")
-            for label in extra_alarms:
-                sections.append(f"  🟡 {label}")
-
-        message = "\n".join(sections)
-        title = f"{header_emoji} Battery {severity}: {self.name}"
-
-        await self.hass.services.async_call(
-            "persistent_notification",
-            "create",
-            {
-                "title": title,
-                "message": message,
-                "notification_id": f"battery_alarm_{self.name}",
-            },
-        )
-        log_conditions = ", ".join(all_faults + all_alarms)
-        _LOGGER.warning("[%s] Battery %s — %s", self.name, severity.lower(), log_conditions)
 
     async def write_register(self, register: int, value: int, do_refresh: bool = True):
         """Write a value to a register and optionally do an immediate refresh."""
