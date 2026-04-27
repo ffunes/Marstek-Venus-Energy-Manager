@@ -1119,6 +1119,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#exclusion-de-baterias-sin-respuesta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exclusión de baterías sin respuesta
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#modos-compatibles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1576,6 +1587,17 @@
     <span class="md-ellipsis">
       
         Distribución de potencia
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exclusion-de-baterias-sin-respuesta" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exclusión de baterías sin respuesta
       
     </span>
   </a>
@@ -2068,6 +2090,10 @@
 </table>
 <h2 id="distribucion-de-potencia">Distribución de potencia<a class="headerlink" href="#distribucion-de-potencia" title="Permanent link">&para;</a></h2>
 <p>Una vez seleccionadas las baterías activas, la potencia total calculada por el <a href="../pd-controller/">controlador PD</a> se reparte entre ellas proporcionalmente, respetando los límites individuales de potencia y SOC de cada una.</p>
+<h2 id="exclusion-de-baterias-sin-respuesta">Exclusión de baterías sin respuesta<a class="headerlink" href="#exclusion-de-baterias-sin-respuesta" title="Permanent link">&para;</a></h2>
+<p>Cuando una batería no entrega la potencia solicitada de forma reiterada — por ejemplo, por un fallo de comunicación Modbus o por una autoprotección del firmware — la integración lo detecta y la retira temporalmente del grupo activo.</p>
+<p>Una batería se marca como sin respuesta cuando su potencia entregada es inferior al 5 % de la consigna durante <strong>3 ciclos de control consecutivos</strong>. Una vez marcada, entra en una <strong>ventana de exclusión de 5 minutos</strong> durante la cual no recibe nuevas consignas y las baterías restantes absorben su parte de la carga. Al expirar la ventana, el contador de fallos se reinicia y la batería vuelve a ser elegible.</p>
+<p>Este mecanismo impide que una sola batería con problemas degrade silenciosamente el rendimiento del sistema sin generar alarmas ni requerir intervención manual.</p>
 <h2 id="modos-compatibles">Modos compatibles<a class="headerlink" href="#modos-compatibles" title="Permanent link">&para;</a></h2>
 <p>La distribución multi-batería se aplica en todos los modos:
 - Control PD normal

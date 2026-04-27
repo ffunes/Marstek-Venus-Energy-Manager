@@ -1602,6 +1602,31 @@
 <td>—</td>
 <td>Sensores derivados calculados (ciclos, estimaciones)</td>
 </tr>
+<tr>
+<td><code>balance_monitor.py</code></td>
+<td><code>CellBalanceMonitor</code></td>
+<td>Medición del spread de tensión de celdas tras la carga completa e historial de salud</td>
+</tr>
+<tr>
+<td><code>non_responsive_tracker.py</code></td>
+<td><code>NonResponsiveTracker</code></td>
+<td>Detección de baterías sin respuesta y ventanas de exclusión de 5 minutos</td>
+</tr>
+<tr>
+<td><code>alarm_notifier.py</code></td>
+<td><code>AlarmNotifier</code></td>
+<td>Detección de cambios de bits de alarma/fallo y formateo de notificaciones persistentes de HA</td>
+</tr>
+<tr>
+<td><code>weekly_full_charge.py</code></td>
+<td><code>WeeklyFullChargeManager</code></td>
+<td>Estado de carga semanal completa, persistencia y orquestación de escritura de registros</td>
+</tr>
+<tr>
+<td><code>consumption_tracker.py</code></td>
+<td><code>ConsumptionTracker</code></td>
+<td>Historial de consumo, acumuladores de energía diaria, detección de tiempos solares, backfill del recorder y captura diaria a las 23:55</td>
+</tr>
 </tbody>
 </table>
 <h2 id="flujo-de-datos">Flujo de datos<a class="headerlink" href="#flujo-de-datos" title="Permanent link">&para;</a></h2>
@@ -1636,7 +1661,7 @@
 </tr>
 <tr>
 <td><code>very_low</code></td>
-<td>300 s</td>
+<td>600 s</td>
 <td>Info de dispositivo, firmware</td>
 </tr>
 </tbody>

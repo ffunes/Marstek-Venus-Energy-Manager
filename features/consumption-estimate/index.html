@@ -1087,10 +1087,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-actual-battery-discharge" class="md-nav__link">
+  <a href="#method-1-battery-discharge-unmet-demand-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Actual battery discharge
+        Method 1 — Battery discharge + unmet demand (default)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 1 — Battery discharge + unmet demand (default)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#actual-battery-discharge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actual battery discharge
       
     </span>
   </a>
@@ -1098,10 +1110,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-unmet-demand-grid-at-min-soc" class="md-nav__link">
+  <a href="#unmet-demand-grid-at-min-soc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Unmet demand — Grid at min SOC
+        Unmet demand — Grid at min SOC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-2-household-consumption-sensor-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method 2 — Household consumption sensor (optional)
       
     </span>
   </a>
@@ -1573,10 +1601,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-actual-battery-discharge" class="md-nav__link">
+  <a href="#method-1-battery-discharge-unmet-demand-default" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Actual battery discharge
+        Method 1 — Battery discharge + unmet demand (default)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Method 1 — Battery discharge + unmet demand (default)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#actual-battery-discharge" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actual battery discharge
       
     </span>
   </a>
@@ -1584,10 +1624,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-unmet-demand-grid-at-min-soc" class="md-nav__link">
+  <a href="#unmet-demand-grid-at-min-soc" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Unmet demand — Grid at min SOC
+        Unmet demand — Grid at min SOC
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#method-2-household-consumption-sensor-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method 2 — Household consumption sensor (optional)
       
     </span>
   </a>
@@ -1722,12 +1778,14 @@
 <p>Predictive charging needs to know how much energy your home consumes each day to decide whether grid charging is needed. Instead of a fixed value, the integration calculates a <strong>dynamic consumption estimate</strong> from the real history of the past 7 days.</p>
 <hr />
 <h2 id="what-the-estimate-measures">What the estimate measures<a class="headerlink" href="#what-the-estimate-measures" title="Permanent link">&para;</a></h2>
-<p>The estimated consumption for a day is the sum of two components:</p>
+<p>The integration supports two accumulation methods depending on whether an optional <strong>household consumption sensor</strong> is configured.</p>
+<h3 id="method-1-battery-discharge-unmet-demand-default">Method 1 — Battery discharge + unmet demand (default)<a class="headerlink" href="#method-1-battery-discharge-unmet-demand-default" title="Permanent link">&para;</a></h3>
+<p>When no household consumption sensor is configured, the estimated consumption for a day is the sum of two components:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Day consumption = Actual battery discharge + Unmet demand (grid at min SOC)
 </code></pre></div>
-<h3 id="1-actual-battery-discharge">1. Actual battery discharge<a class="headerlink" href="#1-actual-battery-discharge" title="Permanent link">&para;</a></h3>
+<h4 id="actual-battery-discharge">Actual battery discharge<a class="headerlink" href="#actual-battery-discharge" title="Permanent link">&para;</a></h4>
 <p>The energy the battery has discharged during the day, read directly from each battery's coordinator (<code>total_daily_discharging_energy</code>). This value resets at midnight according to the battery's internal clock.</p>
-<h3 id="2-unmet-demand-grid-at-min-soc">2. Unmet demand — Grid at min SOC<a class="headerlink" href="#2-unmet-demand-grid-at-min-soc" title="Permanent link">&para;</a></h3>
+<h4 id="unmet-demand-grid-at-min-soc">Unmet demand — Grid at min SOC<a class="headerlink" href="#unmet-demand-grid-at-min-soc" title="Permanent link">&para;</a></h4>
 <p>When <strong>all batteries are at min SOC</strong> and can no longer discharge, the household must draw from the grid to cover its consumption. That grid-imported energy is real household consumption the battery could not serve.</p>
 <p>The integration accumulates it in real time every controller cycle (~2.5 s) while all of these conditions are simultaneously met:</p>
 <table>
@@ -1760,6 +1818,10 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>increment (kWh) = grid_power (W) × 2.5 s / 3,600,000
 </code></pre></div>
 <p>This accumulator is exposed as the <strong><code>Grid at Min SOC</code></strong> sensor (kWh) and resets at midnight.</p>
+<h3 id="method-2-household-consumption-sensor-optional">Method 2 — Household consumption sensor (optional)<a class="headerlink" href="#method-2-household-consumption-sensor-optional" title="Permanent link">&para;</a></h3>
+<p>If a <strong>household consumption sensor</strong> is configured (a power sensor in W or kW measuring total household electricity consumption), the integration integrates it directly to build the daily figure instead of using the battery discharge + grid-at-min-SOC calculation.</p>
+<p>Accumulation only runs while <code>is_in_consumption_window()</code> is true: all 24 hours when no charging time slot is configured, or the hours outside the charging slot on slot days. This scoping ensures the measured window matches what predictive charging expects when it later uses the average to project remaining demand.</p>
+<p>The accumulated daily value is exposed as the <strong><code>Household Energy Today</code></strong> sensor (kWh) and resets at midnight.</p>
 <hr />
 <h2 id="daily-capture-at-2355">Daily capture at 23:55<a class="headerlink" href="#daily-capture-at-2355" title="Permanent link">&para;</a></h2>
 <p>Every day at <strong>23:55 (local time)</strong> the integration saves the day's consumption by computing:</p>

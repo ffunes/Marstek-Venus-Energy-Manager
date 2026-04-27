@@ -1119,6 +1119,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#non-responsive-battery-exclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-responsive battery exclusion
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#compatible-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1576,6 +1587,17 @@
     <span class="md-ellipsis">
       
         Power distribution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-responsive-battery-exclusion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Non-responsive battery exclusion
       
     </span>
   </a>
@@ -2068,6 +2090,10 @@
 </table>
 <h2 id="power-distribution">Power distribution<a class="headerlink" href="#power-distribution" title="Permanent link">&para;</a></h2>
 <p>Once active batteries are selected, the total power calculated by the <a href="../pd-controller/">PD controller</a> is distributed among them proportionally, respecting each battery's individual power and SOC limits.</p>
+<h2 id="non-responsive-battery-exclusion">Non-responsive battery exclusion<a class="headerlink" href="#non-responsive-battery-exclusion" title="Permanent link">&para;</a></h2>
+<p>When a battery consistently fails to deliver the commanded power — for example due to a Modbus communication glitch or a firmware self-protection response — the integration detects this and temporarily removes it from the active pool.</p>
+<p>A battery is flagged as non-responsive when its measured output is below 5% of the commanded setpoint for <strong>3 consecutive control cycles</strong>. Once flagged, it enters a <strong>5-minute exclusion window</strong> during which it receives no new commands and the remaining batteries absorb its share of the load. After the window expires the fail counter resets and the battery becomes eligible again.</p>
+<p>This mechanism prevents a single misbehaving battery from silently degrading system performance without raising alarms or requiring manual intervention.</p>
 <h2 id="compatible-modes">Compatible modes<a class="headerlink" href="#compatible-modes" title="Permanent link">&para;</a></h2>
 <p>Multi-battery distribution applies in all modes:
 - Normal PD control

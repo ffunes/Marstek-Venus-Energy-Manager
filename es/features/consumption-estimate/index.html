@@ -1087,10 +1087,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-descarga-real-de-la-bateria" class="md-nav__link">
+  <a href="#metodo-1-descarga-de-bateria-demanda-insatisfecha-por-defecto" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Descarga real de la batería
+        Método 1 — Descarga de batería + demanda insatisfecha (por defecto)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Método 1 — Descarga de batería + demanda insatisfecha (por defecto)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descarga-real-de-la-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descarga real de la batería
       
     </span>
   </a>
@@ -1098,10 +1110,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-demanda-insatisfecha-red-a-soc-minimo" class="md-nav__link">
+  <a href="#demanda-insatisfecha-red-a-soc-minimo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Demanda insatisfecha — Red a SOC mínimo
+        Demanda insatisfecha — Red a SOC mínimo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metodo-2-sensor-de-consumo-del-hogar-opcional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Método 2 — Sensor de consumo del hogar (opcional)
       
     </span>
   </a>
@@ -1573,10 +1601,22 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#1-descarga-real-de-la-bateria" class="md-nav__link">
+  <a href="#metodo-1-descarga-de-bateria-demanda-insatisfecha-por-defecto" class="md-nav__link">
     <span class="md-ellipsis">
       
-        1. Descarga real de la batería
+        Método 1 — Descarga de batería + demanda insatisfecha (por defecto)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Método 1 — Descarga de batería + demanda insatisfecha (por defecto)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#descarga-real-de-la-bateria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descarga real de la batería
       
     </span>
   </a>
@@ -1584,10 +1624,26 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-demanda-insatisfecha-red-a-soc-minimo" class="md-nav__link">
+  <a href="#demanda-insatisfecha-red-a-soc-minimo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Demanda insatisfecha — Red a SOC mínimo
+        Demanda insatisfecha — Red a SOC mínimo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#metodo-2-sensor-de-consumo-del-hogar-opcional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Método 2 — Sensor de consumo del hogar (opcional)
       
     </span>
   </a>
@@ -1722,12 +1778,14 @@
 <p>La carga predictiva necesita saber cuánta energía consume tu hogar cada día para decidir si hace falta cargar desde la red. En lugar de usar un valor fijo, la integración calcula un <strong>consumo estimado dinámico</strong> a partir del historial real de los últimos 7 días.</p>
 <hr />
 <h2 id="que-mide-el-consumo-estimado">Qué mide el consumo estimado<a class="headerlink" href="#que-mide-el-consumo-estimado" title="Permanent link">&para;</a></h2>
-<p>El consumo estimado de un día es la suma de dos componentes:</p>
+<p>La integración soporta dos métodos de acumulación según si se ha configurado o no un <strong>sensor de consumo del hogar</strong> opcional.</p>
+<h3 id="metodo-1-descarga-de-bateria-demanda-insatisfecha-por-defecto">Método 1 — Descarga de batería + demanda insatisfecha (por defecto)<a class="headerlink" href="#metodo-1-descarga-de-bateria-demanda-insatisfecha-por-defecto" title="Permanent link">&para;</a></h3>
+<p>Cuando no hay sensor de consumo del hogar configurado, el consumo estimado de un día es la suma de dos componentes:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Consumo del día = Descarga real de la batería + Demanda insatisfecha (red a min SOC)
 </code></pre></div>
-<h3 id="1-descarga-real-de-la-bateria">1. Descarga real de la batería<a class="headerlink" href="#1-descarga-real-de-la-bateria" title="Permanent link">&para;</a></h3>
+<h4 id="descarga-real-de-la-bateria">Descarga real de la batería<a class="headerlink" href="#descarga-real-de-la-bateria" title="Permanent link">&para;</a></h4>
 <p>La energía que la batería ha descargado durante el día, leída directamente de los coordinadores de cada batería (<code>total_daily_discharging_energy</code>). Este valor se resetea a medianoche según el reloj interno de la batería.</p>
-<h3 id="2-demanda-insatisfecha-red-a-soc-minimo">2. Demanda insatisfecha — Red a SOC mínimo<a class="headerlink" href="#2-demanda-insatisfecha-red-a-soc-minimo" title="Permanent link">&para;</a></h3>
+<h4 id="demanda-insatisfecha-red-a-soc-minimo">Demanda insatisfecha — Red a SOC mínimo<a class="headerlink" href="#demanda-insatisfecha-red-a-soc-minimo" title="Permanent link">&para;</a></h4>
 <p>Cuando <strong>todas las baterías están al SOC mínimo</strong> y ya no pueden descargar más, el hogar tiene que tirar de la red para cubrir su consumo. Esa energía importada de la red es consumo real del hogar que la batería no pudo atender.</p>
 <p>La integración la acumula en tiempo real cada ciclo del controlador (~2,5 s) mientras se cumplan estas condiciones simultáneamente:</p>
 <table>
@@ -1760,6 +1818,10 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>incremento (kWh) = potencia_red (W) × 2,5 s / 3 600 000
 </code></pre></div>
 <p>Este acumulador se expone como el sensor <strong><code>Grid at Min SOC</code></strong> (kWh) y se resetea a medianoche.</p>
+<h3 id="metodo-2-sensor-de-consumo-del-hogar-opcional">Método 2 — Sensor de consumo del hogar (opcional)<a class="headerlink" href="#metodo-2-sensor-de-consumo-del-hogar-opcional" title="Permanent link">&para;</a></h3>
+<p>Si se configura un <strong>sensor de consumo del hogar</strong> (un sensor de potencia en W o kW que mide el consumo eléctrico total del hogar), la integración lo integra directamente para construir el valor diario en lugar de usar el cálculo de descarga de batería + red a min SOC.</p>
+<p>La acumulación solo se ejecuta mientras <code>is_in_consumption_window()</code> es verdadero: las 24 horas completas cuando no hay franja de carga configurada, o las horas fuera de la franja de carga en los días de la franja. Este acotamiento garantiza que la ventana medida coincide con lo que la carga predictiva espera al usar después el promedio para proyectar la demanda restante.</p>
+<p>El valor diario acumulado se expone como el sensor <strong><code>Household Energy Today</code></strong> (kWh) y se resetea a medianoche.</p>
 <hr />
 <h2 id="captura-diaria-a-las-2355">Captura diaria a las 23:55<a class="headerlink" href="#captura-diaria-a-las-2355" title="Permanent link">&para;</a></h2>
 <p>Cada día a las <strong>23:55 (hora local)</strong> la integración guarda el consumo del día calculando:</p>
