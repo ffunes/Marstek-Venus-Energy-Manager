@@ -4144,7 +4144,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         except Exception as e:
             # Disconnect on any setup error
             await coordinator.disconnect()
-            raise ConfigEntryNotReady(f"Failed to set up {coordinator.host}: {e}") from e
+            raise ConfigEntryNotReady(f"Failed to set up {coordinator.host}:{coordinator.port}: {e}") from e
 
         coordinators.append(coordinator)
 

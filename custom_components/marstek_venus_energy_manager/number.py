@@ -62,7 +62,7 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
         
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
         self._attr_icon = definition.get("icon")
         self._attr_native_unit_of_measurement = definition.get("unit")
         self._attr_native_min_value = definition["min"]
@@ -142,8 +142,8 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
-            "name": self.coordinator.name,
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "name": f"{self.coordinator.name}",
             "manufacturer": "Marstek",
             "model": "Venus",
         }
@@ -220,13 +220,13 @@ class MarstekSoftSocLimitNumber(CoordinatorEntity, NumberEntity):
         self._attr_should_poll = False
         if kind == "max":
             self._attr_translation_key = "charging_cutoff_capacity"
-            self._attr_unique_id = f"{coordinator.host}_charging_cutoff_capacity"
+            self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_charging_cutoff_capacity"
             self._attr_icon = "mdi:battery-arrow-up"
             self._attr_native_min_value = 50
             self._attr_native_max_value = 100
         else:
             self._attr_translation_key = "discharging_cutoff_capacity"
-            self._attr_unique_id = f"{coordinator.host}_discharging_cutoff_capacity"
+            self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_discharging_cutoff_capacity"
             self._attr_icon = "mdi:battery-arrow-down"
             self._attr_native_min_value = 5
             self._attr_native_max_value = 50
@@ -266,7 +266,7 @@ class MarstekSoftSocLimitNumber(CoordinatorEntity, NumberEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "identifiers": {(DOMAIN, f"{coordinator.host}_{coordinator.port}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -285,7 +285,7 @@ class MarstekBackupThresholdNumber(CoordinatorEntity, NumberEntity):
         super().__init__(coordinator)
         self._attr_has_entity_name = True
         self._attr_translation_key = "backup_offgrid_threshold"
-        self._attr_unique_id = f"{coordinator.host}_backup_offgrid_threshold"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_backup_offgrid_threshold"
         self._attr_icon = "mdi:transmission-tower-off"
         self._attr_native_unit_of_measurement = "W"
         self._attr_native_min_value = 0
@@ -312,7 +312,7 @@ class MarstekBackupThresholdNumber(CoordinatorEntity, NumberEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",

@@ -104,7 +104,7 @@ class CellDeltaSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:sine-wave"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_cell_delta"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_cell_delta"
         self._attr_native_value: float | None = None
         super().__init__(coordinator, init)
 
@@ -124,7 +124,7 @@ class BalanceStatusSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:battery-heart-variant"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_balance_status"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_balance_status"
         self._status: str = "unknown"
         super().__init__(coordinator, init)
 
@@ -144,7 +144,7 @@ class DeltaTrendSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:trending-up"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_delta_trend"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_delta_trend"
         self._trend: str = "unknown"
         super().__init__(coordinator, init)
 
@@ -165,7 +165,7 @@ class LastBalanceReadSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_last_balance_read"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_last_balance_read"
         self._ts: datetime | None = None
         super().__init__(coordinator, init)
 
@@ -198,7 +198,7 @@ class DeltaAvg4wSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:chart-timeline-variant"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_delta_avg_4w"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_delta_avg_4w"
         self._avg: float | None = None
         super().__init__(coordinator, init)
 
