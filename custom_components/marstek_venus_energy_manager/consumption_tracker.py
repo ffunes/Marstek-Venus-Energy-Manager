@@ -989,6 +989,51 @@ class ConsumptionTracker:
 
         return not ctrl._check_time_window()
 
+    def get_consumption_window_hours_per_day(self) -> float:
+        """Total daily duration (hours) of the window over which avg_consumption is measured.
+
+        Mirrors is_in_consumption_window: 24h if no charging_time_slot, otherwise
+        24h minus the slot duration. Used to prorate avg_consumption against the
+        portion of the day still ahead in the charge-delay energy balance check.
+        """
+        slot = self._controller.charging_time_slot
+        if not slot:
+            return 24.0
+        try:
+            start = dt_time.fromisoformat(slot["start_time"])
+            end = dt_time.fromisoformat(slot["end_time"])
+        except Exception:
+            return 24.0
+        start_h = start.hour + start.minute / 60.0
+        end_h = end.hour + end.minute / 60.0
+        slot_h = (end_h - start_h) % 24
+        return max(0.0, 24.0 - slot_h)
+
+    def consumption_window_hours_in_range(self, from_h: float, to_h: float) -> float:
+        """Hours within [from_h, to_h] that fall OUTSIDE the charging_time_slot.
+
+        from_h/to_h are hours of the same day in [0, 24]. Returns 0 when the
+        range is empty. When no slot is configured, returns the full range.
+        """
+        if to_h <= from_h:
+            return 0.0
+        slot = self._controller.charging_time_slot
+        if not slot:
+            return to_h - from_h
+        try:
+            s = dt_time.fromisoformat(slot["start_time"])
+            e = dt_time.fromisoformat(slot["end_time"])
+        except Exception:
+            return to_h - from_h
+        s_h = s.hour + s.minute / 60.0
+        e_h = e.hour + e.minute / 60.0
+        intervals = [(s_h, e_h)] if s_h <= e_h else [(s_h, 24.0), (0.0, e_h)]
+        overlap = sum(
+            max(0.0, min(to_h, b) - max(from_h, a))
+            for a, b in intervals
+        )
+        return max(0.0, (to_h - from_h) - overlap)
+
     async def accumulate_household_consumption(self) -> None:
         """Integrate household power sensor → kWh accumulator (called every control cycle).
 
