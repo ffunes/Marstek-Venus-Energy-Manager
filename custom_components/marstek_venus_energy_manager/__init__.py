@@ -915,10 +915,19 @@ class ChargeDischargeController:
             remaining_solar_kwh = forecast_today * (1.0 - solar_fraction_done)
 
         hours_to_t_end = max(0, t_end - now_h)
-        daylight_hours = t_end - self._solar_t_start
-        if daylight_hours > 0:
+        # avg_consumption is measured over the consumption window (outside any
+        # charging_time_slot, or 24h if none is configured) — see
+        # ConsumptionTracker.is_in_consumption_window. Prorate against the
+        # portion of [now, t_end] that overlaps that same window.
+        window_hours_per_day = self._consumption_tracker.get_consumption_window_hours_per_day()
+        if window_hours_per_day > 0 and hours_to_t_end > 0:
             avg_consumption = self._consumption_tracker.get_avg_daily_consumption()
-            remaining_consumption_kwh = (avg_consumption / daylight_hours) * hours_to_t_end
+            remaining_window_hours = self._consumption_tracker.consumption_window_hours_in_range(
+                now_h, t_end
+            )
+            remaining_consumption_kwh = avg_consumption * (
+                remaining_window_hours / window_hours_per_day
+            )
         else:
             remaining_consumption_kwh = 0
 
