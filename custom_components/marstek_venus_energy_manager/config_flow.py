@@ -120,7 +120,7 @@ def _slots_overlap(new_slot: dict, existing_slots: list[dict]) -> bool:
 class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Marstek Venus Energy Manager."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self):
         """Initialize the config flow."""
