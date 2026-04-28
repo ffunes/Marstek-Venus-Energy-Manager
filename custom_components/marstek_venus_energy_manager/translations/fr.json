@@ -283,7 +283,8 @@
           "pd_max_power_change": "Changement de puissance max par cycle (W)",
           "pd_direction_hysteresis": "Hystérésis de direction (W)",
           "pd_min_charge_power": "Puissance minimale de charge (W)",
-          "pd_min_discharge_power": "Puissance minimale de décharge (W)"
+          "pd_min_discharge_power": "Puissance minimale de décharge (W)",
+          "pd_target_grid_power": "Puissance cible réseau (W)"
         },
         "data_description": {
           "pd_kp": "Réactivité au déséquilibre du réseau. Valeurs plus élevées = réponse plus rapide mais risque de dépassement. Plage : 0.1-2.0, par défaut : 0.65",
@@ -292,7 +293,8 @@
           "pd_max_power_change": "Changement de puissance maximale de la batterie par cycle de contrôle (2.5s). Empêche les commandes abruptes. Plage : 100-2000W, par défaut : 800W",
           "pd_direction_hysteresis": "Seuil de puissance requis pour basculer entre charge et décharge. Empêche les changements rapides de direction. Plage : 0-200W, par défaut : 60W",
           "pd_min_charge_power": "Puissance minimale pour charger. En dessous de ce seuil, le contrôleur reste en veille au lieu de charger à faible puissance. 0 = désactivé.",
-          "pd_min_discharge_power": "Puissance minimale pour décharger. En dessous de ce seuil, le contrôleur reste en veille au lieu de décharger à faible puissance. 0 = désactivé."
+          "pd_min_discharge_power": "Puissance minimale pour décharger. En dessous de ce seuil, le contrôleur reste en veille au lieu de décharger à faible puissance. 0 = désactivé.",
+          "pd_target_grid_power": "Consigne de puissance réseau que le contrôleur régule. Négatif = injection réseau, positif = soutirage, 0 = bilan nul. Plage : -500 à +500 W, défaut : 0 W."
         }
       }
     },
@@ -607,7 +609,8 @@
           "pd_max_power_change": "Changement de puissance max par cycle (W)",
           "pd_direction_hysteresis": "Hystérésis de direction (W)",
           "pd_min_charge_power": "Puissance minimale de charge (W)",
-          "pd_min_discharge_power": "Puissance minimale de décharge (W)"
+          "pd_min_discharge_power": "Puissance minimale de décharge (W)",
+          "pd_target_grid_power": "Puissance cible réseau (W)"
         },
         "data_description": {
           "pd_kp": "Réactivité au déséquilibre du réseau. Valeurs plus élevées = réponse plus rapide mais risque de dépassement. Plage : 0.1-2.0, par défaut : 0.65",
@@ -616,7 +619,8 @@
           "pd_max_power_change": "Changement de puissance maximale de la batterie par cycle de contrôle (2.5s). Empêche les commandes abruptes. Valeurs plus faibles = plus doux mais plus lent. Plage : 100-2000W, par défaut : 800W",
           "pd_direction_hysteresis": "Seuil de puissance requis pour basculer entre charge et décharge. Empêche les changements rapides de direction. Plage : 0-200W, par défaut : 60W",
           "pd_min_charge_power": "Puissance minimale pour charger. En dessous de ce seuil, le contrôleur reste en veille au lieu de charger à faible puissance. 0 = désactivé.",
-          "pd_min_discharge_power": "Puissance minimale pour décharger. En dessous de ce seuil, le contrôleur reste en veille au lieu de décharger à faible puissance. 0 = désactivé."
+          "pd_min_discharge_power": "Puissance minimale pour décharger. En dessous de ce seuil, le contrôleur reste en veille au lieu de décharger à faible puissance. 0 = désactivé.",
+          "pd_target_grid_power": "Consigne de puissance réseau que le contrôleur régule. Négatif = injection réseau, positif = soutirage, 0 = bilan nul. Plage : -500 à +500 W, défaut : 0 W."
         }
       }
     },
@@ -831,6 +835,7 @@
       "pd_controller_direction_hysteresis": { "name": "PD Hystérésis de Direction" },
       "pd_min_charge_power": { "name": "PD Puissance Min. de Charge" },
       "pd_min_discharge_power": { "name": "PD Puissance Min. de Décharge" },
+      "pd_target_grid_power": { "name": "PD Puissance Cible Réseau" },
       "max_contracted_power": { "name": "Puissance Contractuelle Max." },
       "capacity_protection_soc_threshold": { "name": "Écrêtement de Pointe – Seuil SOC" },
       "delay_safety_margin_min": { "name": "Retard de Charge – Marge" },

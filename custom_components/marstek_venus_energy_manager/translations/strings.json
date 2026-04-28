@@ -281,7 +281,8 @@
           "pd_max_power_change": "Max Power Change per Cycle (W)",
           "pd_direction_hysteresis": "Direction Hysteresis (W)",
           "pd_min_charge_power": "Minimum Charge Power (W)",
-          "pd_min_discharge_power": "Minimum Discharge Power (W)"
+          "pd_min_discharge_power": "Minimum Discharge Power (W)",
+          "pd_target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "pd_kp": "Responsiveness to grid imbalance. Higher values = faster response but risk of overshoot. Range: 0.1-2.0, default: 0.65",
@@ -290,7 +291,8 @@
           "pd_max_power_change": "Maximum battery power change per control cycle (2.5s). Prevents abrupt commands. Range: 100-2000W, default: 800W",
           "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W",
           "pd_min_charge_power": "Minimum power for charging. Below this threshold, the controller stays idle instead of charging at low power. 0 = disabled.",
-          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled."
+          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled.",
+          "pd_target_grid_power": "Grid power setpoint the controller regulates to. Negative = export to grid, positive = import from grid, 0 = net zero. Range: -500 to +500 W, default: 0 W."
         }
       }
     },
@@ -603,7 +605,8 @@
           "pd_max_power_change": "Max Power Change per Cycle (W)",
           "pd_direction_hysteresis": "Direction Hysteresis (W)",
           "pd_min_charge_power": "Minimum Charge Power (W)",
-          "pd_min_discharge_power": "Minimum Discharge Power (W)"
+          "pd_min_discharge_power": "Minimum Discharge Power (W)",
+          "pd_target_grid_power": "Target Grid Power (W)"
         },
         "data_description": {
           "pd_kp": "Responsiveness to grid imbalance. Higher values = faster response but risk of overshoot. Range: 0.1-2.0, default: 0.65",
@@ -612,7 +615,8 @@
           "pd_max_power_change": "Maximum battery power change per control cycle (2.5s). Prevents abrupt commands. Lower values = smoother but slower. Range: 100-2000W, default: 800W",
           "pd_direction_hysteresis": "Power threshold required to switch between charging and discharging. Prevents rapid direction changes. Range: 0-200W, default: 60W",
           "pd_min_charge_power": "Minimum power for charging. Below this threshold, the controller stays idle instead of charging at low power. 0 = disabled.",
-          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled."
+          "pd_min_discharge_power": "Minimum power for discharging. Below this threshold, the controller stays idle instead of discharging at low power. 0 = disabled.",
+          "pd_target_grid_power": "Grid power setpoint the controller regulates to. Negative = export to grid, positive = import from grid, 0 = net zero. Range: -500 to +500 W, default: 0 W."
         }
       }
     },
@@ -826,6 +830,7 @@
       "pd_controller_direction_hysteresis": { "name": "PD Direction Hysteresis" },
       "pd_min_charge_power": { "name": "PD Min Charge Power" },
       "pd_min_discharge_power": { "name": "PD Min Discharge Power" },
+      "pd_target_grid_power": { "name": "PD Target Grid Power" },
       "max_contracted_power": { "name": "Max Contracted Power" },
       "capacity_protection_soc_threshold": { "name": "Peak Shaving SOC Threshold" },
       "delay_safety_margin_min": { "name": "Charge Delay Margin" },

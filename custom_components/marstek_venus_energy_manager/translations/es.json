@@ -283,7 +283,8 @@
           "pd_max_power_change": "Cambio máximo de potencia por ciclo (W)",
           "pd_direction_hysteresis": "Histéresis de dirección (W)",
           "pd_min_charge_power": "Potencia mínima de carga (W)",
-          "pd_min_discharge_power": "Potencia mínima de descarga (W)"
+          "pd_min_discharge_power": "Potencia mínima de descarga (W)",
+          "pd_target_grid_power": "Potencia objetivo de red (W)"
         },
         "data_description": {
           "pd_kp": "Capacidad de respuesta al desequilibrio de red. Valores más altos = respuesta más rápida pero riesgo de sobreoscilación. Rango: 0.1-2.0, predeterminado: 0.65",
@@ -292,7 +293,8 @@
           "pd_max_power_change": "Cambio máximo de potencia de batería por ciclo de control (2.5s). Previene comandos abruptos. Rango: 100-2000W, predeterminado: 800W",
           "pd_direction_hysteresis": "Umbral de potencia requerido para cambiar entre carga y descarga. Previene cambios rápidos de dirección. Rango: 0-200W, predeterminado: 60W",
           "pd_min_charge_power": "Potencia mínima para cargar. Por debajo de este umbral, el controlador queda en reposo en vez de cargar a baja potencia. 0 = desactivado.",
-          "pd_min_discharge_power": "Potencia mínima para descargar. Por debajo de este umbral, el controlador queda en reposo en vez de descargar a baja potencia. 0 = desactivado."
+          "pd_min_discharge_power": "Potencia mínima para descargar. Por debajo de este umbral, el controlador queda en reposo en vez de descargar a baja potencia. 0 = desactivado.",
+          "pd_target_grid_power": "Consigna de potencia de red que regula el controlador. Negativo = exportar a red, positivo = importar de red, 0 = balance neto cero. Rango: -500 a +500 W, valor por defecto: 0 W."
         }
       }
     },
@@ -607,7 +609,8 @@
           "pd_max_power_change": "Cambio máximo de potencia por ciclo (W)",
           "pd_direction_hysteresis": "Histéresis de dirección (W)",
           "pd_min_charge_power": "Potencia mínima de carga (W)",
-          "pd_min_discharge_power": "Potencia mínima de descarga (W)"
+          "pd_min_discharge_power": "Potencia mínima de descarga (W)",
+          "pd_target_grid_power": "Potencia objetivo de red (W)"
         },
         "data_description": {
           "pd_kp": "Capacidad de respuesta al desequilibrio de red. Valores más altos = respuesta más rápida pero riesgo de sobreoscilación. Rango: 0.1-2.0, predeterminado: 0.65",
@@ -616,7 +619,8 @@
           "pd_max_power_change": "Cambio máximo de potencia de batería por ciclo de control (2.5s). Previene comandos abruptos. Valores más bajos = más suave pero más lento. Rango: 100-2000W, predeterminado: 800W",
           "pd_direction_hysteresis": "Umbral de potencia requerido para cambiar entre carga y descarga. Previene cambios rápidos de dirección. Rango: 0-200W, predeterminado: 60W",
           "pd_min_charge_power": "Potencia mínima para cargar. Por debajo de este umbral, el controlador queda en reposo en vez de cargar a baja potencia. 0 = desactivado.",
-          "pd_min_discharge_power": "Potencia mínima para descargar. Por debajo de este umbral, el controlador queda en reposo en vez de descargar a baja potencia. 0 = desactivado."
+          "pd_min_discharge_power": "Potencia mínima para descargar. Por debajo de este umbral, el controlador queda en reposo en vez de descargar a baja potencia. 0 = desactivado.",
+          "pd_target_grid_power": "Consigna de potencia de red que regula el controlador. Negativo = exportar a red, positivo = importar de red, 0 = balance neto cero. Rango: -500 a +500 W, valor por defecto: 0 W."
         }
       }
     },
@@ -831,6 +835,7 @@
       "pd_controller_direction_hysteresis": { "name": "PD Histéresis Dirección" },
       "pd_min_charge_power": { "name": "PD Potencia Mínima Carga" },
       "pd_min_discharge_power": { "name": "PD Potencia Mínima Descarga" },
+      "pd_target_grid_power": { "name": "PD Potencia Objetivo Red" },
       "max_contracted_power": { "name": "Potencia Máxima Contratada" },
       "capacity_protection_soc_threshold": { "name": "Reducción de Picos – Umbral SOC" },
       "delay_safety_margin_min": { "name": "Retraso de Carga – Margen" },
