@@ -77,7 +77,7 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
         
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
         self._attr_icon = definition.get("icon")
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
@@ -112,7 +112,7 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",

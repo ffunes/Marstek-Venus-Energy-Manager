@@ -11,7 +11,7 @@ from typing import Optional
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval, async_track_time_change
 from homeassistant.helpers.storage import Store
@@ -4027,6 +4027,51 @@ async def _restore_consumption_history(hass: HomeAssistant, entry: ConfigEntry, 
     except Exception as e:
         _LOGGER.warning("Failed to restore consumption history: %s", e)
         controller._daily_consumption_history = []
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate old entry versions. v1 -> v2: add port to unique_ids and device identifiers."""
+    if entry.version >= 2:
+        return True
+
+    from homeassistant.helpers import entity_registry as er
+    from homeassistant.helpers import device_registry as dr
+
+    pairs: list[tuple[str, int]] = []
+    for battery in entry.data.get("batteries", []):
+        host = battery.get(CONF_HOST)
+        port = battery.get(CONF_PORT)
+        if host is not None and port is not None:
+            pairs.append((host, port))
+
+    if not pairs:
+        _LOGGER.error("Cannot migrate to v2: no batteries with host/port in entry.data")
+        return False
+
+    new_prefixes = {f"{h}_{p}_" for h, p in pairs}
+
+    @callback
+    def _update_unique_id(entity_entry):
+        uid = entity_entry.unique_id
+        if not uid or any(uid.startswith(np) for np in new_prefixes):
+            return None
+        for h, p in pairs:
+            old_prefix = f"{h}_"
+            if uid.startswith(old_prefix):
+                return {"new_unique_id": f"{h}_{p}_" + uid[len(old_prefix):]}
+        return None
+
+    await er.async_migrate_entries(hass, entry.entry_id, _update_unique_id)
+
+    dev_reg = dr.async_get(hass)
+    for h, p in pairs:
+        device = dev_reg.async_get_device(identifiers={(DOMAIN, h)})
+        if device:
+            dev_reg.async_update_device(device.id, new_identifiers={(DOMAIN, f"{h}_{p}")})
+
+    hass.config_entries.async_update_entry(entry, version=2)
+    _LOGGER.info("Marstek: migrated config entry to version 2 (unique_ids now include port)")
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

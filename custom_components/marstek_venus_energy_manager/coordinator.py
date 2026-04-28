@@ -348,10 +348,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             
             # Determine entity type for registry lookup
             entity_type = self._get_entity_type(sensor)
-            # Try both unique_id formats - the one used in entities and the one used for lookup
             unique_id_formats = [
-                f"{self.host}_{sensor['key']}",  # Format used in sensor.py
-                f"{self.name}_{sensor['key']}",  # Format used in coordinator lookup
+                f"{self.host}_{self.port}_{sensor['key']}",  # current format (post-migration)
+                f"{self.host}_{sensor['key']}",               # legacy format (pre-migration)
+                f"{self.name}_{sensor['key']}",               # historical legacy
             ]
             
             registry_entry = None
@@ -427,7 +427,28 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                             value *= sensor["scale"]
                         if "precision" in sensor:
                             value = round(value, sensor["precision"])
-                    
+
+                    # Guard against firmware noise on lifetime energy counters.
+                    # The battery occasionally returns a partial 32-bit read mid-update,
+                    # yielding a value far below the real counter (e.g. 50 kWh instead of
+                    # 491 kWh).  A value that is non-zero but less than 90% of the last
+                    # known value is physically impossible for total_increasing sensors
+                    # and must be discarded.  Drops to exactly 0 (daily counter reset,
+                    # factory reset) are still accepted.
+                    if (
+                        sensor.get("state_class") == "total_increasing"
+                        and isinstance(value, (int, float))
+                        and value > 0
+                    ):
+                        prev = self.data.get(key) if self.data else None
+                        if isinstance(prev, (int, float)) and prev > 0 and value < prev * 0.9:
+                            _LOGGER.debug(
+                                "[%s] Discarding implausible backward jump for '%s': "
+                                "%.2f -> %.2f (< 90%% of previous). Likely firmware noise.",
+                                self.name, key, prev, value,
+                            )
+                            continue
+
                     updated_data[key] = value
                     self._last_update_times[key] = now
                     
