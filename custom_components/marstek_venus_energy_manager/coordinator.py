@@ -348,10 +348,10 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             
             # Determine entity type for registry lookup
             entity_type = self._get_entity_type(sensor)
-            # Try both unique_id formats - the one used in entities and the one used for lookup
             unique_id_formats = [
-                f"{self.host}_{sensor['key']}",  # Format used in sensor.py
-                f"{self.name}_{sensor['key']}",  # Format used in coordinator lookup
+                f"{self.host}_{self.port}_{sensor['key']}",  # current format (post-migration)
+                f"{self.host}_{sensor['key']}",               # legacy format (pre-migration)
+                f"{self.name}_{sensor['key']}",               # historical legacy
             ]
             
             registry_entry = None

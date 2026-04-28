@@ -159,7 +159,7 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
         # Set entity attributes
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -208,7 +208,7 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self.coordinator.host)},
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
