@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.7.2] - 2026-04-28
+
+### Changed
+- **Entity unique IDs and device identifiers now include the Modbus port**: Until now entity unique IDs followed the pattern `{host}_{key}` and device identifiers were `(DOMAIN, host)`. This made it impossible to register two batteries reachable at the same IP on different Modbus ports — a setup that exists when several Venus units share a single bridge or NAT mapping. Both the unique ID and device identifier now include the port: `{host}_{port}_{key}` and `(DOMAIN, "{host}_{port}")`. The change is applied across `sensor`, `binary_sensor`, `switch`, `number`, `select`, `button`, `balance_sensors` and `calculated_sensors`.
+- **Config entry version bumped to 2 with automatic migration**: An `async_migrate_entry` handler renames existing entity unique IDs from `{host}_{key}` to `{host}_{port}_{key}` and updates the device identifier in the device registry. Home Assistant automatically populates the `previous_unique_id` field on each migrated entity, so long-term statistics (energy dashboard, history graphs) keep linking to the same entity without interruption. The migration is idempotent and runs once per config entry on first load with the new version.
+
 ## [1.7.1] - 2026-04-26
 
 ### Added
