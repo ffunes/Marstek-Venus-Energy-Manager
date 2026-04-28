@@ -283,7 +283,8 @@
           "pd_max_power_change": "Max. Leistungsänderung pro Zyklus (W)",
           "pd_direction_hysteresis": "Richtungshysterese (W)",
           "pd_min_charge_power": "Minimale Ladeleistung (W)",
-          "pd_min_discharge_power": "Minimale Entladeleistung (W)"
+          "pd_min_discharge_power": "Minimale Entladeleistung (W)",
+          "pd_target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "pd_kp": "Reaktionsfähigkeit auf Netzungleichgewicht. Höhere Werte = schnellere Reaktion, aber Risiko von Überschwingen. Bereich: 0.1-2.0, Standard: 0.65",
@@ -292,7 +293,8 @@
           "pd_max_power_change": "Maximale Batterieleistungsänderung pro Regelzyklus (2.5s). Verhindert abrupte Befehle. Bereich: 100-2000W, Standard: 800W",
           "pd_direction_hysteresis": "Leistungsschwelle zum Wechsel zwischen Laden und Entladen. Verhindert schnelle Richtungswechsel. Bereich: 0-200W, Standard: 60W",
           "pd_min_charge_power": "Minimale Leistung zum Laden. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu laden. 0 = deaktiviert.",
-          "pd_min_discharge_power": "Minimale Leistung zum Entladen. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu entladen. 0 = deaktiviert."
+          "pd_min_discharge_power": "Minimale Leistung zum Entladen. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu entladen. 0 = deaktiviert.",
+          "pd_target_grid_power": "Netzleistungs-Sollwert, auf den der Regler regelt. Negativ = Einspeisung, positiv = Bezug, 0 = Netto-Null. Bereich: -500 bis +500 W, Standard: 0 W."
         }
       }
     },
@@ -607,7 +609,8 @@
           "pd_max_power_change": "Max. Leistungsänderung pro Zyklus (W)",
           "pd_direction_hysteresis": "Richtungshysterese (W)",
           "pd_min_charge_power": "Minimale Ladeleistung (W)",
-          "pd_min_discharge_power": "Minimale Entladeleistung (W)"
+          "pd_min_discharge_power": "Minimale Entladeleistung (W)",
+          "pd_target_grid_power": "Ziel-Netzleistung (W)"
         },
         "data_description": {
           "pd_kp": "Reaktionsfähigkeit auf Netzungleichgewicht. Höhere Werte = schnellere Reaktion, aber Risiko von Überschwingen. Bereich: 0.1-2.0, Standard: 0.65",
@@ -616,7 +619,8 @@
           "pd_max_power_change": "Maximale Batterieleistungsänderung pro Regelzyklus (2.5s). Verhindert abrupte Befehle. Niedrigere Werte = sanfter, aber langsamer. Bereich: 100-2000W, Standard: 800W",
           "pd_direction_hysteresis": "Leistungsschwelle zum Wechsel zwischen Laden und Entladen. Verhindert schnelle Richtungswechsel. Bereich: 0-200W, Standard: 60W",
           "pd_min_charge_power": "Minimale Leistung zum Laden. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu laden. 0 = deaktiviert.",
-          "pd_min_discharge_power": "Minimale Leistung zum Entladen. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu entladen. 0 = deaktiviert."
+          "pd_min_discharge_power": "Minimale Leistung zum Entladen. Unterhalb dieser Schwelle bleibt der Regler im Leerlauf statt mit niedriger Leistung zu entladen. 0 = deaktiviert.",
+          "pd_target_grid_power": "Netzleistungs-Sollwert, auf den der Regler regelt. Negativ = Einspeisung, positiv = Bezug, 0 = Netto-Null. Bereich: -500 bis +500 W, Standard: 0 W."
         }
       }
     },
@@ -831,6 +835,7 @@
       "pd_controller_direction_hysteresis": { "name": "PD Richtungshysterese" },
       "pd_min_charge_power": { "name": "PD Min. Ladeleistung" },
       "pd_min_discharge_power": { "name": "PD Min. Entladeleistung" },
+      "pd_target_grid_power": { "name": "PD Ziel-Netzleistung" },
       "max_contracted_power": { "name": "Max. Vertragsleistung" },
       "capacity_protection_soc_threshold": { "name": "Spitzenlastkappung SOC-Schwelle" },
       "delay_safety_margin_min": { "name": "Ladungsverzögerung – Puffer" },

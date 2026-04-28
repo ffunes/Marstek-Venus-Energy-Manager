@@ -283,7 +283,8 @@
           "pd_max_power_change": "Max vermogenswijziging per cyclus (W)",
           "pd_direction_hysteresis": "Richting hysterese (W)",
           "pd_min_charge_power": "Minimaal laadvermogen (W)",
-          "pd_min_discharge_power": "Minimaal ontlaadvermogen (W)"
+          "pd_min_discharge_power": "Minimaal ontlaadvermogen (W)",
+          "pd_target_grid_power": "Doelnetvermogen (W)"
         },
         "data_description": {
           "pd_kp": "Responsiviteit op netwerk onbalans. Hogere waarden = snellere respons maar risico op overshoot. Bereik: 0.1-2.0, standaard: 0.65",
@@ -292,7 +293,8 @@
           "pd_max_power_change": "Maximale batterijvermogenswijziging per regelcyclus (2.5s). Voorkomt abrupte commando's. Bereik: 100-2000W, standaard: 800W",
           "pd_direction_hysteresis": "Vermogensdrempel vereist om te schakelen tussen laden en ontladen. Voorkomt snelle richtingsveranderingen. Bereik: 0-200W, standaard: 60W",
           "pd_min_charge_power": "Minimaal vermogen om te laden. Onder deze drempel blijft de regelaar inactief in plaats van laden op laag vermogen. 0 = uitgeschakeld.",
-          "pd_min_discharge_power": "Minimaal vermogen om te ontladen. Onder deze drempel blijft de regelaar inactief in plaats van ontladen op laag vermogen. 0 = uitgeschakeld."
+          "pd_min_discharge_power": "Minimaal vermogen om te ontladen. Onder deze drempel blijft de regelaar inactief in plaats van ontladen op laag vermogen. 0 = uitgeschakeld.",
+          "pd_target_grid_power": "Netvermogen-setpoint waarop de regelaar regelt. Negatief = teruglevering, positief = afname, 0 = netto nul. Bereik: -500 tot +500 W, standaard: 0 W."
         }
       }
     },
@@ -607,7 +609,8 @@
           "pd_max_power_change": "Max vermogenswijziging per cyclus (W)",
           "pd_direction_hysteresis": "Richting hysterese (W)",
           "pd_min_charge_power": "Minimaal laadvermogen (W)",
-          "pd_min_discharge_power": "Minimaal ontlaadvermogen (W)"
+          "pd_min_discharge_power": "Minimaal ontlaadvermogen (W)",
+          "pd_target_grid_power": "Doelnetvermogen (W)"
         },
         "data_description": {
           "pd_kp": "Responsiviteit op netwerk onbalans. Hogere waarden = snellere respons maar risico op overshoot. Bereik: 0.1-2.0, standaard: 0.65",
@@ -616,7 +619,8 @@
           "pd_max_power_change": "Maximale batterijvermogenswijziging per regelcyclus (2.5s). Voorkomt abrupte commando's. Lagere waarden = soepeler maar langzamer. Bereik: 100-2000W, standaard: 800W",
           "pd_direction_hysteresis": "Vermogensdrempel vereist om te schakelen tussen laden en ontladen. Voorkomt snelle richtingsveranderingen. Bereik: 0-200W, standaard: 60W",
           "pd_min_charge_power": "Minimaal vermogen om te laden. Onder deze drempel blijft de regelaar inactief in plaats van laden op laag vermogen. 0 = uitgeschakeld.",
-          "pd_min_discharge_power": "Minimaal vermogen om te ontladen. Onder deze drempel blijft de regelaar inactief in plaats van ontladen op laag vermogen. 0 = uitgeschakeld."
+          "pd_min_discharge_power": "Minimaal vermogen om te ontladen. Onder deze drempel blijft de regelaar inactief in plaats van ontladen op laag vermogen. 0 = uitgeschakeld.",
+          "pd_target_grid_power": "Netvermogen-setpoint waarop de regelaar regelt. Negatief = teruglevering, positief = afname, 0 = netto nul. Bereik: -500 tot +500 W, standaard: 0 W."
         }
       }
     },
@@ -831,6 +835,7 @@
       "pd_controller_direction_hysteresis": { "name": "PD Richtingshysterese" },
       "pd_min_charge_power": { "name": "PD Min. Laadvermogen" },
       "pd_min_discharge_power": { "name": "PD Min. Ontlaadvermogen" },
+      "pd_target_grid_power": { "name": "PD Doelnetvermogen" },
       "max_contracted_power": { "name": "Max. Gecontracteerd Vermogen" },
       "capacity_protection_soc_threshold": { "name": "Piekbegrenzing – SOC Drempel" },
       "delay_safety_margin_min": { "name": "Laadvertraging – Marge" },
