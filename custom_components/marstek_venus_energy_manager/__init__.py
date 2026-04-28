@@ -60,7 +60,8 @@ from .const import (
     CONF_PD_MIN_DISCHARGE_POWER,
     DEFAULT_PD_MIN_CHARGE_POWER,
     DEFAULT_PD_MIN_DISCHARGE_POWER,
-    DEFAULT_SLOT_TARGET_GRID_POWER,
+    CONF_TARGET_GRID_POWER,
+    DEFAULT_TARGET_GRID_POWER,
     CONF_CAPACITY_PROTECTION_ENABLED,
     CONF_CAPACITY_PROTECTION_SOC_THRESHOLD,
     CONF_CAPACITY_PROTECTION_LIMIT,
@@ -144,6 +145,7 @@ class ChargeDischargeController:
         self.direction_hysteresis = config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
         self.min_charge_power = config_entry.data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
         self.min_discharge_power = config_entry.data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
+        self.target_grid_power = config_entry.data.get(CONF_TARGET_GRID_POWER, DEFAULT_TARGET_GRID_POWER)
 
         # Sensor filtering to avoid reacting to instantaneous spikes
         self.sensor_history = []  # Keep last 3 readings for faster response
@@ -379,6 +381,7 @@ class ChargeDischargeController:
         self.direction_hysteresis = self.config_entry.data.get(CONF_PD_DIRECTION_HYSTERESIS, DEFAULT_PD_DIRECTION_HYSTERESIS)
         self.min_charge_power = self.config_entry.data.get(CONF_PD_MIN_CHARGE_POWER, DEFAULT_PD_MIN_CHARGE_POWER)
         self.min_discharge_power = self.config_entry.data.get(CONF_PD_MIN_DISCHARGE_POWER, DEFAULT_PD_MIN_DISCHARGE_POWER)
+        self.target_grid_power = self.config_entry.data.get(CONF_TARGET_GRID_POWER, DEFAULT_TARGET_GRID_POWER)
         self.max_contracted_power = self.config_entry.data.get(CONF_MAX_CONTRACTED_POWER, 7000)
         self._delay_safety_margin_h = self.config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
@@ -3449,9 +3452,7 @@ class ChargeDischargeController:
         # Use moving average to smooth out instantaneous spikes
         sensor_filtered = sum(self.sensor_history) / len(self.sensor_history) if self.sensor_history else sensor_raw
 
-        # Get active time slot parameters (target grid power)
-        active_slot = self._get_active_slot()
-        active_target = active_slot.get("target_grid_power", DEFAULT_SLOT_TARGET_GRID_POWER) if active_slot else DEFAULT_SLOT_TARGET_GRID_POWER
+        active_target = self.target_grid_power
         min_charge = self.min_charge_power
         min_discharge = self.min_discharge_power
 

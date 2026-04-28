@@ -1853,6 +1853,7 @@ CONF_PD_MAX_POWER_CHANGE = "pd_controller_max_power_change"
 CONF_PD_DIRECTION_HYSTERESIS = "pd_controller_direction_hysteresis"
 CONF_PD_MIN_CHARGE_POWER = "pd_min_charge_power"
 CONF_PD_MIN_DISCHARGE_POWER = "pd_min_discharge_power"
+CONF_TARGET_GRID_POWER = "pd_target_grid_power"
 
 # Default PD Controller Parameters
 DEFAULT_PD_KP = 0.65
@@ -1862,9 +1863,10 @@ DEFAULT_PD_MAX_POWER_CHANGE = 800
 DEFAULT_PD_DIRECTION_HYSTERESIS = 60
 DEFAULT_PD_MIN_CHARGE_POWER = 0       # Minimum charge power (0 = disabled)
 DEFAULT_PD_MIN_DISCHARGE_POWER = 0    # Minimum discharge power (0 = disabled)
+DEFAULT_TARGET_GRID_POWER = 0
 
-# Default target grid power per time slot (0W = regulate to zero grid flow)
-DEFAULT_SLOT_TARGET_GRID_POWER = 0
+# Legacy alias so existing __init__.py imports don't break during transition
+DEFAULT_SLOT_TARGET_GRID_POWER = DEFAULT_TARGET_GRID_POWER
 
 # Dynamic Pricing Mode Configuration
 CONF_PREDICTIVE_CHARGING_MODE = "predictive_charging_mode"
@@ -1955,6 +1957,16 @@ CONFIG_NUMBER_DEFINITIONS = [
         "unit": "W",
         "default": DEFAULT_PD_MIN_DISCHARGE_POWER,
         "icon": "mdi:battery-low",
+    },
+    {
+        "key": CONF_TARGET_GRID_POWER,
+        "name": "PD Target Grid Power",
+        "min": -500,
+        "max": 500,
+        "step": 10,
+        "unit": "W",
+        "default": DEFAULT_TARGET_GRID_POWER,
+        "icon": "mdi:transmission-tower-export",
     },
     {
         "key": CONF_MAX_CONTRACTED_POWER,

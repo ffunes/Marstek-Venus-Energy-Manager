@@ -227,7 +227,6 @@ class TimeSlotSwitch(SwitchEntity):
             "schedule": f"{slot.get('start_time', '??')}-{slot.get('end_time', '??')}",
             "days": days_str,
             "apply_to_charge": slot.get("apply_to_charge", False),
-            "target_grid_power": f"{slot.get('target_grid_power', 0)} W",
         }
 
     async def _update_slot_enabled(self, enabled: bool) -> None:

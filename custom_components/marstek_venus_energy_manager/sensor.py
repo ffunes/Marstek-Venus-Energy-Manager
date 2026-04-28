@@ -297,7 +297,6 @@ class DischargeWindowSensor(SensorEntity):
             attrs[f"slot_{n}_days"] = days_str
             attrs[f"slot_{n}_enabled"] = slot.get("enabled", True)
             attrs[f"slot_{n}_apply_to_charge"] = slot.get("apply_to_charge", False)
-            attrs[f"slot_{n}_target_grid_power"] = f"{slot.get('target_grid_power', 0)} W"
 
         return attrs
 
@@ -568,7 +567,6 @@ class ConfigurationSummarySensor(SensorEntity):
             attrs[f"slot_{n}_days"] = days_str
             attrs[f"slot_{n}_enabled"] = slot.get("enabled", True)
             attrs[f"slot_{n}_apply_to_charge"] = slot.get("apply_to_charge", False)
-            attrs[f"slot_{n}_target_grid_power_W"] = slot.get("target_grid_power", 0)
 
         # --- Predictive charging ---
         predictive_enabled = data.get(CONF_ENABLE_PREDICTIVE_CHARGING, False)

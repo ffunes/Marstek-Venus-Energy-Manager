@@ -1,5 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### ⚠️ Breaking Change — Target Grid Power
+
+**The per-timeslot "Target Grid Power" field has been removed.**
+
+Previously each discharge time slot had its own independent *Target Grid Power* offset (the watt setpoint the PD controller regulated the grid to during that slot). That per-slot field no longer exists.
+
+It has been replaced by a **single global "PD Target Grid Power"** setting that applies for the entire integration, regardless of which slot is active. The new control is:
+
+- Configurable in the **Options → Advanced PD Controller** flow.
+- Exposed as a live **number entity** (`number.marstek_venus_system_pd_target_grid_power`) that can be changed at runtime without reloading the integration.
+- Default: **0 W** (net-zero grid regulation, same as the previous default).
+
+**Action required on upgrade:** If any of your timeslots had a non-zero Target Grid Power, the value has been reset to 0 W. Open Options → Advanced PD Controller and set the new global value to your desired setpoint.
+
 ## [1.7.1] - 2026-04-26
 
 ### Added
