@@ -1406,6 +1406,12 @@
 <!-- El changelog completo se mantiene en el archivo CHANGELOG.md del repositorio -->
 
 <h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
+<h2 id="172-2026-04-28">[1.7.2] - 2026-04-28<a class="headerlink" href="#172-2026-04-28" title="Permanent link">&para;</a></h2>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Entity unique IDs and device identifiers now include the Modbus port</strong>: Until now entity unique IDs followed the pattern <code>{host}_{key}</code> and device identifiers were <code>(DOMAIN, host)</code>. This made it impossible to register two batteries reachable at the same IP on different Modbus ports — a setup that exists when several Venus units share a single bridge or NAT mapping. Both the unique ID and device identifier now include the port: <code>{host}_{port}_{key}</code> and <code>(DOMAIN, "{host}_{port}")</code>. The change is applied across <code>sensor</code>, <code>binary_sensor</code>, <code>switch</code>, <code>number</code>, <code>select</code>, <code>button</code>, <code>balance_sensors</code> and <code>calculated_sensors</code>.</li>
+<li><strong>Config entry version bumped to 2 with automatic migration</strong>: An <code>async_migrate_entry</code> handler renames existing entity unique IDs from <code>{host}_{key}</code> to <code>{host}_{port}_{key}</code> and updates the device identifier in the device registry. Home Assistant automatically populates the <code>previous_unique_id</code> field on each migrated entity, so long-term statistics (energy dashboard, history graphs) keep linking to the same entity without interruption. The migration is idempotent and runs once per config entry on first load with the new version.</li>
+</ul>
 <h2 id="171-2026-04-26">[1.7.1] - 2026-04-26<a class="headerlink" href="#171-2026-04-26" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1442,7 +1448,7 @@
 <ul>
 <li><strong>Excluded Devices diagnostic sensor</strong>: The <code>Excluded Devices</code> sensor (which reported the count and details of excluded devices as attributes) has been removed. The same information is now directly visible through the per-device <code>{Device} – Enabled</code> and <code>{Device} – Solar Surplus</code> switch entities added in this release.</li>
 </ul>
-<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Predictive charging: grid-only SOC target</strong>: When predictive charging activates, the battery is no longer charged all the way to <code>max_soc</code> from the grid. Instead, the integration calculates how much solar will remain after covering expected household consumption (<em>solar surplus</em>) and charges from the grid only the portion solar cannot cover:</li>
 </ul>
@@ -1487,7 +1493,7 @@
 <li><strong>Options flow menu</strong>: The options flow now uses a menu instead of a linear wizard, allowing users to jump directly to any section — sensors, batteries, time slots, excluded devices, predictive charging, weekly full charge, solar charge delay, peak shaving, or PD controller — without stepping through unrelated screens.</li>
 <li><strong>Solar forecast safety margin</strong>: A configurable kWh buffer can now be added to the consumption forecast when deciding whether to charge from the grid. Useful when your solar forecast integration (e.g. forecast.solar with multiple string arrays) tends to be optimistic. Set in the predictive charging config step for all three modes (time slot, dynamic pricing, real-time price) and also adjustable at runtime via the new <strong>Solar Forecast Safety Margin</strong> number entity under Marstek Venus System — changes take effect immediately without restarting. Defaults to 0 kWh (no change to existing behaviour). Capped at total battery capacity as a guardrail.</li>
 </ul>
-<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Peak shaving SOC threshold minimum lowered to 20 %</strong>: The minimum selectable value for the peak shaving SOC threshold has been reduced from 30 % to 20 %, both in the setup/options flow slider and in the corresponding number entity (<code>number.marstek_venus_system_capacity_protection_soc_threshold</code>). This allows configuring peak shaving to activate at lower SOC levels than previously permitted.</li>
 </ul>
@@ -1544,7 +1550,7 @@
 <li><strong>Dynamic pricing config flow did not advance</strong>: The config flow for dynamic pricing mode failed to proceed past the pricing step because the <code>NumberSelector</code> could not handle comma-separated decimals used in European locales. The <code>TextSelector</code> replacement accepts both comma and dot as decimal separators.</li>
 </ul>
 <h2 id="161-2026-04-10">[1.6.1] - 2026-04-10<a class="headerlink" href="#161-2026-04-10" title="Permanent link">&para;</a></h2>
-<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Peak shaving renamed from "Capacity Protection"</strong>: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.</li>
 </ul>
@@ -1563,7 +1569,7 @@
 <ul>
 <li><strong>Solar charge delay SOC setpoint</strong>: New optional feature that splits the morning charge into two phases. A dedicated checkbox enables it; when enabled, a slider (12–90 %, default 50 %) sets the target SOC. Below the setpoint the battery charges freely without any delay applied; once all batteries reach the setpoint the solar delay logic activates as usual. This guarantees a minimum charge level on deeply discharged batteries before the solar energy decision is made, while still maximising self-consumption for the remaining charge. The minimum is 12 % — the Venus battery minimum discharge SOC. Configurable during setup and from the options flow; the setpoint value is also exposed as a number entity (<em>Charge Delay SOC Setpoint</em>) on the system device card for runtime adjustment.</li>
 </ul>
-<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Solar forecast now uses today's live value</strong>: The integration no longer captures and stores tomorrow's forecast at 23:00. Instead, it reads the configured sensor live on every evaluation. Today's forecast is updated multiple times throughout the day by most solar forecast integrations (Solcast, Forecast.Solar, etc.), becoming progressively more accurate as actual weather conditions develop. This removes the 23:00 nightly capture task and eliminates the stale-forecast problem that occurred after an HA restart or when the nightly window was missed.</li>
 <li><strong>Charge delay threshold is now a dynamic energy balance</strong>: The previous fixed threshold (forecast &lt; 1.5 × battery capacity → unlock) has been replaced with the same energy-balance calculation used by predictive charging: <code>(usable_energy + forecast) &lt; avg_daily_consumption</code>. This takes the current battery SOC into account — on a partly-charged morning the threshold is effectively lower — and uses real historical consumption data instead of an arbitrary capacity multiplier. The balance is only recalculated when the forecast value changes by more than 0.05 kWh, avoiding unnecessary computation on every controller cycle.</li>
@@ -1591,7 +1597,7 @@
 <li><strong>Shared alarm/fault bit-description constants</strong> (<code>FAULT_BIT_DESCRIPTIONS</code>, <code>ALARM_BIT_DESCRIPTIONS</code> in <code>const.py</code>): The 32-bit description maps previously duplicated inline inside <code>SENSOR_DEFINITIONS</code> are now standalone module-level dicts. The existing per-battery <code>Alarm Status</code> and <code>Fault Status</code> sensors reference these constants, eliminating the duplication and making future updates to alarm labels a single-point change.</li>
 <li><strong>Solar Surplus switch per excluded device</strong>: Each excluded device now gets a dedicated switch entity (<code>Solar Surplus – &lt;device name&gt;</code>) that toggles the <code>allow_solar_surplus</code> flag at runtime without entering the options flow. When ON, the battery yields solar surplus to that device (e.g. EV charger) instead of charging itself — solar goes to the device first and the battery will not discharge to power it either. When OFF, the battery charges normally with any available solar surplus. The switch is controllable from HA automations, enabling priority changes based on schedules, battery SOC, EV connection state, or any other condition.</li>
 </ul>
-<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>strings.json now in English</strong>: The base translation file (<code>strings.json</code>) has been converted to English to serve as the proper fallback language for Home Assistant installations using a language without a dedicated translation file.</li>
 </ul>
@@ -1642,7 +1648,7 @@
 <li><strong>Modbus read/write operations now time out on half-open sockets</strong>: <code>async_read_register</code> and <code>async_write_register</code> now wrap their underlying pymodbus calls in <code>asyncio.wait_for(timeout=...)</code> using the client's configured timeout (default 10 s). Previously, a hung write or read on a half-open socket would block indefinitely, preventing the coordinator from recovering after a TCP connection drop. <code>asyncio.TimeoutError</code> is now treated the same as <code>ConnectionException</code>, triggering the existing reconnect-and-retry path.</li>
 <li><strong>Battery SOC hidden by efficiency sensor in device card</strong>: The Round-Trip Efficiency sensor shared the <code>battery</code> device class with the Battery SOC sensor, causing Home Assistant to display the efficiency percentage instead of the SOC in the top-right corner of the device card. The device class has been removed from the efficiency sensor.</li>
 </ul>
-<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Predictive charging notifications reformatted</strong>: Both time-slot and dynamic pricing notifications now use a consistent emoji-based layout (🔋 battery, ☀️ solar, 📊 consumption, ⚡ deficit, ⏰ timing). All notifications show the effective charge power as <code>min(ICP, battery capacity)W (ICP: XW, batteries: YW)</code>. When dynamic pricing finds no deficit, the notification is clearly labelled as informational ("No charging will activate") and shows the cheapest reference hours without implying grid charging will occur.</li>
 <li><strong>Clarifying note on solar forecast sensor in secondary configuration steps</strong>: In the Time Slot, Dynamic Pricing, and Charge Delay configuration steps, the solar forecast sensor field now includes a note explaining that it is not required if the sensor was already configured in the initial setup step — it will be used automatically. The German, French, and Dutch translations of the Dynamic Pricing step were also missing this field entirely; it has been added.</li>
@@ -1683,7 +1689,7 @@
 <ul>
 <li><strong>Force Full Charge button removed</strong>: The <code>Force Full Charge</code> button has been replaced by the new <code>Charge Delay</code> switch (see above).</li>
 </ul>
-<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Solar T_start detection rewritten</strong>: The mechanism that detects when solar production begins (used by the Charge Delay feature) has been replaced. The previous approach accumulated daily battery charging energy and triggered at a 0.1 kWh threshold — unreliable because grid charging energy was included in the counter. The new primary mechanism triggers when grid power ≤ 0 W and total battery power ≤ 0 W simultaneously (solar is covering at least the full house load with no battery contribution). A new astronomical fallback kicks in 30 minutes after the estimated sunrise (calculated from HA latitude, longitude, and day of year) if the primary condition has not fired, handling high-consumption days where grid power never reaches zero.</li>
 <li><strong>Solar forecast corrected by 15 % before use</strong>: A conservative 15 % reduction is applied internally to the captured solar forecast before it is used by the Charge Delay and Predictive Charging algorithms. The raw sensor value is still shown in the <code>forecast_kwh</code> diagnostic attribute; only the internal calculation uses the adjusted value.</li>
@@ -1712,7 +1718,7 @@
 <li><strong>Hassfest manifest validation</strong>: Removed unsupported <code>icon</code> field from <code>manifest.json</code> and added <code>recorder</code> to <code>after_dependencies</code> to declare the integration's usage of the recorder component.</li>
 </ul>
 <h2 id="132-2026-03-17">[1.3.2] - 2026-03-17<a class="headerlink" href="#132-2026-03-17" title="Permanent link">&para;</a></h2>
-<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Min charge/discharge power slider range increased</strong>: The maximum value for <code>Min Charge Power</code> and <code>Min Discharge Power</code> in both the PD Advanced options flow and the number entities has been raised from 500W to 2000W, allowing higher idle thresholds for systems with large PV Systems.</li>
 </ul>
@@ -1733,7 +1739,7 @@
 <li><strong>Force Full Charge button</strong>: New button on the Marstek Venus System device to trigger an immediate 100% charge on any day, bypassing the weekly schedule and delay logic. Resets automatically on day change.</li>
 <li><strong>Configurable safety margin for delay feature</strong>: The delay safety margin (time buffer before estimated end of solar production) is now configurable in both config and options flow (10-120 minutes, default 40 min). Previously hardcoded at 40 minutes.</li>
 </ul>
-<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
+<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>System Charge/Discharge Power uses AC power</strong>: The <code>System Charge Power</code> and <code>System Discharge Power</code> aggregate sensors now read from each battery's <code>AC Power</code> register instead of <code>Battery Power</code>, reflecting the actual AC-side power flow.</li>
 <li><strong>V3 Battery SOC register upgraded</strong>: V3 batteries now read SOC from register 34002 (scale 0.1, precision 2 decimals) instead of 37005 (scale 1, precision 1 decimal), providing higher resolution readings.</li>
@@ -1780,7 +1786,7 @@
 <li><strong>Immediate unavailability detection</strong>: The coordinator now marks a battery as unavailable (<code>_is_connected = False</code>) on the first poll cycle where all reads fail, instead of waiting for 5 consecutive failures. The control loop stops sending writes to unreachable batteries immediately, preventing log noise and wasted Modbus operations.</li>
 <li><strong>Connection error log reduction</strong>: <code>ConnectionException</code> and <code>ModbusIOException</code> errors during read/write operations are now logged at DEBUG level instead of ERROR with full traceback. "Failed after N attempts" messages also downgraded to DEBUG. This eliminates the 60,000+ error log entries that occurred during a WiFi disconnection event.</li>
 </ul>
-<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
+<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Minimum charge/discharge power moved to PD controller settings</strong>: <code>min_charge_power</code> and <code>min_discharge_power</code> are now global PD controller parameters instead of per-time-slot settings. They apply uniformly regardless of the active time slot. Existing installations will use the default (0 = disabled) until reconfigured via Options → PD Advanced.</li>
 <li><strong>Predictive Charging switch logic inverted</strong>: The switch is now ON when predictive charging is enabled (default) and OFF when overridden/paused. Previously, it was an "Override" switch with inverted semantics. New unique_id (<code>_predictive_charging</code>) — the old <code>_override_predictive_charging</code> entity should be manually deleted from HA.</li>
@@ -1817,7 +1823,7 @@
 <li>V3 packet correction: Automatically fixes malformed MBAP length bytes in V3 exception responses that caused pymodbus timeouts.</li>
 <li>Automatic reconnection in Modbus retry loops: Both read and write operations now reconnect if the TCP connection is lost mid-retry (skipped during shutdown to avoid occupying the single TCP slot).</li>
 </ul>
-<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
+<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Platform files (<code>button.py</code>, <code>number.py</code>, <code>select.py</code>, <code>switch.py</code>) now use coordinator's version-specific entity definitions instead of importing hardcoded V2 lists.</li>
 <li><code>ManualModeSwitch</code> uses <code>coordinator.get_register()</code> instead of hardcoded register addresses, making it version-aware.</li>
@@ -1846,7 +1852,7 @@
 <li>Run startup consumption backfill immediately on reload instead of waiting for <code>homeassistant_started</code> (which never fires again after boot).</li>
 </ul>
 <h2 id="101-2026-02-18">[1.0.1] - 2026-02-18<a class="headerlink" href="#101-2026-02-18" title="Permanent link">&para;</a></h2>
-<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
+<h3 id="changed_12">Changed<a class="headerlink" href="#changed_12" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Remove V3-exclusive entity definitions to match V2 register footprint.</li>
 <li>Deleted 20 entity definitions from the V3 definition lists (sensors, binary sensors, selects, buttons) that had no equivalent in V2.</li>
