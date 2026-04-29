@@ -22,6 +22,17 @@ MAX_POWER_BY_VERSION = {
 }
 DEFAULT_VERSION = "v2"
 
+# Multi-battery activation thresholds derived from efficiency tables (η external)
+# Crossover = power at which splitting load across 2 batteries becomes more efficient
+# than running a single battery.  Based on Venus efficiency measurements at 2500 W max.
+MULTI_BATTERY_DISCHARGE_CROSSOVER_W = 1500   # 60% of 2500 W physical max
+MULTI_BATTERY_CHARGE_CROSSOVER_W    = 1750   # 70% of 2500 W physical max
+MULTI_BATTERY_HYSTERESIS_GAP        = 0.10   # fraction gap: activation → deactivation
+MULTI_BATTERY_MIN_ACTIVATION        = 0.50   # floor: never activate below this fraction
+# Cap at 0.95: stage 5% before single-battery saturation to absorb demand transients,
+# even when efficiency analysis alone would keep a single battery active.
+MULTI_BATTERY_MAX_ACTIVATION        = 0.95
+
 # Version-specific register map for control operations
 # Maps logical register names to physical addresses per battery version
 REGISTER_MAP = {

@@ -4,7 +4,16 @@ The integration manages up to **6 batteries** as an aggregated system, distribut
 
 ## Efficiency principle
 
-Based on the Venus efficiency curve (peak ~91% between 1000–1500 W), batteries are activated only when total power exceeds **60% of combined capacity**. Running fewer batteries at higher power is more efficient than spreading the same load across all of them.
+Based on measured Venus efficiency curves, batteries are activated only when total power exceeds the **efficiency crossover point** — the wattage at which splitting load across two batteries becomes more efficient than running one alone. Running fewer batteries at higher power is more efficient than spreading the same load across all of them.
+
+The crossover points (derived from η external measurements) are:
+
+| Direction | Crossover | % of 2500 W physical max |
+|---|---:|---:|
+| Discharge | 1500 W | 60 % |
+| Charge | 1750 W | 70 % |
+
+The activation threshold is computed dynamically as `crossover_W ÷ configured_max_W`, clamped to [50 %, 95 %]. This means users who configure a lower power limit per battery activate additional batteries later (closer to their configured max), which correctly reflects that their operating range stays within the single-battery efficiency peak.
 
 The following measurements show DC power consumption/output, AC power at the meter (internal clamp) and at the wall outlet (external clamp), and the resulting efficiency at each power level:
 
@@ -78,7 +87,7 @@ To avoid "ping-pong" activation/deactivation, three hysteresis levels are applie
 |---|---|---|
 | **SOC** | 5 % | An active battery stays active until another exceeds it by 5% SOC |
 | **Lifetime energy** | 2.5 kWh | Breaks SOC ties using accumulated lifetime energy with an advantage for the active battery |
-| **Power** | ±100 W | Activates the 2nd battery at 60% of combined capacity; deactivates at 50% |
+| **Power** | 10 pp | Activation threshold derived from efficiency crossover; deactivation = activation − 10 percentage points |
 
 ## Power distribution
 

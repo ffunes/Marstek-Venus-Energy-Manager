@@ -463,6 +463,9 @@ class ChargeDelaySensor(SensorEntity):
         if state.startswith("Unlocking") or state == "Charging allowed":
             return "charging_allowed"
 
+        if state == "Skipped - Full Charge Day":
+            return "skipped_full_charge_day"
+
         if state == "Charging to setpoint":
             return "charging_to_setpoint"
 

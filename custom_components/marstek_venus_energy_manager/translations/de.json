@@ -722,6 +722,7 @@
           "waiting_for_solar": "Warte auf Solar",
           "delayed": "Verzögert",
           "charging_allowed": "Laden erlaubt",
+          "skipped_full_charge_day": "Übersprungen – Vollladetag",
           "charging_to_setpoint": "Laden bis Sollwert"
         }
       },

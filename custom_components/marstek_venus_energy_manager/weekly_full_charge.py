@@ -126,6 +126,12 @@ class WeeklyFullChargeManager:
             if stored_date == today_iso:
                 ctrl.weekly_full_charge_complete = data.get("complete", False)
                 ctrl.weekly_full_charge_registers_written = data.get("registers_written", False)
+                # Restore visible status so the sensor reflects the correct state immediately.
+                # (handle_registers() will also correct it on the next tick, but this avoids
+                # a transient "Idle" flash and is correct for the "Complete" case too.)
+                saved_state = data.get("state")
+                if saved_state:
+                    ctrl._weekly_charge_status["state"] = saved_state
                 # Restore delay state
                 ctrl._charge_delay_unlocked = data.get("delay_unlocked", False)
                 ctrl._solar_t_start = data.get("solar_t_start")
@@ -150,6 +156,7 @@ class WeeklyFullChargeManager:
             data = {
                 "complete": ctrl.weekly_full_charge_complete,
                 "registers_written": ctrl.weekly_full_charge_registers_written,
+                "state": ctrl._weekly_charge_status.get("state", "Idle"),
                 "date": date.today().isoformat(),
                 "timestamp": now.isoformat(),
                 # Delay state (bundled in the same store for legacy reasons)
@@ -214,9 +221,19 @@ class WeeklyFullChargeManager:
                 and not ctrl._force_full_charge and not ctrl._balance_monitor_overrides_delay()):
             return  # Delay is handled by _is_charge_delayed() in _is_operation_allowed()
 
-        # Write register 44000 to 100% on first activation (v2 only - v3 uses software enforcement)
-        if not ctrl.weekly_full_charge_registers_written:
-            _LOGGER.info("Weekly Full Charge: Activating for compatible batteries")
+        # Write register 44000 to 100% on first activation (v2 only - v3 uses software enforcement).
+        # Also re-write after HA restart: registers_written may be True (from persisted state)
+        # but async_setup_entry wrote max_soc back to the hardware register.  The empty
+        # _weekly_charge_saved_max_soc dict is a reliable proxy for "not yet applied this
+        # session" because it is in-memory only and starts empty on every restart.
+        need_write = (not ctrl.weekly_full_charge_registers_written
+                      or not ctrl._weekly_charge_saved_max_soc)
+        if need_write:
+            is_restart_reapply = ctrl.weekly_full_charge_registers_written
+            if is_restart_reapply:
+                _LOGGER.info("Weekly Full Charge: Re-applying 100%% cutoff after HA restart")
+            else:
+                _LOGGER.info("Weekly Full Charge: Activating for compatible batteries")
             for coordinator in ctrl.coordinators:
                 cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
 
@@ -230,8 +247,9 @@ class WeeklyFullChargeManager:
                         "Using software enforcement to 100%%.",
                         coordinator.name
                     )
-                    # v3 batteries: software enforcement will allow charging to 100%
-                    # since effective_max_soc is set to 100 when weekly charge is active
+                    # v3 batteries: mark as verified so the restart-proxy check doesn't
+                    # loop forever when all coordinators are v3.
+                    ctrl._weekly_charge_saved_max_soc[coordinator.name] = coordinator.max_soc
                     continue
 
                 # v2 batteries: write hardware register
@@ -248,9 +266,8 @@ class WeeklyFullChargeManager:
 
             ctrl.weekly_full_charge_registers_written = True
             ctrl._weekly_charge_status["state"] = "Charging to 100%"
-            # Persist registers_written immediately so that if HA restarts mid-charge
-            # the stored state reflects the hardware being at 100%, enabling the
-            # day-change abort logic to correctly set _weekly_charge_needs_restore.
+            # Persist state so that the next restart can restore both registers_written
+            # and the status field immediately.
             asyncio.create_task(self.save_state())
 
         # Check if all batteries reached 100%
