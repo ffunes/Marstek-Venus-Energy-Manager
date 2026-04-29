@@ -1643,7 +1643,30 @@
 <h1 id="gestion-multi-bateria">Gestión multi-batería<a class="headerlink" href="#gestion-multi-bateria" title="Permanent link">&para;</a></h1>
 <p>La integración gestiona hasta <strong>6 baterías</strong> como un sistema agregado, distribuyendo la potencia de forma inteligente para maximizar la eficiencia.</p>
 <h2 id="principio-de-eficiencia">Principio de eficiencia<a class="headerlink" href="#principio-de-eficiencia" title="Permanent link">&para;</a></h2>
-<p>Basándose en la curva de eficiencia de las Venus (pico ~91% entre 1000–1500 W), las baterías se activan solo cuando la potencia total supera el <strong>60 % de la capacidad combinada</strong>. Operar con menos baterías activas a mayor potencia es más eficiente que repartir la misma carga entre todas.</p>
+<p>Basándose en las curvas de eficiencia medidas de las Venus, las baterías se activan solo cuando la potencia total supera el <strong>punto de cruce de eficiencia</strong> — la potencia a partir de la cual repartir la carga entre dos baterías resulta más eficiente que operar con una sola. Operar con menos baterías activas a mayor potencia es más eficiente que repartir la misma carga entre todas.</p>
+<p>Los puntos de cruce (derivados de las mediciones de η externo) son:</p>
+<table>
+<thead>
+<tr>
+<th>Dirección</th>
+<th style="text-align: right;">Cruce</th>
+<th style="text-align: right;">% del máximo físico (2500 W)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Descarga</td>
+<td style="text-align: right;">1500 W</td>
+<td style="text-align: right;">60 %</td>
+</tr>
+<tr>
+<td>Carga</td>
+<td style="text-align: right;">1750 W</td>
+<td style="text-align: right;">70 %</td>
+</tr>
+</tbody>
+</table>
+<p>El umbral de activación se calcula dinámicamente como <code>cruce_W ÷ máximo_configurado_W</code>, limitado al rango [50 %, 95 %]. Esto significa que los usuarios que configuran un límite de potencia inferior por batería activan baterías adicionales más tarde (más cerca de su máximo configurado), lo que refleja correctamente que su rango de operación se mantiene dentro del pico de eficiencia de una sola batería.</p>
 <p>Las siguientes mediciones muestran la potencia DC consumida/entregada, la potencia AC en el contador (pinza interna) y en la toma de pared (pinza externa), y la eficiencia resultante en cada nivel de potencia:</p>
 <p><strong>Carga</strong></p>
 <table>
@@ -2083,8 +2106,8 @@
 </tr>
 <tr>
 <td><strong>Potencia</strong></td>
-<td>±100 W</td>
-<td>Activa la 2.ª batería al 60 % de la capacidad combinada; la desactiva al 50 %</td>
+<td>10 pp</td>
+<td>Umbral de activación derivado del punto de cruce de eficiencia; desactivación = activación − 10 puntos porcentuales</td>
 </tr>
 </tbody>
 </table>

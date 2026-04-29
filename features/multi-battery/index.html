@@ -1643,7 +1643,30 @@
 <h1 id="multi-battery-management">Multi-battery management<a class="headerlink" href="#multi-battery-management" title="Permanent link">&para;</a></h1>
 <p>The integration manages up to <strong>6 batteries</strong> as an aggregated system, distributing power intelligently to maximise efficiency.</p>
 <h2 id="efficiency-principle">Efficiency principle<a class="headerlink" href="#efficiency-principle" title="Permanent link">&para;</a></h2>
-<p>Based on the Venus efficiency curve (peak ~91% between 1000–1500 W), batteries are activated only when total power exceeds <strong>60% of combined capacity</strong>. Running fewer batteries at higher power is more efficient than spreading the same load across all of them.</p>
+<p>Based on measured Venus efficiency curves, batteries are activated only when total power exceeds the <strong>efficiency crossover point</strong> — the wattage at which splitting load across two batteries becomes more efficient than running one alone. Running fewer batteries at higher power is more efficient than spreading the same load across all of them.</p>
+<p>The crossover points (derived from η external measurements) are:</p>
+<table>
+<thead>
+<tr>
+<th>Direction</th>
+<th style="text-align: right;">Crossover</th>
+<th style="text-align: right;">% of 2500 W physical max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Discharge</td>
+<td style="text-align: right;">1500 W</td>
+<td style="text-align: right;">60 %</td>
+</tr>
+<tr>
+<td>Charge</td>
+<td style="text-align: right;">1750 W</td>
+<td style="text-align: right;">70 %</td>
+</tr>
+</tbody>
+</table>
+<p>The activation threshold is computed dynamically as <code>crossover_W ÷ configured_max_W</code>, clamped to [50 %, 95 %]. This means users who configure a lower power limit per battery activate additional batteries later (closer to their configured max), which correctly reflects that their operating range stays within the single-battery efficiency peak.</p>
 <p>The following measurements show DC power consumption/output, AC power at the meter (internal clamp) and at the wall outlet (external clamp), and the resulting efficiency at each power level:</p>
 <p><strong>Charging</strong></p>
 <table>
@@ -2083,8 +2106,8 @@
 </tr>
 <tr>
 <td><strong>Power</strong></td>
-<td>±100 W</td>
-<td>Activates the 2nd battery at 60% of combined capacity; deactivates at 50%</td>
+<td>10 pp</td>
+<td>Activation threshold derived from efficiency crossover; deactivation = activation − 10 percentage points</td>
 </tr>
 </tbody>
 </table>

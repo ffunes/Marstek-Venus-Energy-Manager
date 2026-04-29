@@ -1406,6 +1406,21 @@
 <!-- The full changelog is maintained in CHANGELOG.md in the repository -->
 
 <h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
+<h2 id="173-2026-04-29">[1.7.3] - 2026-04-29<a class="headerlink" href="#173-2026-04-29" title="Permanent link">&para;</a></h2>
+<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Charge delay sensor showed <code>target_soc: null</code> when charging was already allowed</strong>: <code>_is_charge_delayed()</code> computed <code>target_soc</code> after three early-return paths (feature disabled, balance-monitor override, already unlocked), so the attribute was never populated once any of those conditions was met. Moved the computation to before the <code>_charge_delay_unlocked</code> early-return so the value is always present when the delay is skipped because it was already evaluated today.</li>
+<li>
+<p><strong>No indication in the charge delay sensor that the delay was intentionally skipped on the weekly full charge day</strong>: When the balance monitor is enabled and today is the weekly full charge day, <code>_balance_monitor_overrides_delay()</code> returns <code>True</code> and the delay is bypassed — but the sensor state was <code>"Charging allowed"</code>, identical to a normal post-evaluation unlock, giving no hint as to why. A new sensor state <code>skipped_full_charge_day</code> has been added (translations: EN "Skipped – Full charge day", ES "Omitido – Día de carga completa", DE "Übersprungen – Vollladetag", FR "Ignoré – Jour de charge complète", NL "Overgeslagen – Vollaaddag").</p>
+</li>
+<li>
+<p><strong>Weekly full charge charge does not complete after HA restart or integration update</strong>: On every restart, <code>async_setup_entry</code> writes the configured <code>max_soc</code> (e.g. 80 %) back to the hardware <code>charging_cutoff_capacity</code> register before the persisted weekly charge state is loaded. After <code>load_state()</code> runs, <code>registers_written=True</code> was restored from storage, so <code>handle_registers()</code> assumed the hardware register was already at 100 % and skipped the write. The battery was therefore limited to 80 % by hardware and could never reach 100 %, leaving the completion check in a permanent no-op state. Fixed by using the in-memory <code>_weekly_charge_saved_max_soc</code> dict as a session proxy: when the dict is empty after a restart (it is never persisted), <code>handle_registers()</code> now re-applies the 100 % cutoff even if <code>registers_written=True</code>. Additionally, <code>_weekly_charge_status["state"]</code> is now persisted in the store and restored by <code>load_state()</code>, so the sensor correctly shows "Cargando al 100 %" or "Completo" immediately after restart instead of "Inactivo".</p>
+</li>
+</ul>
+<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Multi-battery activation threshold is now dynamic based on configured power</strong>: Previously the integration always activated a second battery when total power exceeded 60 % of a single battery's configured capacity, regardless of what that limit was set to. The 60 % figure was only correct when the battery was configured at its full 2500 W physical maximum — at lower limits the absolute activation wattage shifted away from the efficiency optimum. The threshold is now derived from the measured efficiency crossover points: 1500 W for discharge (where η external of 1 battery at <em>P</em> equals η of 2 batteries at <em>P</em>/2) and 1750 W for charge (the same crossover in the charging curve). At runtime the threshold fraction is computed as <code>crossover_W ÷ configured_max_W</code>, clamped to [50 %, 95 %]. Users running at the 2500 W default see no change in discharge behaviour (60 %) and a slightly later charge activation (70 % instead of 60 %). Users with lower configured limits now activate additional batteries later and closer to their actual power ceiling, which is correct because their operating range stays within the single-battery efficiency peak. The deactivation threshold remains 10 percentage points below the activation threshold. Five new constants have been added to <code>const.py</code>: <code>MULTI_BATTERY_DISCHARGE_CROSSOVER_W</code>, <code>MULTI_BATTERY_CHARGE_CROSSOVER_W</code>, <code>MULTI_BATTERY_HYSTERESIS_GAP</code>, <code>MULTI_BATTERY_MIN_ACTIVATION</code>, <code>MULTI_BATTERY_MAX_ACTIVATION</code>.</li>
+</ul>
 <h2 id="172-2026-04-28">[1.7.2] - 2026-04-28<a class="headerlink" href="#172-2026-04-28" title="Permanent link">&para;</a></h2>
 <h3 id="breaking-change-target-grid-power">⚠️ Breaking Change — Target Grid Power<a class="headerlink" href="#breaking-change-target-grid-power" title="Permanent link">&para;</a></h3>
 <p><strong>The per-timeslot "Target Grid Power" field has been removed.</strong></p>
@@ -1417,11 +1432,11 @@
 <li>Default: <strong>0 W</strong> (net-zero grid regulation, same as the previous default).</li>
 </ul>
 <p><strong>Action required on upgrade:</strong> If any of your timeslots had a non-zero Target Grid Power, the value has been reset to 0 W. Open Options → Advanced PD Controller and set the new global value to your desired setpoint.</p>
-<h3 id="fixed">Fixed<a class="headerlink" href="#fixed" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Total Charging/Discharging Energy sensor periodically resets to near-zero</strong>: The battery firmware occasionally returns a corrupt partial value when a Modbus read of the 32-bit energy counter coincides with an internal firmware update of that register. The read technically succeeds (no error logged), but the decoded value can be a fraction of the real counter (e.g. ~50 kWh instead of ~491 kWh). Because the sensor has <code>state_class: total_increasing</code>, Home Assistant interprets the drop as a meter reset and permanently corrupts Energy Dashboard statistics. Fixed by adding a monotonic guard in the coordinator: for any <code>total_increasing</code> sensor, a new reading that is positive but less than 90 % of the last known value is silently discarded. Drops to exactly 0 (daily counter midnight reset, factory reset) are still accepted. Applies to <code>total_charging_energy</code>, <code>total_discharging_energy</code>, <code>total_daily_charging_energy</code>, and <code>total_daily_discharging_energy</code>.</li>
 </ul>
-<h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
+<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Entity unique IDs and device identifiers now include the Modbus port</strong>: Until now entity unique IDs followed the pattern <code>{host}_{key}</code> and device identifiers were <code>(DOMAIN, host)</code>. This made it impossible to register two batteries reachable at the same IP on different Modbus ports — a setup that exists when several Venus units share a single bridge or NAT mapping. Both the unique ID and device identifier now include the port: <code>{host}_{port}_{key}</code> and <code>(DOMAIN, "{host}_{port}")</code>. The change is applied across <code>sensor</code>, <code>binary_sensor</code>, <code>switch</code>, <code>number</code>, <code>select</code>, <code>button</code>, <code>balance_sensors</code> and <code>calculated_sensors</code>.</li>
 <li><strong>Config entry version bumped to 2 with automatic migration</strong>: An <code>async_migrate_entry</code> handler renames existing entity unique IDs from <code>{host}_{key}</code> to <code>{host}_{port}_{key}</code> and updates the device identifier in the device registry. Home Assistant automatically populates the <code>previous_unique_id</code> field on each migrated entity, so long-term statistics (energy dashboard, history graphs) keep linking to the same entity without interruption. The migration is idempotent and runs once per config entry on first load with the new version.</li>
@@ -1431,7 +1446,7 @@
 <ul>
 <li><strong>Live max/min SOC controls for v3/vA/vD batteries</strong>: Batteries on firmware v3, vA and vD do not expose a Modbus register for the charging/discharging cutoff capacity, so until now <code>max_soc</code> and <code>min_soc</code> could only be edited through the options flow (with an integration reload). Each affected battery now gets two number entities — <code>Charging Cutoff Capacity</code> and <code>Discharging Cutoff Capacity</code> — that update the software-enforced limits read by the PD controller in real time and persist the new value in the config entry. v2 batteries are unaffected: they keep using the existing hardware-backed entities. The translation keys and unique IDs match the v2 ones, so the entity names and entity IDs remain consistent across hardware variants.</li>
 </ul>
-<h3 id="fixed_1">Fixed<a class="headerlink" href="#fixed_1" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Charge delay unlocked prematurely by <code>energy_balance</code> due to consumption being prorated against daylight hours</strong>: The energy-balance check in <code>_should_delay_charge</code> computed <code>remaining_consumption_kwh = (avg_consumption / daylight_hours) * hours_to_t_end</code>, dividing the daily total by <code>t_end − t_start</code>. This implicitly assumed the entire day's consumption happens during daylight, which inflated the projected midday consumption by roughly 24 / daylight_hours (≈1.7× in summer) and made <code>net_solar_for_battery</code> look much smaller than it really is. With a high household consumption (~38 kWh/day in the reported case), the inflated estimate pushed <code>net_solar</code> below the safety threshold (<code>energy_needed × DELAY_SAFETY_FACTOR</code>) even when the remaining solar production was clearly enough to top off the battery — triggering a spurious unlock at midday and allowing grid charging the rest of the day. The <code>avg_consumption</code> value is in fact already scoped to the <em>consumption window</em> for both data sources: when <code>household_consumption_sensor</code> is configured, <code>accumulate_household_consumption</code> only integrates while <code>is_in_consumption_window()</code> is true (24h if no <code>charging_time_slot</code> is set, otherwise the hours outside the slot, only on slot days); without that sensor, the captured value is <code>total_daily_discharging_energy + _daily_grid_at_min_soc_kwh</code>, both of which only grow during the same window. Fixed by prorating against the actual consumption-window duration: two new helpers <code>get_consumption_window_hours_per_day()</code> and <code>consumption_window_hours_in_range(from_h, to_h)</code> were added to <code>ConsumptionTracker</code>, and the formula is now <code>avg_consumption × remaining_window_hours / window_hours_per_day</code>. With no slot configured this collapses to a uniform 24h distribution; with a slot it correctly excludes the grid-charging window from both numerator and denominator. The displayed <code>remaining_consumption_kwh</code> attribute is consequently lower and more realistic, and the energy-balance unlock now triggers only when the remaining solar genuinely cannot cover the gap.</li>
 <li><strong>Spurious warning on v3 weekly full charge</strong>: Each time a weekly full charge activated on a v3 battery, a <code>WARNING</code>-level log entry appeared stating that software enforcement would be used (instead of the hardware cutoff register). This is expected behaviour for v3 hardware and does not indicate a problem. The message has been downgraded to <code>DEBUG</code> so it only appears when debug logging is explicitly enabled.</li>
@@ -1462,7 +1477,7 @@
 <ul>
 <li><strong>Excluded Devices diagnostic sensor</strong>: The <code>Excluded Devices</code> sensor (which reported the count and details of excluded devices as attributes) has been removed. The same information is now directly visible through the per-device <code>{Device} – Enabled</code> and <code>{Device} – Solar Surplus</code> switch entities added in this release.</li>
 </ul>
-<h3 id="changed_1">Changed<a class="headerlink" href="#changed_1" title="Permanent link">&para;</a></h3>
+<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Predictive charging: grid-only SOC target</strong>: When predictive charging activates, the battery is no longer charged all the way to <code>max_soc</code> from the grid. Instead, the integration calculates how much solar will remain after covering expected household consumption (<em>solar surplus</em>) and charges from the grid only the portion solar cannot cover:</li>
 </ul>
@@ -1487,7 +1502,7 @@
 <li><code>delay_safety_margin_min</code>: <code>Charge Delay Margin</code> → <code>Charge Delay Safety Margin</code></li>
 <li><code>delay_soc_setpoint</code>: <code>Charge Delay SOC</code> → <code>Charge Delay SOC Setpoint</code></li>
 </ul>
-<h3 id="fixed_2">Fixed<a class="headerlink" href="#fixed_2" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Price-based discharge control ignored while battery is in steady-state discharge</strong>: Even after the handler correctly set <code>_price_based_discharge_blocked</code>, the enforcement at line 5121 could be skipped by the deadband or stale-sensor early-returns in the main control loop. When the system was in equilibrium (grid ≈ 0 W, battery actively discharging) and the price dropped below the daily average, the flag was set but the function exited through the deadband path before applying it — leaving the battery discharging until the load changed enough to exit the deadband. Fixed by inserting a dedicated enforcement block immediately after the predictive-charging dispatcher, before any sensor-dependent early-returns.</li>
 <li><strong>AC Offgrid Power wraps to ~65000 W when solar panels are connected to the backup port</strong>: On firmware 148+, the battery reports negative values on the AC Offgrid Power register when solar panels feed power through the backup port. The register was decoded as <code>uint16</code>, causing a 16-bit wraparound (e.g. −100 W → 65436 W). This falsely triggered the backup-active guard, stopping PD control entirely. Fixed by decoding the register as <code>int16</code> for v2 and v3 hardware variants.</li>
@@ -1507,11 +1522,11 @@
 <li><strong>Options flow menu</strong>: The options flow now uses a menu instead of a linear wizard, allowing users to jump directly to any section — sensors, batteries, time slots, excluded devices, predictive charging, weekly full charge, solar charge delay, peak shaving, or PD controller — without stepping through unrelated screens.</li>
 <li><strong>Solar forecast safety margin</strong>: A configurable kWh buffer can now be added to the consumption forecast when deciding whether to charge from the grid. Useful when your solar forecast integration (e.g. forecast.solar with multiple string arrays) tends to be optimistic. Set in the predictive charging config step for all three modes (time slot, dynamic pricing, real-time price) and also adjustable at runtime via the new <strong>Solar Forecast Safety Margin</strong> number entity under Marstek Venus System — changes take effect immediately without restarting. Defaults to 0 kWh (no change to existing behaviour). Capped at total battery capacity as a guardrail.</li>
 </ul>
-<h3 id="changed_2">Changed<a class="headerlink" href="#changed_2" title="Permanent link">&para;</a></h3>
+<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Peak shaving SOC threshold minimum lowered to 20 %</strong>: The minimum selectable value for the peak shaving SOC threshold has been reduced from 30 % to 20 %, both in the setup/options flow slider and in the corresponding number entity (<code>number.marstek_venus_system_capacity_protection_soc_threshold</code>). This allows configuring peak shaving to activate at lower SOC levels than previously permitted.</li>
 </ul>
-<h3 id="fixed_3">Fixed<a class="headerlink" href="#fixed_3" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Weekly full charge mid-charge abort restored 100% instead of original max SOC</strong>: When the user changed the weekly full charge day (or disabled the feature) while a v2 battery's cutoff register was already set to 100 %, the hardware restore wrote 100 % back instead of the user's configured limit. Root cause: each coordinator data refresh reads back the <code>charging_cutoff_capacity</code> register and updates <code>coordinator.max_soc</code> from it — so once the register was set to 100 %, <code>max_soc</code> became 100 % and the restore code read that same 100 % value. Fixed by saving each coordinator's original <code>max_soc</code> into <code>_weekly_charge_saved_max_soc</code> immediately before writing the 100 % register, and using that saved value (with a fallback to <code>coordinator.max_soc</code>) in both the mid-charge abort path and the normal completion restore path.</li>
 <li><strong>Weekly full charge day change via options flow had no immediate effect</strong>: Changing the weekly full charge day (or enabling/disabling it) in the options flow updated the stored config but not the in-memory controller variables (<code>weekly_full_charge_day</code>, <code>weekly_full_charge_enabled</code>), because those were only read at startup. The hot-reload listener (<code>update_pd_parameters</code>) was missing these fields. As a result, <code>_is_weekly_full_charge_active()</code> kept checking against the old day and never returned True until HA restarted — meaning charge hysteresis was not overridden and batteries would not start charging. Fixed by adding <code>weekly_full_charge_enabled</code> and <code>weekly_full_charge_day</code> to the hot-reload path. When the day changes, the completion flags are also reset so the new day starts fresh.</li>
@@ -1520,7 +1535,7 @@
 <li><strong>Clearing optional entity selector fields in options flow had no effect</strong>: Clicking the × button to remove a configured sensor (e.g. <em>Daily average price sensor</em>, <em>Solar forecast sensor</em>, <em>Household consumption sensor</em>) and saving appeared to clear the field in the UI, but the old value was silently restored. Root cause: HA validates <code>user_input</code> against <code>data_schema</code> using voluptuous, and <code>vol.Optional(key, default=current_value)</code> refills any absent key with the default — so a cleared entity selector (which sends the key as absent) was treated as "unchanged". Fixed by replacing <code>default=</code> with <code>description={"suggested_value": ...}</code> for all clearable entity selector fields in the options flow. The UI still pre-fills with the existing value, but clearing it now correctly persists <code>None</code> to the config.</li>
 </ul>
 <h2 id="165-2026-04-15">[1.6.5] - 2026-04-15<a class="headerlink" href="#165-2026-04-15" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_4">Fixed<a class="headerlink" href="#fixed_4" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Predictive charging slot blocked normal battery discharge</strong>: When the predictive grid charging time slot overlapped with the normal discharge window, the integration sent conflicting commands to batteries every cycle — first idle (0 W) from the predictive handler, then discharge from the PD controller. Batteries could not ramp up, triggering the non-responsive detection after 3 consecutive failures and excluding them from the pool for 5 minutes. This affected three scenarios: (1) the 5-minute entry wait before evaluation, (2) the user override, and (3) after all batteries reached max_soc. Fixed by never sending idle commands from the predictive charging handler when <code>grid_charging_active</code> is False — PD control handles normal operation instead. When charging completes (max_soc reached) or the user overrides, <code>grid_charging_active</code> is deactivated and PD re-initializes cleanly on the same cycle with no idle gap. The same fix was applied to the dynamic pricing override path.</li>
 </ul>
@@ -1547,28 +1562,28 @@
 <li>Backfill on startup queries the recorder for the configured sensor's history to fill in consumption data for past days, using the same time-window filter.</li>
 <li>Documentation updated with a step-by-step guide on how to create the household consumption sensor as a Template helper (combining grid, solar, and battery power readings).</li>
 </ul>
-<h3 id="fixed_5">Fixed<a class="headerlink" href="#fixed_5" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Dynamic pricing notification showed wrong "needed" value</strong>: When no grid charging was required, the "Available ≥ X kWh needed" line always displayed the same value on both sides due to a broken formula (<code>abs(deficit) + consumption</code> algebraically equals <code>total_available</code> when no deficit exists). Fixed to show the actual average consumption. A second notification path (no price slots found) also omitted the numeric consumption value entirely ("≥ needed"); fixed to include it.</li>
 </ul>
 <h2 id="163-2026-04-12">[1.6.3] - 2026-04-12<a class="headerlink" href="#163-2026-04-12" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_6">Fixed<a class="headerlink" href="#fixed_6" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Peak shaving ignored excluded devices with "included in consumption"</strong>: When a special device was configured with "consumption is included in the household consumption sensor", its power was subtracted from the grid reading before peak shaving evaluated the house load. This meant peak shaving never saw the device's consumption and would not discharge the battery to shave peaks caused by it. Peak shaving now calculates the estimated house load using the real grid reading (including excluded devices) and overrides the device exclusion when actively shaving or conserving, so the battery discharges to keep total grid import below the configured limit regardless of device exclusion settings.</li>
 <li><strong>Max price threshold "expected str" error on reconfigure</strong>: Reopening the predictive charging config (dynamic pricing or real-time price) after a threshold was already saved failed with "expected str". The stored value was a <code>float</code>, but the <code>TextSelector</code> schema expected a <code>str</code> default. Fixed by converting the stored value to <code>str()</code> before passing it as the schema default.</li>
 </ul>
 <h2 id="162-2026-04-10">[1.6.2] - 2026-04-10<a class="headerlink" href="#162-2026-04-10" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_7">Fixed<a class="headerlink" href="#fixed_7" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_8">Fixed<a class="headerlink" href="#fixed_8" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Max price threshold rejected small decimal values</strong>: The <code>NumberSelector</code> input for the max price threshold silently rounded values like <code>0.0008</code> to <code>0</code> due to browser-level precision loss in the HTML number input. Replaced with a <code>TextSelector</code> (free-text field) that preserves the exact value entered. Applies to both dynamic pricing and real-time price modes in the setup and options flows. Existing installations that stored a rounded value will need to re-enter the correct threshold in the options flow. Note: HA's attribute display in entity cards may round the value visually (e.g. <code>0.008</code> shown as <code>0.01</code>), but the full-precision value is stored correctly and can be verified in Developer Tools → States.</li>
 <li><strong>Dynamic pricing config flow did not advance</strong>: The config flow for dynamic pricing mode failed to proceed past the pricing step because the <code>NumberSelector</code> could not handle comma-separated decimals used in European locales. The <code>TextSelector</code> replacement accepts both comma and dot as decimal separators.</li>
 </ul>
 <h2 id="161-2026-04-10">[1.6.1] - 2026-04-10<a class="headerlink" href="#161-2026-04-10" title="Permanent link">&para;</a></h2>
-<h3 id="changed_3">Changed<a class="headerlink" href="#changed_3" title="Permanent link">&para;</a></h3>
+<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Peak shaving renamed from "Capacity Protection"</strong>: The peak shaving feature has been renamed across all UI strings and translations (EN, ES, DE, FR, NL) to better reflect its actual function — limiting grid import peaks by discharging the battery only when consumption exceeds a configured threshold. The previous name "Capacity Protection" was misleading, suggesting the feature protects the battery's physical capacity. Internal configuration keys are unchanged, so existing installations are not affected.</li>
 </ul>
-<h3 id="fixed_8">Fixed<a class="headerlink" href="#fixed_8" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_9">Fixed<a class="headerlink" href="#fixed_9" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Charge hysteresis threshold incorrect after weekly full charge</strong>: After a weekly full charge day completed (battery reaching 100 %), the hysteresis logic switched back to the configured max SOC (e.g. 80 %) as its reference instead of the 100 % target actually reached. This caused the re-charge threshold to be set at 70 % (80 % − 10 % hysteresis) rather than the expected 90 % (100 % − 10 %), blocking the battery from recharging even when well below the intended threshold. Fixed by tracking the SOC level that activated the hysteresis (<code>_hysteresis_base_soc</code>) and using it — rather than <code>max_soc</code> — as the base for the threshold calculation. The tracked value is cleared when the hysteresis deactivates, so normal charging days are unaffected.</li>
 <li><strong>Excessive state updates in HA database</strong> (<a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager/issues/96">#96</a>): Removed <code>force_update: True</code> from <code>battery_power</code> and <code>ac_power</code> sensor definitions across all battery versions (v2, v3, vA, vD). With this flag enabled, HA recorded a new database entry on every poll cycle (~every 2 seconds) even when the value hadn't changed, generating ~43,000 state entries per sensor per day and causing significant database growth. Now HA only records a state change when the value actually differs from the previous one.</li>
@@ -1583,7 +1598,7 @@
 <ul>
 <li><strong>Solar charge delay SOC setpoint</strong>: New optional feature that splits the morning charge into two phases. A dedicated checkbox enables it; when enabled, a slider (12–90 %, default 50 %) sets the target SOC. Below the setpoint the battery charges freely without any delay applied; once all batteries reach the setpoint the solar delay logic activates as usual. This guarantees a minimum charge level on deeply discharged batteries before the solar energy decision is made, while still maximising self-consumption for the remaining charge. The minimum is 12 % — the Venus battery minimum discharge SOC. Configurable during setup and from the options flow; the setpoint value is also exposed as a number entity (<em>Charge Delay SOC Setpoint</em>) on the system device card for runtime adjustment.</li>
 </ul>
-<h3 id="changed_4">Changed<a class="headerlink" href="#changed_4" title="Permanent link">&para;</a></h3>
+<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Solar forecast now uses today's live value</strong>: The integration no longer captures and stores tomorrow's forecast at 23:00. Instead, it reads the configured sensor live on every evaluation. Today's forecast is updated multiple times throughout the day by most solar forecast integrations (Solcast, Forecast.Solar, etc.), becoming progressively more accurate as actual weather conditions develop. This removes the 23:00 nightly capture task and eliminates the stale-forecast problem that occurred after an HA restart or when the nightly window was missed.</li>
 <li><strong>Charge delay threshold is now a dynamic energy balance</strong>: The previous fixed threshold (forecast &lt; 1.5 × battery capacity → unlock) has been replaced with the same energy-balance calculation used by predictive charging: <code>(usable_energy + forecast) &lt; avg_daily_consumption</code>. This takes the current battery SOC into account — on a partly-charged morning the threshold is effectively lower — and uses real historical consumption data instead of an arbitrary capacity multiplier. The balance is only recalculated when the forecast value changes by more than 0.05 kWh, avoiding unnecessary computation on every controller cycle.</li>
@@ -1597,7 +1612,7 @@
 <li><strong>Configurable backup offgrid load threshold</strong>: Each battery now has a user-configurable threshold (0–500 W, default 50 W) that determines when an offgrid load is treated as an active backup event. Batteries with small permanent loads on the offgrid port (e.g. a PoE switch, router, or cameras) were previously excluded from PD control indefinitely because any non-zero offgrid reading triggered backup mode. The threshold can be set during initial setup (per-battery limits page in the config flow) and adjusted at any time via a <strong>Backup Offgrid Threshold</strong> number entity on the battery device card — no reconfiguration required. Changes take effect immediately and survive restarts.</li>
 <li><strong>EV charger without power telemetry</strong> (new excluded-device option): A new checkbox — <em>EV charger without power telemetry</em> — is available when configuring an excluded device. When checked, the selected sensor is treated as a <strong>state sensor</strong> rather than a power sensor. The controller monitors it and reacts when the state changes to any recognised charging string (<code>Charging</code>, <code>Cargando</code>, <code>Cargando VE</code>, <code>Cargando Vehículo</code>, and case-insensitive variants). On detection, the battery enters a <strong>5-minute full pause</strong> (both charge and discharge set to 0 W, PD state frozen) so the vehicle receives the maximum available current without competition. Once the pause expires the battery may still <strong>charge from solar surplus</strong> but will <strong>never discharge</strong> while the EV remains in a charging state. Normal operation resumes automatically when the sensor leaves the charging state.</li>
 </ul>
-<h3 id="fixed_9">Fixed<a class="headerlink" href="#fixed_9" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_10">Fixed<a class="headerlink" href="#fixed_10" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>Active Batteries</code> sensor always showing <code>Idle</code> when only one battery is available</strong>: <code>_select_batteries_for_operation</code> returned early for the single-battery case without updating the <code>_active_charge_batteries</code> / <code>_active_discharge_batteries</code> tracking lists, so the diagnostic sensor always saw empty lists and displayed <code>Idle</code> regardless of actual charge/discharge state.</li>
 <li><strong>Backup exclusion logic not applied consistently during shutdown</strong>: The <code>async_unload_entry</code> shutdown handler used a hardcoded <code>!= 0</code> check for the offgrid power sensor instead of the per-battery threshold, meaning batteries with small permanent offgrid loads would incorrectly skip shutdown register writes and be left in an uncontrolled state on integration unload.</li>
@@ -1611,11 +1626,11 @@
 <li><strong>Shared alarm/fault bit-description constants</strong> (<code>FAULT_BIT_DESCRIPTIONS</code>, <code>ALARM_BIT_DESCRIPTIONS</code> in <code>const.py</code>): The 32-bit description maps previously duplicated inline inside <code>SENSOR_DEFINITIONS</code> are now standalone module-level dicts. The existing per-battery <code>Alarm Status</code> and <code>Fault Status</code> sensors reference these constants, eliminating the duplication and making future updates to alarm labels a single-point change.</li>
 <li><strong>Solar Surplus switch per excluded device</strong>: Each excluded device now gets a dedicated switch entity (<code>Solar Surplus – &lt;device name&gt;</code>) that toggles the <code>allow_solar_surplus</code> flag at runtime without entering the options flow. When ON, the battery yields solar surplus to that device (e.g. EV charger) instead of charging itself — solar goes to the device first and the battery will not discharge to power it either. When OFF, the battery charges normally with any available solar surplus. The switch is controllable from HA automations, enabling priority changes based on schedules, battery SOC, EV connection state, or any other condition.</li>
 </ul>
-<h3 id="changed_5">Changed<a class="headerlink" href="#changed_5" title="Permanent link">&para;</a></h3>
+<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>strings.json now in English</strong>: The base translation file (<code>strings.json</code>) has been converted to English to serve as the proper fallback language for Home Assistant installations using a language without a dedicated translation file.</li>
 </ul>
-<h3 id="fixed_10">Fixed<a class="headerlink" href="#fixed_10" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_11">Fixed<a class="headerlink" href="#fixed_11" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>German translation fix</strong>: Corrected <code>round_trip_efficiency_total</code> label from "Gesamte Hin- und Rückfahreffizienz" to "Gesamtwirkungsgrad".</li>
 </ul>
@@ -1649,7 +1664,7 @@
 <li><strong>Improved daily consumption estimate when battery reaches min SOC</strong>: The system now tracks grid energy imported during periods when all batteries are at minimum SOC and the battery would otherwise be discharging (within a configured discharge slot, or always if no slots are defined). This unmet demand is accumulated in a new sensor (<code>Grid at Min SOC</code>, kWh, resets at midnight) and added to the battery discharge when capturing the daily consumption figure used by predictive charging. This prevents the 7-day rolling average from underestimating consumption on days where the battery ran out before midnight, which previously caused the system to charge less than needed the following day. Grid import during intentional grid charging (predictive/dynamic pricing) is excluded from the accumulator.</li>
 <li><strong>Mid-day re-evaluation for dynamic pricing slots</strong>: When multiple cheap slots are selected at 00:05, the system now re-evaluates 1 hour before each subsequent slot whether charging is still needed. If the battery is sufficiently charged (solar + current SOC covers expected consumption), the slot is silently skipped. If charging is still needed, a notification is sent confirming the slot will activate. Re-evaluations are skipped automatically when a previous slot is still actively charging (back-to-back slots), and the per-day state is reset at midnight alongside the main schedule.</li>
 </ul>
-<h3 id="fixed_11">Fixed<a class="headerlink" href="#fixed_11" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_12">Fixed<a class="headerlink" href="#fixed_12" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>SOC and power limit sliders not persisted across restarts (complete fix)</strong>: Changes to <code>Min SOC</code>, <code>Max SOC</code>, <code>Max Charge Power</code>, and <code>Max Discharge Power</code> sliders were written to the battery hardware registers and updated in memory, but <code>config_entry.data</code> was never updated. On every HA restart, <code>async_setup_entry</code> overwrote the hardware registers with the original setup values, discarding any runtime changes. The partial fix in 1.4.0 (syncing coordinator attributes from polled register values) was ineffective because the startup sequence writes the stale config values to hardware <em>before</em> the first poll completes. Values are now persisted to <code>config_entry.data</code> immediately when a slider is changed, using the same pattern as the RS485 switch preference.</li>
 <li><strong>RS485 switch state not persisted across restarts</strong>: Disabling the RS485 Control Mode switch and restarting Home Assistant would re-enable it automatically. The user's preference is now saved to the config entry and restored on startup. The initial RS485 enable during integration load and the reconnection re-enable are both skipped when the user has explicitly disabled the switch.</li>
@@ -1662,7 +1677,7 @@
 <li><strong>Modbus read/write operations now time out on half-open sockets</strong>: <code>async_read_register</code> and <code>async_write_register</code> now wrap their underlying pymodbus calls in <code>asyncio.wait_for(timeout=...)</code> using the client's configured timeout (default 10 s). Previously, a hung write or read on a half-open socket would block indefinitely, preventing the coordinator from recovering after a TCP connection drop. <code>asyncio.TimeoutError</code> is now treated the same as <code>ConnectionException</code>, triggering the existing reconnect-and-retry path.</li>
 <li><strong>Battery SOC hidden by efficiency sensor in device card</strong>: The Round-Trip Efficiency sensor shared the <code>battery</code> device class with the Battery SOC sensor, causing Home Assistant to display the efficiency percentage instead of the SOC in the top-right corner of the device card. The device class has been removed from the efficiency sensor.</li>
 </ul>
-<h3 id="changed_6">Changed<a class="headerlink" href="#changed_6" title="Permanent link">&para;</a></h3>
+<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Predictive charging notifications reformatted</strong>: Both time-slot and dynamic pricing notifications now use a consistent emoji-based layout (🔋 battery, ☀️ solar, 📊 consumption, ⚡ deficit, ⏰ timing). All notifications show the effective charge power as <code>min(ICP, battery capacity)W (ICP: XW, batteries: YW)</code>. When dynamic pricing finds no deficit, the notification is clearly labelled as informational ("No charging will activate") and shows the cheapest reference hours without implying grid charging will occur.</li>
 <li><strong>Clarifying note on solar forecast sensor in secondary configuration steps</strong>: In the Time Slot, Dynamic Pricing, and Charge Delay configuration steps, the solar forecast sensor field now includes a note explaining that it is not required if the sensor was already configured in the initial setup step — it will be used automatically. The German, French, and Dutch translations of the Dynamic Pricing step were also missing this field entirely; it has been added.</li>
@@ -1703,7 +1718,7 @@
 <ul>
 <li><strong>Force Full Charge button removed</strong>: The <code>Force Full Charge</code> button has been replaced by the new <code>Charge Delay</code> switch (see above).</li>
 </ul>
-<h3 id="changed_7">Changed<a class="headerlink" href="#changed_7" title="Permanent link">&para;</a></h3>
+<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Solar T_start detection rewritten</strong>: The mechanism that detects when solar production begins (used by the Charge Delay feature) has been replaced. The previous approach accumulated daily battery charging energy and triggered at a 0.1 kWh threshold — unreliable because grid charging energy was included in the counter. The new primary mechanism triggers when grid power ≤ 0 W and total battery power ≤ 0 W simultaneously (solar is covering at least the full house load with no battery contribution). A new astronomical fallback kicks in 30 minutes after the estimated sunrise (calculated from HA latitude, longitude, and day of year) if the primary condition has not fired, handling high-consumption days where grid power never reaches zero.</li>
 <li><strong>Solar forecast corrected by 15 % before use</strong>: A conservative 15 % reduction is applied internally to the captured solar forecast before it is used by the Charge Delay and Predictive Charging algorithms. The raw sensor value is still shown in the <code>forecast_kwh</code> diagnostic attribute; only the internal calculation uses the adjusted value.</li>
@@ -1711,7 +1726,7 @@
 <li><strong>Solar forecast captured every night</strong>: The forecast capture at 23:00 now runs every night (previously only the night before the weekly charge day). The stored value is used the next morning by the delay logic, ensuring the forecast is always from the previous evening — before the sensor resets to the next day's data at midnight.</li>
 <li><strong>Delay uses stored forecast</strong>: The charge delay algorithm no longer reads the solar forecast sensor live. It uses the value captured the previous night, which corresponds to the current day's production. Live reads would return the <em>next</em> day's forecast after midnight.</li>
 </ul>
-<h3 id="fixed_12">Fixed<a class="headerlink" href="#fixed_12" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_13">Fixed<a class="headerlink" href="#fixed_13" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Feature entities disappearing after disabling switch</strong>: The <code>Charge Delay</code> sensor and <code>Capacity Protection</code> switch and status sensor were only registered at startup when their respective feature was enabled. Disabling the switch persisted the disabled state to config, so after a restart those entities would no longer appear. Registration now checks whether the feature is configured (key exists in config entry) rather than whether it is currently enabled, matching the pattern already used by the <code>Charge Delay</code> switch. Affected entities: <code>Charge Delay</code> sensor, <code>Capacity Protection</code> switch, <code>Capacity Protection Active</code> binary sensor.</li>
 <li><strong>Charge Delay sensor renamed</strong>: The <code>Charge Delay Status</code> sensor has been renamed to <code>Charge Delay</code> across all supported languages (EN, ES, DE, FR, NL) for brevity.</li>
@@ -1727,17 +1742,17 @@
 <li><strong>Stale sensor detection for PD controller</strong>: The control loop now detects when the consumption sensor hasn't updated between cycles (common with sensors reporting every 5s or slower) and skips PD recalculation to avoid acting on stale data. Sensor history is only populated with real readings, preventing duplicate values from diluting the moving average. The derivative term now uses the actual elapsed time between sensor updates instead of a fixed 2s, eliminating derivative spikes that caused oscillation with slow sensors. A safety valve forces recalculation (proportional only, derivative suppressed) if the sensor stops updating for ~30 seconds.</li>
 </ul>
 <h2 id="133-2026-03-17">[1.3.3] - 2026-03-17<a class="headerlink" href="#133-2026-03-17" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_13">Fixed<a class="headerlink" href="#fixed_13" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_14">Fixed<a class="headerlink" href="#fixed_14" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Hassfest manifest validation</strong>: Removed unsupported <code>icon</code> field from <code>manifest.json</code> and added <code>recorder</code> to <code>after_dependencies</code> to declare the integration's usage of the recorder component.</li>
 </ul>
 <h2 id="132-2026-03-17">[1.3.2] - 2026-03-17<a class="headerlink" href="#132-2026-03-17" title="Permanent link">&para;</a></h2>
-<h3 id="changed_8">Changed<a class="headerlink" href="#changed_8" title="Permanent link">&para;</a></h3>
+<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Min charge/discharge power slider range increased</strong>: The maximum value for <code>Min Charge Power</code> and <code>Min Discharge Power</code> in both the PD Advanced options flow and the number entities has been raised from 500W to 2000W, allowing higher idle thresholds for systems with large PV Systems.</li>
 </ul>
 <h2 id="131-2026-03-12">[1.3.1] - 2026-03-12<a class="headerlink" href="#131-2026-03-12" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_14">Fixed<a class="headerlink" href="#fixed_14" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_15">Fixed<a class="headerlink" href="#fixed_15" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>System SOC decimal precision for v3 batteries</strong>: The <code>System SOC</code> aggregate sensor now displays one decimal place when any battery in the system is a v3/vA/vD model, matching the higher-resolution SOC readings provided by those batteries.</li>
 </ul>
@@ -1753,14 +1768,14 @@
 <li><strong>Force Full Charge button</strong>: New button on the Marstek Venus System device to trigger an immediate 100% charge on any day, bypassing the weekly schedule and delay logic. Resets automatically on day change.</li>
 <li><strong>Configurable safety margin for delay feature</strong>: The delay safety margin (time buffer before estimated end of solar production) is now configurable in both config and options flow (10-120 minutes, default 40 min). Previously hardcoded at 40 minutes.</li>
 </ul>
-<h3 id="changed_9">Changed<a class="headerlink" href="#changed_9" title="Permanent link">&para;</a></h3>
+<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>System Charge/Discharge Power uses AC power</strong>: The <code>System Charge Power</code> and <code>System Discharge Power</code> aggregate sensors now read from each battery's <code>AC Power</code> register instead of <code>Battery Power</code>, reflecting the actual AC-side power flow.</li>
 <li><strong>V3 Battery SOC register upgraded</strong>: V3 batteries now read SOC from register 34002 (scale 0.1, precision 2 decimals) instead of 37005 (scale 1, precision 1 decimal), providing higher resolution readings.</li>
 <li><strong>Removed unused Charge to SOC entity</strong>: The <code>charge_to_soc</code> number entity (register 42011) was not used by any integration logic and has been removed from both V2 and V3 definitions.</li>
 <li><strong>Translation files completed</strong>: Added missing <code>apply_to_charge</code> field translations to EN, DE, FR and NL. Added missing <code>enable_weekly_full_charge_delay</code>, <code>solar_forecast_sensor</code> and <code>delay_safety_margin_min</code> translations to DE, FR and NL (both config and options flow).</li>
 </ul>
-<h3 id="fixed_15">Fixed<a class="headerlink" href="#fixed_15" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_16">Fixed<a class="headerlink" href="#fixed_16" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>RS485 control mode not re-enabled after reconnection</strong>: When a battery's TCP connection was lost and re-established (e.g., WiFi drop, options flow reload), RS485 control mode was not re-enabled. The battery silently ignored all power commands until a manual restart. <code>async_reconnect_fresh()</code> now automatically re-enables RS485 after every successful reconnection, with a user-override flag to respect manual RS485 disabling via the switch entity.</li>
 <li><strong>First battery RS485 disabled after options flow reload</strong>: On reload, the first battery attempted to reconnect before the V3 firmware released the previous TCP slot, causing the initial connection to fail. RS485 was only enabled on successful connection, leaving the first battery uncontrolled until health monitoring reconnected (without re-enabling RS485). Added a 1-second retry delay for failed initial connections.</li>
@@ -1769,7 +1784,7 @@
 <li><strong>Grid charging falsely triggering solar T_start detection</strong>: <code>total_daily_charging_energy</code> includes grid charging energy, which could falsely indicate solar production start. T_start detection now only activates after 07:00 to avoid overnight grid charging interference.</li>
 </ul>
 <h2 id="121-2026-03-06">[1.2.1] - 2026-03-06<a class="headerlink" href="#121-2026-03-06" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_16">Fixed<a class="headerlink" href="#fixed_16" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_17">Fixed<a class="headerlink" href="#fixed_17" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Max charge/discharge power changes from UI ignored by control loop</strong>: Changing <code>Max Charge Power</code> or <code>Max Discharge Power</code> number entities wrote to the Modbus register but did not update the coordinator attributes used by the PD controller. The initial config flow values were used forever. Changes now take effect immediately.</li>
 </ul>
@@ -1800,7 +1815,7 @@
 <li><strong>Immediate unavailability detection</strong>: The coordinator now marks a battery as unavailable (<code>_is_connected = False</code>) on the first poll cycle where all reads fail, instead of waiting for 5 consecutive failures. The control loop stops sending writes to unreachable batteries immediately, preventing log noise and wasted Modbus operations.</li>
 <li><strong>Connection error log reduction</strong>: <code>ConnectionException</code> and <code>ModbusIOException</code> errors during read/write operations are now logged at DEBUG level instead of ERROR with full traceback. "Failed after N attempts" messages also downgraded to DEBUG. This eliminates the 60,000+ error log entries that occurred during a WiFi disconnection event.</li>
 </ul>
-<h3 id="changed_10">Changed<a class="headerlink" href="#changed_10" title="Permanent link">&para;</a></h3>
+<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Minimum charge/discharge power moved to PD controller settings</strong>: <code>min_charge_power</code> and <code>min_discharge_power</code> are now global PD controller parameters instead of per-time-slot settings. They apply uniformly regardless of the active time slot. Existing installations will use the default (0 = disabled) until reconfigured via Options → PD Advanced.</li>
 <li><strong>Predictive Charging switch logic inverted</strong>: The switch is now ON when predictive charging is enabled (default) and OFF when overridden/paused. Previously, it was an "Override" switch with inverted semantics. New unique_id (<code>_predictive_charging</code>) — the old <code>_override_predictive_charging</code> entity should be manually deleted from HA.</li>
@@ -1811,14 +1826,14 @@
 <li><strong>Removed per-slot Time Slot Info sensors and Predictive Charging Config sensor</strong>: Replaced by the single Discharge Window diagnostic sensor. Old entities (<code>*_time_slot_N_info</code>, <code>*_config_predictive_charging_slot</code>) should be manually deleted from HA.</li>
 <li><strong>Max charge/discharge power config flow selector</strong>: Replaced the dropdown with only two options (800W / 2500W) with a slider ranging from 800W to 2500W in 50W increments, both in initial setup and options flow.</li>
 </ul>
-<h3 id="fixed_17">Fixed<a class="headerlink" href="#fixed_17" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_18">Fixed<a class="headerlink" href="#fixed_18" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>write_register()</code> refresh never executed</strong>: The <code>async_request_refresh()</code> call after a successful register write was dead code — it sat after <code>return True</code> inside the <code>async with self.lock</code> block and was never reached. Restructured the method so the refresh executes outside the lock after a successful write.</li>
 <li><strong>First execution ignores time slot restrictions</strong>: After integration reload/reconfiguration, the first control cycle sent power to batteries without checking time slot restrictions. This caused a brief discharge pulse (~2.5s) even when the current day/time was outside any configured slot, which was then corrected to 0W on the next cycle. The first execution now checks <code>_is_operation_allowed()</code> before sending any power commands.</li>
 <li><strong>Charge/discharge power limits swapped</strong>: The PD controller clamped charging power using <code>max_discharge_power</code> and vice versa. This caused charging to be limited to the discharge limit (e.g., 800W instead of 2500W) and discharge to use the charge limit. Both clamp conditions now use the correct limit for their direction.</li>
 </ul>
 <h2 id="111-2026-02-27">[1.1.1] - 2026-02-27<a class="headerlink" href="#111-2026-02-27" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_18">Fixed<a class="headerlink" href="#fixed_18" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_19">Fixed<a class="headerlink" href="#fixed_19" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Incorrect time slot translations</strong>: Fixed descriptions in English, German, French, and Dutch that incorrectly stated batteries "will NOT discharge" during slots. The correct behavior is the opposite — batteries are ALLOWED to discharge during configured slots and blocked outside them. Spanish translations were already correct.</li>
 </ul>
@@ -1837,7 +1852,7 @@
 <li>V3 packet correction: Automatically fixes malformed MBAP length bytes in V3 exception responses that caused pymodbus timeouts.</li>
 <li>Automatic reconnection in Modbus retry loops: Both read and write operations now reconnect if the TCP connection is lost mid-retry (skipped during shutdown to avoid occupying the single TCP slot).</li>
 </ul>
-<h3 id="changed_11">Changed<a class="headerlink" href="#changed_11" title="Permanent link">&para;</a></h3>
+<h3 id="changed_12">Changed<a class="headerlink" href="#changed_12" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Platform files (<code>button.py</code>, <code>number.py</code>, <code>select.py</code>, <code>switch.py</code>) now use coordinator's version-specific entity definitions instead of importing hardcoded V2 lists.</li>
 <li><code>ManualModeSwitch</code> uses <code>coordinator.get_register()</code> instead of hardcoded register addresses, making it version-aware.</li>
@@ -1845,7 +1860,7 @@
 <li>Version-specific Modbus timing: V2 uses 50ms, V3 uses 150ms between messages.</li>
 <li>RS485 control mode disable now writes the correct <code>command_off</code> value (<code>0x55BB</code>) instead of <code>0</code>, which V3 firmware rejects with Modbus Exception 3.</li>
 </ul>
-<h3 id="fixed_19">Fixed<a class="headerlink" href="#fixed_19" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_20">Fixed<a class="headerlink" href="#fixed_20" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Race condition during reload</strong>: Control loop and coordinator refresh continued running during <code>async_unload_entry</code>, causing "Not connected" write errors. Fixed by cancelling timers at the start of unload, adding a shutdown flag to suppress expected errors and skip operations, and reordering the unload sequence to: cancel timers → set shutdown flag → wait for in-flight ops → unload platforms → write shutdown registers → disconnect.</li>
 <li><strong>Reconfiguration fails randomly with connection error</strong>: In-flight coordinator polls could survive the shutdown <code>disconnect()</code> and automatically reconnect via Modbus retry logic, occupying the battery's single TCP connection slot. The new <code>async_setup_entry</code> would then fail with <code>[Errno 111] Connect call failed</code>. Fixed by exiting Modbus read/write retries immediately during shutdown and adding an early exit check in the coordinator poll cycle.</li>
@@ -1853,12 +1868,12 @@
 <li><strong>V3 Modbus serialization</strong>: Polling reads now acquire the coordinator lock, preventing interleaving with control loop writes on the same TCP connection. V3 firmware mishandled concurrent requests, causing transaction ID mismatches ("extra data") and written values not being applied. New <code>write_power_atomic()</code> method writes all power registers and reads feedback under a single lock acquisition.</li>
 </ul>
 <h2 id="103-2026-02-22">[1.0.3] - 2026-02-22<a class="headerlink" href="#103-2026-02-22" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_20">Fixed<a class="headerlink" href="#fixed_20" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_21">Fixed<a class="headerlink" href="#fixed_21" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Fix <code>KeyError</code> for <code>force_mode</code> when <code>data_type</code> is missing (PR #3 by @openschwall).</li>
 </ul>
 <h2 id="102-2026-02-20">[1.0.2] - 2026-02-20<a class="headerlink" href="#102-2026-02-20" title="Permanent link">&para;</a></h2>
-<h3 id="fixed_21">Fixed<a class="headerlink" href="#fixed_21" title="Permanent link">&para;</a></h3>
+<h3 id="fixed_22">Fixed<a class="headerlink" href="#fixed_22" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Remove redundant <code>_write_config_to_batteries()</code> call during options flow. The function opened a second Modbus TCP connection while the coordinator was still holding the first one, causing "Not connected" errors on V3 batteries. The reload already applies all configuration values via <code>async_setup_entry()</code>.</li>
 <li>Fix <code>async_close()</code> in Modbus client attempting to <code>await</code> the synchronous <code>close()</code> method, which caused "object NoneType can't be used in 'await' expression" errors on every reload.</li>
@@ -1866,7 +1881,7 @@
 <li>Run startup consumption backfill immediately on reload instead of waiting for <code>homeassistant_started</code> (which never fires again after boot).</li>
 </ul>
 <h2 id="101-2026-02-18">[1.0.1] - 2026-02-18<a class="headerlink" href="#101-2026-02-18" title="Permanent link">&para;</a></h2>
-<h3 id="changed_12">Changed<a class="headerlink" href="#changed_12" title="Permanent link">&para;</a></h3>
+<h3 id="changed_13">Changed<a class="headerlink" href="#changed_13" title="Permanent link">&para;</a></h3>
 <ul>
 <li>Remove V3-exclusive entity definitions to match V2 register footprint.</li>
 <li>Deleted 20 entity definitions from the V3 definition lists (sensors, binary sensors, selects, buttons) that had no equivalent in V2.</li>
