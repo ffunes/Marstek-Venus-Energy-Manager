@@ -85,6 +85,11 @@ from .const import (
     CONF_METER_INVERTED,
     CONF_PREDICTIVE_SAFETY_MARGIN_KWH,
     DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
+    MULTI_BATTERY_DISCHARGE_CROSSOVER_W,
+    MULTI_BATTERY_CHARGE_CROSSOVER_W,
+    MULTI_BATTERY_HYSTERESIS_GAP,
+    MULTI_BATTERY_MIN_ACTIVATION,
+    MULTI_BATTERY_MAX_ACTIVATION,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .non_responsive_tracker import NonResponsiveTracker
@@ -1665,7 +1670,13 @@ class ChargeDischargeController:
         available_batteries: list,
         is_charging: bool
     ) -> list:
-        """Select minimum batteries needed so total_power <= 60% of combined capacity.
+        """Select minimum batteries needed for efficient load sharing.
+
+        Activation threshold is derived dynamically from absolute efficiency crossover
+        wattages (where splitting across 2 batteries beats a single battery on η external):
+        - Discharge: 1500 W crossover → threshold = 1500 / per_battery_max
+        - Charge:    1750 W crossover → threshold = 1750 / per_battery_max
+        Clamped to [MIN_ACTIVATION, MAX_ACTIVATION] from const.py.
 
         Prioritizes:
         - Discharge: Highest SOC first (drain fullest battery first)
@@ -1673,7 +1684,7 @@ class ChargeDischargeController:
 
         Hysteresis:
         - SOC: Active batteries get 5% effective SOC advantage to avoid ping-pong
-        - Power: Activate at 60%, deactivate at 50% (~100W hysteresis band)
+        - Power: Deactivation threshold = activation threshold − 10 pp
         """
         if len(available_batteries) <= 1:
             # Even with a single battery, update tracking state so the Active
@@ -1694,8 +1705,19 @@ class ChargeDischargeController:
             self._active_charge_batteries = []
             return list(available_batteries)
 
-        ACTIVATION_THRESHOLD = 0.60
-        DEACTIVATION_THRESHOLD = 0.50
+        crossover_w = (
+            MULTI_BATTERY_CHARGE_CROSSOVER_W if is_charging
+            else MULTI_BATTERY_DISCHARGE_CROSSOVER_W
+        )
+        per_battery_max = min(
+            (b.max_charge_power if is_charging else b.max_discharge_power)
+            for b in available_batteries
+        )
+        ACTIVATION_THRESHOLD = max(
+            MULTI_BATTERY_MIN_ACTIVATION,
+            min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / per_battery_max)
+        )
+        DEACTIVATION_THRESHOLD = ACTIVATION_THRESHOLD - MULTI_BATTERY_HYSTERESIS_GAP
         SOC_HYSTERESIS = 5.0
         ENERGY_HYSTERESIS = 2.5  # kWh advantage for active battery in tiebreaker
 
@@ -1751,9 +1773,13 @@ class ChargeDischargeController:
         if set(selected) != set(previous_active):
             mode = "charge" if is_charging else "discharge"
             _LOGGER.info(
-                "Load sharing [%s]: %d/%d batteries active (%s) for %dW",
+                "Load sharing [%s]: %d/%d batteries active (%s) for %dW "
+                "(per_battery_max=%dW, activation=%.0f%%, deactivation=%.0f%%)",
                 mode, len(selected), len(available_batteries),
-                ", ".join(c.name for c in selected), int(total_power)
+                ", ".join(c.name for c in selected), int(total_power),
+                int(per_battery_max),
+                ACTIVATION_THRESHOLD * 100,
+                DEACTIVATION_THRESHOLD * 100,
             )
 
         # Update tracking state: clear opposite list since charge/discharge are mutually exclusive

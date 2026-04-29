@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.3] - 2026-04-29
+
+### Changed
+- **Multi-battery activation threshold is now dynamic based on configured power**: Previously the integration always activated a second battery when total power exceeded 60 % of a single battery's configured capacity, regardless of what that limit was set to. The 60 % figure was only correct when the battery was configured at its full 2500 W physical maximum — at lower limits the absolute activation wattage shifted away from the efficiency optimum. The threshold is now derived from the measured efficiency crossover points: 1500 W for discharge (where η external of 1 battery at *P* equals η of 2 batteries at *P*/2) and 1750 W for charge (the same crossover in the charging curve). At runtime the threshold fraction is computed as `crossover_W ÷ configured_max_W`, clamped to [50 %, 95 %]. Users running at the 2500 W default see no change in discharge behaviour (60 %) and a slightly later charge activation (70 % instead of 60 %). Users with lower configured limits now activate additional batteries later and closer to their actual power ceiling, which is correct because their operating range stays within the single-battery efficiency peak. The deactivation threshold remains 10 percentage points below the activation threshold. Five new constants have been added to `const.py`: `MULTI_BATTERY_DISCHARGE_CROSSOVER_W`, `MULTI_BATTERY_CHARGE_CROSSOVER_W`, `MULTI_BATTERY_HYSTERESIS_GAP`, `MULTI_BATTERY_MIN_ACTIVATION`, `MULTI_BATTERY_MAX_ACTIVATION`.
+
 ## [1.7.2] - 2026-04-28
 
 ### ⚠️ Breaking Change — Target Grid Power

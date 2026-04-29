@@ -4,7 +4,16 @@ La integración gestiona hasta **6 baterías** como un sistema agregado, distrib
 
 ## Principio de eficiencia
 
-Basándose en la curva de eficiencia de las Venus (pico ~91% entre 1000–1500 W), las baterías se activan solo cuando la potencia total supera el **60 % de la capacidad combinada**. Operar con menos baterías activas a mayor potencia es más eficiente que repartir la misma carga entre todas.
+Basándose en las curvas de eficiencia medidas de las Venus, las baterías se activan solo cuando la potencia total supera el **punto de cruce de eficiencia** — la potencia a partir de la cual repartir la carga entre dos baterías resulta más eficiente que operar con una sola. Operar con menos baterías activas a mayor potencia es más eficiente que repartir la misma carga entre todas.
+
+Los puntos de cruce (derivados de las mediciones de η externo) son:
+
+| Dirección | Cruce | % del máximo físico (2500 W) |
+|---|---:|---:|
+| Descarga | 1500 W | 60 % |
+| Carga | 1750 W | 70 % |
+
+El umbral de activación se calcula dinámicamente como `cruce_W ÷ máximo_configurado_W`, limitado al rango [50 %, 95 %]. Esto significa que los usuarios que configuran un límite de potencia inferior por batería activan baterías adicionales más tarde (más cerca de su máximo configurado), lo que refleja correctamente que su rango de operación se mantiene dentro del pico de eficiencia de una sola batería.
 
 Las siguientes mediciones muestran la potencia DC consumida/entregada, la potencia AC en el contador (pinza interna) y en la toma de pared (pinza externa), y la eficiencia resultante en cada nivel de potencia:
 
@@ -78,7 +87,7 @@ Para evitar el "ping-pong" de activación/desactivación, se aplican tres nivele
 |---|---|---|
 | **SOC** | 5 % | Una batería activa permanece activa hasta que otra la supere en 5 % de SOC |
 | **Energía vitalicia** | 2,5 kWh | Desempata el SOC usando la energía acumulada con ventaja para la batería activa |
-| **Potencia** | ±100 W | Activa la 2.ª batería al 60 % de la capacidad combinada; la desactiva al 50 % |
+| **Potencia** | 10 pp | Umbral de activación derivado del punto de cruce de eficiencia; desactivación = activación − 10 puntos porcentuales |
 
 ## Distribución de potencia
 
