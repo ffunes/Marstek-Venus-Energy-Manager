@@ -741,8 +741,11 @@ class ChargeDischargeController:
 
         # Skip delay entirely on the weekly full charge day when opted in
         if self._balance_monitor_overrides_delay():
-            self._charge_delay_status["state"] = "Charging allowed"
+            self._charge_delay_status["state"] = "Skipped - Full Charge Day"
             return False
+
+        target_soc = self._consumption_tracker.get_today_target_soc()
+        self._charge_delay_status["target_soc"] = target_soc
 
         # Already unlocked today?
         if self._charge_delay_unlocked:
@@ -758,9 +761,6 @@ class ChargeDischargeController:
             if min_soc < self._delay_soc_setpoint:
                 self._charge_delay_status["state"] = "Charging to setpoint"
                 return False
-
-        target_soc = self._consumption_tracker.get_today_target_soc()
-        self._charge_delay_status["target_soc"] = target_soc
 
         # Evaluate delay conditions
         if self._should_delay_charge(target_soc):
