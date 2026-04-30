@@ -28,6 +28,15 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Inverter state raw value for "Standby" (BMS has cut off, no active charge/discharge).
+_INVERTER_STATE_STANDBY = 1
+# Battery power below this (W) is treated as "not charging" for BMS-cutoff detection.
+_BMS_CUTOFF_POWER_W = 10
+# Consecutive update cycles (~2 s each) of BMS-cutoff conditions required before
+# declaring completion at 99%.  5 × 2 s = 10 s is enough to outlast the Modbus
+# response delay after writing registers, but fast enough to react to a real cutoff.
+_BMS_CUTOFF_REQUIRED_CYCLES = 5
+
 
 class WeeklyFullChargeManager:
     """Manages weekly full charge state, persistence and register writes."""
@@ -43,11 +52,77 @@ class WeeklyFullChargeManager:
         # Bundled store: weekly charge flags + delay_unlocked + solar_t_start.
         # Format preserved for backward-compat with existing user installs.
         self._store = Store(hass, 1, f"{DOMAIN}.{config_entry.entry_id}.weekly_charge_state")
+        # Per-battery debounce counter for BMS-cutoff detection (in-memory only).
+        self._bms_cutoff_counts: dict[str, int] = {}
 
     @property
     def store(self) -> Store:
         """Expose the underlying Store (for legacy attribute compatibility)."""
         return self._store
+
+    def tick_bms_cutoff(self) -> None:
+        """Update per-battery BMS-cutoff counters for the current cycle.
+
+        Must be called exactly once per update cycle, unconditionally, at the
+        top of handle_registers() before any early returns.  Both
+        handle_registers() and _get_available_batteries() then query
+        is_battery_full() as a read-only state check.
+        """
+        ctrl = self._controller
+        for c in ctrl.coordinators:
+            if not c.data:
+                self._bms_cutoff_counts[c.name] = 0
+                continue
+            soc = c.data.get("battery_soc", 0)
+            if soc >= 99:
+                power = c.data.get("battery_power", None)
+                inv_state = c.data.get("inverter_state", None)
+                cutoff = (
+                    power is not None
+                    and inv_state is not None
+                    and power <= _BMS_CUTOFF_POWER_W
+                    and inv_state == _INVERTER_STATE_STANDBY
+                )
+                if cutoff:
+                    count = self._bms_cutoff_counts.get(c.name, 0) + 1
+                    self._bms_cutoff_counts[c.name] = count
+                    if count == 1:
+                        _LOGGER.info(
+                            "%s: SOC %d%%, power=%.1fW, inverter=Standby — "
+                            "possible BMS cutoff, confirming (%d/%d cycles)",
+                            c.name, soc, power, count, _BMS_CUTOFF_REQUIRED_CYCLES,
+                        )
+                    elif count == _BMS_CUTOFF_REQUIRED_CYCLES:
+                        _LOGGER.info(
+                            "%s: BMS cutoff confirmed at %d%% (%d cycles at ≤%.0fW + Standby)",
+                            c.name, soc, count, _BMS_CUTOFF_POWER_W,
+                        )
+                else:
+                    if self._bms_cutoff_counts.get(c.name, 0) > 0:
+                        _LOGGER.debug(
+                            "%s: BMS cutoff condition cleared (power=%.1fW, inv_state=%s) — "
+                            "resetting counter",
+                            c.name, power or 0, inv_state,
+                        )
+                    self._bms_cutoff_counts[c.name] = 0
+            else:
+                self._bms_cutoff_counts[c.name] = 0
+
+    def is_battery_full(self, coordinator: Any) -> bool:
+        """Return True if this battery counts as fully charged.
+
+        Read-only: does not modify _bms_cutoff_counts (tick_bms_cutoff() does).
+        Used by both handle_registers() (weekly completion) and
+        _get_available_batteries() (normal max_soc=100% case).
+        """
+        if not coordinator.data:
+            return False
+        soc = coordinator.data.get("battery_soc", 0)
+        if soc >= 100:
+            return True
+        if soc >= 99:
+            return self._bms_cutoff_counts.get(coordinator.name, 0) >= _BMS_CUTOFF_REQUIRED_CYCLES
+        return False
 
     def is_active(self) -> bool:
         """Check if weekly full charge is currently active.
@@ -176,11 +251,15 @@ class WeeklyFullChargeManager:
 
         Responsibilities:
         - Write register 44000 to 100% on first activation (v2 only)
-        - Detect completion (all batteries at 100%)
+        - Detect completion (all batteries at 100% or BMS cutoff at 99%)
         - Restore register 44000 to configured max_soc when complete
         - Re-enable hysteresis after completion
         """
         ctrl = self._controller
+
+        # Always tick BMS-cutoff counters unconditionally — _get_available_batteries()
+        # reads is_battery_full() later in the same cycle for the normal max_soc=100% case.
+        self.tick_bms_cutoff()
 
         # Mid-charge abort: day changed (or feature disabled) while registers were already at 100%.
         # Restore hardware cutoff to max_soc before anything else.
@@ -270,17 +349,18 @@ class WeeklyFullChargeManager:
             # and the status field immediately.
             asyncio.create_task(self.save_state())
 
-        # Check if all batteries reached 100%
+        # Check if all batteries reached 100% or BMS cut off at >= 99%
         all_batteries_full = all(
-            c.data.get("battery_soc", 0) >= 100
+            self.is_battery_full(c)
             for c in ctrl.coordinators if c.data
         )
 
         if all_batteries_full and not ctrl.weekly_full_charge_complete:
-            # All batteries just reached 100% - mark as complete
+            # All batteries just reached 100% (or BMS cut off at 99%) - mark as complete
             _LOGGER.info("Weekly Full Charge: Complete - reverting to configured limits")
             ctrl.weekly_full_charge_complete = True
             ctrl._weekly_charge_status["state"] = "Complete"
+            self._bms_cutoff_counts.clear()
 
             # Restore register 44000 to original max_soc values (v2 only)
             for coordinator in ctrl.coordinators:
