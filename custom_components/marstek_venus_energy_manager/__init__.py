@@ -623,6 +623,25 @@ class ChargeDischargeController:
                 else:
                     effective_max_soc = coordinator.max_soc
 
+                # BMS cutoff detection: counter is maintained by tick_bms_cutoff() which
+                # runs unconditionally at the top of handle_registers() each cycle.
+                # is_battery_full() is a read-only query shared with handle_registers().
+                if self._weekly_charge_mgr.is_battery_full(coordinator):
+                    if coordinator.enable_charge_hysteresis and not coordinator._hysteresis_active:
+                        coordinator._hysteresis_active = True
+                        if coordinator._hysteresis_base_soc is None:
+                            coordinator._hysteresis_base_soc = current_soc
+                        _LOGGER.debug(
+                            "%s: BMS cutoff at %d%% — activating hysteresis",
+                            coordinator.name, current_soc,
+                        )
+                    else:
+                        _LOGGER.debug(
+                            "%s: BMS cutoff at %d%% — skipping charge allocation",
+                            coordinator.name, current_soc,
+                        )
+                    continue
+
                 # Only charge if below effective max SOC
                 if current_soc < effective_max_soc:
                     available_batteries.append(coordinator)
