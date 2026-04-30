@@ -3203,21 +3203,26 @@ class ChargeDischargeController:
                 )
 
         if price_is_cheap and not self._realtime_price_charging:
-            # Evaluate whether charging is actually needed before starting
-            decision_data = await self._should_activate_grid_charging()
-            self._last_decision_data = decision_data
-            if decision_data["should_charge"]:
-                self._realtime_price_charging = True
-                self._grid_charging_initialized = False
-                self.grid_charging_active = True
-                _LOGGER.info(
-                    "Real-time price: charging STARTED (price=%.4f <= threshold=%.4f)",
-                    current_price, threshold,
+            if not self._is_operation_allowed(is_charging=True):
+                _LOGGER.debug(
+                    "Real-time price: cheap price but charging NOT ALLOWED by time slot configuration",
                 )
             else:
-                _LOGGER.info(
-                    "Real-time price: cheap price but charging NOT needed (sufficient energy)",
-                )
+                # Evaluate whether charging is actually needed before starting
+                decision_data = await self._should_activate_grid_charging()
+                self._last_decision_data = decision_data
+                if decision_data["should_charge"]:
+                    self._realtime_price_charging = True
+                    self._grid_charging_initialized = False
+                    self.grid_charging_active = True
+                    _LOGGER.info(
+                        "Real-time price: charging STARTED (price=%.4f <= threshold=%.4f)",
+                        current_price, threshold,
+                    )
+                else:
+                    _LOGGER.info(
+                        "Real-time price: cheap price but charging NOT needed (sufficient energy)",
+                    )
 
         elif not price_is_cheap and self._realtime_price_charging:
             self._realtime_price_charging = False
@@ -3231,6 +3236,17 @@ class ChargeDischargeController:
             )
 
         if self.grid_charging_active:
+            if not self._is_operation_allowed(is_charging=True):
+                # Time slot ended while charging was active — stop immediately
+                self._realtime_price_charging = False
+                self.grid_charging_active = False
+                self._grid_charging_initialized = False
+                self.previous_power = 0
+                self.previous_error = 0
+                _LOGGER.debug(
+                    "Real-time price: charging stopped — outside charge time slot",
+                )
+                return
             await self._handle_predictive_grid_charging()
 
     # =========================================================================
@@ -3574,6 +3590,20 @@ class ChargeDischargeController:
                 self._active_discharge_batteries = []
                 self._active_charge_batteries = []
                 # Set all batteries to 0
+                for coordinator in self.coordinators:
+                    await self._set_battery_power(coordinator, 0, 0)
+                return
+
+            # Check price-based discharge block (e.g. RT price mode: cheap price blocks discharge)
+            if not is_charging and self._price_based_discharge_blocked:
+                _LOGGER.info("ChargeDischargeController: First execution - Discharging NOT ALLOWED by price-based control, starting at 0W")
+                self.previous_power = 0
+                self.error_integral = 0.0
+                self.previous_error = -(sensor_actual - active_target)
+                self.last_output_sign = 0
+                self.sign_changes = 0
+                self._active_discharge_batteries = []
+                self._active_charge_batteries = []
                 for coordinator in self.coordinators:
                     await self._set_battery_power(coordinator, 0, 0)
                 return
