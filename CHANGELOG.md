@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.4] - 2026-04-30
+
+### Changed
+- **Venus A maximum charge/discharge power updated to 1500 W**: `MAX_POWER_BY_VERSION["vA"]` was set to 1200 W, which underestimated the hardware limit. Updated to 1500 W so the config flow slider and all power calculations reflect the correct physical maximum.
+
 ## [1.7.3] - 2026-04-29
 
 ### Fixed

@@ -17,7 +17,7 @@ SUPPORTED_VERSIONS = ["v2", "v3", "vA", "vD"]
 MAX_POWER_BY_VERSION = {
     "v2": 2500,
     "v3": 2500,
-    "vA": 1200,
+    "vA": 1500,
     "vD": 2200,
 }
 DEFAULT_VERSION = "v2"

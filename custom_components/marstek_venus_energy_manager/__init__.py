@@ -1697,7 +1697,7 @@ class ChargeDischargeController:
         - Charge:    1750 W crossover → threshold = 1750 / this_battery_max
         Clamped to [MIN_ACTIVATION, MAX_ACTIVATION] from const.py.
         Using each battery's own capacity ensures correct behaviour in heterogeneous
-        setups (e.g. v3 2500 W + Venus A 1200 W).
+        setups (e.g. v3 2500 W + Venus A 1500 W).
 
         Prioritizes:
         - Discharge: Highest SOC first (drain fullest battery first)
