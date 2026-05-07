@@ -238,7 +238,7 @@
           "load_shedding_duration_min": "Minutes of sustained overload before plugs are switched off. Default: 7 min.",
           "load_shedding_min_plug_power": "Only shed plugs currently drawing at least this much power. Default: 100 W.",
           "load_shedding_notify_enabled": "Send a notification when plugs are switched off or restored.",
-          "load_shedding_notify_target": "Optional: select a notify service (e.g. mobile app) to receive push notifications in addition to the HA dashboard notification."
+          "load_shedding_notify_target": "Enter a notify service name (e.g. notify.mobile_app_iphone) to also send push notifications. Leave empty for HA dashboard notification only."
         }
       },
       "add_load_shedding_plug": {
@@ -480,7 +480,7 @@
           "load_shedding_duration_min": "Minutes of sustained overload before plugs are switched off. Default: 7 min.",
           "load_shedding_min_plug_power": "Only shed plugs currently drawing at least this much power. Default: 100 W.",
           "load_shedding_notify_enabled": "Send a notification when plugs are switched off or restored.",
-          "load_shedding_notify_target": "Optional: select a notify service (e.g. mobile app) to receive push notifications in addition to the HA dashboard notification."
+          "load_shedding_notify_target": "Enter a notify service name (e.g. notify.mobile_app_iphone) to also send push notifications. Leave empty for HA dashboard notification only."
         }
       },
       "add_load_shedding_plug": {

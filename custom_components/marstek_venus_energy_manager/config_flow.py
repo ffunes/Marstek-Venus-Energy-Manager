@@ -17,8 +17,6 @@ from homeassistant.helpers.selector import (
     NumberSelectorMode,
     EntitySelector,
     EntitySelectorConfig,
-    ServiceSelector,
-    ServiceSelectorConfig,
     TimeSelector,
     SelectSelector,
     SelectSelectorConfig,
@@ -1228,7 +1226,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required("load_shedding_notify_enabled", default=DEFAULT_LOAD_SHEDDING_NOTIFY_ENABLED):
                         BooleanSelector(),
                     vol.Optional("load_shedding_notify_target"):
-                        ServiceSelector(ServiceSelectorConfig(domain="notify")),
+                        TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
                 }
             ),
         )
@@ -2646,7 +2644,7 @@ class OptionsFlowHandler(OptionsFlow):
             vol.Required("load_shedding_notify_enabled", default=cur_notify):
                 BooleanSelector(),
             vol.Optional("load_shedding_notify_target", description={"suggested_value": cur_target} if cur_target else {}):
-                ServiceSelector(ServiceSelectorConfig(domain="notify")),
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
         }
 
         return self.async_show_form(

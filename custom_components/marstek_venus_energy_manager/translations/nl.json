@@ -321,7 +321,7 @@
           "load_shedding_duration_min": "Minuten aanhoudende overbelasting voordat stekkers worden uitgeschakeld. Standaard: 7 min.",
           "load_shedding_min_plug_power": "Schakel alleen stekkers af die momenteel minstens dit vermogen verbruiken. Standaard: 100 W.",
           "load_shedding_notify_enabled": "Stuur een melding wanneer stekkers worden uitgeschakeld of hersteld.",
-          "load_shedding_notify_target": "Optioneel: selecteer een meldingsservice (bijv. mobiele app) voor pushmeldingen naast de HA-dashboardmelding."
+          "load_shedding_notify_target": "Voer een meldingsservicenaam in (bijv. notify.mobile_app_iphone) voor pushmeldingen. Laat leeg voor alleen de HA-dashboardmelding."
         }
       },
       "add_load_shedding_plug": {
@@ -694,7 +694,7 @@
           "load_shedding_duration_min": "Minuten aanhoudende overbelasting voordat stekkers worden uitgeschakeld. Standaard: 7 min.",
           "load_shedding_min_plug_power": "Schakel alleen stekkers af die momenteel minstens dit vermogen verbruiken. Standaard: 100 W.",
           "load_shedding_notify_enabled": "Stuur een melding wanneer stekkers worden uitgeschakeld of hersteld.",
-          "load_shedding_notify_target": "Optioneel: selecteer een meldingsservice (bijv. mobiele app) voor pushmeldingen naast de HA-dashboardmelding."
+          "load_shedding_notify_target": "Voer een meldingsservicenaam in (bijv. notify.mobile_app_iphone) voor pushmeldingen. Laat leeg voor alleen de HA-dashboardmelding."
         }
       },
       "add_load_shedding_plug": {
