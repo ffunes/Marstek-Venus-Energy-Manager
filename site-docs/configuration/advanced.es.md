@@ -10,7 +10,7 @@ Fuerza una carga al **100 % una vez por semana** para equilibrar las celdas de l
 
 Ver [Carga semanal completa](../features/weekly-full-charge.md) para el detalle de funcionamiento.
 
-![Configuración de carga semanal completa](../assets/screenshots/configuration/advanced-weekly-full-charge.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuración de carga semanal completa](../assets/screenshots/configuration/advanced-weekly-full-charge-config.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
@@ -27,7 +27,7 @@ Un margen mayor (p. ej. 180 min) desbloquea la carga desde la red más temprano;
 
 Ver [Retraso de carga solar](../features/solar-charge-delay.md) para el detalle de funcionamiento.
 
-![Configuración del retraso de carga solar](../assets/screenshots/configuration/advanced-charge-delay.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuración del retraso de carga solar](../assets/screenshots/configuration/advanced-solar-charge-delay-config.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
@@ -42,7 +42,7 @@ Limita la descarga cuando el SOC cae por debajo de un umbral, cubriendo solo los
 
 Ver [Peak shaving](../features/peak-shaving.md) para el detalle de funcionamiento.
 
-![Configuración de protección de capacidad](../assets/screenshots/configuration/advanced-capacity-protection.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuración de protección de capacidad](../assets/screenshots/configuration/advanced-capacity-protection-config.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
 
@@ -65,4 +65,4 @@ Permite ajustar los parámetros internos del controlador PD. Todos los valores s
 
 Los parámetros de potencia mínima de carga/descarga son útiles para evitar microciclos ineficientes cuando la demanda de la red es muy baja.
 
-![Configuración avanzada del controlador PD](../assets/screenshots/configuration/advanced-pd-controller.png){ width="650"  style="display: block; margin: 0 auto;"}
+![Configuración avanzada del controlador PD](../assets/screenshots/configuration/advanced-pd-controller-config.png){ width="650"  style="display: block; margin: 0 auto;"}
