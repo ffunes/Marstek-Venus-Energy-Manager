@@ -301,7 +301,7 @@
         "title": "Stündliche Netzbalance",
         "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.",
         "data": {
-          "configure_hourly_balance": "Stündliche Balance konfigurieren"
+          "configure_hourly_balance": "Stündliche Netto-Balance konfigurieren"
         }
       },
       "hourly_balance_config": {
@@ -649,7 +649,7 @@
         "title": "Stündliche Netzbalance",
         "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.",
         "data": {
-          "configure_hourly_balance": "Stündliche Balance konfigurieren"
+          "configure_hourly_balance": "Stündliche Netto-Balance konfigurieren"
         }
       },
       "hourly_balance_config": {
@@ -736,7 +736,7 @@
         "name": "Zeitfenster {slot_number}"
       },
       "hourly_balance": {
-        "name": "Stündliche Balance"
+        "name": "Netto-Balance"
       }
     },
     "time": {

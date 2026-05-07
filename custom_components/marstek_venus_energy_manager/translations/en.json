@@ -270,7 +270,7 @@
         "title": "Hourly Net Balance",
         "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.",
         "data": {
-          "configure_hourly_balance": "Configure hourly balance"
+          "configure_hourly_balance": "Configure hourly net balance"
         }
       },
       "pd_advanced": {
@@ -649,7 +649,7 @@
         "title": "Hourly Net Balance",
         "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.",
         "data": {
-          "configure_hourly_balance": "Configure hourly balance"
+          "configure_hourly_balance": "Configure hourly net balance"
         }
       },
       "hourly_balance_config": {
@@ -735,7 +735,7 @@
         "name": "Time Slot {slot_number}"
       },
       "hourly_balance": {
-        "name": "Hourly Balance"
+        "name": "Net Balance"
       }
     },
     "time": {

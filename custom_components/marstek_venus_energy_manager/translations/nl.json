@@ -301,7 +301,7 @@
         "title": "Uurlijks Netsaldo",
         "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.",
         "data": {
-          "configure_hourly_balance": "Uurlijks saldo configureren"
+          "configure_hourly_balance": "Uurlijks nettosaldo configureren"
         }
       },
       "hourly_balance_config": {
@@ -649,7 +649,7 @@
         "title": "Uurlijks Netsaldo",
         "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.",
         "data": {
-          "configure_hourly_balance": "Uurlijks saldo configureren"
+          "configure_hourly_balance": "Uurlijks nettosaldo configureren"
         }
       },
       "hourly_balance_config": {
@@ -736,7 +736,7 @@
         "name": "Tijdslot {slot_number}"
       },
       "hourly_balance": {
-        "name": "Uurlijks Saldo"
+        "name": "Nettosaldo"
       }
     },
     "time": {

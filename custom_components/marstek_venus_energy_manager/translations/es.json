@@ -270,7 +270,7 @@
         "title": "Balance Neto Horario",
         "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.",
         "data": {
-          "configure_hourly_balance": "Configurar balance horario"
+          "configure_hourly_balance": "Configurar balance neto horario"
         }
       },
       "pd_advanced": {
@@ -649,7 +649,7 @@
         "title": "Balance Neto Horario",
         "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.",
         "data": {
-          "configure_hourly_balance": "Configurar balance horario"
+          "configure_hourly_balance": "Configurar balance neto horario"
         }
       },
       "hourly_balance_config": {
@@ -736,7 +736,7 @@
         "name": "Franja Horaria {slot_number}"
       },
       "hourly_balance": {
-        "name": "Balance Horario"
+        "name": "Balance Neto"
       }
     },
     "time": {

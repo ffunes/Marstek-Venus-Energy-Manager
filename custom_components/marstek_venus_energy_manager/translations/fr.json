@@ -301,7 +301,7 @@
         "title": "Bilan Horaire Net",
         "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.",
         "data": {
-          "configure_hourly_balance": "Configurer le bilan horaire"
+          "configure_hourly_balance": "Configurer le bilan net horaire"
         }
       },
       "hourly_balance_config": {
@@ -649,7 +649,7 @@
         "title": "Bilan Horaire Net",
         "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.",
         "data": {
-          "configure_hourly_balance": "Configurer le bilan horaire"
+          "configure_hourly_balance": "Configurer le bilan net horaire"
         }
       },
       "hourly_balance_config": {
@@ -736,7 +736,7 @@
         "name": "Plage Horaire {slot_number}"
       },
       "hourly_balance": {
-        "name": "Bilan Horaire"
+        "name": "Bilan Net"
       }
     },
     "time": {
