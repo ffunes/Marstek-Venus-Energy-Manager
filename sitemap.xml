@@ -113,13 +113,6 @@
         <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/consumption-estimate/"/>
     </url>
     <url>
-        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/hourly-net-balance/</loc>
-        <lastmod>2026-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/hourly-net-balance/"/>
-        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/hourly-net-balance/"/>
-    </url>
-    <url>
         <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/load-exclusion/</loc>
         <lastmod>2026-05-08</lastmod>
         <changefreq>daily</changefreq>
@@ -300,13 +293,6 @@
         <changefreq>daily</changefreq>
         <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/consumption-estimate/"/>
         <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/consumption-estimate/"/>
-    </url>
-    <url>
-        <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/hourly-net-balance/</loc>
-        <lastmod>2026-05-08</lastmod>
-        <changefreq>daily</changefreq>
-        <xhtml:link rel="alternate" hreflang="es" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/hourly-net-balance/"/>
-        <xhtml:link rel="alternate" hreflang="en" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/hourly-net-balance/"/>
     </url>
     <url>
         <loc>https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/load-exclusion/</loc>
