@@ -12,17 +12,17 @@
         <meta name="author" content="ffunes">
       
       
-        <link rel="canonical" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/load-exclusion/">
+        <link rel="canonical" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/hourly-net-balance/">
       
       
-        <link rel="prev" href="../solar-charge-delay/">
+        <link rel="prev" href="../load-exclusion/">
       
       
-        <link rel="next" href="../hourly-net-balance/">
+        <link rel="next" href="../../reference/architecture/">
       
       
         
-          <link rel="alternate" href="../../../features/load-exclusion/" hreflang="en">
+          <link rel="alternate" href="../../../features/hourly-net-balance/" hreflang="en">
         
           <link rel="alternate" href="./" hreflang="es">
         
@@ -33,7 +33,7 @@
     
     
       
-        <title>Exclusión de cargas - Marstek Venus Energy Manager</title>
+        <title>Balance neto horario - Marstek Venus Energy Manager</title>
       
     
     
@@ -84,7 +84,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#exclusion-de-cargas" class="md-skip">
+        <a href="#balance-neto-horario" class="md-skip">
           Saltar a contenido
         </a>
       
@@ -123,7 +123,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Exclusión de cargas
+              Balance neto horario
             
           </span>
         </div>
@@ -170,7 +170,7 @@
       <ul class="md-select__list">
         
           <li class="md-select__item">
-            <a href="../../../features/load-exclusion/" hreflang="en" class="md-select__link">
+            <a href="../../../features/hourly-net-balance/" hreflang="en" class="md-select__link">
               English
             </a>
           </li>
@@ -1124,6 +1124,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../load-exclusion/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Exclusión de cargas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1143,7 +1171,7 @@
   <span class="md-ellipsis">
     
   
-    Exclusión de cargas
+    Balance neto horario
   
 
     
@@ -1161,7 +1189,7 @@
   <span class="md-ellipsis">
     
   
-    Exclusión de cargas
+    Balance neto horario
   
 
     
@@ -1187,66 +1215,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#como-funciona-internamente" class="md-nav__link">
+  <a href="#como-funciona" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cómo funciona internamente
+        Cómo funciona
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Cómo funciona internamente">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#si-el-dispositivo-no-esta-incluido-en-el-sensor-principal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Si el dispositivo NO está incluido en el sensor principal
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#opcion-permitir-excedente-solar" class="md-nav__link">
+  <a href="#fuente-de-datos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Opción "Permitir excedente solar"
+        Fuente de datos
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Opción &#34;Permitir excedente solar&#34;">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#switch-de-excedente-solar-control-en-tiempo-real" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Switch de excedente solar (control en tiempo real)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+  <a href="#prioridad-y-composicion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cargador VE sin telemetría de potencia
+        Prioridad y composición
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bloqueo-de-compensacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bloqueo de compensación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensor-balance-neto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensor Balance Neto
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuración
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistencia
       
     </span>
   </a>
@@ -1257,34 +1295,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../hourly-net-balance/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Balance neto horario
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1523,66 +1533,76 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#como-funciona-internamente" class="md-nav__link">
+  <a href="#como-funciona" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cómo funciona internamente
+        Cómo funciona
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Cómo funciona internamente">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#si-el-dispositivo-no-esta-incluido-en-el-sensor-principal" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Si el dispositivo NO está incluido en el sensor principal
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#opcion-permitir-excedente-solar" class="md-nav__link">
+  <a href="#fuente-de-datos" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Opción "Permitir excedente solar"
+        Fuente de datos
       
     </span>
   </a>
-  
-    <nav class="md-nav" aria-label="Opción &#34;Permitir excedente solar&#34;">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#switch-de-excedente-solar-control-en-tiempo-real" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Switch de excedente solar (control en tiempo real)
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cargador-ve-sin-telemetria-de-potencia" class="md-nav__link">
+  <a href="#prioridad-y-composicion" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cargador VE sin telemetría de potencia
+        Prioridad y composición
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bloqueo-de-compensacion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bloqueo de compensación
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensor-balance-neto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensor Balance Neto
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuracion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuración
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persistencia" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persistencia
       
     </span>
   </a>
@@ -1606,7 +1626,7 @@
 
 
   
-    <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager/edit/main/site-docs/features/load-exclusion.es.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
+    <a href="https://github.com/ffunes/Marstek-Venus-Energy-Manager/edit/main/site-docs/features/hourly-net-balance.es.md" title="Editar esta página" class="md-content__button md-icon" rel="edit">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -1614,79 +1634,174 @@
   
 
 
-<h1 id="exclusion-de-cargas">Exclusión de cargas<a class="headerlink" href="#exclusion-de-cargas" title="Permanent link">&para;</a></h1>
-<p>Ver <a href="../../configuration/excluded-devices/">Dispositivos excluidos</a> para la configuración.</p>
-<h2 id="como-funciona-internamente">Cómo funciona internamente<a class="headerlink" href="#como-funciona-internamente" title="Permanent link">&para;</a></h2>
-<p>Cuando un dispositivo excluido está activo, el controlador resta su potencia del consumo de red antes de calcular el ajuste del controlador PD:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>consumo_efectivo = consumo_red - potencia_excluida
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>error = consumo_efectivo - target_grid_power
-</code></pre></div>
-<p>Esto hace que la batería "ignore" esa carga y no intente compensarla.</p>
-<h3 id="si-el-dispositivo-no-esta-incluido-en-el-sensor-principal">Si el dispositivo NO está incluido en el sensor principal<a class="headerlink" href="#si-el-dispositivo-no-esta-incluido-en-el-sensor-principal" title="Permanent link">&para;</a></h3>
-<p>La integración <strong>suma</strong> la potencia del dispositivo excluido al consumo de red medido (porque el sensor principal no la ve) y luego la resta, resultando en el mismo consumo efectivo neto.</p>
-<h2 id="opcion-permitir-excedente-solar">Opción "Permitir excedente solar"<a class="headerlink" href="#opcion-permitir-excedente-solar" title="Permanent link">&para;</a></h2>
-<p>Cuando está activa, si el sistema opera con excedente solar (la batería está cargando por excedente), la exclusión no se aplica para la parte de carga. En otras palabras: la batería no cargará para compensar el consumo de este dispositivo cuando ya hay excedente solar disponible.</p>
-<p>Esta opción es la base para la <strong>prioridad batería vs. carga del VE</strong>:</p>
+<h1 id="balance-neto-horario">Balance Neto Horario<a class="headerlink" href="#balance-neto-horario" title="Permanent link">&para;</a></h1>
+<p>Registra la importación y exportación de red dentro de cada hora civil y ajusta el punto de trabajo del controlador PD en tiempo real para llevar la energía neta hacia un objetivo configurable. El objetivo por defecto es 0 Wh — balance neto cero cada hora — aunque puede desplazarse para permitir una importación fija o apuntar a una exportación fija.</p>
+<h2 id="como-funciona">Cómo funciona<a class="headerlink" href="#como-funciona" title="Permanent link">&para;</a></h2>
+<p>En cada ciclo del controlador PD (~2,5 s), el gestor:</p>
+<ol>
+<li>Acumula importación y exportación de red para la hora civil actual.</li>
+<li>Calcula el déficit respecto al objetivo: <code>déficit = objetivo_neto_Wh − (imp_Wh − exp_Wh)</code>.</li>
+<li>Deriva una corrección de potencia: <code>offset = déficit / horas_restantes</code>.</li>
+<li>Aplica un ramp-in de 5 minutos al inicio de cada hora para evitar correcciones agresivas tempranas.</li>
+<li>Limita el offset al máximo configurado.</li>
+<li>Aplica una histéresis configurable (por defecto 15 W): el offset solo se actualiza si cambia más de este umbral (omitida durante los últimos 10 minutos de la hora para que la hora se cierre con precisión).</li>
+<li>Registra el offset mediante el registro de puntos de trabajo para que se combine correctamente con otras funcionalidades.</li>
+</ol>
+<p>El offset se elimina automáticamente cuando:</p>
+<ul>
+<li>La hora actual está fuera de todas las <a href="../../configuration/time-slots/">franjas horarias de descarga</a> configuradas (o se aplica 24/7 si no hay franjas definidas).</li>
+<li>El modo manual está activo.</li>
+</ul>
+<h2 id="fuente-de-datos">Fuente de datos<a class="headerlink" href="#fuente-de-datos" title="Permanent link">&para;</a></h2>
+<p>Por defecto, la integración integra el sensor de potencia de red mediante la regla trapezoidal. Si existe un sensor llamado <code>sensor.balance_neto</code> en Home Assistant, se usa en su lugar. La detección es automática:</p>
 <table>
 <thead>
 <tr>
-<th>Modo</th>
-<th>¿La batería carga con solar?</th>
-<th>¿La batería descarga para el dispositivo?</th>
+<th>Tipo de sensor</th>
+<th>Unidad</th>
+<th><code>state_class</code></th>
+<th>Método</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Excluido, excedente OFF</td>
-<td>Sí</td>
-<td>No</td>
+<td>Energía acumulada</td>
+<td>kWh / Wh</td>
+<td><code>total</code> o <code>total_increasing</code></td>
+<td>Snapshot al inicio de hora, delta por ciclo</td>
 </tr>
 <tr>
-<td>Excluido, excedente ON</td>
-<td><strong>No</strong> — el solar va primero al dispositivo</td>
-<td>No</td>
+<td>Energía instantánea</td>
+<td>kWh / Wh</td>
+<td><code>measurement</code></td>
+<td>Lectura directa</td>
+</tr>
+<tr>
+<td>Potencia</td>
+<td>W / kW</td>
+<td>cualquiera</td>
+<td>Integración trapezoidal</td>
 </tr>
 </tbody>
 </table>
-<h3 id="switch-de-excedente-solar-control-en-tiempo-real">Switch de excedente solar (control en tiempo real)<a class="headerlink" href="#switch-de-excedente-solar-control-en-tiempo-real" title="Permanent link">&para;</a></h3>
-<p>Cada dispositivo excluido dispone de una entidad switch <strong>Solar Surplus</strong> dedicada que permite cambiar este comportamiento en tiempo real sin reconfigurar la integración. Úsalo en automatizaciones de HA para cambiar la prioridad dinámicamente:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Ejemplo: priorizar el VE cuando está conectado</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nt">automation</span><span class="p">:</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">trigger</span><span class="p">:</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">platform</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">state</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">binary_sensor.ev_conectado</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">to</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;on&quot;</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">action</span><span class="p">:</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">service</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.turn_on</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nt">target</span><span class="p">:</span>
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">        </span><span class="nt">entity_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">switch.solar_surplus_wallbox_power</span>
-</code></pre></div>
-<p><img alt="Sensor de potencia de dispositivo excluido en HA" src="../../../assets/screenshots/features/load-exclusion-entities.png" style="display: block; margin: 0 auto;" width="700" /></p>
-<h2 id="cargador-ve-sin-telemetria-de-potencia">Cargador VE sin telemetría de potencia<a class="headerlink" href="#cargador-ve-sin-telemetria-de-potencia" title="Permanent link">&para;</a></h2>
-<p>Para cargadores VE que solo exponen un sensor de estado (sin lectura de potencia en tiempo real), existe la opción <strong>Cargador VE sin telemetría de potencia</strong>. En lugar de leer vatios, el controlador monitoriza el estado del sensor y reacciona ante cualquier cadena de carga (<code>Charging</code>, <code>Cargando</code>, etc.).</p>
+<p>Si el sensor externo queda no disponible, la integración vuelve al método trapezoidal automáticamente. La fuente activa es visible en el atributo <code>source</code> del sensor Balance Neto.</p>
+<p>La lista de candidatos se define en <code>const.py → EXTERNAL_NET_BALANCE_CANDIDATES</code>. Convención de signo: <strong>positivo = exportación neta a la red</strong>.</p>
+<h2 id="prioridad-y-composicion">Prioridad y composición<a class="headerlink" href="#prioridad-y-composicion" title="Permanent link">&para;</a></h2>
+<p>El offset de balance horario se registra como <strong>offset aditivo</strong> en el registro de puntos de trabajo (clave <code>hourly_balance</code>). Se suma a la preferencia de potencia objetivo del usuario y a cualquier otro offset aditivo. La Protección de Capacidad utiliza una anulación absoluta (prioridad 10) y toma el control total cuando está activa.</p>
+<h2 id="bloqueo-de-compensacion">Bloqueo de compensación<a class="headerlink" href="#bloqueo-de-compensacion" title="Permanent link">&para;</a></h2>
+<p>Ciertas condiciones impiden que el offset se aplique. El atributo <code>charge_block_reason</code> del sensor Balance Neto muestra el motivo:</p>
 <table>
 <thead>
 <tr>
-<th>Fase</th>
-<th>Comportamiento de la batería</th>
+<th>Motivo</th>
+<th>Significado</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Estado VE → Cargando (primeros 5 min)</td>
-<td>0 W — carga y descarga bloqueadas, estado PD congelado</td>
+<td><code>solar_charge_delay</code></td>
+<td>El retraso de carga solar está activo — se bloquean las correcciones de importación y exportación</td>
 </tr>
 <tr>
-<td>VE cargando (después de 5 min)</td>
-<td>Se permite cargar con excedente solar; descarga siempre bloqueada</td>
+<td><code>hysteresis</code></td>
+<td>La histéresis de carga está activa — solo se bloquea la corrección de importación</td>
 </tr>
 <tr>
-<td>Estado VE → cualquier otro valor</td>
-<td>Operación normal</td>
+<td><code>max_soc</code></td>
+<td>Todas las baterías están al SOC máximo — solo se bloquea la corrección de importación</td>
 </tr>
 </tbody>
 </table>
-<p>Ver <a href="../../configuration/excluded-devices/#cargador-ve-sin-telemetría-de-potencia">Cargador VE sin telemetría de potencia</a> en la referencia de configuración para los detalles de configuración.</p>
+<p>Mientras está bloqueado, el acumulador sigue registrando para que el offset correcto se aplique en cuanto desaparezca el bloqueo.</p>
+<h2 id="sensor-balance-neto">Sensor Balance Neto<a class="headerlink" href="#sensor-balance-neto" title="Permanent link">&para;</a></h2>
+<p>Cuando la funcionalidad está activada, se crea un único sensor de diagnóstico (<code>sensor.*_balance_neto</code>).</p>
+<p><strong>Estado</strong>: kWh neto de la hora actual (positivo = exportación neta, negativo = importación neta).</p>
+<p><strong>Atributos</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Atributo</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td><code>idle</code>, <code>out_of_slot</code>, <code>capped</code>, <code>compensating_import</code>, <code>compensating_export</code>, <code>compensation_stopped</code></td>
+</tr>
+<tr>
+<td><code>offset_w</code></td>
+<td>Corrección de punto de trabajo activa en vatios</td>
+</tr>
+<tr>
+<td><code>imp_wh</code></td>
+<td>Importación de red acumulada en la hora actual</td>
+</tr>
+<tr>
+<td><code>exp_wh</code></td>
+<td>Exportación de red acumulada en la hora actual</td>
+</tr>
+<tr>
+<td><code>target_net_wh</code></td>
+<td>Objetivo configurado en Wh</td>
+</tr>
+<tr>
+<td><code>remaining_min</code></td>
+<td>Minutos restantes en la hora actual</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>ID de entidad del sensor usado, o <code>trapezoidal</code></td>
+</tr>
+<tr>
+<td><code>hour_iso</code></td>
+<td>Timestamp ISO del inicio de la hora actual</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td>Últimas 10 entradas de horas cerradas (imp_wh, exp_wh, net_wh, target_net_wh)</td>
+</tr>
+<tr>
+<td><code>charge_block_reason</code></td>
+<td>Solo presente cuando la compensación está bloqueada; indica el motivo</td>
+</tr>
+</tbody>
+</table>
+<h2 id="configuracion">Configuración<a class="headerlink" href="#configuracion" title="Permanent link">&para;</a></h2>
+<p>Activa y configura desde <strong>Configuración → Dispositivos y Servicios → Marstek Venus Energy Manager → Configurar → Balance neto horario</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Parámetro</th>
+<th>Por defecto</th>
+<th>Descripción</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Balance neto objetivo (kWh)</td>
+<td><code>0.0</code></td>
+<td>Energía neta objetivo por hora. <code>0</code> = balance neto cero. Positivo = permite importación neta. Negativo = apunta a exportación neta.</td>
+</tr>
+<tr>
+<td>Offset máximo (W)</td>
+<td><code>1000</code></td>
+<td>Corrección de potencia máxima que puede aplicar el controlador.</td>
+</tr>
+<tr>
+<td>Tolerancia de balance neto (kWh)</td>
+<td><code>0.0</code></td>
+<td>Banda muerta: sin corrección cuando el balance neto está dentro de ±N kWh del objetivo. <code>0</code> = corrección exacta.</td>
+</tr>
+<tr>
+<td>Histéresis del desplazamiento (W)</td>
+<td><code>15</code></td>
+<td>Cambio mínimo en el desplazamiento necesario para aplicar una nueva corrección. Evita micro-ajustes cada ciclo. <code>0</code> = actualizar siempre.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="persistencia">Persistencia<a class="headerlink" href="#persistencia" title="Permanent link">&para;</a></h2>
+<p>El estado se persiste en el almacenamiento de Home Assistant cada ~5 minutos y al descargar la integración. Al reiniciar, los acumuladores de la hora actual se restauran solo si el reinicio se produjo en la misma hora civil.</p>
 
 
 
@@ -1724,7 +1839,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Pie" >
         
           
-          <a href="../solar-charge-delay/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Retraso de carga solar">
+          <a href="../load-exclusion/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Exclusión de cargas">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1734,20 +1849,20 @@
                 Anterior
               </span>
               <div class="md-ellipsis">
-                Retraso de carga solar
+                Exclusión de cargas
               </div>
             </div>
           </a>
         
         
           
-          <a href="../hourly-net-balance/" class="md-footer__link md-footer__link--next" aria-label="Siguiente: Balance neto horario">
+          <a href="../../reference/architecture/" class="md-footer__link md-footer__link--next" aria-label="Siguiente: Arquitectura">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Siguiente
               </span>
               <div class="md-ellipsis">
-                Balance neto horario
+                Arquitectura
               </div>
             </div>
             <div class="md-footer__button md-icon">
