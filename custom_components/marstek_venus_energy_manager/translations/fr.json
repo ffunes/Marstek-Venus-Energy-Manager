@@ -299,7 +299,7 @@
       },
       "hourly_balance": {
         "title": "Bilan Horaire Net",
-        "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.",
+        "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.\n\n⚠️ **Important** : Cette fonctionnalité n'a de sens que si votre contrat électrique inclut un **compteur intelligent (smart meter)** effectuant un **calcul du bilan net horaire**. Si votre compteur ne calcule pas le bilan net horaire, les ajustements de consigne de la batterie ne se traduiront pas par des économies et la fonctionnalité n'offre aucun avantage.",
         "data": {
           "configure_hourly_balance": "Configurer le bilan net horaire"
         }
@@ -649,7 +649,7 @@
       },
       "hourly_balance": {
         "title": "Bilan Horaire Net",
-        "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.",
+        "description": "Activer le contrôle du bilan net horaire ? Cette fonction suit les importations/exportations réseau par heure et ajuste automatiquement le point de consigne de la batterie pour atteindre un bilan énergétique cible.\n\n⚠️ **Important** : Cette fonctionnalité n'a de sens que si votre contrat électrique inclut un **compteur intelligent (smart meter)** effectuant un **calcul du bilan net horaire**. Si votre compteur ne calcule pas le bilan net horaire, les ajustements de consigne de la batterie ne se traduiront pas par des économies et la fonctionnalité n'offre aucun avantage.",
         "data": {
           "configure_hourly_balance": "Configurer le bilan net horaire"
         }

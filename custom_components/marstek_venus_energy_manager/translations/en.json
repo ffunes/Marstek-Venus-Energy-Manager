@@ -268,7 +268,7 @@
       },
       "hourly_balance": {
         "title": "Hourly Net Balance",
-        "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.",
+        "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.\n\n⚠️ **Important**: This feature is only useful if your electricity contract includes a **smart meter** that performs **hourly net balance calculation**. If your meter does not calculate hourly net balance, the battery setpoint adjustments will not translate to cost savings and the feature provides no benefit.",
         "data": {
           "configure_hourly_balance": "Configure hourly net balance"
         }
@@ -649,7 +649,7 @@
       },
       "hourly_balance": {
         "title": "Hourly Net Balance",
-        "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.",
+        "description": "Enable hourly net balance control? This feature tracks grid import/export per hour and automatically adjusts the battery setpoint to achieve a target net energy balance.\n\n⚠️ **Important**: This feature is only useful if your electricity contract includes a **smart meter** that performs **hourly net balance calculation**. If your meter does not calculate hourly net balance, the battery setpoint adjustments will not translate to cost savings and the feature provides no benefit.",
         "data": {
           "configure_hourly_balance": "Configure hourly net balance"
         }

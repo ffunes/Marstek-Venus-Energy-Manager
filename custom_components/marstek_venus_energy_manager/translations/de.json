@@ -299,7 +299,7 @@
       },
       "hourly_balance": {
         "title": "Stündliche Netzbalance",
-        "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.",
+        "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.\n\n⚠️ **Wichtig**: Diese Funktion ist nur sinnvoll, wenn Ihr Stromvertrag ein **Smart Meter (intelligenter Zähler)** mit **stündlicher Netzbalance-Berechnung** umfasst. Wenn Ihr Zähler keine stündliche Netzbalance berechnet, führen die Anpassungen des Batterie-Sollwerts nicht zu Kosteneinsparungen und die Funktion bietet keinen Nutzen.",
         "data": {
           "configure_hourly_balance": "Stündliche Netto-Balance konfigurieren"
         }
@@ -649,7 +649,7 @@
       },
       "hourly_balance": {
         "title": "Stündliche Netzbalance",
-        "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.",
+        "description": "Stündliche Netzbalance-Steuerung aktivieren? Diese Funktion erfasst Netzimport/-export pro Stunde und passt den Batterie-Sollwert automatisch an, um eine Ziel-Energiebalance zu erreichen.\n\n⚠️ **Wichtig**: Diese Funktion ist nur sinnvoll, wenn Ihr Stromvertrag ein **Smart Meter (intelligenter Zähler)** mit **stündlicher Netzbalance-Berechnung** umfasst. Wenn Ihr Zähler keine stündliche Netzbalance berechnet, führen die Anpassungen des Batterie-Sollwerts nicht zu Kosteneinsparungen und die Funktion bietet keinen Nutzen.",
         "data": {
           "configure_hourly_balance": "Stündliche Netto-Balance konfigurieren"
         }

@@ -1241,7 +1241,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional("pd_target_grid_power", default=DEFAULT_TARGET_GRID_POWER):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=-500, max=500, step=10,
+                                min=-2500, max=2500, step=10,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="W",
                             )
@@ -2653,7 +2653,7 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional("pd_target_grid_power", default=current_target_grid_power):
                         NumberSelector(
                             NumberSelectorConfig(
-                                min=-500, max=500, step=10,
+                                min=-2500, max=2500, step=10,
                                 mode=NumberSelectorMode.SLIDER,
                                 unit_of_measurement="W",
                             )

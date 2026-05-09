@@ -268,7 +268,7 @@
       },
       "hourly_balance": {
         "title": "Balance Neto Horario",
-        "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.",
+        "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.\n\n⚠️ **Importante**: Esta función solo tiene sentido si tu contrato eléctrico incluye un **contador inteligente (smart meter)** que realice **cálculo del balance neto horario**. Si tu contador no calcula el balance neto por hora, los ajustes al setpoint de la batería no se traducirán en ahorro de costes y la función no proporciona beneficio.",
         "data": {
           "configure_hourly_balance": "Configurar balance neto horario"
         }
@@ -649,7 +649,7 @@
       },
       "hourly_balance": {
         "title": "Balance Neto Horario",
-        "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.",
+        "description": "¿Activar el control de balance neto horario? Esta función registra la importación/exportación de red por hora y ajusta automáticamente el setpoint de la batería para alcanzar un balance de energía objetivo.\n\n⚠️ **Importante**: Esta función solo tiene sentido si tu contrato eléctrico incluye un **contador inteligente (smart meter)** que realice **cálculo del balance neto horario**. Si tu contador no calcula el balance neto por hora, los ajustes al setpoint de la batería no se traducirán en ahorro de costes y la función no proporciona beneficio.",
         "data": {
           "configure_hourly_balance": "Configurar balance neto horario"
         }

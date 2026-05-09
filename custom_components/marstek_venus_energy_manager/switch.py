@@ -658,7 +658,10 @@ class HourlyBalanceSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Disable hourly balance."""
         self.controller.hourly_balance_enabled = False
-        self.controller.remove_setpoint_offset("hourly_balance")
+        if self.controller._hourly_balance_mgr is not None:
+            self.controller._hourly_balance_mgr.clear_offset()
+        else:
+            self.controller.remove_setpoint_offset("hourly_balance")
         new_data = dict(self.entry.data)
         new_data[CONF_ENABLE_HOURLY_BALANCE] = False
         self.hass.config_entries.async_update_entry(self.entry, data=new_data)

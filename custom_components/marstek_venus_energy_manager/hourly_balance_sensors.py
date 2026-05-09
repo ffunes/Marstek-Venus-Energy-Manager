@@ -36,7 +36,7 @@ class NetBalanceSensor(SensorEntity):
     """Net grid balance for the current civil hour.
 
     State  : net kWh (positive = net export to grid, negative = net import).
-    Attributes: full status snapshot — offset, breakdown, history, source.
+    Attributes: full status snapshot — offset, breakdown, source.
     """
 
     _attr_has_entity_name = True
@@ -78,7 +78,6 @@ class NetBalanceSensor(SensorEntity):
             "remaining_min": s["remaining_min"],
             "source": s["source"],
             "hour_iso": s["hour_iso"],
-            "history": s["history"],
         }
         if s["charge_block_reason"]:
             attrs["charge_block_reason"] = s["charge_block_reason"]

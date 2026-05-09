@@ -299,7 +299,7 @@
       },
       "hourly_balance": {
         "title": "Uurlijks Netsaldo",
-        "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.",
+        "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.\n\n⚠️ **Belangrijk**: Deze functie heeft alleen zin als uw elektriciteitscontract een **slimme meter (smart meter)** met **uurlijkse netsaldo-berekening** bevat. Als uw meter geen uurlijkse netsaldo berekent, zullen de aanpassingen van het batterij-instelpunt niet leiden tot kostenbesparingen en biedt de functie geen voordeel.",
         "data": {
           "configure_hourly_balance": "Uurlijks nettosaldo configureren"
         }
@@ -649,7 +649,7 @@
       },
       "hourly_balance": {
         "title": "Uurlijks Netsaldo",
-        "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.",
+        "description": "Uurlijkse netsaldo-regeling inschakelen? Deze functie registreert netimport/-export per uur en past het batterij-instelpunt automatisch aan om een doel-energiebalans te bereiken.\n\n⚠️ **Belangrijk**: Deze functie heeft alleen zin als uw elektriciteitscontract een **slimme meter (smart meter)** met **uurlijkse netsaldo-berekening** bevat. Als uw meter geen uurlijkse netsaldo berekent, zullen de aanpassingen van het batterij-instelpunt niet leiden tot kostenbesparingen en biedt de functie geen voordeel.",
         "data": {
           "configure_hourly_balance": "Uurlijks nettosaldo configureren"
         }

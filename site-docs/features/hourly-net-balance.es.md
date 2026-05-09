@@ -67,7 +67,6 @@ Cuando la funcionalidad está activada, se crea un único sensor de diagnóstico
 | `remaining_min` | Minutos restantes en la hora actual |
 | `source` | ID de entidad del sensor usado, o `trapezoidal` |
 | `hour_iso` | Timestamp ISO del inicio de la hora actual |
-| `history` | Últimas 10 entradas de horas cerradas (imp_wh, exp_wh, net_wh, target_net_wh) |
 | `charge_block_reason` | Solo presente cuando la compensación está bloqueada; indica el motivo |
 
 ## Configuración

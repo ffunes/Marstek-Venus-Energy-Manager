@@ -67,7 +67,6 @@ A single diagnostic sensor (`sensor.*_balance_neto`) is created when the feature
 | `remaining_min` | Minutes remaining in the current hour |
 | `source` | Sensor entity ID used, or `trapezoidal` |
 | `hour_iso` | ISO timestamp of the current hour start |
-| `history` | Last 10 closed-hour entries (imp_wh, exp_wh, net_wh, target_net_wh) |
 | `charge_block_reason` | Present only when compensation is blocked; contains the block reason |
 
 ## Configuration

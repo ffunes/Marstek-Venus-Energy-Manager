@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_DELAY_SOC_SETPOINT_ENABLED,
     CONF_DELAY_SOC_SETPOINT,
     DEFAULT_DELAY_SOC_SETPOINT,
+    DELAY_SOC_SETPOINT_HYSTERESIS,
     CHARGE_EFFICIENCY,
     DELAY_SAFETY_FACTOR,
     T_START_FALLBACK_HOUR,
@@ -310,6 +311,7 @@ class ChargeDischargeController:
         self._balance_monitor_enabled = config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
         self._predictive_safety_margin_kwh: float = config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_unlocked = False       # True when delay has been unlocked today
+        self._delay_setpoint_reached = False      # True once SOC first reached the setpoint
         self._balance_monitor = None  # Set from async_setup_entry after monitor is created
 
         # Hourly Net Balance
@@ -437,7 +439,10 @@ class ChargeDischargeController:
         # Hourly balance: ON→OFF cleans up offset; flag change is enough for async_process to react
         new_hb_enabled = self.config_entry.data.get(CONF_ENABLE_HOURLY_BALANCE, False)
         if self.hourly_balance_enabled and not new_hb_enabled:
-            self.remove_setpoint_offset("hourly_balance")
+            if self._hourly_balance_mgr is not None:
+                self._hourly_balance_mgr.clear_offset()
+            else:
+                self.remove_setpoint_offset("hourly_balance")
             _LOGGER.info("Hourly Net Balance: DISABLED via hot-reload")
         elif not self.hourly_balance_enabled and new_hb_enabled:
             _LOGGER.info("Hourly Net Balance: ENABLED via hot-reload")
@@ -859,6 +864,130 @@ class ChargeDischargeController:
                           {k: v[1] for k, v in self._setpoint_overrides.items()})
             self._setpoint_overrides.clear()
 
+    def _apply_capacity_protection(
+        self, sensor_actual: float, active_target: float
+    ) -> tuple[float, float]:
+        """Apply peak-shaving override and return the effective target and sensor value."""
+        if not self.capacity_protection_enabled:
+            self.remove_setpoint_override("capacity_protection")
+            self._capacity_protection_active = False
+            self._capacity_protection_status["active"] = False
+            self._capacity_protection_status["action"] = "disabled"
+            return self.compute_active_target(), sensor_actual
+
+        coordinators_with_data = [c for c in self.coordinators if c.data]
+        if coordinators_with_data:
+            avg_soc = (
+                sum(c.data.get("battery_soc", 0) for c in coordinators_with_data)
+                / len(coordinators_with_data)
+            )
+        else:
+            avg_soc = 100  # Assume full if no data, don't activate protection
+
+        original_target = active_target
+
+        if avg_soc < self.capacity_protection_soc_threshold:
+            # Estimate house consumption: grid reading minus what the battery is currently doing
+            # sensor_actual = grid power (positive=import), previous_power > 0 = charging, < 0 = discharging
+            # Add back excluded-device adjustment so capacity protection sees the REAL grid load
+            # including devices marked as "included in consumption". This ensures capacity
+            # protection can shave peaks even when those devices are normally excluded.
+            estimated_house_load = (sensor_actual + self._excluded_included_adjustment) - self.previous_power
+
+            if estimated_house_load > self.capacity_protection_limit:
+                # House load exceeds peak limit: discharge only the excess
+                # Undo excluded-device adjustment so PD controller can discharge against real grid
+                if self._excluded_included_adjustment > 0:
+                    _LOGGER.info(
+                        "Capacity Protection overriding excluded device adjustment (%.0fW) for peak shaving",
+                        self._excluded_included_adjustment,
+                    )
+                    sensor_actual += self._excluded_included_adjustment
+                self.set_setpoint_override("capacity_protection", self.capacity_protection_limit, priority=10)
+                active_target = self.compute_active_target()
+                _LOGGER.info(
+                    "Capacity Protection ACTIVE: SOC=%.1f%% < %d%%, house_load=%.0fW > limit=%dW -> target=%dW",
+                    avg_soc,
+                    self.capacity_protection_soc_threshold,
+                    estimated_house_load,
+                    self.capacity_protection_limit,
+                    active_target,
+                )
+                self._capacity_protection_active = True
+                self._capacity_protection_status.update({
+                    "active": True, "avg_soc": round(avg_soc, 1),
+                    "estimated_house_load": round(estimated_house_load),
+                    "action": "shaving",
+                    "original_target": original_target, "adjusted_target": active_target,
+                })
+            elif estimated_house_load > active_target:
+                # House load is below peak limit but above normal target: set target to house load
+                # This makes the PD controller smoothly ramp discharge to 0W
+                # Undo excluded-device adjustment so target aligns with real grid reading
+                if self._excluded_included_adjustment > 0:
+                    _LOGGER.info(
+                        "Capacity Protection overriding excluded device adjustment (%.0fW) for conservation",
+                        self._excluded_included_adjustment,
+                    )
+                    sensor_actual += self._excluded_included_adjustment
+                self.set_setpoint_override("capacity_protection", estimated_house_load, priority=10)
+                active_target = self.compute_active_target()
+                _LOGGER.info(
+                    "Capacity Protection ACTIVE: SOC=%.1f%% < %d%%, house_load=%.0fW <= limit=%dW -> idle (target=%.0fW)",
+                    avg_soc,
+                    self.capacity_protection_soc_threshold,
+                    estimated_house_load,
+                    self.capacity_protection_limit,
+                    active_target,
+                )
+                self._capacity_protection_active = True
+                self._capacity_protection_status.update({
+                    "active": True, "avg_soc": round(avg_soc, 1),
+                    "estimated_house_load": round(estimated_house_load),
+                    "action": "conserving",
+                    "original_target": original_target, "adjusted_target": active_target,
+                })
+            else:
+                # Solar surplus: normal charging, but SOC is still below threshold
+                self.remove_setpoint_override("capacity_protection")
+                active_target = self.compute_active_target()
+                self._capacity_protection_active = True
+                self._capacity_protection_status.update({
+                    "active": True, "avg_soc": round(avg_soc, 1),
+                    "estimated_house_load": round(estimated_house_load),
+                    "action": "charging",
+                    "original_target": original_target, "adjusted_target": active_target,
+                })
+        else:
+            # SOC above threshold: protection not needed
+            self.remove_setpoint_override("capacity_protection")
+            active_target = self.compute_active_target()
+            self._capacity_protection_active = False
+            self._capacity_protection_status.update({
+                "active": False, "avg_soc": round(avg_soc, 1),
+                "estimated_house_load": None,
+                "action": "idle",
+                "original_target": original_target, "adjusted_target": active_target,
+            })
+
+        # Always keep thresholds up to date
+        self._capacity_protection_status["soc_threshold"] = self.capacity_protection_soc_threshold
+        self._capacity_protection_status["peak_limit"] = self.capacity_protection_limit
+        return active_target, sensor_actual
+
+    def _is_capacity_protection_soc_limited(self) -> bool:
+        """Return True when peak shaving should be active based on current SOC."""
+        if not self.capacity_protection_enabled:
+            return False
+        coordinators_with_data = [c for c in self.coordinators if c.data]
+        if not coordinators_with_data:
+            return False
+        avg_soc = (
+            sum(c.data.get("battery_soc", 0) for c in coordinators_with_data)
+            / len(coordinators_with_data)
+        )
+        return avg_soc < self.capacity_protection_soc_threshold
+
     def _is_charge_delayed(self) -> bool:
         """Unified gate: check if charging should be delayed based on solar forecast.
 
@@ -882,15 +1011,25 @@ class ChargeDischargeController:
             self._charge_delay_status["state"] = "Charging allowed"
             return False
 
-        # SOC setpoint: delay only kicks in once all batteries reach the setpoint
+        # SOC setpoint: delay only kicks in once all batteries reach the setpoint.
+        # Hysteresis prevents oscillation: once the setpoint is reached, charging
+        # only resumes if SOC drops DELAY_SOC_SETPOINT_HYSTERESIS % below it.
         if self._delay_soc_setpoint_enabled:
             min_soc = min(
                 (c.data.get("battery_soc", 100) for c in self.coordinators if c.data),
                 default=100,
             )
-            if min_soc < self._delay_soc_setpoint:
-                self._charge_delay_status["state"] = "Charging to setpoint"
-                return False
+            if not self._delay_setpoint_reached:
+                if min_soc < self._delay_soc_setpoint:
+                    self._charge_delay_status["state"] = "Charging to setpoint"
+                    return False
+                self._delay_setpoint_reached = True
+            else:
+                low_threshold = self._delay_soc_setpoint - DELAY_SOC_SETPOINT_HYSTERESIS
+                if min_soc < low_threshold:
+                    self._delay_setpoint_reached = False
+                    self._charge_delay_status["state"] = "Charging to setpoint"
+                    return False
 
         # Evaluate delay conditions
         if self._should_delay_charge(target_soc):
@@ -1886,21 +2025,45 @@ class ChargeDischargeController:
             if total_power <= combined_capacity * activation_threshold:
                 break
 
-        # Power hysteresis: can we remove the last battery added?
-        if len(selected) > 1 and len(previous_active) > 0:
-            last = selected[-1]
-            last_limit = last.max_charge_power if is_charging else last.max_discharge_power
-            capacity_without_last = combined_capacity - last_limit
-            second_limit = (
-                selected[-2].max_charge_power if is_charging else selected[-2].max_discharge_power
-            )
-            deactivation_threshold = (
-                max(MULTI_BATTERY_MIN_ACTIVATION, min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / second_limit))
-                - MULTI_BATTERY_HYSTERESIS_GAP
-            )
-            if (total_power <= capacity_without_last * deactivation_threshold
-                    and last not in previous_active):
-                selected.pop()
+        # Power hysteresis: avoid oscillating near the activation threshold.
+        if len(available_batteries) > 1 and previous_active:
+            # Case A — deactivation hysteresis: the loop dropped a previously-active battery.
+            # Only confirm its removal if power fell clearly below the activation threshold;
+            # otherwise re-add it so it stays active until the load genuinely drops.
+            for battery in previous_active:
+                if battery not in selected and battery in available_batteries:
+                    limit = battery.max_charge_power if is_charging else battery.max_discharge_power
+                    first_limit = (
+                        selected[0].max_charge_power if is_charging else selected[0].max_discharge_power
+                    ) if selected else limit
+                    act_thr = max(MULTI_BATTERY_MIN_ACTIVATION,
+                                  min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / first_limit))
+                    deact_thr = max(MULTI_BATTERY_MIN_ACTIVATION, act_thr - MULTI_BATTERY_HYSTERESIS_GAP)
+                    if total_power > combined_capacity * deact_thr:
+                        selected.append(battery)
+                        combined_capacity += limit
+
+            # Case B — activation hysteresis: the loop just added a battery that was not
+            # previously active.  Only commit to using it if power is clearly above the
+            # threshold; if it is near the boundary, keep a single battery to prevent
+            # rapid on/off cycling.
+            if len(selected) > 1:
+                last = selected[-1]
+                if last not in previous_active:
+                    last_limit = last.max_charge_power if is_charging else last.max_discharge_power
+                    capacity_without_last = combined_capacity - last_limit
+                    prev_limit = (
+                        selected[-2].max_charge_power if is_charging else selected[-2].max_discharge_power
+                    )
+                    act_thr_with_hyst = min(
+                        max(MULTI_BATTERY_MIN_ACTIVATION,
+                            min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / prev_limit))
+                        + MULTI_BATTERY_HYSTERESIS_GAP,
+                        MULTI_BATTERY_MAX_ACTIVATION,
+                    )
+                    if total_power <= capacity_without_last * act_thr_with_hyst:
+                        selected.pop()
+                        combined_capacity -= last_limit
 
         # Log when selection changes
         if set(selected) != set(previous_active):
@@ -3572,6 +3735,7 @@ class ChargeDischargeController:
                 if self._charge_delay_last_date is not None:
                     # Real day change: reset delay state
                     self._charge_delay_unlocked = False
+                    self._delay_setpoint_reached = False
                     self._solar_t_start = None
                 # On first cycle after HA restart (_charge_delay_last_date is None),
                 # _charge_delay_unlocked may have been restored from storage by
@@ -3662,12 +3826,21 @@ class ChargeDischargeController:
 
         if is_stale:
             self._stale_cycles += 1
-            if self._stale_cycles <= self._max_stale_cycles:
+            capacity_protection_must_recheck = (
+                self.previous_power < 0
+                and self._is_capacity_protection_soc_limited()
+            )
+            if self._stale_cycles <= self._max_stale_cycles and not capacity_protection_must_recheck:
                 _LOGGER.debug(
                     "ChargeDischargeController: Sensor stale (cycle %d/%d), maintaining last command %.1fW",
                     self._stale_cycles, self._max_stale_cycles, self.previous_power
                 )
                 return
+            elif capacity_protection_must_recheck:
+                _LOGGER.debug(
+                    "ChargeDischargeController: Sensor stale but peak shaving is SOC-limited; recalculating instead of maintaining discharge %.1fW",
+                    self.previous_power,
+                )
             else:
                 _LOGGER.debug(
                     "ChargeDischargeController: Sensor stale for %d cycles (~%.0fs). Safety recalculation.",
@@ -3686,6 +3859,36 @@ class ChargeDischargeController:
         active_target = self.compute_active_target()
         min_charge = self.min_charge_power
         min_discharge = self.min_discharge_power
+
+        # Use filtered sensor directly - it shows the real grid imbalance we need to correct
+        sensor_actual = sensor_filtered
+
+        if len(self.sensor_history) >= self.sensor_history_size:
+            _LOGGER.debug("Sensor ready: raw=%.1fW, filtered=%.1fW", sensor_raw, sensor_filtered)
+
+        # Adjust for excluded/additional devices before dynamic setpoint decisions.
+        # Positive adjustment = reduce battery discharge (excluded devices)
+        # Negative adjustment = increase battery discharge (additional devices not in home sensor)
+        excluded_adjustment = self._calculate_excluded_devices_adjustment(sensor_actual)
+        if excluded_adjustment != 0:
+            if excluded_adjustment > 0:
+                _LOGGER.info("Reducing battery demand by %.1fW (excluded devices)", excluded_adjustment)
+            else:
+                _LOGGER.info("Increasing battery demand by %.1fW (additional devices)", abs(excluded_adjustment))
+            sensor_actual -= excluded_adjustment
+
+        # HOURLY NET BALANCE: Update setpoint offset based on current-hour net energy.
+        # Runs before capacity protection so the offset is already in _setpoint_offsets
+        # when compute_active_target() is called; CP override wins automatically.
+        if self._hourly_balance_mgr is not None:
+            await self._hourly_balance_mgr.async_process()
+            active_target = self.compute_active_target()
+
+        # CAPACITY PROTECTION MODE: When enabled and SOC is below threshold,
+        # only discharge to cover consumption above the peak limit. This must run
+        # before deadband and first-execution handling, otherwise a previous
+        # hourly-balance discharge can be kept alive by an early return.
+        active_target, sensor_actual = self._apply_capacity_protection(sensor_actual, active_target)
 
         # CRITICAL: Check deadband on FILTERED sensor (actual grid balance) BEFORE compensation
         # Deadband is centered around the active target grid power
@@ -3707,23 +3910,6 @@ class ChargeDischargeController:
             # remain accurate for the diagnostic sensor.
             return
         
-        # Use filtered sensor directly - it shows the real grid imbalance we need to correct
-        sensor_actual = sensor_filtered
-        
-        if len(self.sensor_history) >= self.sensor_history_size:
-            _LOGGER.debug("Sensor ready: raw=%.1fW, filtered=%.1fW", sensor_raw, sensor_filtered)
-        
-        # Adjust for excluded/additional devices
-        # Positive adjustment = reduce battery discharge (excluded devices)
-        # Negative adjustment = increase battery discharge (additional devices not in home sensor)
-        excluded_adjustment = self._calculate_excluded_devices_adjustment(sensor_actual)
-        if excluded_adjustment != 0:
-            if excluded_adjustment > 0:
-                _LOGGER.info("Reducing battery demand by %.1fW (excluded devices)", excluded_adjustment)
-            else:
-                _LOGGER.info("Increasing battery demand by %.1fW (additional devices)", abs(excluded_adjustment))
-            sensor_actual -= excluded_adjustment
-
         if len(self.coordinators) == 0:
             _LOGGER.debug("ChargeDischargeController: No batteries configured.")
             return
@@ -3826,104 +4012,6 @@ class ChargeDischargeController:
         _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, UPDATING BATTERIES!",
                       sensor_actual)
         
-        # HOURLY NET BALANCE: Update setpoint offset based on current-hour net energy.
-        # Runs before capacity protection so the offset is already in _setpoint_offsets
-        # when compute_active_target() is called; CP override wins automatically.
-        if self._hourly_balance_mgr is not None:
-            await self._hourly_balance_mgr.async_process()
-            active_target = self.compute_active_target()
-
-        # CAPACITY PROTECTION MODE: When enabled and SOC is below threshold,
-        # only discharge to cover consumption above the peak limit.
-        # Uses setpoint offset registry so other features can compose with it.
-        if self.capacity_protection_enabled:
-            coordinators_with_data = [c for c in self.coordinators if c.data]
-            if coordinators_with_data:
-                avg_soc = sum(c.data.get("battery_soc", 0) for c in coordinators_with_data) / len(coordinators_with_data)
-            else:
-                avg_soc = 100  # Assume full if no data, don't activate protection
-
-            original_target = active_target
-
-            if avg_soc < self.capacity_protection_soc_threshold:
-                # Estimate house consumption: grid reading minus what the battery is currently doing
-                # sensor_actual = grid power (positive=import), previous_power > 0 = charging, < 0 = discharging
-                # Add back excluded-device adjustment so capacity protection sees the REAL grid load
-                # including devices marked as "included in consumption". This ensures capacity
-                # protection can shave peaks even when those devices are normally excluded.
-                estimated_house_load = (sensor_actual + self._excluded_included_adjustment) - self.previous_power
-
-                if estimated_house_load > self.capacity_protection_limit:
-                    # House load exceeds peak limit: discharge only the excess
-                    # Undo excluded-device adjustment so PD controller can discharge against real grid
-                    if self._excluded_included_adjustment > 0:
-                        _LOGGER.info("Capacity Protection overriding excluded device adjustment (%.0fW) for peak shaving",
-                                    self._excluded_included_adjustment)
-                        sensor_actual += self._excluded_included_adjustment
-                    self.set_setpoint_override("capacity_protection", self.capacity_protection_limit, priority=10)
-                    active_target = self.compute_active_target()
-                    _LOGGER.info("Capacity Protection ACTIVE: SOC=%.1f%% < %d%%, house_load=%.0fW > limit=%dW → target=%dW",
-                                avg_soc, self.capacity_protection_soc_threshold,
-                                estimated_house_load, self.capacity_protection_limit, active_target)
-                    self._capacity_protection_active = True
-                    self._capacity_protection_status.update({
-                        "active": True, "avg_soc": round(avg_soc, 1),
-                        "estimated_house_load": round(estimated_house_load),
-                        "action": "shaving",
-                        "original_target": original_target, "adjusted_target": active_target,
-                    })
-                elif estimated_house_load > active_target:
-                    # House load is below peak limit but above normal target: set target to house load
-                    # This makes the PD controller smoothly ramp discharge to 0W
-                    # Undo excluded-device adjustment so target aligns with real grid reading
-                    if self._excluded_included_adjustment > 0:
-                        _LOGGER.info("Capacity Protection overriding excluded device adjustment (%.0fW) for conservation",
-                                    self._excluded_included_adjustment)
-                        sensor_actual += self._excluded_included_adjustment
-                    self.set_setpoint_override("capacity_protection", estimated_house_load, priority=10)
-                    active_target = self.compute_active_target()
-                    _LOGGER.info("Capacity Protection ACTIVE: SOC=%.1f%% < %d%%, house_load=%.0fW ≤ limit=%dW → idle (target=%.0fW)",
-                                avg_soc, self.capacity_protection_soc_threshold,
-                                estimated_house_load, self.capacity_protection_limit, active_target)
-                    self._capacity_protection_active = True
-                    self._capacity_protection_status.update({
-                        "active": True, "avg_soc": round(avg_soc, 1),
-                        "estimated_house_load": round(estimated_house_load),
-                        "action": "conserving",
-                        "original_target": original_target, "adjusted_target": active_target,
-                    })
-                else:
-                    # Solar surplus: normal charging, but SOC is still below threshold
-                    self.remove_setpoint_override("capacity_protection")
-                    active_target = self.compute_active_target()
-                    self._capacity_protection_active = True
-                    self._capacity_protection_status.update({
-                        "active": True, "avg_soc": round(avg_soc, 1),
-                        "estimated_house_load": round(estimated_house_load),
-                        "action": "charging",
-                        "original_target": original_target, "adjusted_target": active_target,
-                    })
-            else:
-                # SOC above threshold: protection not needed
-                self.remove_setpoint_override("capacity_protection")
-                active_target = self.compute_active_target()
-                self._capacity_protection_active = False
-                self._capacity_protection_status.update({
-                    "active": False, "avg_soc": round(avg_soc, 1),
-                    "estimated_house_load": None,
-                    "action": "idle",
-                    "original_target": original_target, "adjusted_target": active_target,
-                })
-
-            # Always keep thresholds up to date
-            self._capacity_protection_status["soc_threshold"] = self.capacity_protection_soc_threshold
-            self._capacity_protection_status["peak_limit"] = self.capacity_protection_limit
-        else:
-            self.remove_setpoint_override("capacity_protection")
-            self._capacity_protection_active = False
-            self._capacity_protection_status["active"] = False
-            self._capacity_protection_status["action"] = "disabled"
-
         # PD CONTROLLER: Calculate adjustment based on grid imbalance relative to target
         # error > 0: grid power above target → need to discharge more / charge less
         # error < 0: grid power below target → need to charge more / discharge less
