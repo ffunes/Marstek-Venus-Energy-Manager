@@ -821,6 +821,64 @@ class IntegrationStatusSensor(SensorEntity):
                 return False  # Inside a discharge window → allowed
         return True  # Outside all windows → blocked
 
+    def _hourly_balance_state_key(self) -> str | None:
+        """Return the integration-status key for hourly net balance activity."""
+        c = self._controller
+        mgr = getattr(c, "_hourly_balance_mgr", None)
+        if mgr is None or not getattr(c, "hourly_balance_enabled", False):
+            return None
+
+        return {
+            "compensating_import": "hourly_balance_import",
+            "compensating_export": "hourly_balance_export",
+            "capped": "hourly_balance_capped",
+            "compensation_stopped": "hourly_balance_blocked",
+        }.get(mgr.get_state_label())
+
+    def _capacity_protection_state_key(self) -> str | None:
+        """Return the integration-status key for peak-shaving activity."""
+        c = self._controller
+        if not getattr(c, "_capacity_protection_active", False):
+            return None
+
+        action = c._capacity_protection_status.get("action")
+        return {
+            "shaving": "peak_shaving",
+            "conserving": "capacity_conserving",
+            "charging": "capacity_protection_charging",
+        }.get(action, "capacity_protection")
+
+    def _ev_charger_state_key(self) -> str | None:
+        """Return the integration-status key for no-telemetry EV charger handling."""
+        from homeassistant.util import dt as dt_util
+
+        c = self._controller
+        now = dt_util.utcnow()
+        if any(pause_until and now < pause_until for pause_until in c._ev_pause_until.values()):
+            return "ev_charger_pause"
+        if any(c._ev_charging_states.values()):
+            return "ev_discharge_blocked"
+        return None
+
+    def _balance_hold_batteries(self) -> list[str]:
+        """Return batteries currently held by the cell-balance monitor."""
+        return [
+            coordinator.name
+            for coordinator in self._controller.coordinators
+            if getattr(coordinator, "balance_hold", False)
+        ]
+
+    def _backup_cooldown_batteries(self) -> list[str]:
+        """Return batteries temporarily excluded because backup/offgrid load was active."""
+        from homeassistant.util import dt as dt_util
+
+        now = dt_util.utcnow()
+        return [
+            coordinator.name
+            for coordinator, cooldown_until in self._controller._backup_cooldown_until.items()
+            if cooldown_until and now < cooldown_until
+        ]
+
     @property
     def native_value(self) -> str:
         """Return the current integration status as a translation key."""
@@ -852,9 +910,27 @@ class IntegrationStatusSensor(SensorEntity):
             if delay_state == "Charging to setpoint" and c.previous_power >= 0:
                 return "charging_to_setpoint"
 
-        # Priority 5: Capacity protection active
-        if c._capacity_protection_active:
-            return "capacity_protection"
+        # Priority 5: Operational restrictions and feature overrides
+        ev_state = self._ev_charger_state_key()
+        if ev_state:
+            return ev_state
+
+        if self._balance_hold_batteries():
+            return "cell_balance_hold"
+
+        capacity_state = self._capacity_protection_state_key()
+        if capacity_state:
+            return capacity_state
+
+        if c._price_based_discharge_blocked:
+            return "price_discharge_blocked"
+
+        hourly_state = self._hourly_balance_state_key()
+        if hourly_state:
+            return hourly_state
+
+        if self._backup_cooldown_batteries():
+            return "backup_mode"
 
         # Priority 6: Outside all configured discharge windows
         if self._is_outside_discharge_window():
@@ -873,10 +949,15 @@ class IntegrationStatusSensor(SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict:
-        """Return setpoint offset details for diagnostics."""
+        """Return current controller details for diagnostics."""
         c = self._controller
         attrs = {
             "setpoint_active": c.compute_active_target(),
+            "previous_power_w": c.previous_power,
+            "first_execution": c.first_execution,
+            "manual_mode_enabled": c.manual_mode_enabled,
+            "grid_charging_active": c.grid_charging_active,
+            "price_based_discharge_blocked": c._price_based_discharge_blocked,
         }
         offsets = dict(c._setpoint_offsets)
         if offsets:
@@ -884,6 +965,47 @@ class IntegrationStatusSensor(SensorEntity):
         overrides = {k: v[1] for k, v in c._setpoint_overrides.items()}
         if overrides:
             attrs["setpoint_overrides"] = overrides
+        attrs["capacity_protection"] = dict(c._capacity_protection_status)
+
+        if c.predictive_charging_enabled:
+            attrs["predictive_charging_mode"] = c.predictive_charging_mode
+            attrs["predictive_charging_overridden"] = c.predictive_charging_overridden
+            attrs["dynamic_price_slot_active"] = c._current_price_slot_active
+            attrs["realtime_price_charging"] = c._realtime_price_charging
+            attrs["price_data_status"] = c._price_data_status
+
+        mgr = getattr(c, "_hourly_balance_mgr", None)
+        if mgr is not None:
+            status = mgr.get_status_dict()
+            attrs["hourly_balance_status"] = mgr.get_state_label()
+            attrs["hourly_balance_offset_w"] = status["offset_w"]
+            attrs["hourly_balance_theoretical_offset_w"] = status["theoretical_offset_w"]
+            attrs["hourly_balance_net_kwh"] = status["net_kwh"]
+            attrs["hourly_balance_remaining_min"] = status["remaining_min"]
+            if status["charge_block_reason"]:
+                attrs["hourly_balance_charge_block_reason"] = status["charge_block_reason"]
+
+        balance_hold_batteries = self._balance_hold_batteries()
+        if balance_hold_batteries:
+            attrs["balance_hold_batteries"] = balance_hold_batteries
+
+        backup_cooldown_batteries = self._backup_cooldown_batteries()
+        if backup_cooldown_batteries:
+            attrs["backup_cooldown_batteries"] = backup_cooldown_batteries
+
+        ev_chargers = [entity_id for entity_id, active in c._ev_charging_states.items() if active]
+        if ev_chargers:
+            attrs["ev_chargers_active"] = ev_chargers
+        if c._ev_pause_until:
+            attrs["ev_pause_until"] = {
+                entity_id: pause_until.isoformat()
+                for entity_id, pause_until in c._ev_pause_until.items()
+                if pause_until is not None
+            }
+
+        non_responsive = c.non_responsive_battery_names
+        if non_responsive:
+            attrs["non_responsive_batteries"] = non_responsive
         return attrs
 
     @property
