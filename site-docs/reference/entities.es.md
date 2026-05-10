@@ -70,6 +70,8 @@ Solo presentes cuando el [monitor de equilibrio de celdas](../features/cell-bala
 | Entidad | Descripción |
 |---|---|
 | `switch.*_rs485_control` | Modo control RS485 |
+| `switch.*_allow_charge` | Control de software que permite que esta batería participe en la carga automática |
+| `switch.*_allow_discharge` | Control de software que permite que esta batería participe en la descarga automática |
 | `switch.*_backup_function` | Función de reserva — cuando está activo **y** la potencia AC offgrid ≠ 0 W, la batería queda excluida del control PD (no se envían comandos de escritura) |
 | `switch.marstek_venus_system_override_predictive_charging` | Cancelar carga predictiva |
 
@@ -99,6 +101,17 @@ Solo presentes cuando el [monitor de equilibrio de celdas](../features/cell-bala
 | `Standby` | Sistema equilibrado dentro de la banda muerta, sin acción necesaria |
 | `Manual Mode` | Modo manual activo — la integración no envía comandos automáticos |
 | `Initializing` | Primer ciclo del controlador aún no completado |
+
+El sensor también expone diagnósticos del registro de bloqueos como atributos:
+
+| Atributo | Descripción |
+|---|---|
+| `charge_blocked` | `true` cuando hay algún bloqueo global de carga activo |
+| `discharge_blocked` | `true` cuando hay algún bloqueo global de descarga activo |
+| `charge_blockers` | Bloqueos globales de carga activos con motivo, detalles y marca temporal |
+| `discharge_blockers` | Bloqueos globales de descarga activos con motivo, detalles y marca temporal |
+| `battery_charge_blockers` | Bloqueos de carga activos por batería, agrupados por batería |
+| `battery_discharge_blockers` | Bloqueos de descarga activos por batería, agrupados por batería |
 
 ### Sensores agregados
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.0] - 2026-05-10
+
+### Added
+- **Unified charge/discharge blocker registry**: The PD controller now uses explicit runtime blocker registries for charge and discharge decisions. Blockers can be global (system-wide) or scoped to an individual battery, and are exposed on the **Integration Status** diagnostic sensor via `charge_blockers`, `discharge_blockers`, `battery_charge_blockers`, and `battery_discharge_blockers`. Existing restrictions such as charge delay, time slots, price-based discharge control, EV charger no-telemetry handling, and per-battery user blocks now share the same decision path.
+- **Per-battery Allow Charge / Allow Discharge switches**: Each battery now exposes two software controls to include or exclude it from automatic PD charging or discharging independently. The switches persist in the config entry as `allow_charge` and `allow_discharge`, default to enabled for existing installations, and do not write Modbus registers directly. Disabling a direction stops that battery if it is currently active and lets the next PD cycle reallocate power to the remaining eligible batteries.
+
+### Changed
+- **PD blocker enforcement before deadband and stale-sensor early returns**: Active charge/discharge commands are now stopped immediately when a matching global or per-battery blocker appears, even if the grid sensor is inside deadband or has not updated. This prevents stale commands from continuing after a feature or user switch has blocked that direction.
+- **Hourly net balance uses the charge blocker registry for block reasons**: Positive hourly-balance compensation now reads the unified charge blockers for reasons such as solar charge delay, charge time-slot restriction, or EV pause, while keeping its existing local checks for charge hysteresis and max SOC.
+
 ## [1.7.6] - 2026-05-09
 
 ### Changed

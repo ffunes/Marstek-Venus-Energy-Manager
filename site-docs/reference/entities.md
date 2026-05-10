@@ -82,6 +82,8 @@ Only present when the [cell balance monitor](../features/cell-balance-monitor.md
 | Entity | Description |
 |---|---|
 | `switch.*_rs485_control` | RS485 control mode |
+| `switch.*_allow_charge` | Software control that allows this battery to participate in automatic charging |
+| `switch.*_allow_discharge` | Software control that allows this battery to participate in automatic discharging |
 | `switch.*_backup_function` | Backup function — when enabled **and** AC offgrid power ≠ 0 W, the battery is excluded from PD control (no write commands sent) |
 | `switch.marstek_venus_system_override_predictive_charging` | Override predictive charging |
 
@@ -111,6 +113,17 @@ Only present when the [cell balance monitor](../features/cell-balance-monitor.md
 | `Standby` | System balanced within deadband, no action needed |
 | `Manual Mode` | Manual mode active — integration sends no automatic commands |
 | `Initializing` | First controller cycle not yet completed |
+
+The sensor also exposes blocker diagnostics as attributes:
+
+| Attribute | Description |
+|---|---|
+| `charge_blocked` | `true` when any global charge blocker is active |
+| `discharge_blocked` | `true` when any global discharge blocker is active |
+| `charge_blockers` | Active system-wide charge blockers with reason, details, and timestamp |
+| `discharge_blockers` | Active system-wide discharge blockers with reason, details, and timestamp |
+| `battery_charge_blockers` | Active per-battery charge blockers grouped by battery |
+| `battery_discharge_blockers` | Active per-battery discharge blockers grouped by battery |
 
 ### Aggregate sensors
 

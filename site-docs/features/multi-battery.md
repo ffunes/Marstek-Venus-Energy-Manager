@@ -93,6 +93,34 @@ To avoid "ping-pong" activation/deactivation, three hysteresis levels are applie
 
 Once active batteries are selected, the total power calculated by the [PD controller](pd-controller.md) is distributed among them proportionally, respecting each battery's individual power and SOC limits.
 
+## Per-battery charge/discharge controls
+
+Each battery exposes two software switches:
+
+| Switch | Effect |
+|--------|--------|
+| `Allow Charge` | When turned off, this battery is excluded from automatic charging. It may still discharge if `Allow Discharge` is turned on. |
+| `Allow Discharge` | When turned off, this battery is excluded from automatic discharging. It may still charge if `Allow Charge` is turned on. |
+
+These switches do not write Modbus control registers directly. They only affect the integration's automatic PD controller. If a battery is active in the disabled direction, the integration sends that battery to `0 W` and the next control cycle reallocates power to the remaining eligible batteries.
+
+The state is stored per battery as `allow_charge` and `allow_discharge`. Missing values default to enabled, so existing installations keep their previous behavior after updating.
+
+## Unified blocker registry
+
+Charge and discharge permissions are resolved through a runtime blocker registry. Blockers can be system-wide or scoped to one battery. The controller checks this registry before deadband and stale-sensor early returns, so an active command is stopped as soon as a blocker appears.
+
+Global blockers include solar charge delay, charge/discharge time slots, price-based discharge control, and EV charger no-telemetry pauses. Per-battery blockers include the `Allow Charge` and `Allow Discharge` switches. Battery limits such as minimum SOC, maximum SOC, charge hysteresis, backup/off-grid exclusion, and non-responsive exclusion remain separate availability checks.
+
+The registry is exposed on the `Integration Status` diagnostic sensor through these attributes:
+
+- `charge_blocked`
+- `discharge_blocked`
+- `charge_blockers`
+- `discharge_blockers`
+- `battery_charge_blockers`
+- `battery_discharge_blockers`
+
 ## Non-responsive battery exclusion
 
 When a battery consistently fails to deliver the commanded power — for example due to a Modbus communication glitch or a firmware self-protection response — the integration detects this and temporarily removes it from the active pool.
