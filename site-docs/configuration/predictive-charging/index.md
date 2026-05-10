@@ -12,7 +12,7 @@ Else:
 ```
 
 - **Usable battery**: energy currently stored above the configured min SOC.
-- **Solar forecast**: estimated production for tomorrow (Solcast/Forecast.Solar sensor).
+- **Solar forecast**: estimated production for today (Solcast/Forecast.Solar sensor).
 - **Expected consumption**: 7-day rolling average. See [Daily consumption estimate](../../features/consumption-estimate.md).
 
 ---
