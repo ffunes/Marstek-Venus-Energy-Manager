@@ -110,7 +110,9 @@ El estado se guarda por batería como `allow_charge` y `allow_discharge`. Si esa
 
 Los permisos de carga y descarga se resuelven mediante un registro runtime de bloqueos. Los bloqueos pueden ser globales o estar asociados a una batería concreta. El controlador consulta este registro antes de las salidas tempranas por banda muerta o sensor sin actualizar, por lo que una consigna activa se detiene en cuanto aparece un bloqueo.
 
-Los bloqueos globales incluyen retraso de carga solar, franjas de carga/descarga, control de descarga por precio y pausas por cargador VE sin telemetría. Los bloqueos por batería incluyen los switches `Permitir Carga` y `Permitir Descarga`. Los límites de batería como SOC mínimo, SOC máximo, histéresis de carga, exclusión por backup/off-grid y exclusión por falta de respuesta siguen siendo comprobaciones de disponibilidad separadas.
+Los bloqueos globales incluyen retraso de carga solar, franjas de carga/descarga, control de descarga por precio y pausas por cargador VE sin telemetría. Los bloqueos por batería incluyen los switches `Permitir Carga` y `Permitir Descarga`, SOC máximo, SOC mínimo e histéresis de carga. Otras comprobaciones de disponibilidad, como exclusión por backup/off-grid y exclusión por falta de respuesta, siguen separadas del registro de bloqueos.
+
+Los atributos superiores `charge_blocked` y `discharge_blocked` muestran el estado efectivo del sistema: pasan a `true` cuando hay un bloqueo global activo o cuando todas las baterías conocidas están bloqueadas en esa dirección. El detalle por batería sigue visible en `battery_charge_blockers` y `battery_discharge_blockers`.
 
 El registro se expone en el sensor diagnóstico `Estado de la Integración` mediante estos atributos:
 

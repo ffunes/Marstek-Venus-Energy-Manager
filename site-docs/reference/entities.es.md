@@ -106,12 +106,12 @@ El sensor también expone diagnósticos del registro de bloqueos como atributos:
 
 | Atributo | Descripción |
 |---|---|
-| `charge_blocked` | `true` cuando hay algún bloqueo global de carga activo |
-| `discharge_blocked` | `true` cuando hay algún bloqueo global de descarga activo |
+| `charge_blocked` | `true` cuando la carga está bloqueada de forma efectiva en todo el sistema, por un bloqueo global o porque todas las baterías conocidas tienen la carga bloqueada |
+| `discharge_blocked` | `true` cuando la descarga está bloqueada de forma efectiva en todo el sistema, por un bloqueo global o porque todas las baterías conocidas tienen la descarga bloqueada |
 | `charge_blockers` | Bloqueos globales de carga activos con motivo, detalles y marca temporal |
 | `discharge_blockers` | Bloqueos globales de descarga activos con motivo, detalles y marca temporal |
-| `battery_charge_blockers` | Bloqueos de carga activos por batería, agrupados por batería |
-| `battery_discharge_blockers` | Bloqueos de descarga activos por batería, agrupados por batería |
+| `battery_charge_blockers` | Bloqueos de carga activos por batería, agrupados por batería, incluyendo permitir carga, SOC máximo e histéresis de carga |
+| `battery_discharge_blockers` | Bloqueos de descarga activos por batería, agrupados por batería, incluyendo permitir descarga y SOC mínimo |
 
 ### Sensores agregados
 

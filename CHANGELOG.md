@@ -8,6 +8,7 @@
 
 ### Changed
 - **PD blocker enforcement before deadband and stale-sensor early returns**: Active charge/discharge commands are now stopped immediately when a matching global or per-battery blocker appears, even if the grid sensor is inside deadband or has not updated. This prevents stale commands from continuing after a feature or user switch has blocked that direction.
+- **SOC limits and charge hysteresis are now visible in the blocker registry**: Per-battery charge blocking caused by configured maximum SOC or active charge hysteresis is now recorded in `battery_charge_blockers`, and discharge blocking caused by minimum SOC is recorded in `battery_discharge_blockers`. The top-level `charge_blocked` and `discharge_blocked` attributes on Integration Status report the effective system state, so they become `true` when every known battery is blocked in that direction, even if the reason is per-battery rather than global.
 - **Hourly net balance uses the charge blocker registry for block reasons**: Positive hourly-balance compensation now reads the unified charge blockers for reasons such as solar charge delay, charge time-slot restriction, or EV pause, while keeping its existing local checks for charge hysteresis and max SOC.
 
 ## [1.7.6] - 2026-05-09

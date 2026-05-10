@@ -110,7 +110,9 @@ The state is stored per battery as `allow_charge` and `allow_discharge`. Missing
 
 Charge and discharge permissions are resolved through a runtime blocker registry. Blockers can be system-wide or scoped to one battery. The controller checks this registry before deadband and stale-sensor early returns, so an active command is stopped as soon as a blocker appears.
 
-Global blockers include solar charge delay, charge/discharge time slots, price-based discharge control, and EV charger no-telemetry pauses. Per-battery blockers include the `Allow Charge` and `Allow Discharge` switches. Battery limits such as minimum SOC, maximum SOC, charge hysteresis, backup/off-grid exclusion, and non-responsive exclusion remain separate availability checks.
+Global blockers include solar charge delay, charge/discharge time slots, price-based discharge control, and EV charger no-telemetry pauses. Per-battery blockers include the `Allow Charge` and `Allow Discharge` switches, maximum SOC, minimum SOC, and charge hysteresis. Other availability checks such as backup/off-grid exclusion and non-responsive exclusion remain separate from the blocker registry.
+
+The top-level `charge_blocked` and `discharge_blocked` attributes report the effective system state: they become `true` when a global blocker is active or when every known battery is blocked in that direction. Per-battery details remain visible in `battery_charge_blockers` and `battery_discharge_blockers`.
 
 The registry is exposed on the `Integration Status` diagnostic sensor through these attributes:
 

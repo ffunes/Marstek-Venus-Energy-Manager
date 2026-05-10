@@ -958,8 +958,8 @@ class IntegrationStatusSensor(SensorEntity):
             "manual_mode_enabled": c.manual_mode_enabled,
             "grid_charging_active": c.grid_charging_active,
             "price_based_discharge_blocked": c._price_based_discharge_blocked,
-            "charge_blocked": c.is_charge_blocked(),
-            "discharge_blocked": c.is_discharge_blocked(),
+            "charge_blocked": c.is_charge_effectively_blocked(),
+            "discharge_blocked": c.is_discharge_effectively_blocked(),
         }
         charge_blockers = c.get_charge_blockers()
         if charge_blockers:

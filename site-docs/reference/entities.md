@@ -118,12 +118,12 @@ The sensor also exposes blocker diagnostics as attributes:
 
 | Attribute | Description |
 |---|---|
-| `charge_blocked` | `true` when any global charge blocker is active |
-| `discharge_blocked` | `true` when any global discharge blocker is active |
+| `charge_blocked` | `true` when charge is effectively blocked system-wide, either by a global blocker or because every known battery is charge-blocked |
+| `discharge_blocked` | `true` when discharge is effectively blocked system-wide, either by a global blocker or because every known battery is discharge-blocked |
 | `charge_blockers` | Active system-wide charge blockers with reason, details, and timestamp |
 | `discharge_blockers` | Active system-wide discharge blockers with reason, details, and timestamp |
-| `battery_charge_blockers` | Active per-battery charge blockers grouped by battery |
-| `battery_discharge_blockers` | Active per-battery discharge blockers grouped by battery |
+| `battery_charge_blockers` | Active per-battery charge blockers grouped by battery, including manual allow-charge, maximum SOC, and charge hysteresis |
+| `battery_discharge_blockers` | Active per-battery discharge blockers grouped by battery, including manual allow-discharge and minimum SOC |
 
 ### Aggregate sensors
 

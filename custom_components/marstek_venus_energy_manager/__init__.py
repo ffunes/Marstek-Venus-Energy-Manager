@@ -568,6 +568,32 @@ class ChargeDischargeController:
             if blockers
         }
 
+    def _known_batteries_for_block_summary(self) -> list:
+        """Return batteries with enough data to summarize effective blockers."""
+        return [
+            coordinator
+            for coordinator in self.coordinators
+            if coordinator.data is not None and coordinator.is_available
+        ]
+
+    def is_charge_effectively_blocked(self) -> bool:
+        """Return True when no known battery can currently accept charge."""
+        if self._global_charge_blockers:
+            return True
+        batteries = self._known_batteries_for_block_summary()
+        return bool(batteries) and all(
+            self.is_charge_blocked(coordinator) for coordinator in batteries
+        )
+
+    def is_discharge_effectively_blocked(self) -> bool:
+        """Return True when no known battery can currently discharge."""
+        if self._global_discharge_blockers:
+            return True
+        batteries = self._known_batteries_for_block_summary()
+        return bool(batteries) and all(
+            self.is_discharge_blocked(coordinator) for coordinator in batteries
+        )
+
     def _is_time_slot_allowed(self, is_charging: bool) -> bool:
         """Return True if the current time-slot configuration allows this direction."""
         from datetime import datetime, time as dt_time
@@ -638,6 +664,145 @@ class ChargeDischargeController:
                     coordinator=coordinator,
                 )
 
+    def _weekly_full_charge_unlocked(self) -> bool:
+        """Return True when charging to 100% should bypass configured max SOC."""
+        weekly_charge_active = self._weekly_charge_mgr.is_active()
+        return weekly_charge_active and (
+            not self.charge_delay_enabled
+            or self._charge_delay_unlocked
+            or self._balance_monitor_overrides_delay()
+        )
+
+    def _effective_charge_max_soc(self, coordinator, weekly_100_unlocked: bool) -> tuple[float, str]:
+        """Return the current per-battery charge ceiling and the source of that ceiling."""
+        if weekly_100_unlocked:
+            return 100, "weekly_full_charge"
+
+        if self.grid_charging_active and self._predictive_charge_target_soc is not None:
+            per_battery_target = self._predictive_charge_target_soc.get(coordinator)
+            if per_battery_target is not None:
+                return min(coordinator.max_soc, per_battery_target), "predictive_target"
+
+        return coordinator.max_soc, "max_soc"
+
+    def _refresh_battery_charge_limit_blocks(self) -> None:
+        """Expose max-SOC and hysteresis charge availability as per-battery blockers."""
+        weekly_100_unlocked = self._weekly_full_charge_unlocked()
+
+        for coordinator in self.coordinators:
+            if coordinator.data is None:
+                self.remove_charge_block("max_soc", coordinator=coordinator)
+                self.remove_charge_block("charge_hysteresis", coordinator=coordinator)
+                continue
+
+            current_soc = coordinator.data.get("battery_soc", 0)
+
+            if weekly_100_unlocked:
+                if coordinator.enable_charge_hysteresis and coordinator._hysteresis_active:
+                    _LOGGER.debug("%s: Overriding hysteresis for weekly full charge", coordinator.name)
+                coordinator._hysteresis_active = False
+                coordinator._hysteresis_base_soc = None
+                self.remove_charge_block("max_soc", coordinator=coordinator)
+                self.remove_charge_block("charge_hysteresis", coordinator=coordinator)
+                continue
+
+            effective_max_soc, max_soc_source = self._effective_charge_max_soc(
+                coordinator,
+                weekly_100_unlocked,
+            )
+            bms_cutoff = self._weekly_charge_mgr.is_battery_full(coordinator)
+
+            if coordinator.enable_charge_hysteresis:
+                if current_soc >= coordinator.max_soc or bms_cutoff:
+                    coordinator._hysteresis_active = True
+                    if coordinator._hysteresis_base_soc is None:
+                        coordinator._hysteresis_base_soc = current_soc
+
+                hysteresis_base = (
+                    coordinator._hysteresis_base_soc
+                    if coordinator._hysteresis_base_soc is not None
+                    else coordinator.max_soc
+                )
+                charge_threshold = hysteresis_base - coordinator.charge_hysteresis_percent
+
+                if current_soc < charge_threshold:
+                    coordinator._hysteresis_active = False
+                    coordinator._hysteresis_base_soc = None
+
+                if coordinator._hysteresis_active:
+                    if current_soc >= effective_max_soc or bms_cutoff:
+                        self.set_charge_block(
+                            "max_soc",
+                            "max_soc",
+                            {
+                                "battery": coordinator.name,
+                                "soc": current_soc,
+                                "max_soc": coordinator.max_soc,
+                                "effective_max_soc": effective_max_soc,
+                                "source": max_soc_source,
+                                "bms_cutoff": bms_cutoff,
+                            },
+                            coordinator=coordinator,
+                        )
+                    else:
+                        self.remove_charge_block("max_soc", coordinator=coordinator)
+                    self.set_charge_block(
+                        "charge_hysteresis",
+                        "hysteresis",
+                        {
+                            "battery": coordinator.name,
+                            "soc": current_soc,
+                            "max_soc": coordinator.max_soc,
+                            "threshold": charge_threshold,
+                            "base_soc": hysteresis_base,
+                            "hysteresis_percent": coordinator.charge_hysteresis_percent,
+                            "bms_cutoff": bms_cutoff,
+                        },
+                        coordinator=coordinator,
+                    )
+                    continue
+
+            self.remove_charge_block("charge_hysteresis", coordinator=coordinator)
+
+            if current_soc >= effective_max_soc or bms_cutoff:
+                self.set_charge_block(
+                    "max_soc",
+                    "max_soc",
+                    {
+                        "battery": coordinator.name,
+                        "soc": current_soc,
+                        "max_soc": coordinator.max_soc,
+                        "effective_max_soc": effective_max_soc,
+                        "source": max_soc_source,
+                        "bms_cutoff": bms_cutoff,
+                    },
+                    coordinator=coordinator,
+                )
+            else:
+                self.remove_charge_block("max_soc", coordinator=coordinator)
+
+    def _refresh_battery_discharge_limit_blocks(self) -> None:
+        """Expose min-SOC discharge availability as per-battery blockers."""
+        for coordinator in self.coordinators:
+            if coordinator.data is None:
+                self.remove_discharge_block("min_soc", coordinator=coordinator)
+                continue
+
+            current_soc = coordinator.data.get("battery_soc", 0)
+            if current_soc <= coordinator.min_soc:
+                self.set_discharge_block(
+                    "min_soc",
+                    "min_soc",
+                    {
+                        "battery": coordinator.name,
+                        "soc": current_soc,
+                        "min_soc": coordinator.min_soc,
+                    },
+                    coordinator=coordinator,
+                )
+            else:
+                self.remove_discharge_block("min_soc", coordinator=coordinator)
+
     def _refresh_ev_blocks(self) -> None:
         """Update EV charger blockers from no-telemetry charger state."""
         ev_pause_active, ev_charging_active = self._check_ev_charger_state()
@@ -668,6 +833,8 @@ class ChargeDischargeController:
         self._apply_price_discharge_block()
         self._refresh_ev_blocks()
         self._refresh_user_battery_blocks()
+        self._refresh_battery_charge_limit_blocks()
+        self._refresh_battery_discharge_limit_blocks()
         self._price_based_discharge_blocked = "price_discharge" in self._global_discharge_blockers
 
     def _is_operation_allowed(self, is_charging: bool) -> bool:
@@ -759,12 +926,7 @@ class ChargeDischargeController:
             
             if is_charging:
                 # Check if weekly full charge is active AND 100% is actually unlocked
-                weekly_charge_active = self._weekly_charge_mgr.is_active()
-                weekly_100_unlocked = weekly_charge_active and (
-                    not self.charge_delay_enabled
-                    or self._charge_delay_unlocked
-                    or self._balance_monitor_overrides_delay()
-                )
+                weekly_100_unlocked = self._weekly_full_charge_unlocked()
 
                 # Update hysteresis state if enabled
                 if coordinator.enable_charge_hysteresis:
@@ -796,26 +958,23 @@ class ChargeDischargeController:
                             continue
 
                 # Determine effective max SOC
-                if weekly_100_unlocked:
-                    effective_max_soc = 100
+                effective_max_soc, max_soc_source = self._effective_charge_max_soc(
+                    coordinator,
+                    weekly_100_unlocked,
+                )
+                if max_soc_source == "weekly_full_charge":
                     _LOGGER.debug("%s: Weekly Full Charge active - effective_max_soc=100%% (configured: %d%%)",
                                  coordinator.name, coordinator.max_soc)
-                elif self.grid_charging_active and self._predictive_charge_target_soc is not None:
+                elif max_soc_source == "predictive_target":
                     # Predictive grid charging: per-battery target so each battery
                     # charges only the portion solar cannot cover for its individual gap
                     per_battery_target = self._predictive_charge_target_soc.get(coordinator)
-                    if per_battery_target is not None:
-                        effective_max_soc = min(coordinator.max_soc, per_battery_target)
-                        _LOGGER.debug(
-                            "%s: Predictive grid charging - effective_max_soc=%.1f%% "
-                            "(target=%.1f%%, configured=%d%%)",
-                            coordinator.name, effective_max_soc,
-                            per_battery_target, coordinator.max_soc,
-                        )
-                    else:
-                        effective_max_soc = coordinator.max_soc
-                else:
-                    effective_max_soc = coordinator.max_soc
+                    _LOGGER.debug(
+                        "%s: Predictive grid charging - effective_max_soc=%.1f%% "
+                        "(target=%.1f%%, configured=%d%%)",
+                        coordinator.name, effective_max_soc,
+                        per_battery_target, coordinator.max_soc,
+                    )
 
                 # BMS cutoff detection: counter is maintained by tick_bms_cutoff() which
                 # runs unconditionally at the top of handle_registers() each cycle.
