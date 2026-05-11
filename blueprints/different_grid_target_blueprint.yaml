@@ -1,0 +1,179 @@
+blueprint:
+  name: "Marstek Venus - Different Grid Target For Charge And Discharge"
+  description: >
+    Automatically changes the Marstek Venus PD Target Grid Power depending on
+    whether the system is charging or discharging.
+
+    Default behavior:
+    - While charging: set grid target to -50 W, meaning export to grid.
+    - While discharging: set grid target to +50 W, meaning import from grid.
+    - While idle: leave the current target unchanged, unless idle reset is enabled.
+  domain: automation
+  source_url: "https://github.com/ffunes/Marstek-Venus-Energy-Manager/blob/main/blueprints/different_grid_target_blueprint.yaml"
+
+  input:
+    charge_power_sensor:
+      name: "System Charge Power Sensor"
+      description: "Marstek Venus system charge power sensor."
+      default: sensor.marstek_venus_system_system_charge_power
+      selector:
+        entity:
+          filter:
+            domain: sensor
+
+    discharge_power_sensor:
+      name: "System Discharge Power Sensor"
+      description: "Marstek Venus system discharge power sensor."
+      default: sensor.marstek_venus_system_system_discharge_power
+      selector:
+        entity:
+          filter:
+            domain: sensor
+
+    target_grid_power_number:
+      name: "PD Target Grid Power Number"
+      description: "Marstek Venus PD Target Grid Power number entity."
+      default: number.marstek_venus_system_pd_target_grid_power
+      selector:
+        entity:
+          filter:
+            domain: number
+
+    charge_target_w:
+      name: "Grid Target While Charging"
+      description: "Negative values mean export to grid."
+      default: -50
+      selector:
+        number:
+          min: -2500
+          max: 2500
+          step: 10
+          unit_of_measurement: W
+          mode: box
+
+    discharge_target_w:
+      name: "Grid Target While Discharging"
+      description: "Positive values mean import from grid."
+      default: 50
+      selector:
+        number:
+          min: -2500
+          max: 2500
+          step: 10
+          unit_of_measurement: W
+          mode: box
+
+    active_threshold_w:
+      name: "Active Power Threshold"
+      description: "Ignore charge/discharge values below this threshold to avoid noise around zero."
+      default: 20
+      selector:
+        number:
+          min: 0
+          max: 500
+          step: 5
+          unit_of_measurement: W
+          mode: box
+
+    reset_when_idle:
+      name: "Reset Target When Idle"
+      description: "Set the grid target back to the idle value when neither charging nor discharging."
+      default: false
+      selector:
+        boolean:
+
+    idle_target_w:
+      name: "Idle Grid Target"
+      description: "Used only when idle reset is enabled."
+      default: 0
+      selector:
+        number:
+          min: -2500
+          max: 2500
+          step: 10
+          unit_of_measurement: W
+          mode: box
+
+variables:
+  charge_power_sensor: !input charge_power_sensor
+  discharge_power_sensor: !input discharge_power_sensor
+  target_grid_power_number: !input target_grid_power_number
+  charge_target_w: !input charge_target_w
+  discharge_target_w: !input discharge_target_w
+  active_threshold_w: !input active_threshold_w
+  reset_when_idle: !input reset_when_idle
+  idle_target_w: !input idle_target_w
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input charge_power_sensor
+    above: !input active_threshold_w
+    id: charge_started
+  - platform: numeric_state
+    entity_id: !input discharge_power_sensor
+    above: !input active_threshold_w
+    id: discharge_started
+  - platform: numeric_state
+    entity_id: !input charge_power_sensor
+    below: !input active_threshold_w
+    id: charge_stopped
+  - platform: numeric_state
+    entity_id: !input discharge_power_sensor
+    below: !input active_threshold_w
+    id: discharge_stopped
+  - platform: homeassistant
+    event: start
+    id: homeassistant_start
+
+condition: []
+
+mode: restart
+
+action:
+  - variables:
+      charge_w: "{{ states(charge_power_sensor) | float(0) }}"
+      discharge_w: "{{ states(discharge_power_sensor) | float(0) }}"
+      current_target_w: "{{ states(target_grid_power_number) | float(999999) }}"
+
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ (discharge_w | float(0)) > (active_threshold_w | float(0))
+                 and (discharge_w | float(0)) >= (charge_w | float(0))
+                 and (current_target_w | float(999999)) != (discharge_target_w | float(0)) }}
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input target_grid_power_number
+            data:
+              value: "{{ discharge_target_w | float(0) }}"
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ (charge_w | float(0)) > (active_threshold_w | float(0))
+                 and (charge_w | float(0)) > (discharge_w | float(0))
+                 and (current_target_w | float(999999)) != (charge_target_w | float(0)) }}
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input target_grid_power_number
+            data:
+              value: "{{ charge_target_w | float(0) }}"
+
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ reset_when_idle
+                 and (charge_w | float(0)) <= (active_threshold_w | float(0))
+                 and (discharge_w | float(0)) <= (active_threshold_w | float(0))
+                 and (current_target_w | float(999999)) != (idle_target_w | float(0)) }}
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input target_grid_power_number
+            data:
+              value: "{{ idle_target_w | float(0) }}"
+
+    default: []
