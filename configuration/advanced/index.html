@@ -966,6 +966,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hourly-net-balance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hourly net balance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#advanced-pd-controller" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1536,6 +1547,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#hourly-net-balance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hourly net balance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#advanced-pd-controller" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1572,7 +1594,7 @@
 
 
 <h1 id="advanced-options">Advanced options<a class="headerlink" href="#advanced-options" title="Permanent link">&para;</a></h1>
-<p>After configuring predictive charging, the wizard offers four additional optional steps that adjust the integration's behaviour in specific situations.</p>
+<p>After configuring predictive charging, the wizard offers five additional optional steps that adjust the integration's behaviour in specific situations.</p>
 <hr />
 <h2 id="weekly-full-charge">Weekly full charge<a class="headerlink" href="#weekly-full-charge" title="Permanent link">&para;</a></h2>
 <p>Forces a <strong>100% charge once a week</strong> for cell balancing. You only need to select the day of the week.</p>
@@ -1634,6 +1656,43 @@
 </table>
 <p>See <a href="../../features/peak-shaving/">Peak shaving</a> for how it works.</p>
 <p><img alt="Capacity protection configuration" src="../../assets/screenshots/configuration/advanced-capacity-protection-config.png" style="display: block; margin: 0 auto;" width="650" /></p>
+<hr />
+<h2 id="hourly-net-balance">Hourly net balance<a class="headerlink" href="#hourly-net-balance" title="Permanent link">&para;</a></h2>
+<p>Tracks grid import and export within each civil hour and adjusts the PD setpoint in real time to drive the net energy toward a configurable target. The default target is 0 Wh — net zero each hour — but you can shift it to allow a fixed import or target a fixed export.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Target net balance (kWh)</strong></td>
+<td>Target net energy balance  (0=net zero, positive=net import, negative=net export)</td>
+<td><code>0 kWh</code></td>
+</tr>
+<tr>
+<td><strong>Maximum offset (W)</strong></td>
+<td>Maximum power offset the controller can apply (sum of all batteries)</td>
+<td><code>1000 W</code></td>
+</tr>
+<tr>
+<td><strong>Net balance tolerance (kWh)</strong></td>
+<td>Tolerance band around target (0=no correction)</td>
+<td><code>0 kWh</code></td>
+</tr>
+<tr>
+<td><strong>Offset hysteresis (W)</strong></td>
+<td>Minimum change in offset before corrections are applied (0=apply every cycle)</td>
+<td><code>15 W</code></td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../features/hourly-net-balance/">Hourly net balance</a> for how it works.</p>
+<p><img alt="Hourly net balance warning" src="../../assets/screenshots/configuration/hourly_net_balance_warning.png" style="display: block; margin: 0 auto;" width="650" />
+<img alt="Hourly net balance config" src="../../assets/screenshots/configuration/hourly_net_balance_config.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <hr />
 <h2 id="advanced-pd-controller">Advanced PD controller<a class="headerlink" href="#advanced-pd-controller" title="Permanent link">&para;</a></h2>
 <div class="admonition warning">

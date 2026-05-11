@@ -1531,18 +1531,33 @@
 <p>The integration is configured entirely from the Home Assistant UI through a multi-step wizard.</p>
 <h2 id="wizard-steps">Wizard steps<a class="headerlink" href="#wizard-steps" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
-    A[1. Main sensor] --&gt; B[2. Number of batteries]
+    A[1. Main sensor config] --&gt; B[2. Number of batteries]
     B --&gt; C[3. Per-battery config]
     C --&gt; D{Time slots?}
-    D -- Yes --&gt; E[4. Time slots]
+    D -- Yes --&gt; E[4. Time slots config]
     D -- No --&gt; F
     E --&gt; F{Excluded devices?}
-    F -- Yes --&gt; G[5. Excluded devices]
+    F -- Yes --&gt; G[5. Excluded devices config]
     F -- No --&gt; H
     G --&gt; H{Predictive charging?}
-    H -- Yes --&gt; I[6. Predictive charging mode]
-    H -- No --&gt; J[Done]
-    I --&gt; J</code></pre>
+    H -- Yes --&gt; I[6. Predictive charging mode config]
+    H -- No --&gt; J
+    I --&gt; J{Weekly full charge?}
+    J -- Yes --&gt; K[7. Weekly full charge day]
+    J -- No --&gt; L
+    K --&gt; L{Solar charge delay?}
+    L -- Yes --&gt; M[8. Solar charge delay config]
+    L -- No --&gt; N
+    M --&gt; N{Capacity protection?}
+    N -- Yes --&gt; O[9. Capacity protection config]
+    N -- No --&gt; P
+    O --&gt; P{Hourly net balance?}
+    P -- Yes --&gt; Q[10. Hourly net balance config]
+    P -- No --&gt; R
+    Q --&gt; R{PD controller advanced?}
+    R -- Yes --&gt; S[11. PD controller advanced config]
+    R -- No --&gt; T[Done]
+    S --&gt; T</code></pre>
 <table>
 <thead>
 <tr>
@@ -1583,8 +1598,28 @@
 <td style="text-align: center;">❌</td>
 </tr>
 <tr>
-<td><a href="advanced/">Advanced options</a></td>
-<td>Weekly charge, solar delay, peak shaving</td>
+<td><a href="advanced/">Weekly full charge</a></td>
+<td>Charge batteries to 100% once a week to balance the cells</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><a href="advanced/">Solar charge delay</a></td>
+<td>Avoid to charge the batteries early if expected solar production will suffice</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><a href="advanced/">Capacity protection</a></td>
+<td>Reserves a portion of battery capacity for demand spikes (peak shaving)</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><a href="advanced/">Hourly net balance</a></td>
+<td>Sets hourly fixed energy target import/export (default 0 Wh)</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><a href="advanced/">PD controller (advanced)</a></td>
+<td>Finetune the PD controller to keep the grid flow to the configured target</td>
 <td style="text-align: center;">❌</td>
 </tr>
 </tbody>
