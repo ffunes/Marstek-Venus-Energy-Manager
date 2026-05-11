@@ -604,6 +604,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#blueprint-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blueprint installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Blueprint installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-from-the-home-assistant-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from the Home Assistant UI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-installation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#adding-the-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1608,6 +1647,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#blueprint-installation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Blueprint installation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Blueprint installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-from-the-home-assistant-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Install from the Home Assistant UI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-installation_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Manual installation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#adding-the-integration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1695,6 +1773,36 @@
 <li>Extract the <code>marstek_venus_energy_manager</code> folder.</li>
 <li>Copy it to the <code>custom_components/</code> directory of your Home Assistant instance.</li>
 <li>Restart Home Assistant.</li>
+</ol>
+<hr />
+<h2 id="blueprint-installation">Blueprint installation<a class="headerlink" href="#blueprint-installation" title="Permanent link">&para;</a></h2>
+<p>Blueprints are optional and are installed in the Home Assistant configuration folder, not inside <code>custom_components/</code>.</p>
+<p>The blueprint folder for your Home Assistant instance is:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/config/blueprints/automation/marstek_venus_energy_manager/
+</code></pre></div>
+<p>If you access Home Assistant through Samba, Studio Code Server or File Editor, the same path is usually shown as:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>config/blueprints/automation/marstek_venus_energy_manager/
+</code></pre></div>
+<h3 id="install-from-the-home-assistant-ui">Install from the Home Assistant UI<a class="headerlink" href="#install-from-the-home-assistant-ui" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Go to <strong>Settings</strong> → <strong>Automations &amp; Scenes</strong> → <strong>Blueprints</strong>.</li>
+<li>Click <strong>Import Blueprint</strong>.</li>
+<li>
+<p>Paste the URL of the blueprint you want to import, for example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>https://raw.githubusercontent.com/ffunes/Marstek-Venus-Energy-Manager/main/blueprints/different_grid_target_blueprint.yaml
+</code></pre></div>
+</li>
+<li>
+<p>Click <strong>Preview Blueprint</strong> and then <strong>Import Blueprint</strong>.</p>
+</li>
+<li>Create a new automation from the imported blueprint and select your entities.</li>
+</ol>
+<h3 id="manual-installation_1">Manual installation<a class="headerlink" href="#manual-installation_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Create the <code>/config/blueprints/automation/marstek_venus_energy_manager/</code> folder if it does not already exist.</li>
+<li>Copy the <code>.yaml</code> files from this repository's <code>blueprints/</code> folder into it.</li>
+<li>In Home Assistant, go to <strong>Settings</strong> → <strong>Automations &amp; Scenes</strong> → <strong>Blueprints</strong> and click <strong>Reload Blueprints</strong>. If the option is not available, restart Home Assistant.</li>
+<li>Create a new automation from the installed blueprint.</li>
 </ol>
 <hr />
 <h2 id="adding-the-integration">Adding the integration<a class="headerlink" href="#adding-the-integration" title="Permanent link">&para;</a></h2>

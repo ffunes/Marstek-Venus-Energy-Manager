@@ -604,6 +604,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instalacion-de-blueprints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación de blueprints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instalación de blueprints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#instalacion-desde-la-interfaz-de-home-assistant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación desde la interfaz de Home Assistant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instalacion-manual_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#anadir-la-integracion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1608,6 +1647,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#instalacion-de-blueprints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación de blueprints
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Instalación de blueprints">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#instalacion-desde-la-interfaz-de-home-assistant" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación desde la interfaz de Home Assistant
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#instalacion-manual_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Instalación manual
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#anadir-la-integracion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1695,6 +1773,36 @@
 <li>Extrae la carpeta <code>marstek_venus_energy_manager</code>.</li>
 <li>Cópiala en el directorio <code>custom_components/</code> de Home Assistant.</li>
 <li>Reinicia Home Assistant.</li>
+</ol>
+<hr />
+<h2 id="instalacion-de-blueprints">Instalación de blueprints<a class="headerlink" href="#instalacion-de-blueprints" title="Permanent link">&para;</a></h2>
+<p>Los blueprints son opcionales y se instalan en la carpeta de configuración de Home Assistant, no dentro de <code>custom_components/</code>.</p>
+<p>La carpeta de blueprints de tu Home Assistant es:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/config/blueprints/automation/marstek_venus_energy_manager/
+</code></pre></div>
+<p>Si accedes a Home Assistant mediante Samba, Studio Code Server o File Editor, la misma ruta suele verse como:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>config/blueprints/automation/marstek_venus_energy_manager/
+</code></pre></div>
+<h3 id="instalacion-desde-la-interfaz-de-home-assistant">Instalación desde la interfaz de Home Assistant<a class="headerlink" href="#instalacion-desde-la-interfaz-de-home-assistant" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Ve a <strong>Ajustes</strong> → <strong>Automatizaciones y escenas</strong> → <strong>Blueprints</strong>.</li>
+<li>Pulsa <strong>Importar blueprint</strong>.</li>
+<li>
+<p>Pega la URL del blueprint que quieras importar, por ejemplo:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>https://raw.githubusercontent.com/ffunes/Marstek-Venus-Energy-Manager/main/blueprints/different_grid_target_blueprint.yaml
+</code></pre></div>
+</li>
+<li>
+<p>Pulsa <strong>Previsualizar blueprint</strong> y después <strong>Importar blueprint</strong>.</p>
+</li>
+<li>Crea una automatización nueva desde el blueprint importado y selecciona tus entidades.</li>
+</ol>
+<h3 id="instalacion-manual_1">Instalación manual<a class="headerlink" href="#instalacion-manual_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Crea la carpeta <code>/config/blueprints/automation/marstek_venus_energy_manager/</code> si no existe.</li>
+<li>Copia dentro los archivos <code>.yaml</code> de la carpeta <code>blueprints/</code> de este repositorio.</li>
+<li>En Home Assistant, ve a <strong>Ajustes</strong> → <strong>Automatizaciones y escenas</strong> → <strong>Blueprints</strong> y pulsa <strong>Recargar blueprints</strong>. Si no aparece la opción, reinicia Home Assistant.</li>
+<li>Crea una automatización nueva desde el blueprint instalado.</li>
 </ol>
 <hr />
 <h2 id="anadir-la-integracion">Añadir la integración<a class="headerlink" href="#anadir-la-integracion" title="Permanent link">&para;</a></h2>
