@@ -1434,7 +1434,7 @@
 <!-- The full changelog is maintained in CHANGELOG.md in the repository -->
 
 <h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
-<h2 id="180-2026-05-10">[1.8.0] - 2026-05-10<a class="headerlink" href="#180-2026-05-10" title="Permanent link">&para;</a></h2>
+<h2 id="180-2026-05-11">[1.8.0] - 2026-05-11<a class="headerlink" href="#180-2026-05-11" title="Permanent link">&para;</a></h2>
 <h3 id="added">Added<a class="headerlink" href="#added" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>Unified charge/discharge blocker registry</strong>: The PD controller now uses explicit runtime blocker registries for charge and discharge decisions. Blockers can be global (system-wide) or scoped to an individual battery, and are exposed on the <strong>Integration Status</strong> diagnostic sensor via <code>charge_blockers</code>, <code>discharge_blockers</code>, <code>battery_charge_blockers</code>, and <code>battery_discharge_blockers</code>. Existing restrictions such as charge delay, time slots, price-based discharge control, EV charger no-telemetry handling, and per-battery user blocks now share the same decision path.</li>
