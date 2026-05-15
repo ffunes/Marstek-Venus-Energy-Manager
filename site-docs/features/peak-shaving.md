@@ -1,12 +1,12 @@
-# Peak shaving
+# Capacity protection (aka peak shaving)
 
 Reserves a portion of battery capacity to cover demand spikes that exceed a configurable power threshold. Instead of the battery covering all household consumption, it holds back energy and only discharges to compensate the portion of demand above the peak limit — keeping capacity in reserve for when it is actually needed.
 
-## Behaviour without peak shaving
+## Behaviour without capacity protection active
 
 The PD controller covers all household consumption → the battery can fully discharge if consumption is high and sustained.
 
-## Behaviour with peak shaving active
+## Behaviour with capacity protection active
 
 When SOC is below the threshold:
 - The battery does **not** cover all consumption.

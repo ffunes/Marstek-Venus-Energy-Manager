@@ -37,16 +37,16 @@ flowchart TD
 
 | Step | Description | Required |
 |------|-------------|:--------:|
-| [Main sensor](main-sensor.md) | Grid consumption sensor and solar sensor | ✅ |
-| Batteries | Number of units and per-battery configuration | ✅ |
-| [Batteries](batteries.md) | IP, port, version, power limits and SOC | ✅ |
-| [Time slots](time-slots.md) | Discharge windows with per-slot parameters | ❌ |
+| [Main sensor](main-sensor.md) | Grid consumption sensor, solar sensor and household consumption sensor | ✅ |
+| Batteries | Number of battery units | ✅ |
+| [Batteries](batteries.md) | Per-battery config : name, IP, port, version, power limits and SOC | ✅ |
+| [Time slots](time-slots.md) | Discharge/charge windows with per-slot parameters | ❌ |
 | [Excluded devices](excluded-devices.md) | Heavy loads to ignore | ❌ |
 | [Predictive charging](predictive-charging/index.md) | Grid charging when solar forecast is insufficient | ❌ |
 | [Weekly full charge](advanced.md) | Charge batteries to 100% once a week to balance the cells | ❌ |
 | [Solar charge delay](advanced.md) | Avoid to charge the batteries early if expected solar production will suffice | ❌ |
 | [Capacity protection](advanced.md) | Reserves a portion of battery capacity for demand spikes (peak shaving) | ❌ |
-| [Hourly net balance](advanced.md) | Sets hourly fixed energy target import/export (default 0 Wh) | ❌ |
+| [Hourly net balance](advanced.md) | Sets the hourly net import/export energy to a specific target (default 0 Wh) | ❌ |
 | [PD controller (advanced)](advanced.md) | Finetune the PD controller to keep the grid flow to the configured target | ❌ |
 
 ## Modifying the configuration

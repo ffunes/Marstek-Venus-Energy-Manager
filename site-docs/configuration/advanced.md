@@ -60,6 +60,7 @@ Tracks grid import and export within each civil hour and adjusts the PD setpoint
 See [Hourly net balance](../features/hourly-net-balance.md) for how it works.
 
 ![Hourly net balance warning](../assets/screenshots/configuration/hourly_net_balance_warning.png){ width="650"  style="display: block; margin: 0 auto;"}
+
 ![Hourly net balance config](../assets/screenshots/configuration/hourly_net_balance_config.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---
