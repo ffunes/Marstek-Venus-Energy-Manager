@@ -17,6 +17,8 @@ from .const import (
     BINARY_SENSOR_DEFINITIONS,
     BUTTON_DEFINITIONS,
     MESSAGE_WAIT_MS,
+    DEBUG_POLL_SENSOR_SKIPS,
+    DEBUG_POLL_SENSOR_VALUES,
 )
 from .modbus_client import MarstekModbusClient
 from .alarm_notifier import AlarmNotifier
@@ -302,8 +304,6 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         now = utcnow()
         updated_data = {}
 
-        _LOGGER.debug("[%s] Coordinator poll tick at %s", self.name, now.isoformat())
-
         if self._is_shutting_down:
             _LOGGER.debug("[%s] Shutdown in progress, skipping poll", self.name)
             return self.data or {}
@@ -344,6 +344,9 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Track read attempts vs successes for connection health monitoring
         sensors_attempted = 0
         sensors_succeeded = 0
+        sensors_skipped_interval = 0
+        sensors_skipped_disabled = 0
+        disabled_dependencies_fetched = 0
 
         # Iterate over each sensor definition to poll if due
         for sensor in self._all_definitions:
@@ -377,9 +380,13 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             # Skip polling if entity is disabled unless it is a dependency key
             if is_disabled:
                 if is_dependency:
-                    _LOGGER.debug("[%s] Fetching disabled dependency key '%s'", self.name, key)
+                    disabled_dependencies_fetched += 1
+                    if DEBUG_POLL_SENSOR_SKIPS:
+                        _LOGGER.debug("[%s] Fetching disabled dependency key '%s'", self.name, key)
                 else:
-                    _LOGGER.debug("[%s] Skipping disabled entity '%s'", self.name, sensor.get("name", key))
+                    sensors_skipped_disabled += 1
+                    if DEBUG_POLL_SENSOR_SKIPS:
+                        _LOGGER.debug("[%s] Skipping disabled entity '%s'", self.name, sensor.get("name", key))
                     continue
 
             # Determine polling interval for this sensor
@@ -400,14 +407,16 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             elapsed = (now - last_update).total_seconds() if last_update else None
 
             if elapsed is not None and elapsed < interval:
-                _LOGGER.debug(
-                    "[%s] Skipping %s '%s', last update %.1fs ago (%ds)",
-                    self.name,
-                    entity_type,
-                    key,
-                    elapsed,
-                    interval,
-                )
+                sensors_skipped_interval += 1
+                if DEBUG_POLL_SENSOR_SKIPS:
+                    _LOGGER.debug(
+                        "[%s] Skipping %s '%s', last update %.1fs ago (%ds)",
+                        self.name,
+                        entity_type,
+                        key,
+                        elapsed,
+                        interval,
+                    )
                 continue
 
             # Attempt to read the sensor value from Modbus
@@ -455,8 +464,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                     updated_data[key] = value
                     self._last_update_times[key] = now
                     
-                    # Log high priority updates for debugging
-                    if interval_name == "high":
+                    if DEBUG_POLL_SENSOR_VALUES and interval_name == "high":
                         _LOGGER.debug("[%s] Updated %s: %s", self.name, key, value)
                 else:
                     if not self._is_shutting_down:
@@ -471,7 +479,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Only track failures when we actually attempted reads (not when all sensors
         # were simply skipped because their polling interval hasn't elapsed yet)
         if sensors_attempted == 0:
-            _LOGGER.debug("[%s] No sensors due for update this cycle", self.name)
+            if DEBUG_POLL_SENSOR_SKIPS:
+                _LOGGER.debug("[%s] No sensors due for update this cycle", self.name)
         elif sensors_succeeded > 0:
             # At least some sensors read successfully - connection is healthy
             if self._consecutive_failures > 0:
@@ -535,9 +544,19 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         if "max_discharge_power" in self.data:
             self.max_discharge_power = int(self.data["max_discharge_power"])
 
-        # Log updates for debugging
         if updated_data:
-            _LOGGER.debug("[%s] Updated %d sensors: %s", self.name, len(updated_data), list(updated_data.keys()))
+            _LOGGER.debug(
+                "[%s] Poll summary: attempted=%d succeeded=%d updated=%d skipped_interval=%d "
+                "skipped_disabled=%d dependency_reads=%d values=%s",
+                self.name,
+                sensors_attempted,
+                sensors_succeeded,
+                len(updated_data),
+                sensors_skipped_interval,
+                sensors_skipped_disabled,
+                disabled_dependencies_fetched,
+                updated_data,
+            )
 
         return self.data
 

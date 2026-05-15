@@ -103,6 +103,7 @@ from .const import (
     CONF_HOURLY_BALANCE_MAX_OFFSET_W,
     DEFAULT_HOURLY_BALANCE_TARGET_NET_WH,
     DEFAULT_HOURLY_BALANCE_MAX_OFFSET_W,
+    DEBUG_CONTROL_LOOP_DETAIL,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 from .hourly_balance import HourlyBalanceManager
@@ -113,6 +114,13 @@ _LOGGER = logging.getLogger(__name__)
 
 # Dynamic pricing data structures
 PriceSlot = namedtuple("PriceSlot", ["start", "end", "price"])
+
+# Charge taper used whenever a battery is charged at high SOC.
+# Above 95% the final phase is intentionally slow to reduce BMS cutoff/float churn.
+FULL_CHARGE_TAPER_STEPS = (
+    (98, 100),
+    (95, 500),
+)
 
 
 @dataclass
@@ -294,6 +302,10 @@ class ChargeDischargeController:
             "user_target": self.target_grid_power,  # user's preference from config
         }
         self._setpoint_overrides: dict[str, tuple[int, float]] = {}  # source → (priority, value_w)
+
+        self._rate_limiter_was_active = False
+        self._rate_limiter_last_direction = 0
+        self._rate_limiter_last_logged_change: float | None = None
 
         # Capacity Protection Mode state
         self.capacity_protection_enabled = config_entry.data.get(CONF_CAPACITY_PROTECTION_ENABLED, False)
@@ -490,7 +502,7 @@ class ChargeDischargeController:
     def _effective_system_capacity(self, batteries: list, is_charging: bool) -> int:
         """Return available capacity after applying the optional global cap."""
         total_capacity = sum(
-            c.max_charge_power if is_charging else c.max_discharge_power
+            self._battery_power_limit(c, is_charging)
             for c in batteries
         )
         system_limit = self._configured_system_limit(is_charging)
@@ -512,6 +524,21 @@ class ChargeDischargeController:
     def _clamp_to_system_capacity(self, power: float, batteries: list, is_charging: bool) -> float:
         """Clamp a positive direction-specific power request to available capacity."""
         return min(power, self._effective_system_capacity(batteries, is_charging))
+
+    def _battery_power_limit(self, coordinator, is_charging: bool) -> int:
+        """Return the effective per-battery power limit for the current cycle."""
+        if not is_charging:
+            return coordinator.max_discharge_power
+
+        limit = coordinator.max_charge_power
+        if coordinator.data is None:
+            return limit
+
+        current_soc = coordinator.data.get("battery_soc", 0)
+        for soc_threshold, tapered_limit in FULL_CHARGE_TAPER_STEPS:
+            if current_soc >= soc_threshold:
+                return min(limit, tapered_limit)
+        return limit
 
     def update_pd_parameters(self):
         """Re-read PD controller parameters from config_entry.data (hot-reload)."""
@@ -616,6 +643,72 @@ class ChargeDischargeController:
             for source, record in registry.items()
         }
 
+    @staticmethod
+    def _format_blockers_for_log(blockers: dict) -> str:
+        """Return a compact one-line blocker summary for logs."""
+        if not blockers:
+            return "none"
+
+        parts = []
+        for source, record in blockers.items():
+            reason = record.get("reason") or source
+            details = record.get("details") or {}
+            detail_text = ",".join(
+                f"{key}={value}"
+                for key, value in details.items()
+                if value is not None
+            )
+            if detail_text:
+                parts.append(f"{source}:{reason}({detail_text})")
+            else:
+                parts.append(f"{source}:{reason}")
+        return ";".join(parts)
+
+    def _format_setpoint_summary_for_log(self) -> str:
+        """Return current target contributors in a compact form."""
+        offsets = ",".join(
+            f"{source}={value:.1f}W"
+            for source, value in self._setpoint_offsets.items()
+        ) or "none"
+        overrides = {
+            source: {"priority": priority, "value": round(value, 1)}
+            for source, (priority, value) in self._setpoint_overrides.items()
+        }
+        if self._setpoint_overrides:
+            active_source, (_, active_value) = max(
+                self._setpoint_overrides.items(),
+                key=lambda item: item[1][0],
+            )
+            override = f"{active_source}={active_value:.1f}W"
+        else:
+            override = "none"
+        return f"offsets={offsets} active_override={override} overrides={overrides or 'none'}"
+
+    def _should_log_rate_limiter(self, requested_change_w: float) -> bool:
+        """Return True when rate limiting newly matters enough to log."""
+        direction = 1 if requested_change_w > 0 else -1
+        previous_change = self._rate_limiter_last_logged_change
+        change_threshold = max(250.0, self.max_power_change_per_cycle * 0.25)
+
+        should_log = (
+            not self._rate_limiter_was_active
+            or direction != self._rate_limiter_last_direction
+            or previous_change is None
+            or abs(requested_change_w - previous_change) >= change_threshold
+        )
+
+        self._rate_limiter_was_active = True
+        self._rate_limiter_last_direction = direction
+        if should_log:
+            self._rate_limiter_last_logged_change = requested_change_w
+        return should_log
+
+    def _clear_rate_limiter_state(self) -> None:
+        """Mark the rate limiter as inactive so the next clamp is logged once."""
+        self._rate_limiter_was_active = False
+        self._rate_limiter_last_direction = 0
+        self._rate_limiter_last_logged_change = None
+
     def _block_registry(self, is_charging: bool, coordinator=None) -> dict:
         """Return the mutable blocker registry for a direction and scope."""
         if coordinator is None:
@@ -629,7 +722,12 @@ class ChargeDischargeController:
         registry[source] = self._make_block_record(registry, source, reason, details)
         if old is None:
             scope = "global" if coordinator is None else coordinator.name
-            _LOGGER.debug("%s block added [%s]: %s", "Charge" if is_charging else "Discharge", scope, source)
+            _LOGGER.debug(
+                "%s block added [%s]: %s",
+                "Charge" if is_charging else "Discharge",
+                scope,
+                self._format_blockers_for_log({source: registry[source]}),
+            )
 
     def _remove_operation_block(self, is_charging: bool, source: str, coordinator=None) -> None:
         if coordinator is None:
@@ -642,7 +740,12 @@ class ChargeDischargeController:
         removed = registry.pop(source, None)
         if removed is not None:
             scope = "global" if coordinator is None else coordinator.name
-            _LOGGER.debug("%s block removed [%s]: %s", "Charge" if is_charging else "Discharge", scope, source)
+            _LOGGER.debug(
+                "%s block removed [%s]: %s",
+                "Charge" if is_charging else "Discharge",
+                scope,
+                self._format_blockers_for_log({source: removed}),
+            )
         if coordinator is not None and not registry:
             registries.pop(coordinator, None)
 
@@ -2341,7 +2444,8 @@ class ChargeDischargeController:
         power_change = new_power_raw - self.previous_power
         if abs(power_change) > self.max_power_change_per_cycle:
             sign = 1 if power_change > 0 else -1
-            new_power = self.previous_power + (sign * self.max_power_change_per_cycle)
+            clamped_change = sign * self.max_power_change_per_cycle
+            new_power = self.previous_power + clamped_change
             _LOGGER.info("Predictive: Rate limiter active (change: %.1fW → %.1fW)",
                         power_change, new_power - self.previous_power)
         else:
@@ -2396,7 +2500,7 @@ class ChargeDischargeController:
         # Get each battery's individual limit
         limits = {}
         for c in available_batteries:
-            limits[c] = c.max_charge_power if is_charging else c.max_discharge_power
+            limits[c] = self._battery_power_limit(c, is_charging)
 
         total_capacity = sum(limits.values())
         if total_capacity <= 0:
@@ -2539,7 +2643,7 @@ class ChargeDischargeController:
 
         for battery in sorted_batteries:
             selected.append(battery)
-            limit = battery.max_charge_power if is_charging else battery.max_discharge_power
+            limit = self._battery_power_limit(battery, is_charging)
             combined_capacity += limit
             activation_threshold = max(
                 MULTI_BATTERY_MIN_ACTIVATION,
@@ -2555,9 +2659,9 @@ class ChargeDischargeController:
             # otherwise re-add it so it stays active until the load genuinely drops.
             for battery in previous_active:
                 if battery not in selected and battery in available_batteries:
-                    limit = battery.max_charge_power if is_charging else battery.max_discharge_power
+                    limit = self._battery_power_limit(battery, is_charging)
                     first_limit = (
-                        selected[0].max_charge_power if is_charging else selected[0].max_discharge_power
+                        self._battery_power_limit(selected[0], is_charging)
                     ) if selected else limit
                     act_thr = max(MULTI_BATTERY_MIN_ACTIVATION,
                                   min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / first_limit))
@@ -2573,11 +2677,9 @@ class ChargeDischargeController:
             if len(selected) > 1:
                 last = selected[-1]
                 if last not in previous_active:
-                    last_limit = last.max_charge_power if is_charging else last.max_discharge_power
+                    last_limit = self._battery_power_limit(last, is_charging)
                     capacity_without_last = combined_capacity - last_limit
-                    prev_limit = (
-                        selected[-2].max_charge_power if is_charging else selected[-2].max_discharge_power
-                    )
+                    prev_limit = self._battery_power_limit(selected[-2], is_charging)
                     act_thr_with_hyst = min(
                         max(MULTI_BATTERY_MIN_ACTIVATION,
                             min(MULTI_BATTERY_MAX_ACTIVATION, crossover_w / prev_limit))
@@ -2607,7 +2709,7 @@ class ChargeDischargeController:
                 and hold_cycles.get(battery, 0) > 0
             ):
                 selected.append(battery)
-                held_limit = battery.max_charge_power if is_charging else battery.max_discharge_power
+                held_limit = self._battery_power_limit(battery, is_charging)
                 combined_capacity += held_limit
                 _LOGGER.debug(
                     "Load sharing [%s]: holding %s active for %d more cycles",
@@ -2646,6 +2748,87 @@ class ChargeDischargeController:
             self._charge_selection_hold_cycles.clear()
 
         return selected
+
+    def _log_power_command_plan(
+        self,
+        *,
+        phase: str,
+        grid_w: float,
+        target_w: float,
+        previous_power_w: float,
+        requested_power_w: float,
+        is_charging: bool,
+        available_batteries: list,
+        selected_batteries: list,
+        power_allocation: dict,
+        operation_restricted: bool = False,
+    ) -> None:
+        """Log one compact control decision before per-battery writes."""
+        mode = "charge" if is_charging else ("discharge" if requested_power_w < 0 else "idle")
+        selected_names = [coordinator.name for coordinator in selected_batteries]
+        allocation = {
+            coordinator.name: int(power)
+            for coordinator, power in power_allocation.items()
+        }
+        charge_blocks = self._format_blockers_for_log(self.get_charge_blockers())
+        discharge_blocks = self._format_blockers_for_log(self.get_discharge_blockers())
+        setpoints = self._format_setpoint_summary_for_log()
+
+        _LOGGER.debug(
+            "Power plan [%s]: mode=%s grid=%.1fW target=%.1fW error=%.1fW "
+            "prev=%.1fW request=%.1fW allocated=%dW available=%d selected=%s "
+            "allocation=%s restricted=%s charge_blocks=%s discharge_blocks=%s setpoints=%s",
+            phase,
+            mode,
+            grid_w,
+            target_w,
+            grid_w - target_w,
+            previous_power_w,
+            requested_power_w,
+            sum(allocation.values()),
+            len(available_batteries),
+            selected_names,
+            allocation,
+            operation_restricted,
+            charge_blocks,
+            discharge_blocks,
+            setpoints,
+        )
+
+    def _log_low_power_delivery(
+        self,
+        coordinator: MarstekVenusDataUpdateCoordinator,
+        *,
+        command: str,
+        commanded_power: float,
+        feedback: dict,
+    ) -> None:
+        """Log a compact diagnostic when ACK succeeds but delivered power is low."""
+        data = coordinator.data or {}
+        actual_power = feedback["battery_power"]
+        actual_abs = abs(actual_power)
+        threshold = max(25.0, commanded_power * 0.10)
+
+        if commanded_power < 100 or actual_abs >= threshold:
+            return
+
+        _LOGGER.debug(
+            "[%s] Power delivery low: command=%s commanded=%dW "
+            "readback(force=%d charge=%dW discharge=%dW) actual=%dW "
+            "threshold=%.0fW soc=%s%% min_soc=%d%% max_soc=%d%% inverter=%s",
+            coordinator.name,
+            command,
+            int(commanded_power),
+            feedback["force_mode"],
+            feedback["set_charge_power"],
+            feedback["set_discharge_power"],
+            actual_power,
+            threshold,
+            data.get("battery_soc"),
+            coordinator.min_soc,
+            coordinator.max_soc,
+            data.get("inverter_state"),
+        )
 
     async def _set_battery_power(
         self,
@@ -2725,13 +2908,31 @@ class ChargeDischargeController:
 
             if ack_ok:
                 _LOGGER.debug(
-                    "[%s] Power command ACK'd: force=%d, charge=%dW, discharge=%dW, actual=%dW",
+                    "[%s] Power ACK: requested(force=%d charge=%dW discharge=%dW) "
+                    "readback(force=%d charge=%dW discharge=%dW battery=%dW)",
                     coordinator.name,
                     expected_force_mode,
                     int(charge_power),
                     int(discharge_power),
-                    feedback["battery_power"]
+                    feedback["force_mode"],
+                    feedback["set_charge_power"],
+                    feedback["set_discharge_power"],
+                    feedback["battery_power"],
                 )
+                if charge_power > 0:
+                    self._log_low_power_delivery(
+                        coordinator,
+                        command="charge",
+                        commanded_power=charge_power,
+                        feedback=feedback,
+                    )
+                elif discharge_power > 0:
+                    self._log_low_power_delivery(
+                        coordinator,
+                        command="discharge",
+                        commanded_power=discharge_power,
+                        feedback=feedback,
+                    )
                 # Detect non-responsive battery: ACK ok but not delivering discharge power
                 if discharge_power >= 100 and charge_power == 0:
                     actual_abs = abs(feedback["battery_power"])
@@ -2755,10 +2956,16 @@ class ChargeDischargeController:
             if attempt == 0:
                 _LOGGER.warning(
                     "[%s] Power command not ACK'd (attempt 1/2), retrying. "
-                    "Expected force=%d, got=%d",
+                    "requested(force=%d charge=%dW discharge=%dW) "
+                    "readback(force=%d charge=%dW discharge=%dW battery=%dW)",
                     coordinator.name,
                     expected_force_mode,
-                    feedback["force_mode"]
+                    int(charge_power),
+                    int(discharge_power),
+                    feedback["force_mode"],
+                    feedback["set_charge_power"],
+                    feedback["set_discharge_power"],
+                    feedback["battery_power"],
                 )
 
         if not coordinator._is_shutting_down:
@@ -4328,7 +4535,8 @@ class ChargeDischargeController:
 
     async def async_update_charge_discharge(self, now=None):
         """Update the charge/discharge power of the batteries."""
-        _LOGGER.debug("ChargeDischargeController: async_update_charge_discharge started.")
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("ChargeDischargeController: async_update_charge_discharge started.")
 
         # === SHUTDOWN CHECK (absolute priority) ===
         # Skip all operations if any coordinator is shutting down (integration unloading)
@@ -4471,10 +4679,11 @@ class ChargeDischargeController:
                 and not capacity_protection_must_recheck
                 and not blocked_active_changed
             ):
-                _LOGGER.debug(
-                    "ChargeDischargeController: Sensor stale (cycle %d/%d), maintaining last command %.1fW",
-                    self._stale_cycles, self._max_stale_cycles, self.previous_power
-                )
+                if DEBUG_CONTROL_LOOP_DETAIL:
+                    _LOGGER.debug(
+                        "ChargeDischargeController: Sensor stale (cycle %d/%d), maintaining last command %.1fW",
+                        self._stale_cycles, self._max_stale_cycles, self.previous_power
+                    )
                 return
             elif capacity_protection_must_recheck:
                 _LOGGER.debug(
@@ -4503,7 +4712,7 @@ class ChargeDischargeController:
         # Use filtered sensor directly - it shows the real grid imbalance we need to correct
         sensor_actual = sensor_filtered
 
-        if len(self.sensor_history) >= self.sensor_history_size:
+        if DEBUG_CONTROL_LOOP_DETAIL and len(self.sensor_history) >= self.sensor_history_size:
             _LOGGER.debug("Sensor ready: raw=%.1fW, filtered=%.1fW", sensor_raw, sensor_filtered)
 
         # Adjust for excluded/additional devices before dynamic setpoint decisions.
@@ -4549,8 +4758,13 @@ class ChargeDischargeController:
         # CRITICAL: Check deadband on FILTERED sensor (actual grid balance) BEFORE compensation
         # Deadband is centered around the active target grid power
         if not blocked_active_changed and abs(sensor_filtered - active_target) < self.deadband:
-            _LOGGER.debug("ChargeDischargeController: Filtered sensor %.1fW within deadband ±%dW of target %dW, no action.",
-                          sensor_filtered, self.deadband, active_target)
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug(
+                    "ChargeDischargeController: Filtered sensor %.1fW within deadband of target %dW (+/-%dW), no action.",
+                    sensor_filtered,
+                    active_target,
+                    self.deadband,
+                )
             
             # Reset integral when within deadband to prevent accumulation (only if Ki > 0)
             if self.ki > 0 and self.error_integral != 0.0:
@@ -4570,8 +4784,9 @@ class ChargeDischargeController:
             _LOGGER.debug("ChargeDischargeController: No batteries configured.")
             return
 
-        _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, previous_sensor=%s, previous_power=%fW",
-                      sensor_actual, self.previous_sensor, self.previous_power)
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, previous_sensor=%s, previous_power=%fW",
+                          sensor_actual, self.previous_sensor, self.previous_power)
 
         # FIRST EXECUTION: Initialize with sensor reading
         if self.first_execution:
@@ -4643,10 +4858,17 @@ class ChargeDischargeController:
             selected_batteries = self._select_batteries_for_operation(abs(self.previous_power), available_batteries, is_charging)
             power_allocation = self._distribute_power_by_limits(abs(self.previous_power), selected_batteries, is_charging)
 
-            total_allocated = sum(power_allocation.values())
-            _LOGGER.info("ChargeDischargeController: Setting initial power to %dW across %d batteries: %s",
-                        total_allocated, len(selected_batteries),
-                        {c.name: p for c, p in power_allocation.items()})
+            self._log_power_command_plan(
+                phase="initial",
+                grid_w=sensor_actual,
+                target_w=active_target,
+                previous_power_w=0,
+                requested_power_w=self.previous_power,
+                is_charging=is_charging,
+                available_batteries=available_batteries,
+                selected_batteries=selected_batteries,
+                power_allocation=power_allocation,
+            )
 
             for coordinator in selected_batteries:
                 power = power_allocation.get(coordinator, 0)
@@ -4672,8 +4894,9 @@ class ChargeDischargeController:
 
         # SUBSEQUENT EXECUTIONS: Continue with PD control
         # Deadband was already checked on filtered sensor before compensation
-        _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, UPDATING BATTERIES!",
-                      sensor_actual)
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, UPDATING BATTERIES!",
+                          sensor_actual)
         self._refresh_effective_system_capacities()
         
         # PD CONTROLLER: Calculate adjustment based on grid imbalance relative to target
@@ -4761,13 +4984,20 @@ class ChargeDischargeController:
             # Clamp the change to maximum allowed rate
             sign = 1 if power_change > 0 else -1
             new_power = self.previous_power + (sign * self.max_power_change_per_cycle)
-            _LOGGER.info("PD: Rate limiter active - requested change %.1fW exceeds limit ±%dW, clamping to %.1fW",
-                        power_change, self.max_power_change_per_cycle, new_power - self.previous_power)
+            if self._should_log_rate_limiter(power_change):
+                _LOGGER.info(
+                    "PD rate limiter: requested_change=%.1fW limit=+/-%.0fW applied_change=%.1fW",
+                    power_change,
+                    self.max_power_change_per_cycle,
+                    new_power - self.previous_power,
+                )
         else:
+            self._clear_rate_limiter_state()
             new_power = new_power_raw
         
-        _LOGGER.debug("PD: Adjustment=%.1fW, Previous power=%.1fW, New target=%.1fW",
-                     pd_adjustment, self.previous_power, new_power)
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("PD: Adjustment=%.1fW, Previous power=%.1fW, New target=%.1fW",
+                         pd_adjustment, self.previous_power, new_power)
         
         # DIRECTIONAL HYSTERESIS: Prevent rapid switching between charge/discharge
         # If we're changing direction, the new power must overcome the hysteresis threshold
@@ -4809,12 +5039,14 @@ class ChargeDischargeController:
             else:
                 integral_percent = 0
             
-            _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, I=%.1fW (%.0f%%), D=%.1fW, Adjustment=%.1fW, New=%.1fW",
-                          error, P, I, integral_percent, D, pd_adjustment, new_power)
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, I=%.1fW (%.0f%%), D=%.1fW, Adjustment=%.1fW, New=%.1fW",
+                              error, P, I, integral_percent, D, pd_adjustment, new_power)
         else:
             # Integral disabled - simpler log
-            _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, D=%.1fW, Adjustment=%.1fW, New=%.1fW",
-                          error, P, D, pd_adjustment, new_power)
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, D=%.1fW, Adjustment=%.1fW, New=%.1fW",
+                              error, P, D, pd_adjustment, new_power)
         
         # Determine if charging or discharging (before applying restrictions)
         is_charging = new_power > 0
@@ -4892,8 +5124,9 @@ class ChargeDischargeController:
             elif new_power < -max_total_discharge:
                 new_power = -max_total_discharge
         
-        _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, previous_power=%fW, new_power=%fW (available: %d batteries)",
-                     sensor_actual, self.previous_power, new_power, len(available_batteries))
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, previous_power=%fW, new_power=%fW (available: %d batteries)",
+                         sensor_actual, self.previous_power, new_power, len(available_batteries))
 
         # GRID-AT-MIN-SOC ACCUMULATOR: track grid import that the battery couldn't cover
         # Conditions:
@@ -4938,10 +5171,18 @@ class ChargeDischargeController:
         selected_batteries = self._select_batteries_for_operation(abs(new_power), available_batteries, is_charging)
         power_allocation = self._distribute_power_by_limits(abs(new_power), selected_batteries, is_charging)
 
-        total_allocated = sum(power_allocation.values())
-        _LOGGER.debug("ChargeDischargeController: Setting power to %dW total across %d batteries: %s",
-                      total_allocated, len(selected_batteries),
-                      {c.name: p for c, p in power_allocation.items()})
+        self._log_power_command_plan(
+            phase="pd",
+            grid_w=sensor_actual,
+            target_w=active_target,
+            previous_power_w=self.previous_power,
+            requested_power_w=new_power,
+            is_charging=is_charging,
+            available_batteries=available_batteries,
+            selected_batteries=selected_batteries,
+            power_allocation=power_allocation,
+            operation_restricted=operation_restricted,
+        )
 
         # Write to selected batteries
         for coordinator in selected_batteries:
@@ -5009,14 +5250,17 @@ class ChargeDischargeController:
                 # This ensures we only track sign changes that matter (outside deadband)
             self.previous_error = error
             self.last_output_sign = current_output_sign
-            _LOGGER.debug("ChargeDischargeController: PD state updated - previous_error=%.1fW, error_sign=%d, output_sign=%d",
-                         self.previous_error, self.last_error_sign, self.last_output_sign)
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD state updated - previous_error=%.1fW, error_sign=%d, output_sign=%d",
+                             self.previous_error, self.last_error_sign, self.last_output_sign)
         else:
             # Controller is paused by restrictions - DO NOT update error tracking
             # This prevents false oscillation detection from natural load fluctuations
-            _LOGGER.debug("ChargeDischargeController: PD state FROZEN (restricted) - error tracking paused to prevent false oscillation warnings")
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD state FROZEN (restricted) - error tracking paused to prevent false oscillation warnings")
         
-        _LOGGER.debug("ChargeDischargeController: async_update_charge_discharge finished.")
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("ChargeDischargeController: async_update_charge_discharge finished.")
 
 
 async def _restore_consumption_history(hass: HomeAssistant, entry: ConfigEntry, controller: ChargeDischargeController) -> None:

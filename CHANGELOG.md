@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.8.2] - 2026-05-15
+
+### Added
+- **High-SOC charge taper (Still under testing)**: During any charge, the controller now caps each battery's charge allocation to 500 W from 95% SOC and 100 W from 98% SOC, while still respecting the existing per-battery and system power limits.
+
+### Changed
+- **Cleaner debug logging for polling and Modbus reads**: Normal debug logs no longer emit one line per skipped sensor, disabled entity, raw Modbus register read, or unchanged aggregate power calculation. Coordinator polling now produces compact per-cycle summaries, while maintainer-level raw Modbus and per-sensor detail remain available behind internal debug switches.
+- **More useful power-control debug summaries**: The PD controller now logs a single `Power plan` line with the control mode, grid reading, target, error, previous/requested/allocated power, selected batteries, allocation, active charge/discharge blockers, and active setpoint offsets/overrides. Per-battery writes now include explicit requested-vs-readback ACK details for force mode, charge power, discharge power, and reported battery power.
+- **Reduced repeated rate-limiter noise**: The PD rate-limiter message is now emitted only when limiting first becomes active, changes direction, or the requested change materially changes, instead of repeating every stable control cycle under sustained surplus or demand.
+
 ## [1.8.1] - 2026-05-12
 
 ### ⚠️ Breaking Change — Dynamic Pricing discharge threshold priority

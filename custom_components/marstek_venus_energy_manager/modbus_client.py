@@ -11,6 +11,8 @@ from typing import Optional
 
 import logging
 
+from .const import DEBUG_RAW_MODBUS_READS
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -246,16 +248,16 @@ class MarstekModbusClient:
                         )
                 else:
                     regs = result.registers
-                    _LOGGER.debug(
-                        "Requesting register %d (0x%04X) for sensor '%s' (type: %s, count: %s)",
-                        register,
-                        register,
-                        sensor_key or 'unknown',
-                        data_type,
-                        count,
-                    )
-                    _LOGGER.debug("Received data from register %d (0x%04X): %s", register, register, regs)
-                    _LOGGER.debug("Raw value for register %d (0x%04X): %s", register, register, regs[0] if regs else None)
+                    if DEBUG_RAW_MODBUS_READS:
+                        _LOGGER.debug(
+                            "Modbus read %s: register=%d/0x%04X type=%s count=%s raw=%s",
+                            sensor_key or "unknown",
+                            register,
+                            register,
+                            data_type,
+                            count,
+                            regs,
+                        )
 
                     if data_type == "int16":
                         val = regs[0]
@@ -381,7 +383,8 @@ class MarstekModbusClient:
             # Let pymodbus handle connection issues
 
             try:
-                _LOGGER.debug("Writing value %s to register %d (0x%04X)", value, register, register)
+                if DEBUG_RAW_MODBUS_READS:
+                    _LOGGER.debug("Modbus write: register=%d/0x%04X value=%s", register, register, value)
                 result = await asyncio.wait_for(
                     self.client.write_register(address=register, value=value),
                     timeout=self._timeout,
