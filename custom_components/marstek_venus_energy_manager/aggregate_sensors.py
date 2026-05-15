@@ -11,7 +11,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS
+from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 
@@ -238,8 +238,12 @@ class MarstekVenusAggregateSensor(SensorEntity):
                         has_data = True
 
         # Debug logging to see what's being summed
-        if ac_powers:
-            _LOGGER.debug(f"System Discharge Power calculation: {', '.join(ac_powers)} → Total: {total_power}W")
+        if DEBUG_POLL_SENSOR_VALUES and ac_powers:
+            _LOGGER.debug(
+                "System discharge power calculation: %s -> total=%sW",
+                ", ".join(ac_powers),
+                total_power,
+            )
 
         if not has_data:
             return 0  # Return 0 instead of None when not discharging

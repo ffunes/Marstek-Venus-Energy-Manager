@@ -2,6 +2,14 @@
 
 DOMAIN = "marstek_venus_energy_manager"
 
+# Internal debug switches for maintainer-level troubleshooting.
+# Keep these disabled for normal Home Assistant debug logging; enabling them can
+# generate very large logs on systems with fast polling or multiple batteries.
+DEBUG_RAW_MODBUS_READS = False
+DEBUG_POLL_SENSOR_SKIPS = False
+DEBUG_POLL_SENSOR_VALUES = False
+DEBUG_CONTROL_LOOP_DETAIL = False
+
 SCAN_INTERVAL = {
     "high": 2,       # fast-changing sensors, e.g., power, alarms
     "medium": 5,     # moderately changing sensors, e.g., voltage, current
