@@ -45,6 +45,8 @@ Select how many Marstek Venus units you have (1–6). The integration will ask y
 
 Max/min SOC and max charge/discharge power values can be adjusted at any time using the integration's sliders without reconfiguring. Changes are persisted and restored on every Home Assistant restart.
 
+If you raise a battery's **Max SOC** to `100 %`, that battery runs the same active top-balancing profile used by the weekly full charge once it reaches the top. This is evaluated per battery and uses 90 W charge, 30 W hold charge and 30 W discharge micro-cycles based on `max_cell_voltage`. See [Cell balance monitor](../features/cell-balance-monitor.md#active-top-balancing-profile) for the exact entry and exit conditions.
+
 ![SOC and power sliders](../assets/screenshots/configuration/battery-runtime-sliders.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ---

@@ -47,7 +47,9 @@
           "max_soc": "SOC máximo (%)",
           "min_soc": "SOC mínimo de descarga (%)",
           "enable_charge_hysteresis": "Activar histéresis de carga",
-          "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
+          "charge_hysteresis_percent": "Porcentaje de histéresis (%)",
+          "full_charge_voltage_taper_enabled": "Activar reduccion por voltaje al cargar al 100%",
+          "active_balance_mode_enabled": "Activar modo de balanceo activo 48h"
         },
         "data_description": {
           "max_charge_power": "Potencia máxima permitida para cargar la batería",
@@ -55,7 +57,9 @@
           "max_soc": "Estado de carga máximo (80-100%) - la batería no cargará por encima de este valor",
           "min_soc": "Estado de carga mínimo para descarga (12-30%) - la batería no descargará por debajo de este valor",
           "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",
-          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%"
+          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%",
+          "full_charge_voltage_taper_enabled": "Cuando el objetivo es 100%, limita la carga a 200 W desde 3.45 V de celda maxima y a 100 W desde 3.53 V. No cambia la potencia del balanceo activo.",
+          "active_balance_mode_enabled": "Activa el modo de balanceo activo de 48 h en esta batería. Mientras esté ON la batería queda excluida del control PD normal. El switch se apaga automáticamente al terminar (delta razonable o timeout 48 h). Combínalo con una automatización para programarlo el día y hora que prefieras."
         }
       },
       "time_slots": {
@@ -273,7 +277,9 @@
           "max_soc": "SOC máximo (%)",
           "min_soc": "SOC mínimo de descarga (%)",
           "enable_charge_hysteresis": "Activar histéresis de carga",
-          "charge_hysteresis_percent": "Porcentaje de histéresis (%)"
+          "charge_hysteresis_percent": "Porcentaje de histéresis (%)",
+          "full_charge_voltage_taper_enabled": "Activar reduccion por voltaje al cargar al 100%",
+          "active_balance_mode_enabled": "Activar modo de balanceo activo 48h"
         },
         "data_description": {
           "max_charge_power": "Potencia máxima permitida para cargar la batería",
@@ -281,7 +287,9 @@
           "max_soc": "Estado de carga máximo (80-100%)",
           "min_soc": "Estado de carga mínimo para descarga (12-30%)",
           "enable_charge_hysteresis": "Evita que la batería cargue cuando está cerca del SOC máximo",
-          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%"
+          "charge_hysteresis_percent": "La batería no cargará hasta que el SOC baje a (max_soc - histéresis). Ej: SOC max 100% con 5% histéresis = no carga hasta 95%",
+          "full_charge_voltage_taper_enabled": "Cuando el objetivo es 100%, limita la carga a 200 W desde 3.45 V de celda maxima y a 100 W desde 3.53 V. No cambia la potencia del balanceo activo.",
+          "active_balance_mode_enabled": "Activa el modo de balanceo activo de 48 h en esta batería. Mientras esté ON la batería queda excluida del control PD normal. El switch se apaga automáticamente al terminar (delta razonable o timeout 48 h). Combínalo con una automatización para programarlo el día y hora que prefieras."
         }
       },
       "time_slots": {

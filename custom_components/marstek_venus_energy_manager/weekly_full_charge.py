@@ -20,7 +20,20 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN, WEEKDAY_MAP
+from .const import (
+    ACTIVE_BALANCE_CHARGE_POWER_W,
+    ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE,
+    ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_DISCHARGE_POWER_W,
+    ACTIVE_BALANCE_BMS_CUTOFF_DISCHARGE_CELL_VOLTAGE,
+    ACTIVE_BALANCE_DISCHARGE_START_CELL_VOLTAGE,
+    ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_HOLD_CHARGE_POWER_W,
+    ACTIVE_BALANCE_HOLD_CHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_WEEKLY_SECONDS,
+    DOMAIN,
+    WEEKDAY_MAP,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -54,6 +67,8 @@ class WeeklyFullChargeManager:
         self._store = Store(hass, 1, f"{DOMAIN}.{config_entry.entry_id}.weekly_charge_state")
         # Per-battery debounce counter for BMS-cutoff detection (in-memory only).
         self._bms_cutoff_counts: dict[str, int] = {}
+        self._balance_phases: dict[str, str] = {}
+        self._balance_started_ts: str | None = None
 
     @property
     def store(self) -> Store:
@@ -150,9 +165,16 @@ class WeeklyFullChargeManager:
                 _LOGGER.info("Weekly Full Charge: Exited %s, resetting flags for next week",
                             ctrl.weekly_full_charge_day.upper())
                 ctrl.weekly_full_charge_complete = False
+                ctrl.weekly_full_charge_top_reached = False
                 ctrl.weekly_full_charge_registers_written = False
                 ctrl._force_full_charge = False
+                self._balance_phases.clear()
+                self._balance_started_ts = None
                 ctrl._weekly_charge_status["state"] = "Idle"
+                ctrl._weekly_charge_status.pop("completion_reason", None)
+                ctrl._weekly_charge_status.pop("active_balancing", None)
+                ctrl._weekly_charge_status.pop("active_balance_elapsed_h", None)
+                ctrl._weekly_charge_status.pop("active_balance_target_h", None)
                 # Save the cleared state asynchronously (don't await to avoid blocking)
                 asyncio.create_task(self.save_state())
 
@@ -200,7 +222,10 @@ class WeeklyFullChargeManager:
             # completion from being incorrectly restored on the same weekday next week)
             if stored_date == today_iso:
                 ctrl.weekly_full_charge_complete = data.get("complete", False)
+                ctrl.weekly_full_charge_top_reached = data.get("top_reached", False)
                 ctrl.weekly_full_charge_registers_written = data.get("registers_written", False)
+                self._balance_phases = data.get("balance_phases", {}) or {}
+                self._balance_started_ts = data.get("balance_started_ts")
                 # Restore visible status so the sensor reflects the correct state immediately.
                 # (handle_registers() will also correct it on the next tick, but this avoids
                 # a transient "Idle" flash and is correct for the "Complete" case too.)
@@ -210,9 +235,14 @@ class WeeklyFullChargeManager:
                 # Restore delay state
                 ctrl._charge_delay_unlocked = data.get("delay_unlocked", False)
                 ctrl._solar_t_start = data.get("solar_t_start")
-                _LOGGER.info("Weekly Full Charge: Restored state - complete=%s, registers_written=%s, delay_unlocked=%s",
-                            ctrl.weekly_full_charge_complete, ctrl.weekly_full_charge_registers_written,
-                            ctrl._charge_delay_unlocked)
+                _LOGGER.info(
+                    "Weekly Full Charge: Restored state - complete=%s, top_reached=%s, "
+                    "registers_written=%s, delay_unlocked=%s",
+                    ctrl.weekly_full_charge_complete,
+                    ctrl.weekly_full_charge_top_reached,
+                    ctrl.weekly_full_charge_registers_written,
+                    ctrl._charge_delay_unlocked,
+                )
             else:
                 _LOGGER.debug("Weekly Full Charge: Stored state is from %s, today is %s - ignoring",
                               stored_date, today_iso)
@@ -230,8 +260,11 @@ class WeeklyFullChargeManager:
             now = datetime.now()
             data = {
                 "complete": ctrl.weekly_full_charge_complete,
+                "top_reached": ctrl.weekly_full_charge_top_reached,
                 "registers_written": ctrl.weekly_full_charge_registers_written,
                 "state": ctrl._weekly_charge_status.get("state", "Idle"),
+                "balance_started_ts": self._balance_started_ts,
+                "balance_phases": dict(self._balance_phases),
                 "date": date.today().isoformat(),
                 "timestamp": now.isoformat(),
                 # Delay state (bundled in the same store for legacy reasons)
@@ -266,6 +299,8 @@ class WeeklyFullChargeManager:
         if ctrl._weekly_charge_needs_restore:
             _LOGGER.info("Weekly Full Charge: Restoring hardware cutoff registers after mid-charge abort")
             for coordinator in ctrl.coordinators:
+                if ctrl._is_active_balance_mode_running(coordinator):
+                    continue
                 cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
                 if ctrl._is_backup_function_active(coordinator):
                     continue
@@ -287,7 +322,14 @@ class WeeklyFullChargeManager:
                     _LOGGER.error("%s: Failed to restore charging cutoff register: %s", coordinator.name, e)
             ctrl._weekly_charge_saved_max_soc.clear()
             ctrl._weekly_charge_needs_restore = False
+            ctrl.weekly_full_charge_top_reached = False
+            self._balance_phases.clear()
+            self._balance_started_ts = None
             ctrl._weekly_charge_status["state"] = "Idle"
+            ctrl._weekly_charge_status.pop("active_balancing", None)
+            ctrl._weekly_charge_status.pop("completion_reason", None)
+            ctrl._weekly_charge_status.pop("active_balance_elapsed_h", None)
+            ctrl._weekly_charge_status.pop("active_balance_target_h", None)
 
         if not ctrl.weekly_full_charge_enabled and not ctrl._force_full_charge:
             return
@@ -314,6 +356,8 @@ class WeeklyFullChargeManager:
             else:
                 _LOGGER.info("Weekly Full Charge: Activating for compatible batteries")
             for coordinator in ctrl.coordinators:
+                if ctrl._is_active_balance_mode_running(coordinator):
+                    continue
                 cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
 
                 if ctrl._is_backup_function_active(coordinator):
@@ -345,61 +389,310 @@ class WeeklyFullChargeManager:
 
             ctrl.weekly_full_charge_registers_written = True
             ctrl._weekly_charge_status["state"] = "Charging to 100%"
+            ctrl._weekly_charge_status.pop("completion_reason", None)
+            ctrl._weekly_charge_status.pop("active_balancing", None)
+            ctrl._weekly_charge_status.pop("active_balance_elapsed_h", None)
+            ctrl._weekly_charge_status.pop("active_balance_target_h", None)
             # Persist state so that the next restart can restore both registers_written
             # and the status field immediately.
             asyncio.create_task(self.save_state())
 
-        # Check if all batteries reached 100% or BMS cut off at >= 99%
-        all_batteries_full = all(
+        # Check if all batteries reached the top. This starts active cell
+        # balancing; completion is handled after the cells converge.
+        batteries_with_data = [
+            c
+            for c in ctrl.coordinators
+            if c.data and not ctrl._is_active_balance_mode_running(c)
+        ]
+        all_batteries_full = bool(batteries_with_data) and all(
             self.is_battery_full(c)
-            for c in ctrl.coordinators if c.data
+            for c in batteries_with_data
         )
 
-        if all_batteries_full and not ctrl.weekly_full_charge_complete:
-            # All batteries just reached 100% (or BMS cut off at 99%) - mark as complete
-            _LOGGER.info("Weekly Full Charge: Complete - reverting to configured limits")
-            ctrl.weekly_full_charge_complete = True
-            ctrl._weekly_charge_status["state"] = "Complete"
+        if (
+            all_batteries_full
+            and not ctrl.weekly_full_charge_complete
+            and not ctrl.weekly_full_charge_top_reached
+        ):
+            ctrl.weekly_full_charge_top_reached = True
+            self._balance_started_ts = datetime.now().isoformat()
+            self._balance_phases = {
+                c.host: "HOLD"
+                for c in ctrl.coordinators
+                if c.data and not ctrl._is_active_balance_mode_running(c)
+            }
+            ctrl._weekly_charge_status["state"] = "Active balancing"
+            ctrl._weekly_charge_status.pop("completion_reason", None)
             self._bms_cutoff_counts.clear()
-
-            # Restore register 44000 to original max_soc values (v2 only)
-            for coordinator in ctrl.coordinators:
-                cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
-
-                if ctrl._is_backup_function_active(coordinator):
-                    _LOGGER.debug("%s: Skipping cutoff restore - backup function is active", coordinator.name)
-                    continue
-
-                if cutoff_reg is None:
-                    _LOGGER.debug("%s: No hardware cutoff register to restore (v3 battery)", coordinator.name)
-                    # v3: software enforcement automatically reverts to max_soc
-                    continue
-
-                # v2: restore hardware register
-                try:
-                    original_max_soc = ctrl._weekly_charge_saved_max_soc.get(
-                        coordinator.name, coordinator.max_soc
-                    )
-                    max_soc_value = int(original_max_soc / 0.1)  # Convert to register value
-                    await coordinator.write_register(cutoff_reg, max_soc_value, do_refresh=False)
-                    await asyncio.sleep(0.1)
-                    _LOGGER.debug("%s: Restored hardware cutoff to %d%% (reg=%d)",
-                                coordinator.name, original_max_soc, max_soc_value)
-                except Exception as e:
-                    _LOGGER.error("%s: Failed to restore charging cutoff register: %s", coordinator.name, e)
-
-            ctrl._weekly_charge_saved_max_soc.clear()
-
-            # Re-enable hysteresis for batteries that have it configured
-            for coordinator in ctrl.coordinators:
-                if coordinator.enable_charge_hysteresis:
-                    coordinator._hysteresis_active = True
-                    # Set base SOC to current level (~100% after full charge) so the threshold
-                    # is "actual peak SOC - hysteresis" (e.g. 90%), not "max_soc - hysteresis" (e.g. 70%)
-                    current_soc = coordinator.data.get("battery_soc", 100) if coordinator.data else 100
-                    coordinator._hysteresis_base_soc = current_soc
-                    _LOGGER.debug("%s: Re-enabled hysteresis after weekly full charge (base SOC: %.1f%%)",
-                                  coordinator.name, coordinator._hysteresis_base_soc)
-
-            # Persist the completion state so it survives HA restarts
+            _LOGGER.info(
+                "Weekly Full Charge: all batteries reached the top - starting active cell balancing"
+            )
             await self.save_state()
+
+    def _weekly_balance_elapsed_seconds(self) -> float:
+        """Return elapsed seconds since weekly active balancing started."""
+        if not self._balance_started_ts:
+            return 0.0
+        try:
+            started = datetime.fromisoformat(self._balance_started_ts)
+        except (TypeError, ValueError):
+            return 0.0
+        return max(0.0, (datetime.now() - started).total_seconds())
+
+    async def handle_active_balancing(self) -> bool:
+        """Run active top-balancing micro-cycles after the weekly charge reaches 100%.
+
+        Returns True when this manager took over the control loop for this cycle.
+        """
+        ctrl = self._controller
+        if (
+            not ctrl.weekly_full_charge_enabled
+            and not ctrl._force_full_charge
+        ):
+            return False
+        if (
+            ctrl.weekly_full_charge_complete
+            or not ctrl.weekly_full_charge_top_reached
+            or not self.is_active()
+        ):
+            return False
+
+        elapsed = self._weekly_balance_elapsed_seconds()
+        if elapsed >= ACTIVE_BALANCE_WEEKLY_SECONDS:
+            await self._complete_weekly_charge("active_balance_4h_complete")
+            return True
+
+        missing_cell_data = False
+        status: dict[str, dict[str, Any]] = {}
+
+        for coordinator in ctrl.coordinators:
+            data = coordinator.data or {}
+            if ctrl._is_active_balance_mode_running(coordinator):
+                continue
+            if not data:
+                continue
+
+            vmax = data.get("max_cell_voltage")
+            vmin = data.get("min_cell_voltage")
+            if vmax is None or vmin is None:
+                missing_cell_data = True
+                status[coordinator.name] = {
+                    "phase": "waiting_for_cell_voltage",
+                    "charge_w": 0,
+                    "discharge_w": 0,
+                }
+                await ctrl._set_battery_power(coordinator, 0, 0)
+                continue
+
+            try:
+                vmax_f = float(vmax)
+                vmin_f = float(vmin)
+            except (TypeError, ValueError):
+                missing_cell_data = True
+                status[coordinator.name] = {
+                    "phase": "waiting_for_cell_voltage",
+                    "charge_w": 0,
+                    "discharge_w": 0,
+                }
+                await ctrl._set_battery_power(coordinator, 0, 0)
+                continue
+
+            delta_mv = (vmax_f - vmin_f) * 1000
+            previous_phase = self._balance_phases.get(coordinator.host, "HOLD")
+            phase = previous_phase
+            charge_power = 0
+            discharge_power = 0
+            soc = data.get("battery_soc")
+            power = data.get("battery_power")
+            inv_state = data.get("inverter_state")
+            try:
+                bms_cutoff = (
+                    vmax_f >= ACTIVE_BALANCE_BMS_CUTOFF_DISCHARGE_CELL_VOLTAGE
+                    and phase in {"CHARGE", "HOLD"}
+                    and soc is not None
+                    and float(soc) >= 95
+                    and power is not None
+                    and abs(float(power)) <= 10
+                    and inv_state == _INVERTER_STATE_STANDBY
+                )
+            except (TypeError, ValueError):
+                bms_cutoff = False
+            try:
+                bms_full_lockout = (
+                    vmax_f > ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE
+                    and phase == "HOLD"
+                    and soc is not None
+                    and float(soc) >= 99
+                    and power is not None
+                    and abs(float(power)) <= 10
+                    and inv_state == _INVERTER_STATE_STANDBY
+                )
+            except (TypeError, ValueError):
+                bms_full_lockout = False
+
+            if phase == "DISCHARGE" and vmax_f > ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE:
+                discharge_power = ACTIVE_BALANCE_DISCHARGE_POWER_W
+            elif (
+                vmax_f >= ACTIVE_BALANCE_DISCHARGE_START_CELL_VOLTAGE
+                or bms_cutoff
+                or bms_full_lockout
+            ):
+                phase = "DISCHARGE"
+                discharge_power = ACTIVE_BALANCE_DISCHARGE_POWER_W
+            elif phase == "CHARGE" and vmax_f < ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE:
+                charge_power = ACTIVE_BALANCE_CHARGE_POWER_W
+            elif vmax_f <= ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE:
+                phase = "CHARGE"
+                charge_power = ACTIVE_BALANCE_CHARGE_POWER_W
+            elif vmax_f < ACTIVE_BALANCE_HOLD_CHARGE_STOP_CELL_VOLTAGE:
+                # HOLD zone: keep 30W charge until vmax reaches HOLD_CHARGE_STOP (3.59 V).
+                # Covers vmax dropping back below CHARGE_STOP (3.53 V) after the BMS rejects
+                # the hold charge — otherwise the controller would stall at 0 W until vmax
+                # relaxed all the way to CHARGE_RESUME (3.45 V).
+                phase = "HOLD"
+                charge_power = ACTIVE_BALANCE_HOLD_CHARGE_POWER_W
+            else:
+                # 3.59 V <= vmax < 3.62 V: idle window before DISCHARGE_START kicks in.
+                phase = "HOLD"
+
+            self._balance_phases[coordinator.host] = phase
+            status[coordinator.name] = {
+                "phase": phase.lower(),
+                "max_cell_voltage": round(vmax_f, 3),
+                "min_cell_voltage": round(vmin_f, 3),
+                "delta_mV": round(delta_mv, 1),
+                "charge_w": charge_power,
+                "discharge_w": discharge_power,
+                "bms_cutoff": bms_cutoff,
+                "bms_full_lockout": bms_full_lockout,
+            }
+
+            await ctrl._set_battery_power(
+                coordinator,
+                charge_power,
+                discharge_power,
+                ignore_charge_blockers={
+                    "charge_delay",
+                    "time_slot_charge",
+                    "max_soc",
+                    "charge_hysteresis",
+                    "normal_balance_pause",
+                    "normal_balance_daily_limit",
+                    "user_battery_charge_disabled",
+                    "ev_pause",
+                },
+                ignore_discharge_blockers={
+                    "time_slot_discharge",
+                    "price_discharge",
+                    "min_soc",
+                    "user_battery_discharge_disabled",
+                    "ev_pause",
+                    "ev_charging",
+                },
+            )
+
+            if (
+                phase == "DISCHARGE"
+                and previous_phase in {"CHARGE", "HOLD"}
+                and getattr(ctrl, "_balance_monitor", None) is not None
+            ):
+                await ctrl._balance_monitor.async_record_active_balance_transition(
+                    coordinator,
+                    vmax_f,
+                    vmin_f,
+                    soc,
+                    previous_phase,
+                    phase,
+                )
+
+        ctrl._weekly_charge_status["state"] = "Active balancing"
+        ctrl._weekly_charge_status["active_balancing"] = status
+        ctrl._weekly_charge_status["active_balance_elapsed_h"] = round(elapsed / 3600, 2)
+        ctrl._weekly_charge_status["active_balance_target_h"] = round(
+            ACTIVE_BALANCE_WEEKLY_SECONDS / 3600,
+            2,
+        )
+
+        if missing_cell_data:
+            _LOGGER.warning(
+                "Weekly Full Charge: cell-voltage data unavailable during active balancing; "
+                "holding output at 0W for affected batteries until data returns or 4h elapse"
+            )
+
+        await self.save_state()
+        return True
+
+    async def _complete_weekly_charge(self, reason: str) -> None:
+        """Mark weekly full charge complete and restore configured limits."""
+        ctrl = self._controller
+        _LOGGER.info("Weekly Full Charge: Complete (%s) - reverting to configured limits", reason)
+        ctrl.weekly_full_charge_complete = True
+        ctrl.weekly_full_charge_top_reached = False
+        ctrl._weekly_charge_status["state"] = "Complete"
+        ctrl._weekly_charge_status["completion_reason"] = reason
+        ctrl._weekly_charge_status.pop("active_balancing", None)
+        ctrl._weekly_charge_status.pop("active_balance_elapsed_h", None)
+        ctrl._weekly_charge_status.pop("active_balance_target_h", None)
+        self._bms_cutoff_counts.clear()
+        self._balance_phases.clear()
+        self._balance_started_ts = None
+
+        for coordinator in ctrl.coordinators:
+            if ctrl._is_active_balance_mode_running(coordinator):
+                continue
+            await ctrl._set_battery_power(coordinator, 0, 0)
+
+        # Restore register 44000 to original max_soc values (v2 only).
+        for coordinator in ctrl.coordinators:
+            if ctrl._is_active_balance_mode_running(coordinator):
+                continue
+            cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
+
+            if ctrl._is_backup_function_active(coordinator):
+                _LOGGER.debug("%s: Skipping cutoff restore - backup function is active", coordinator.name)
+                continue
+
+            if cutoff_reg is None:
+                _LOGGER.debug("%s: No hardware cutoff register to restore (v3 battery)", coordinator.name)
+                continue
+
+            try:
+                original_max_soc = ctrl._weekly_charge_saved_max_soc.get(
+                    coordinator.name, coordinator.max_soc
+                )
+                max_soc_value = int(original_max_soc / 0.1)
+                await coordinator.write_register(cutoff_reg, max_soc_value, do_refresh=False)
+                await asyncio.sleep(0.1)
+                _LOGGER.debug("%s: Restored hardware cutoff to %d%% (reg=%d)",
+                              coordinator.name, original_max_soc, max_soc_value)
+            except Exception as e:
+                _LOGGER.error("%s: Failed to restore charging cutoff register: %s", coordinator.name, e)
+
+        ctrl._weekly_charge_saved_max_soc.clear()
+
+        # Re-enable hysteresis for batteries that have it configured.
+        for coordinator in ctrl.coordinators:
+            if ctrl._is_active_balance_mode_running(coordinator):
+                continue
+            if coordinator.enable_charge_hysteresis:
+                coordinator._hysteresis_active = True
+                current_soc = coordinator.data.get("battery_soc", 100) if coordinator.data else 100
+                coordinator._hysteresis_base_soc = current_soc
+                _LOGGER.debug(
+                    "%s: Re-enabled hysteresis after weekly full charge (base SOC: %.1f%%)",
+                    coordinator.name,
+                    coordinator._hysteresis_base_soc,
+                )
+
+        await self.save_state()
+
+    def get_active_balance_status(self) -> dict[str, Any]:
+        """Return diagnostics for the current weekly active-balancing phase."""
+        return {
+            "active": self._controller.weekly_full_charge_top_reached,
+            "started": self._balance_started_ts,
+            "elapsed_h": round(self._weekly_balance_elapsed_seconds() / 3600, 2),
+            "target_h": round(ACTIVE_BALANCE_WEEKLY_SECONDS / 3600, 2),
+            "phases": dict(self._balance_phases),
+            "batteries": dict(self._controller._weekly_charge_status.get("active_balancing", {})),
+        }

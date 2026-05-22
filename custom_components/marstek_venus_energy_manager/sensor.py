@@ -442,6 +442,7 @@ class WeeklyFullChargeSensor(SensorEntity):
             "Idle": "idle",
             "Disabled": "disabled",
             "Charging to 100%": "charging",
+            "Active balancing": "active_balancing",
             "Complete": "complete",
         }.get(state, "idle")
 
@@ -452,6 +453,12 @@ class WeeklyFullChargeSensor(SensorEntity):
             "weekly_charge_day": self._controller.weekly_full_charge_day,
             "charge_delay_enabled": self._controller.charge_delay_enabled,
         }
+        balance_status = self._controller._weekly_charge_mgr.get_active_balance_status()
+        if balance_status.get("active") or balance_status.get("batteries"):
+            attrs["active_balancing"] = balance_status
+        completion_reason = self._controller._weekly_charge_status.get("completion_reason")
+        if completion_reason:
+            attrs["completion_reason"] = completion_reason
         return attrs
 
     @property
@@ -658,6 +665,9 @@ class ConfigurationSummarySensor(SensorEntity):
                 )
             attrs[f"battery_{n}_backup_offgrid_threshold_W"] = bat.get(
                 "backup_offgrid_threshold"
+            )
+            attrs[f"battery_{n}_full_charge_voltage_taper_enabled"] = bat.get(
+                "full_charge_voltage_taper_enabled", True
             )
 
         # --- Time slots ---
@@ -951,8 +961,14 @@ class IntegrationStatusSensor(SensorEntity):
 
         # Priority 3: Weekly full charge in progress
         if c.weekly_full_charge_enabled:
-            if c._weekly_charge_status.get("state") == "Charging to 100%":
+            if c._weekly_charge_status.get("state") in ("Charging to 100%", "Active balancing"):
                 return "weekly_full_charge"
+
+        if any(
+            status.get("state") == "active"
+            for status in c.get_active_balance_mode_status().values()
+        ):
+            return "active_balance_mode"
 
         # Priority 4: Charge delay states
         if c.charge_delay_enabled:
@@ -1078,6 +1094,14 @@ class IntegrationStatusSensor(SensorEntity):
                 for entity_id, pause_until in c._ev_pause_until.items()
                 if pause_until is not None
             }
+
+        normal_balance = c.get_normal_balance_status()
+        if normal_balance:
+            attrs["normal_balance_protection"] = normal_balance
+
+        active_balance_mode = c.get_active_balance_mode_status()
+        if active_balance_mode:
+            attrs["active_balance_mode"] = active_balance_mode
 
         non_responsive = c.non_responsive_battery_names
         if non_responsive:

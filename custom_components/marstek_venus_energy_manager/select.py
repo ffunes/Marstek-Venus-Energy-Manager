@@ -142,3 +142,5 @@ class WeeklyFullChargeDaySelect(SelectEntity):
             "manufacturer": "Marstek",
             "model": "Venus Multi-Battery System",
         }
+
+

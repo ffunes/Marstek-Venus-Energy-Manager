@@ -103,6 +103,29 @@ from .const import (
     CONF_HOURLY_BALANCE_MAX_OFFSET_W,
     DEFAULT_HOURLY_BALANCE_TARGET_NET_WH,
     DEFAULT_HOURLY_BALANCE_MAX_OFFSET_W,
+    NORMAL_BALANCE_SOC_THRESHOLD,
+    NORMAL_BALANCE_TAPER_CELL_VOLTAGE,
+    NORMAL_BALANCE_SECOND_TAPER_CELL_VOLTAGE,
+    NORMAL_BALANCE_PAUSE_CELL_VOLTAGE,
+    NORMAL_BALANCE_RESUME_CELL_VOLTAGE,
+    NORMAL_BALANCE_FIRST_CHARGE_POWER_W,
+    NORMAL_BALANCE_CHARGE_POWER_W,
+    NORMAL_BALANCE_DAILY_MAX_SECONDS,
+    NORMAL_BALANCE_MAX_TICK_SECONDS,
+    ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE,
+    ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_HOLD_CHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_DISCHARGE_START_CELL_VOLTAGE,
+    ACTIVE_BALANCE_BMS_CUTOFF_DISCHARGE_CELL_VOLTAGE,
+    ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE,
+    ACTIVE_BALANCE_CHARGE_POWER_W,
+    ACTIVE_BALANCE_HOLD_CHARGE_POWER_W,
+    ACTIVE_BALANCE_DISCHARGE_POWER_W,
+    ACTIVE_BALANCE_MODE_SECONDS,
+    ACTIVE_BALANCE_MODE_TARGET_DELTA_MV,
+    CONF_ACTIVE_BALANCE_MODE_ENABLED,
+    CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+    DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     DEBUG_CONTROL_LOOP_DETAIL,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
@@ -118,8 +141,7 @@ PriceSlot = namedtuple("PriceSlot", ["start", "end", "price"])
 # Charge taper used whenever a battery is charged at high SOC.
 # Above 95% the final phase is intentionally slow to reduce BMS cutoff/float churn.
 FULL_CHARGE_TAPER_STEPS = (
-    (98, 100),
-    (95, 500),
+    (NORMAL_BALANCE_SOC_THRESHOLD, NORMAL_BALANCE_FIRST_CHARGE_POWER_W),
 )
 
 
@@ -206,6 +228,24 @@ class ChargeDischargeController:
         self._last_sensor_update_time = None    # datetime of last real sensor change (HA last_updated)
         self._stale_cycles = 0                  # consecutive cycles without sensor change
         self._max_stale_cycles = 15             # safety valve: ~30s before forcing recalculation
+
+        # Normal high-SOC charge protection. These must exist before the first
+        # capacity calculation because _battery_power_limit() reads them.
+        self._normal_balance_date = dt_util.now().date()
+        self._normal_balance_zone_seconds: dict[MarstekVenusDataUpdateCoordinator, float] = {}
+        self._normal_balance_last_tick: dict[MarstekVenusDataUpdateCoordinator, datetime] = {}
+        self._normal_balance_charge_paused: dict[MarstekVenusDataUpdateCoordinator, bool] = {}
+        self._normal_balance_voltage_tapered: dict[MarstekVenusDataUpdateCoordinator, bool] = {}
+        self._normal_active_balance_phases: dict[MarstekVenusDataUpdateCoordinator, str] = {}
+        self._active_balance_mode_phases: dict[MarstekVenusDataUpdateCoordinator, str] = {}
+        self._active_balance_mode_status: dict[str, dict] = {}
+        for coordinator in coordinators:
+            saved_phase = getattr(coordinator, "active_balance_mode_phase", None)
+            if (
+                getattr(coordinator, "active_balance_mode_started_ts", None)
+                and saved_phase in {"CHARGE", "HOLD", "DISCHARGE"}
+            ):
+                self._active_balance_mode_phases[coordinator] = saved_phase
         
         # Calculate dynamic anti-windup limits based on total system capacity
         self.max_charge_capacity = self._effective_system_capacity(coordinators, is_charging=True)
@@ -328,7 +368,8 @@ class ChargeDischargeController:
         # Weekly Full Charge state
         self.weekly_full_charge_enabled = config_entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False)
         self.weekly_full_charge_day = config_entry.data.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
-        self.weekly_full_charge_complete = False  # True when ALL batteries reach 100%
+        self.weekly_full_charge_complete = False  # True when top-balancing has completed
+        self.weekly_full_charge_top_reached = False  # True after ALL batteries first reach 100%
         self.last_checked_weekday = None  # Track day transitions for reset logic
         self.weekly_full_charge_registers_written = False  # True when register 44000 set to 100%
         self._weekly_charge_needs_restore = False  # True when day changed mid-charge and hardware restore is pending
@@ -525,6 +566,1145 @@ class ChargeDischargeController:
         """Clamp a positive direction-specific power request to available capacity."""
         return min(power, self._effective_system_capacity(batteries, is_charging))
 
+    def _normal_balance_reset_if_new_day(self) -> None:
+        """Reset normal-balance exposure counters at the local day boundary."""
+        today = dt_util.now().date()
+        if today == self._normal_balance_date:
+            return
+
+        self._normal_balance_date = today
+        self._normal_balance_zone_seconds.clear()
+        self._normal_balance_last_tick.clear()
+        self._normal_balance_charge_paused.clear()
+        self._normal_balance_voltage_tapered.clear()
+        self._normal_active_balance_phases.clear()
+        for coordinator in self.coordinators:
+            self.remove_charge_block("normal_balance_pause", coordinator=coordinator)
+            self.remove_charge_block("normal_balance_daily_limit", coordinator=coordinator)
+        _LOGGER.info("Normal Balance Protection: daily high-SOC exposure counters reset")
+
+    @staticmethod
+    def _cell_delta_mv(data: dict) -> float | None:
+        """Return current max-min cell delta in mV when both voltages are known."""
+        vmax = data.get("max_cell_voltage")
+        vmin = data.get("min_cell_voltage")
+        if vmax is None or vmin is None:
+            return None
+        try:
+            return round((float(vmax) - float(vmin)) * 1000, 1)
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _full_charge_voltage_taper_enabled(coordinator) -> bool:
+        """Return True when this battery uses full-charge voltage tapering."""
+        return bool(
+            getattr(
+                coordinator,
+                CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+                DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+            )
+        )
+
+    def _full_charge_voltage_taper_applies(self, coordinator) -> bool:
+        """Return True when the current charge target is 100%, excluding active balance ownership."""
+        if not self._full_charge_voltage_taper_enabled(coordinator):
+            return False
+        if self._is_active_balance_mode_running(coordinator):
+            return False
+        if getattr(coordinator, "active_balance_mode_enabled", False):
+            return False
+        if coordinator.max_soc >= 100:
+            return True
+        if hasattr(self, "_weekly_charge_mgr") and self._weekly_full_charge_unlocked():
+            return True
+        return False
+
+    def _normal_balance_zone_active(self, coordinator) -> bool:
+        """Return True when the battery is in the normal top-balancing zone."""
+        if not self._full_charge_voltage_taper_applies(coordinator):
+            return False
+
+        data = coordinator.data or {}
+        soc = data.get("battery_soc")
+        vmax = data.get("max_cell_voltage")
+        try:
+            if soc is not None and float(soc) >= NORMAL_BALANCE_SOC_THRESHOLD:
+                return True
+            if vmax is not None and float(vmax) >= NORMAL_BALANCE_TAPER_CELL_VOLTAGE:
+                return True
+        except (TypeError, ValueError):
+            return False
+        return False
+
+    def _normal_balance_daily_limit_reached(self, coordinator) -> bool:
+        """Return True once this battery spent the daily budget in the top zone."""
+        return (
+            self._normal_balance_zone_seconds.get(coordinator, 0.0)
+            >= NORMAL_BALANCE_DAILY_MAX_SECONDS
+        )
+
+    def _refresh_normal_balance_blocks(self) -> None:
+        """Update normal high-SOC charge protection blockers.
+
+        The normal mode does not force charging. It only limits normal charge
+        current, pauses charge if a high cell runs away, and stops extending the
+        high-SOC window after the daily exposure budget is spent.
+        """
+        now = dt_util.utcnow()
+        self._normal_balance_reset_if_new_day()
+
+        for coordinator in self.coordinators:
+            data = coordinator.data or {}
+            if not self._full_charge_voltage_taper_applies(coordinator):
+                self._normal_balance_last_tick.pop(coordinator, None)
+                self._normal_balance_charge_paused.pop(coordinator, None)
+                self._normal_balance_voltage_tapered.pop(coordinator, None)
+                self.remove_charge_block("normal_balance_pause", coordinator=coordinator)
+                self.remove_charge_block("normal_balance_daily_limit", coordinator=coordinator)
+                continue
+
+            if not data:
+                self._normal_balance_last_tick.pop(coordinator, None)
+                self._normal_balance_charge_paused.pop(coordinator, None)
+                self._normal_balance_voltage_tapered.pop(coordinator, None)
+                self.remove_charge_block("normal_balance_pause", coordinator=coordinator)
+                self.remove_charge_block("normal_balance_daily_limit", coordinator=coordinator)
+                continue
+
+            in_zone = self._normal_balance_zone_active(coordinator)
+            if in_zone:
+                last_tick = self._normal_balance_last_tick.get(coordinator)
+                if last_tick is not None:
+                    elapsed = max(0.0, (now - last_tick).total_seconds())
+                    elapsed = min(elapsed, NORMAL_BALANCE_MAX_TICK_SECONDS)
+                    self._normal_balance_zone_seconds[coordinator] = (
+                        self._normal_balance_zone_seconds.get(coordinator, 0.0) + elapsed
+                    )
+                self._normal_balance_last_tick[coordinator] = now
+            else:
+                self._normal_balance_last_tick.pop(coordinator, None)
+                self._normal_balance_voltage_tapered.pop(coordinator, None)
+
+            vmax = data.get("max_cell_voltage")
+            paused = self._normal_balance_charge_paused.get(coordinator, False)
+            if vmax is None:
+                paused = False
+            else:
+                try:
+                    vmax_f = float(vmax)
+                except (TypeError, ValueError):
+                    paused = False
+                else:
+                    if in_zone and vmax_f >= NORMAL_BALANCE_TAPER_CELL_VOLTAGE:
+                        self._normal_balance_voltage_tapered[coordinator] = True
+                    if vmax_f >= NORMAL_BALANCE_PAUSE_CELL_VOLTAGE:
+                        paused = True
+                    elif paused and vmax_f <= NORMAL_BALANCE_RESUME_CELL_VOLTAGE:
+                        paused = False
+
+            if paused:
+                self._normal_balance_charge_paused[coordinator] = True
+                self.set_charge_block(
+                    "normal_balance_pause",
+                    "cell_voltage_pause",
+                    {
+                        "battery": coordinator.name,
+                        "max_cell_voltage": vmax,
+                        "resume_voltage": NORMAL_BALANCE_RESUME_CELL_VOLTAGE,
+                        "delta_mV": self._cell_delta_mv(data),
+                    },
+                    coordinator=coordinator,
+                )
+            else:
+                self._normal_balance_charge_paused.pop(coordinator, None)
+                self.remove_charge_block("normal_balance_pause", coordinator=coordinator)
+
+            soc = data.get("battery_soc")
+            try:
+                soc_f = float(soc) if soc is not None else 0.0
+            except (TypeError, ValueError):
+                soc_f = 0.0
+
+            daily_limit_reached = (
+                in_zone
+                and soc_f >= NORMAL_BALANCE_SOC_THRESHOLD
+                and not self._weekly_full_charge_unlocked()
+                and self._normal_balance_daily_limit_reached(coordinator)
+            )
+            if daily_limit_reached:
+                self.set_charge_block(
+                    "normal_balance_daily_limit",
+                    "daily_balance_limit",
+                    {
+                        "battery": coordinator.name,
+                        "soc": soc,
+                        "max_cell_voltage": vmax,
+                        "exposure_h": round(
+                            self._normal_balance_zone_seconds.get(coordinator, 0.0) / 3600,
+                            2,
+                        ),
+                        "daily_limit_h": round(NORMAL_BALANCE_DAILY_MAX_SECONDS / 3600, 2),
+                    },
+                    coordinator=coordinator,
+                )
+            else:
+                self.remove_charge_block("normal_balance_daily_limit", coordinator=coordinator)
+
+    def get_normal_balance_status(self) -> dict:
+        """Return normal-balance diagnostics for the integration status sensor."""
+        status = {}
+        for coordinator in self.coordinators:
+            data = coordinator.data or {}
+            if not data:
+                continue
+            seconds = self._normal_balance_zone_seconds.get(coordinator, 0.0)
+            status[coordinator.name] = {
+                "enabled": self._full_charge_voltage_taper_enabled(coordinator),
+                "in_zone": self._normal_balance_zone_active(coordinator),
+                "exposure_h": round(seconds / 3600, 2),
+                "daily_limit_h": round(NORMAL_BALANCE_DAILY_MAX_SECONDS / 3600, 2),
+                "paused": self._normal_balance_charge_paused.get(coordinator, False),
+                "max_cell_voltage": data.get("max_cell_voltage"),
+                "min_cell_voltage": data.get("min_cell_voltage"),
+                "delta_mV": self._cell_delta_mv(data),
+                "voltage_taper_latched": getattr(
+                    self, "_normal_balance_voltage_tapered", {}
+                ).get(coordinator, False),
+                "active_balance_phase": getattr(
+                    self, "_normal_active_balance_phases", {}
+                ).get(coordinator),
+                "charge_limit_w": self._battery_power_limit(coordinator, True),
+            }
+        return status
+
+    def _active_balance_command_for(
+        self,
+        coordinator,
+        phase_map: dict[MarstekVenusDataUpdateCoordinator, str] | None = None,
+        allow_full_lockout_recovery: bool = True,
+    ) -> tuple[str, int, int, dict] | None:
+        """Return the 90/30/30 W active-balancing command for a battery at the top.
+
+        Callers must only invoke this once the battery is known to be in the
+        top-of-charge balancing window. Pre-top run-up is owned by the normal PD
+        loop, not by this function — ``_handle_active_balance_mode`` skips the
+        call entirely while ``top_reached`` is False.
+        """
+        data = coordinator.data or {}
+        vmax = data.get("max_cell_voltage")
+        vmin = data.get("min_cell_voltage")
+        if vmax is None or vmin is None:
+            return None
+        try:
+            vmax_f = float(vmax)
+            vmin_f = float(vmin)
+        except (TypeError, ValueError):
+            return None
+
+        delta_mv = (vmax_f - vmin_f) * 1000
+        phases = phase_map if phase_map is not None else self._normal_active_balance_phases
+        phase = phases.get(coordinator, "HOLD")
+        charge_power = 0
+        discharge_power = 0
+
+        bms_cutoff = self._active_balance_bms_cutoff_detected(
+            coordinator,
+            vmax_f,
+            phase,
+        )
+        bms_full_lockout = (
+            allow_full_lockout_recovery
+            and self._active_balance_bms_full_lockout_detected(
+                coordinator,
+                vmax_f,
+                phase,
+            )
+        )
+
+        if phase == "DISCHARGE" and vmax_f > ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE:
+            discharge_power = ACTIVE_BALANCE_DISCHARGE_POWER_W
+        elif (
+            vmax_f >= ACTIVE_BALANCE_DISCHARGE_START_CELL_VOLTAGE
+            or bms_cutoff
+            or bms_full_lockout
+        ):
+            phase = "DISCHARGE"
+            discharge_power = ACTIVE_BALANCE_DISCHARGE_POWER_W
+        elif phase == "CHARGE" and vmax_f < ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE:
+            charge_power = ACTIVE_BALANCE_CHARGE_POWER_W
+        elif vmax_f <= ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE:
+            phase = "CHARGE"
+            charge_power = ACTIVE_BALANCE_CHARGE_POWER_W
+        elif vmax_f < ACTIVE_BALANCE_HOLD_CHARGE_STOP_CELL_VOLTAGE:
+            # HOLD zone: keep 30W charge until vmax reaches HOLD_CHARGE_STOP (3.59 V).
+            # Covers vmax dropping back below CHARGE_STOP (3.53 V) after the BMS rejects
+            # the hold charge — otherwise the controller would stall at 0 W until vmax
+            # relaxed all the way to CHARGE_RESUME (3.45 V).
+            phase = "HOLD"
+            charge_power = ACTIVE_BALANCE_HOLD_CHARGE_POWER_W
+        else:
+            # 3.59 V <= vmax < 3.62 V: idle window before DISCHARGE_START kicks in.
+            phase = "HOLD"
+
+        details = {
+            "phase": phase.lower(),
+            "max_cell_voltage": round(vmax_f, 3),
+            "min_cell_voltage": round(vmin_f, 3),
+            "delta_mV": round(delta_mv, 1),
+            "charge_w": charge_power,
+            "discharge_w": discharge_power,
+            "bms_cutoff": bms_cutoff,
+            "bms_full_lockout": bms_full_lockout,
+        }
+        return phase, charge_power, discharge_power, details
+
+    def _active_balance_bms_cutoff_detected(
+        self,
+        coordinator,
+        vmax_f: float,
+        phase: str,
+    ) -> bool:
+        """Return True when BMS appears to have stopped charge near the top window."""
+        if vmax_f < ACTIVE_BALANCE_BMS_CUTOFF_DISCHARGE_CELL_VOLTAGE:
+            return False
+        if phase not in {"CHARGE", "HOLD"}:
+            return False
+        data = coordinator.data or {}
+        soc = data.get("battery_soc")
+        power = data.get("battery_power")
+        inv_state = data.get("inverter_state")
+        try:
+            return (
+                soc is not None
+                and float(soc) >= 95
+                and power is not None
+                and abs(float(power)) <= 10
+                and inv_state == 1
+            )
+        except (TypeError, ValueError):
+            return False
+
+    def _active_balance_bms_full_lockout_detected(
+        self,
+        coordinator,
+        vmax_f: float,
+        phase: str,
+    ) -> bool:
+        """Return True when the BMS still reports full after voltage has settled."""
+        if vmax_f <= ACTIVE_BALANCE_DISCHARGE_STOP_CELL_VOLTAGE:
+            return False
+        if phase != "HOLD":
+            return False
+        data = coordinator.data or {}
+        soc = data.get("battery_soc")
+        power = data.get("battery_power")
+        inv_state = data.get("inverter_state")
+        try:
+            return (
+                soc is not None
+                and float(soc) >= 99
+                and power is not None
+                and abs(float(power)) <= 10
+                and inv_state == 1
+            )
+        except (TypeError, ValueError):
+            return False
+
+    def _pd_house_demand_present(self) -> bool:
+        """Return True when the PD input indicates household/grid demand."""
+        consumption_state = self.hass.states.get(self.consumption_sensor)
+        sensor_raw = self._apply_meter_transform(consumption_state)
+        if sensor_raw is None:
+            return False
+        active_target = self.compute_active_target()
+        return sensor_raw > active_target + self.deadband
+
+    async def _handle_normal_max_soc_active_balancing(self) -> bool:
+        """Apply 90/30/30 active balancing when normal max SOC is set to 100%."""
+        if self._weekly_charge_mgr.is_active():
+            self._normal_active_balance_phases.clear()
+            return False
+
+        # Keep additive setpoint sources current before deciding whether PD
+        # really needs control back. Otherwise an hourly-balance offset can be
+        # discovered only after active balancing has already released control.
+        if self.charge_delay_enabled and self._hourly_balance_mgr is not None:
+            await self._hourly_balance_mgr.async_process()
+
+        if self.charge_delay_enabled and self._pd_house_demand_present():
+            if self._normal_active_balance_phases:
+                _LOGGER.info(
+                    "Normal max-SOC active balancing: house demand detected by PD input; "
+                    "releasing control"
+                )
+            self._normal_active_balance_phases.clear()
+            return False
+
+        active_details = {}
+        took_over = False
+        active_coordinators: set[MarstekVenusDataUpdateCoordinator] = set()
+
+        for coordinator in self.coordinators:
+            if coordinator.data is None or coordinator.max_soc < 100:
+                continue
+            if self._is_active_balance_mode_running(coordinator):
+                continue
+            if coordinator in self._normal_active_balance_phases:
+                active_coordinators.add(coordinator)
+            elif self._weekly_charge_mgr.is_battery_full(coordinator):
+                command = self._active_balance_command_for(coordinator)
+                if command is not None:
+                    active_coordinators.add(coordinator)
+
+        for coordinator in list(self._normal_active_balance_phases):
+            if coordinator not in active_coordinators:
+                self._normal_active_balance_phases.pop(coordinator, None)
+
+        for coordinator in active_coordinators:
+            command = self._active_balance_command_for(coordinator)
+            if command is None:
+                self._normal_active_balance_phases.pop(coordinator, None)
+                continue
+
+            phase, charge_power, discharge_power, details = command
+            active_details[coordinator.name] = details
+            took_over = True
+
+            self._normal_active_balance_phases[coordinator] = phase
+            await self._set_battery_power(
+                coordinator,
+                charge_power,
+                discharge_power,
+                ignore_charge_blockers={
+                    "charge_delay",
+                    "time_slot_charge",
+                    "max_soc",
+                    "charge_hysteresis",
+                    "normal_balance_pause",
+                    "normal_balance_daily_limit",
+                },
+                ignore_discharge_blockers={
+                    "time_slot_discharge",
+                    "price_discharge",
+                    "min_soc",
+                },
+            )
+
+        if active_details:
+            _LOGGER.debug("Normal max-SOC active balancing: %s", active_details)
+        return took_over
+
+    def _persist_battery_runtime_config(self, coordinator, updates: dict) -> None:
+        """Persist multiple per-battery runtime values in one config-entry write."""
+        if coordinator._config_entry is None:
+            return
+        new_data = dict(coordinator._config_entry.data)
+        batteries = [dict(b) for b in new_data.get("batteries", [])]
+        for battery in batteries:
+            if battery.get("host") == coordinator.host and battery.get("port") == coordinator.port:
+                battery.update(updates)
+                break
+        new_data["batteries"] = batteries
+        self.hass.config_entries.async_update_entry(coordinator._config_entry, data=new_data)
+
+    def _active_balance_mode_delta_mv(self, coordinator) -> float | None:
+        """Return current cell delta in mV for the scheduled active balance mode."""
+        data = coordinator.data or {}
+        vmax = data.get("max_cell_voltage")
+        vmin = data.get("min_cell_voltage")
+        if vmax is None or vmin is None:
+            return None
+        try:
+            return (float(vmax) - float(vmin)) * 1000
+        except (TypeError, ValueError):
+            return None
+
+    def _active_balance_mode_cell_values(self, coordinator) -> tuple[float | None, float | None, float | None]:
+        """Return current vmax/vmin/delta values for active-balance notifications."""
+        data = coordinator.data or {}
+        vmax = data.get("max_cell_voltage")
+        vmin = data.get("min_cell_voltage")
+        if vmax is None or vmin is None:
+            return None, None, None
+        try:
+            vmax_f = float(vmax)
+            vmin_f = float(vmin)
+        except (TypeError, ValueError):
+            return None, None, None
+        return vmax_f, vmin_f, (vmax_f - vmin_f) * 1000
+
+    def _active_balance_mode_last_recorded_delta_mv(self, coordinator) -> tuple[float | None, str]:
+        """Return the last stored cell-delta sensor value for active-balance context."""
+        try:
+            from homeassistant.helpers import entity_registry as er
+
+            registry = er.async_get(self.hass)
+            entity_id = registry.async_get_entity_id(
+                "sensor",
+                DOMAIN,
+                f"{coordinator.host}_{coordinator.port}_cell_delta",
+            )
+            if entity_id:
+                state = self.hass.states.get(entity_id)
+                if state is not None and state.state not in (None, "unknown", "unavailable"):
+                    return float(state.state), "sensor.cell_delta"
+        except (TypeError, ValueError):
+            pass
+
+        if self._balance_monitor is not None:
+            init = self._balance_monitor.get_initial_state(coordinator.host)
+            delta_mv = init.get("delta_mV")
+            if delta_mv is not None:
+                try:
+                    return float(delta_mv), "balance_monitor"
+                except (TypeError, ValueError):
+                    pass
+
+        return None, "instantaneo"
+
+    def _format_active_balance_value(self, value, unit: str, decimals: int = 1) -> str:
+        """Format optional numeric values for active-balance notifications."""
+        if value is None:
+            return "n/a"
+        try:
+            return f"{float(value):.{decimals}f} {unit}"
+        except (TypeError, ValueError):
+            return "n/a"
+
+    def _active_balance_notification_id(
+        self,
+        coordinator,
+        kind: str,
+        started_ts: str | None = None,
+        reason: str | None = None,
+    ) -> str:
+        """Build a per-run persistent notification ID for active balance events."""
+
+        def _sanitize(value: object) -> str:
+            text = str(value)
+            cleaned = "".join(ch if ch.isalnum() else "_" for ch in text)
+            return cleaned.strip("_") or "unknown"
+
+        parts = [
+            "marstek_active_balance_mode",
+            kind,
+            coordinator.host,
+            coordinator.port,
+        ]
+        if started_ts:
+            parts.append(started_ts)
+        if reason:
+            parts.append(reason)
+        return "_".join(_sanitize(part) for part in parts)
+
+    async def _dismiss_persistent_notification(self, notification_id: str) -> None:
+        """Dismiss a persistent notification if it exists."""
+        try:
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "dismiss",
+                {"notification_id": notification_id},
+            )
+        except Exception as err:
+            _LOGGER.debug(
+                "Failed to dismiss persistent notification %s: %s",
+                notification_id,
+                err,
+            )
+
+    async def _dismiss_legacy_active_balance_notifications(self, coordinator) -> None:
+        """Dismiss pre per-run active-balance notification IDs."""
+        await self._dismiss_persistent_notification(
+            f"marstek_active_balance_mode_start_{coordinator.host}_{coordinator.port}"
+        )
+        await self._dismiss_persistent_notification(
+            f"marstek_active_balance_mode_result_{coordinator.host}_{coordinator.port}"
+        )
+
+    async def _notify_active_balance_mode_started(
+        self,
+        coordinator,
+        started_ts: str,
+    ) -> None:
+        """Send a persistent notification when a scheduled balance run starts."""
+        start_vmax = getattr(coordinator, "active_balance_mode_start_max_cell_voltage", None)
+        start_vmin = getattr(coordinator, "active_balance_mode_start_min_cell_voltage", None)
+        start_delta = getattr(coordinator, "active_balance_mode_start_delta_mv", None)
+        start_delta_source = getattr(coordinator, "active_balance_mode_start_delta_source", None)
+        message = "\n".join(
+            [
+                f"🔋 Bateria: {coordinator.name}",
+                f"▶️ Inicio: {started_ts}",
+                "⏱️ Duracion maxima: 48 h",
+                f"🎯 Objetivo de delta: <= {ACTIVE_BALANCE_MODE_TARGET_DELTA_MV:.0f} mV",
+                f"📏 Delta inicial: {self._format_active_balance_value(start_delta, 'mV')}",
+                f"🧾 Fuente delta inicial: {start_delta_source or 'n/a'}",
+                f"🔺 Celda maxima inicial: {self._format_active_balance_value(start_vmax, 'V', 3)}",
+                f"🔻 Celda minima inicial: {self._format_active_balance_value(start_vmin, 'V', 3)}",
+                "",
+                "🚫 Durante la ejecucion esta bateria queda excluida del control PD normal.",
+            ]
+        )
+        try:
+            await self._dismiss_legacy_active_balance_notifications(coordinator)
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "title": f"🔋 Balanceo activo iniciado - {coordinator.name}",
+                    "message": message,
+                    "notification_id": self._active_balance_notification_id(
+                        coordinator,
+                        "start",
+                        started_ts,
+                    ),
+                },
+            )
+        except Exception as err:
+            _LOGGER.warning(
+                "%s: failed to create active balance start notification: %s",
+                coordinator.name,
+                err,
+            )
+
+    async def _notify_active_balance_mode_completed(
+        self,
+        coordinator,
+        reason: str,
+        started_ts: str | None,
+        elapsed_h: float | None,
+    ) -> None:
+        """Send a persistent notification with the scheduled balance result."""
+        reason_text = {
+            "delta_reasonable": "Delta dentro del rango razonable",
+            "timeout_48h": "Tiempo maximo de 48 h alcanzado",
+            "disabled": "Detenido por el usuario",
+        }.get(reason, reason)
+
+        final_vmax, final_vmin, final_delta = self._active_balance_mode_cell_values(coordinator)
+        start_delta = getattr(coordinator, "active_balance_mode_start_delta_mv", None)
+        start_delta_source = getattr(coordinator, "active_balance_mode_start_delta_source", None)
+        start_vmax = getattr(coordinator, "active_balance_mode_start_max_cell_voltage", None)
+        start_vmin = getattr(coordinator, "active_balance_mode_start_min_cell_voltage", None)
+        improvement = None
+        if start_delta is not None and final_delta is not None:
+            try:
+                improvement = float(start_delta) - float(final_delta)
+            except (TypeError, ValueError):
+                improvement = None
+
+        message = "\n".join(
+            [
+                f"🔋 Bateria: {coordinator.name}",
+                f"✅ Resultado: {reason_text}",
+                f"▶️ Inicio: {started_ts or 'n/a'}",
+                f"⏱️ Duracion: {self._format_active_balance_value(elapsed_h, 'h', 2)}",
+                "",
+                f"📏 Delta inicial: {self._format_active_balance_value(start_delta, 'mV')}",
+                f"🧾 Fuente delta inicial: {start_delta_source or 'n/a'}",
+                f"📉 Delta final: {self._format_active_balance_value(final_delta, 'mV')}",
+                f"📊 Mejora: {self._format_active_balance_value(improvement, 'mV')}",
+                "",
+                f"🔺 Celda maxima inicial: {self._format_active_balance_value(start_vmax, 'V', 3)}",
+                f"🔻 Celda minima inicial: {self._format_active_balance_value(start_vmin, 'V', 3)}",
+                f"🔺 Celda maxima final: {self._format_active_balance_value(final_vmax, 'V', 3)}",
+                f"🔻 Celda minima final: {self._format_active_balance_value(final_vmin, 'V', 3)}",
+            ]
+        )
+        try:
+            await self._dismiss_legacy_active_balance_notifications(coordinator)
+            if started_ts:
+                await self._dismiss_persistent_notification(
+                    self._active_balance_notification_id(
+                        coordinator,
+                        "start",
+                        started_ts,
+                    )
+                )
+            await self.hass.services.async_call(
+                "persistent_notification",
+                "create",
+                {
+                    "title": f"✅ Balanceo activo finalizado - {coordinator.name}",
+                    "message": message,
+                    "notification_id": self._active_balance_notification_id(
+                        coordinator,
+                        "result",
+                        started_ts,
+                        reason,
+                    ),
+                },
+            )
+        except Exception as err:
+            _LOGGER.warning(
+                "%s: failed to create active balance result notification: %s",
+                coordinator.name,
+                err,
+            )
+
+    def _is_active_balance_mode_running(self, coordinator) -> bool:
+        """Return True when active balance mode owns this battery's power control.
+
+        Only the post-top phase (90 W/30 W cycle) is "owning" — the pre-top run-up
+        is driven by the normal PD loop. Returning False during the pre-top phase
+        lets PD include this battery in its allocation while still benefiting from
+        the delay/SOC overrides applied by the active-balance handler.
+        """
+        if not bool(getattr(coordinator, "active_balance_mode_top_reached", False)):
+            return False
+        return bool(
+            getattr(coordinator, "active_balance_mode_started_ts", None)
+            or coordinator in self._active_balance_mode_phases
+        )
+
+    def _active_balance_mode_started(self, coordinator) -> bool:
+        """Return True when an active-balance run is in progress (any phase)."""
+        return bool(getattr(coordinator, "active_balance_mode_started_ts", None))
+
+    def get_active_balance_mode_status(self) -> dict:
+        """Return diagnostic status for the per-battery 48h balance mode."""
+        return dict(self._active_balance_mode_status)
+
+    async def _apply_active_balance_mode_cutoff(self, coordinator) -> None:
+        """Temporarily raise the hardware charge cutoff and software max_soc to 100%.
+
+        Bumps both:
+          * Hardware register (v2 only): so the BMS itself allows charging to 100%.
+          * Software ``coordinator.max_soc``: so the PD loop is allowed to drive
+            this battery to the top during the pre-top run-up. Without this PD
+            would cap charge at the user's configured max_soc (e.g. 80%) and
+            never reach the 3.45 V balancing window.
+
+        Both originals are saved on the coordinator and restored on completion.
+        """
+        if getattr(coordinator, "active_balance_mode_cutoff_applied", False):
+            return
+
+        if self._is_backup_function_active(coordinator):
+            _LOGGER.debug(
+                "%s: skipping active balance mode cutoff write because backup is active",
+                coordinator.name,
+            )
+            return
+
+        updates = {}
+        if getattr(coordinator, "active_balance_mode_saved_max_soc", None) is None:
+            coordinator.active_balance_mode_saved_max_soc = coordinator.max_soc
+            updates["active_balance_mode_saved_max_soc"] = coordinator.max_soc
+
+        # Bump software max_soc unconditionally so PD can charge to 100% during
+        # the pre-top run-up. Hardware register write below is v2-only.
+        coordinator.max_soc = 100
+
+        cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
+        if cutoff_reg is None:
+            coordinator.active_balance_mode_cutoff_applied = True
+            _LOGGER.info(
+                "%s: active balance mode raised software max_soc to 100%% "
+                "(v3 — no hardware cutoff register)",
+                coordinator.name,
+            )
+        else:
+            try:
+                await coordinator.write_register(cutoff_reg, 1000, do_refresh=False)
+                await asyncio.sleep(0.1)
+                coordinator.active_balance_mode_cutoff_applied = True
+                _LOGGER.info(
+                    "%s: active balance mode raised software max_soc and hardware "
+                    "charging cutoff to 100%%",
+                    coordinator.name,
+                )
+            except Exception as err:
+                _LOGGER.error(
+                    "%s: failed to set active balance mode hardware cutoff: %s",
+                    coordinator.name,
+                    err,
+                )
+
+        if updates:
+            self._persist_battery_runtime_config(coordinator, updates)
+
+    async def _restore_active_balance_mode_cutoff(self, coordinator) -> None:
+        """Restore the hardware charge cutoff and software max_soc saved before balance mode."""
+        saved_max_soc = getattr(coordinator, "active_balance_mode_saved_max_soc", None)
+        if saved_max_soc is None:
+            coordinator.active_balance_mode_cutoff_applied = False
+            return
+
+        # Restore software max_soc first so PD respects the original limit on the
+        # next cycle, regardless of whether the hardware write succeeds.
+        coordinator.max_soc = saved_max_soc
+
+        cutoff_reg = coordinator.get_register("charging_cutoff_capacity")
+        if cutoff_reg is not None and not self._is_backup_function_active(coordinator):
+            try:
+                await coordinator.write_register(
+                    cutoff_reg,
+                    int(saved_max_soc / 0.1),
+                    do_refresh=False,
+                )
+                await asyncio.sleep(0.1)
+                _LOGGER.info(
+                    "%s: active balance mode restored software max_soc and hardware "
+                    "charging cutoff to %d%%",
+                    coordinator.name,
+                    saved_max_soc,
+                )
+            except Exception as err:
+                _LOGGER.error(
+                    "%s: failed to restore active balance mode hardware cutoff: %s",
+                    coordinator.name,
+                    err,
+                )
+        else:
+            _LOGGER.info(
+                "%s: active balance mode restored software max_soc to %d%%",
+                coordinator.name,
+                saved_max_soc,
+            )
+
+        coordinator.active_balance_mode_saved_max_soc = None
+        coordinator.active_balance_mode_cutoff_applied = False
+        self._persist_battery_runtime_config(
+            coordinator,
+            {"active_balance_mode_saved_max_soc": None},
+        )
+
+    async def _complete_active_balance_mode(
+        self,
+        coordinator,
+        reason: str,
+        today: str,
+        mark_completed: bool = True,
+    ) -> None:
+        """Stop and mark one scheduled active-balance run complete."""
+        started_ts = getattr(coordinator, "active_balance_mode_started_ts", None)
+        elapsed_h = None
+        if started_ts:
+            try:
+                elapsed_h = max(
+                    0.0,
+                    (dt_util.now() - datetime.fromisoformat(started_ts)).total_seconds() / 3600,
+                )
+            except (TypeError, ValueError):
+                elapsed_h = None
+
+        await self._notify_active_balance_mode_completed(
+            coordinator,
+            reason,
+            started_ts,
+            elapsed_h,
+        )
+        self._active_balance_mode_phases.pop(coordinator, None)
+        await self._restore_active_balance_mode_cutoff(coordinator)
+        coordinator.active_balance_mode_started_ts = None
+        coordinator.active_balance_mode_run_date = None
+        coordinator.active_balance_mode_phase = None
+        coordinator.active_balance_mode_top_reached = False
+        coordinator.active_balance_mode_completed_date = today if mark_completed else None
+        coordinator.active_balance_mode_completion_reason = reason
+        coordinator.active_balance_mode_start_delta_mv = None
+        coordinator.active_balance_mode_start_delta_source = None
+        coordinator.active_balance_mode_start_max_cell_voltage = None
+        coordinator.active_balance_mode_start_min_cell_voltage = None
+        persist_updates: dict = {
+            "active_balance_mode_started_ts": None,
+            "active_balance_mode_run_date": None,
+            "active_balance_mode_phase": None,
+            "active_balance_mode_top_reached": False,
+            "active_balance_mode_completed_date": today if mark_completed else None,
+            "active_balance_mode_completion_reason": reason,
+            "active_balance_mode_start_delta_mv": None,
+            "active_balance_mode_start_delta_source": None,
+            "active_balance_mode_start_max_cell_voltage": None,
+            "active_balance_mode_start_min_cell_voltage": None,
+        }
+        # When the run finishes on its own (delta reached or 48h timeout), flip the
+        # enable switch back to OFF so the user's next automation trigger represents
+        # a fresh cycle. When the user manually disabled the switch, leave it as-is.
+        if mark_completed:
+            coordinator.active_balance_mode_enabled = False
+            persist_updates[CONF_ACTIVE_BALANCE_MODE_ENABLED] = False
+        self._persist_battery_runtime_config(coordinator, persist_updates)
+        await self._set_battery_power(coordinator, 0, 0)
+        _LOGGER.info("%s: active balance mode completed (%s)", coordinator.name, reason)
+
+    async def _handle_active_balance_mode(self) -> None:
+        """Run per-battery scheduled active balancing while leaving PD to other batteries."""
+        now = dt_util.now()
+        today = now.date().isoformat()
+        statuses: dict[str, dict] = {}
+
+        for coordinator in self.coordinators:
+            enabled = bool(getattr(coordinator, "active_balance_mode_enabled", False))
+            started_ts = getattr(coordinator, "active_balance_mode_started_ts", None)
+
+            if not enabled:
+                if self._active_balance_mode_started(coordinator):
+                    await self._complete_active_balance_mode(
+                        coordinator,
+                        "disabled",
+                        today,
+                        mark_completed=False,
+                    )
+                statuses[coordinator.name] = {
+                    "enabled": False,
+                    "state": "disabled",
+                }
+                continue
+
+            if not started_ts:
+                started_ts = now.isoformat()
+                coordinator.active_balance_mode_started_ts = started_ts
+                coordinator.active_balance_mode_run_date = today
+                # Phase stays None during pre-top run-up — PD owns the battery.
+                # The phase map is only populated when entering the 90/30/30 W cycle.
+                coordinator.active_balance_mode_phase = None
+                coordinator.active_balance_mode_top_reached = False
+                coordinator.active_balance_mode_completed_date = None
+                coordinator.active_balance_mode_completion_reason = None
+                start_vmax, start_vmin, start_delta = self._active_balance_mode_cell_values(coordinator)
+                recorded_delta, recorded_delta_source = self._active_balance_mode_last_recorded_delta_mv(coordinator)
+                coordinator.active_balance_mode_start_delta_mv = (
+                    recorded_delta if recorded_delta is not None else start_delta
+                )
+                coordinator.active_balance_mode_start_delta_source = (
+                    recorded_delta_source if recorded_delta is not None else "instantaneo"
+                )
+                coordinator.active_balance_mode_start_max_cell_voltage = start_vmax
+                coordinator.active_balance_mode_start_min_cell_voltage = start_vmin
+                self._persist_battery_runtime_config(
+                    coordinator,
+                    {
+                        "active_balance_mode_started_ts": started_ts,
+                        "active_balance_mode_run_date": today,
+                        "active_balance_mode_phase": None,
+                        "active_balance_mode_top_reached": False,
+                        "active_balance_mode_completed_date": None,
+                        "active_balance_mode_completion_reason": None,
+                        "active_balance_mode_start_delta_mv": coordinator.active_balance_mode_start_delta_mv,
+                        "active_balance_mode_start_delta_source": coordinator.active_balance_mode_start_delta_source,
+                        "active_balance_mode_start_max_cell_voltage": start_vmax,
+                        "active_balance_mode_start_min_cell_voltage": start_vmin,
+                    },
+                )
+                _LOGGER.info(
+                    "%s: active balance mode started for up to 48h",
+                    coordinator.name,
+                )
+                await self._notify_active_balance_mode_started(
+                    coordinator,
+                    started_ts,
+                )
+
+            await self._apply_active_balance_mode_cutoff(coordinator)
+
+            try:
+                started = datetime.fromisoformat(started_ts)
+            except (TypeError, ValueError):
+                started = now
+                started_ts = started.isoformat()
+                coordinator.active_balance_mode_started_ts = started_ts
+                self._persist_battery_runtime_config(
+                    coordinator,
+                    {"active_balance_mode_started_ts": started_ts},
+                )
+
+            elapsed_s = max(0.0, (now - started).total_seconds())
+            delta_mv = self._active_balance_mode_delta_mv(coordinator)
+
+            # Latch top_reached when the cells enter the balancing window (vmax
+            # at/above CHARGE_RESUME = 3.45 V). SOC alone is not reliable here:
+            # on LFP packs the cell delta can stay low around 95% and only open
+            # up near the top knee.
+            #
+            # Two effects depend on this flag:
+            #   * Below the latch the controller charges at full battery power
+            #     instead of the 90 W balancing taper (handled inside
+            #     ``_active_balance_command_for``).
+            #   * The ``delta_reasonable`` early-exit is gated on this — otherwise
+            #     an LFP battery sitting below the top knee would auto-complete
+            #     because cells are naturally flat there (delta typically <20 mV),
+            #     without ever doing balancing.
+            data_now = coordinator.data or {}
+            soc_now = data_now.get("battery_soc")
+            vmax_now = data_now.get("max_cell_voltage")
+            top_reached = bool(getattr(coordinator, "active_balance_mode_top_reached", False))
+            if not top_reached:
+                try:
+                    vmax_high = (
+                        vmax_now is not None
+                        and float(vmax_now) >= ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE
+                    )
+                except (TypeError, ValueError):
+                    vmax_high = False
+                if vmax_high:
+                    top_reached = True
+                    coordinator.active_balance_mode_top_reached = True
+                    self._persist_battery_runtime_config(
+                        coordinator,
+                        {"active_balance_mode_top_reached": True},
+                    )
+                    _LOGGER.info(
+                        "%s: active balance mode reached top-balance zone "
+                        "(soc=%s, vmax=%s) — switching to 90/30/30 W cycle",
+                        coordinator.name,
+                        soc_now,
+                        vmax_now,
+                    )
+
+            phase_for_completion = (
+                self._active_balance_mode_phases.get(coordinator)
+                or getattr(coordinator, "active_balance_mode_phase", None)
+            )
+            try:
+                vmax_completion_ready = (
+                    vmax_now is not None
+                    and float(vmax_now) >= ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE
+                )
+            except (TypeError, ValueError):
+                vmax_completion_ready = False
+            delta_completion_ready = (
+                vmax_completion_ready
+                or phase_for_completion in {"HOLD", "DISCHARGE"}
+            )
+
+            if (
+                top_reached
+                and delta_completion_ready
+                and delta_mv is not None
+                and delta_mv <= ACTIVE_BALANCE_MODE_TARGET_DELTA_MV
+            ):
+                await self._complete_active_balance_mode(coordinator, "delta_reasonable", today)
+                statuses[coordinator.name] = {
+                    "enabled": False,
+                    "state": "complete",
+                    "elapsed_h": round(elapsed_s / 3600, 2),
+                    "delta_mV": round(delta_mv, 1),
+                    "completion_reason": "delta_reasonable",
+                }
+                continue
+
+            if elapsed_s >= ACTIVE_BALANCE_MODE_SECONDS:
+                await self._complete_active_balance_mode(coordinator, "timeout_48h", today)
+                statuses[coordinator.name] = {
+                    "enabled": False,
+                    "state": "complete",
+                    "elapsed_h": round(elapsed_s / 3600, 2),
+                    "delta_mV": round(delta_mv, 1) if delta_mv is not None else None,
+                    "completion_reason": "timeout_48h",
+                }
+                continue
+
+            # Pre-top run-up: PD owns this battery. The active-balance handler
+            # only sets up the SOC/delay overrides and waits for the cells to
+            # reach the balancing window. ``_is_active_balance_mode_running``
+            # already returns False here so PD picks the battery up normally.
+            if not top_reached:
+                statuses[coordinator.name] = {
+                    "enabled": True,
+                    "state": "charging_to_top",
+                    "elapsed_h": round(elapsed_s / 3600, 2),
+                    "max_cell_voltage": (
+                        round(float(vmax_now), 3) if vmax_now is not None else None
+                    ),
+                    "soc": soc_now,
+                    "delta_mV": round(delta_mv, 1) if delta_mv is not None else None,
+                    "trigger_vmax": ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE,
+                    "delta_completion_vmax": ACTIVE_BALANCE_CHARGE_STOP_CELL_VOLTAGE,
+                }
+                continue
+
+            command = self._active_balance_command_for(
+                coordinator,
+                self._active_balance_mode_phases,
+                allow_full_lockout_recovery=(
+                    getattr(coordinator, "active_balance_mode_phase", None) is None
+                ),
+            )
+            if command is None:
+                statuses[coordinator.name] = {
+                    "enabled": True,
+                    "state": "waiting_for_cell_voltage",
+                    "elapsed_h": round(elapsed_s / 3600, 2),
+                }
+                await self._set_battery_power(coordinator, 0, 0)
+                continue
+
+            phase, charge_power, discharge_power, details = command
+            previous_phase = self._active_balance_mode_phases.get(coordinator)
+            self._active_balance_mode_phases[coordinator] = phase
+            if getattr(coordinator, "active_balance_mode_phase", None) != phase:
+                coordinator.active_balance_mode_phase = phase
+                self._persist_battery_runtime_config(
+                    coordinator,
+                    {"active_balance_mode_phase": phase},
+                )
+            # Active balance mode is a user-initiated, scheduled operation that
+            # must run to completion regardless of charge-delay, time-slot, price,
+            # SOC limits, hysteresis, EV pauses, or the per-battery allow switches.
+            # Only hard safety paths (backup function active, battery unreachable)
+            # can still stop the write inside _set_battery_power.
+            await self._set_battery_power(
+                coordinator,
+                charge_power,
+                discharge_power,
+                ignore_charge_blockers={
+                    "charge_delay",
+                    "time_slot_charge",
+                    "max_soc",
+                    "charge_hysteresis",
+                    "normal_balance_pause",
+                    "normal_balance_daily_limit",
+                    "user_battery_charge_disabled",
+                    "ev_pause",
+                },
+                ignore_discharge_blockers={
+                    "time_slot_discharge",
+                    "price_discharge",
+                    "min_soc",
+                    "user_battery_discharge_disabled",
+                    "ev_pause",
+                    "ev_charging",
+                },
+            )
+            statuses[coordinator.name] = {
+                "enabled": True,
+                "state": "active",
+                "started": started_ts,
+                "elapsed_h": round(elapsed_s / 3600, 2),
+                "target_h": round(ACTIVE_BALANCE_MODE_SECONDS / 3600, 2),
+                "target_delta_mV": ACTIVE_BALANCE_MODE_TARGET_DELTA_MV,
+                **details,
+            }
+            if previous_phase != phase:
+                _LOGGER.info(
+                    "%s: active balance mode phase changed %s -> %s",
+                    coordinator.name,
+                    previous_phase or "none",
+                    phase,
+                )
+                if (
+                    phase == "DISCHARGE"
+                    and previous_phase in {"CHARGE", "HOLD"}
+                    and self._balance_monitor is not None
+                ):
+                    data = coordinator.data or {}
+                    vmax = data.get("max_cell_voltage")
+                    vmin = data.get("min_cell_voltage")
+                    if vmax is not None and vmin is not None:
+                        await self._balance_monitor.async_record_active_balance_transition(
+                            coordinator,
+                            vmax,
+                            vmin,
+                            data.get("battery_soc"),
+                            previous_phase,
+                            phase,
+                        )
+
+        self._active_balance_mode_status = statuses
+
     def _battery_power_limit(self, coordinator, is_charging: bool) -> int:
         """Return the effective per-battery power limit for the current cycle."""
         if not is_charging:
@@ -533,11 +1713,33 @@ class ChargeDischargeController:
         limit = coordinator.max_charge_power
         if coordinator.data is None:
             return limit
+        if not self._full_charge_voltage_taper_applies(coordinator):
+            return limit
+
+        max_cell_voltage = coordinator.data.get("max_cell_voltage")
+        voltage_tapered = getattr(self, "_normal_balance_voltage_tapered", {})
+        voltage_taper_latched = voltage_tapered.get(coordinator, False)
+        if max_cell_voltage is not None:
+            try:
+                max_cell_voltage_f = float(max_cell_voltage)
+                if max_cell_voltage_f >= NORMAL_BALANCE_TAPER_CELL_VOLTAGE:
+                    voltage_taper_latched = True
+                    voltage_tapered[coordinator] = True
+                elif not self._normal_balance_zone_active(coordinator):
+                    voltage_tapered.pop(coordinator, None)
+                    voltage_taper_latched = False
+                if voltage_taper_latched:
+                    limit = min(limit, NORMAL_BALANCE_FIRST_CHARGE_POWER_W)
+                if max_cell_voltage_f >= NORMAL_BALANCE_SECOND_TAPER_CELL_VOLTAGE:
+                    limit = min(limit, NORMAL_BALANCE_CHARGE_POWER_W)
+            except (TypeError, ValueError):
+                pass
 
         current_soc = coordinator.data.get("battery_soc", 0)
         for soc_threshold, tapered_limit in FULL_CHARGE_TAPER_STEPS:
             if current_soc >= soc_threshold:
-                return min(limit, tapered_limit)
+                limit = min(limit, tapered_limit)
+                break
         return limit
 
     def update_pd_parameters(self):
@@ -556,6 +1758,7 @@ class ChargeDischargeController:
                 _LOGGER.info("Weekly Full Charge: Mid-charge abort detected - hardware restore pending")
                 self._weekly_charge_needs_restore = True
             self.weekly_full_charge_complete = False
+            self.weekly_full_charge_top_reached = False
             self.weekly_full_charge_registers_written = False
         self.weekly_full_charge_enabled = new_weekly_enabled
         self.weekly_full_charge_day = new_weekly_day
@@ -937,6 +2140,21 @@ class ChargeDischargeController:
                 continue
 
             current_soc = coordinator.data.get("battery_soc", 0)
+            active_balance_enabled = bool(
+                getattr(coordinator, "active_balance_mode_enabled", False)
+            )
+
+            if active_balance_enabled:
+                if coordinator.enable_charge_hysteresis and coordinator._hysteresis_active:
+                    _LOGGER.debug(
+                        "%s: Overriding hysteresis for active balance mode",
+                        coordinator.name,
+                    )
+                coordinator._hysteresis_active = False
+                coordinator._hysteresis_base_soc = None
+                self.remove_charge_block("max_soc", coordinator=coordinator)
+                self.remove_charge_block("charge_hysteresis", coordinator=coordinator)
+                continue
 
             if weekly_100_unlocked:
                 if coordinator.enable_charge_hysteresis and coordinator._hysteresis_active:
@@ -1061,7 +2279,11 @@ class ChargeDischargeController:
 
     def _refresh_operation_blockers(self) -> None:
         """Refresh all runtime operation blockers for the current control cycle."""
-        if self.charge_delay_enabled and self._is_charge_delayed():
+        if (
+            self.charge_delay_enabled
+            and self._is_charge_delayed()
+            and not self._active_balance_overrides_delay()
+        ):
             self.set_charge_block(
                 "charge_delay",
                 "charge_delay",
@@ -1074,6 +2296,7 @@ class ChargeDischargeController:
         self._apply_price_discharge_block()
         self._refresh_ev_blocks()
         self._refresh_user_battery_blocks()
+        self._refresh_normal_balance_blocks()
         self._refresh_battery_charge_limit_blocks()
         self._refresh_battery_discharge_limit_blocks()
         self._price_based_discharge_blocked = "price_discharge" in self._global_discharge_blockers
@@ -1142,18 +2365,34 @@ class ChargeDischargeController:
                 _LOGGER.debug("%s: Skipping - excluded due to non-responsive behavior", coordinator.name)
                 continue
 
+            if self._is_active_balance_mode_running(coordinator):
+                _LOGGER.debug("%s: Skipping - active balance mode owns this battery", coordinator.name)
+                continue
+
             # Skip batteries with backup function active (they manage themselves autonomously)
             if self._is_backup_function_active(coordinator):
                 _LOGGER.debug("%s: Skipping - backup function is active", coordinator.name)
                 continue
 
-            if include_operation_blocks and is_charging and self.is_charge_blocked(coordinator):
-                _LOGGER.debug(
-                    "%s: Skipping charge - blocked by %s",
-                    coordinator.name,
-                    ", ".join(self.get_charge_blockers(coordinator).keys()),
-                )
-                continue
+            active_balance_enabled = bool(
+                getattr(coordinator, "active_balance_mode_enabled", False)
+            )
+
+            if include_operation_blocks and is_charging:
+                charge_blockers = self.get_charge_blockers(coordinator)
+                if active_balance_enabled:
+                    charge_blockers = {
+                        source: block
+                        for source, block in charge_blockers.items()
+                        if source not in {"max_soc", "charge_hysteresis"}
+                    }
+                if charge_blockers:
+                    _LOGGER.debug(
+                        "%s: Skipping charge - blocked by %s",
+                        coordinator.name,
+                        ", ".join(charge_blockers.keys()),
+                    )
+                    continue
 
             if include_operation_blocks and not is_charging and self.is_discharge_blocked(coordinator):
                 _LOGGER.debug(
@@ -1171,11 +2410,15 @@ class ChargeDischargeController:
 
                 # Update hysteresis state if enabled
                 if coordinator.enable_charge_hysteresis:
-                    # Only override hysteresis when 100% is actually unlocked
-                    if weekly_100_unlocked:
-                        # Force-disable hysteresis during weekly charge
+                    # Only override hysteresis when an explicit full/top-balance
+                    # run is active.
+                    if weekly_100_unlocked or active_balance_enabled:
+                        # Force-disable hysteresis during weekly or active balance.
                         if coordinator._hysteresis_active:
-                            _LOGGER.debug("%s: Overriding hysteresis for weekly full charge", coordinator.name)
+                            _LOGGER.debug(
+                                "%s: Overriding hysteresis for full/top-balance charge",
+                                coordinator.name,
+                            )
                         coordinator._hysteresis_active = False
                         coordinator._hysteresis_base_soc = None
                     else:
@@ -1341,6 +2584,20 @@ class ChargeDischargeController:
     def _balance_monitor_overrides_delay(self) -> bool:
         """Return True when the full-charge-day skip-delay option is active for the current day."""
         return self._balance_monitor_enabled and self._weekly_charge_mgr.is_active()
+
+    def _active_balance_overrides_delay(self) -> bool:
+        """Return True when any battery has the scheduled active balance mode enabled.
+
+        While active balance is enabled, the per-battery run-up to the balancing
+        window is driven by the normal PD loop. The charge-delay block would
+        otherwise stop PD from charging at all during the delay window, leaving
+        the active-balance battery stuck mid-SOC. Bypassing the delay system-wide
+        is acceptable because the user explicitly triggered an override-style run.
+        """
+        return any(
+            bool(getattr(c, "active_balance_mode_enabled", False))
+            for c in self.coordinators
+        )
 
     # -------------------------------------------------------------------------
     # Setpoint offset management
@@ -2378,6 +3635,8 @@ class ChargeDischargeController:
             self.previous_power = 0
             self.previous_error = 0
             for coordinator in self.coordinators:
+                if self._is_active_balance_mode_running(coordinator):
+                    continue
                 await self._set_battery_power(coordinator, 0, 0)
             return
 
@@ -2482,6 +3741,8 @@ class ChargeDischargeController:
         # Set all other batteries to 0 (non-available + available-but-not-selected)
         for coordinator in self.coordinators:
             if coordinator not in selected_batteries:
+                if self._is_active_balance_mode_running(coordinator):
+                    continue
                 await self._set_battery_power(coordinator, 0, 0)
         
         # Update state
@@ -2570,6 +3831,16 @@ class ChargeDischargeController:
         - SOC: Active batteries get 5% effective SOC advantage to avoid ping-pong
         - Power: Deactivation threshold = activation threshold − 10 pp
         """
+        # No power requested: clear load-sharing state. This must run before
+        # the single-battery fast path so a one-battery system is not retained
+        # as active while the controller is intentionally idle.
+        if total_power <= 0:
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            self._discharge_selection_hold_cycles.clear()
+            self._charge_selection_hold_cycles.clear()
+            return []
+
         if len(available_batteries) <= 1:
             # Even with a single battery, update tracking state so the Active
             # Batteries diagnostic sensor correctly reflects charging/discharging
@@ -2579,20 +3850,15 @@ class ChargeDischargeController:
                 self._active_charge_batteries = selected
                 self._active_discharge_batteries = []
                 self._discharge_selection_hold_cycles.clear()
+                self._charge_selection_hold_cycles.clear()
             else:
                 self._active_discharge_batteries = selected
                 self._active_charge_batteries = []
+                self._discharge_selection_hold_cycles.clear()
                 self._charge_selection_hold_cycles.clear()
             return selected
 
-        # No power requested — clear state and return empty
-        if total_power <= 0:
-            self._active_discharge_batteries = []
-            self._active_charge_batteries = []
-            self._discharge_selection_hold_cycles.clear()
-            self._charge_selection_hold_cycles.clear()
-            return list(available_batteries)
-
+        # Clamp the request to the capacity of currently available batteries.
         total_power = self._clamp_to_system_capacity(
             total_power,
             available_batteries,
@@ -2834,7 +4100,9 @@ class ChargeDischargeController:
         self,
         coordinator: MarstekVenusDataUpdateCoordinator,
         charge_power: float,
-        discharge_power: float
+        discharge_power: float,
+        ignore_charge_blockers: set[str] | None = None,
+        ignore_discharge_blockers: set[str] | None = None,
     ) -> bool:
         """Set charge/discharge power for a single battery with ACK verification.
 
@@ -2856,19 +4124,41 @@ class ChargeDischargeController:
             )
             return False
 
-        if charge_power > 0 and self.is_charge_blocked(coordinator):
+        if charge_power > 0:
+            charge_blockers = self.get_charge_blockers(coordinator)
+            if ignore_charge_blockers:
+                charge_blockers = {
+                    source: block
+                    for source, block in charge_blockers.items()
+                    if source not in ignore_charge_blockers
+                }
+        else:
+            charge_blockers = {}
+
+        if charge_power > 0 and charge_blockers:
             _LOGGER.debug(
                 "[%s] Charge command suppressed by blockers: %s",
                 coordinator.name,
-                ", ".join(self.get_charge_blockers(coordinator).keys()),
+                ", ".join(charge_blockers.keys()),
             )
             charge_power = 0
 
-        if discharge_power > 0 and self.is_discharge_blocked(coordinator):
+        if discharge_power > 0:
+            discharge_blockers = self.get_discharge_blockers(coordinator)
+            if ignore_discharge_blockers:
+                discharge_blockers = {
+                    source: block
+                    for source, block in discharge_blockers.items()
+                    if source not in ignore_discharge_blockers
+                }
+        else:
+            discharge_blockers = {}
+
+        if discharge_power > 0 and discharge_blockers:
             _LOGGER.debug(
                 "[%s] Discharge command suppressed by blockers: %s",
                 coordinator.name,
-                ", ".join(self.get_discharge_blockers(coordinator).keys()),
+                ", ".join(discharge_blockers.keys()),
             )
             discharge_power = 0
 
@@ -4513,6 +5803,8 @@ class ChargeDischargeController:
         """Stop all battery commands after a global operation block becomes active."""
         _LOGGER.debug("ChargeDischargeController: stopping all batteries due to %s block", direction)
         for coordinator in self.coordinators:
+            if self._is_active_balance_mode_running(coordinator):
+                continue
             await self._set_battery_power(coordinator, 0, 0)
         self.previous_power = 0
         self._active_discharge_batteries = []
@@ -4607,6 +5899,32 @@ class ChargeDischargeController:
         # This makes charge/discharge permission a shared registry instead of a
         # collection of independent flags and one-off checks.
         self._refresh_operation_blockers()
+
+        # Per-battery scheduled active balance mode has priority over global
+        # modes. It owns only the selected battery; PD can still use the rest.
+        await self._handle_active_balance_mode()
+
+        # Weekly full charge: once the top is reached, actively keep cells in
+        # the documented balancing window before returning to normal PD control.
+        if await self._weekly_charge_mgr.handle_active_balancing():
+            self.previous_power = 0
+            self.previous_sensor = None
+            self.previous_error = 0
+            self.last_output_sign = 0
+            self.sign_changes = 0
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            return
+
+        if await self._handle_normal_max_soc_active_balancing():
+            self.previous_power = 0
+            self.previous_sensor = None
+            self.previous_error = 0
+            self.last_output_sign = 0
+            self.sign_changes = 0
+            self._active_discharge_batteries = []
+            self._active_charge_batteries = []
+            return
 
         # === Predictive Grid Charging Logic (mode dispatch) ===
         if self.predictive_charging_enabled:
@@ -4745,6 +6063,8 @@ class ChargeDischargeController:
                 "Capacity Protection conserving capacity: stopping existing discharge command"
             )
             for coordinator in self.coordinators:
+                if self._is_active_balance_mode_running(coordinator):
+                    continue
                 await self._set_battery_power(coordinator, 0, 0)
             self.previous_power = 0
             self.previous_sensor = sensor_actual
@@ -4822,6 +6142,8 @@ class ChargeDischargeController:
                 self._active_charge_batteries = []
                 # Set all batteries to 0
                 for coordinator in self.coordinators:
+                    if self._is_active_balance_mode_running(coordinator):
+                        continue
                     await self._set_battery_power(coordinator, 0, 0)
                 return
 
@@ -4836,6 +6158,8 @@ class ChargeDischargeController:
                 self._active_discharge_batteries = []
                 self._active_charge_batteries = []
                 for coordinator in self.coordinators:
+                    if self._is_active_balance_mode_running(coordinator):
+                        continue
                     await self._set_battery_power(coordinator, 0, 0)
                 return
 
@@ -4880,6 +6204,8 @@ class ChargeDischargeController:
             # Set all other batteries to 0 (non-available + available-but-not-selected)
             for coordinator in self.coordinators:
                 if coordinator not in selected_batteries:
+                    if self._is_active_balance_mode_running(coordinator):
+                        continue
                     await self._set_battery_power(coordinator, 0, 0)
 
             # Reset PD state for clean start (CRITICAL: clear saturated integral)
@@ -5160,6 +6486,8 @@ class ChargeDischargeController:
         if not available_batteries:
             _LOGGER.debug("ChargeDischargeController: No available batteries, setting all to 0.")
             for coordinator in self.coordinators:
+                if self._is_active_balance_mode_running(coordinator):
+                    continue
                 await self._set_battery_power(coordinator, 0, 0)
             self.previous_power = 0
             self.previous_sensor = sensor_actual
@@ -5195,6 +6523,8 @@ class ChargeDischargeController:
         # Set all other batteries to 0 (non-available + available-but-not-selected)
         for coordinator in self.coordinators:
             if coordinator not in selected_batteries:
+                if self._is_active_balance_mode_running(coordinator):
+                    continue
                 await self._set_battery_power(coordinator, 0, 0)
         
         # Update state for next cycle
@@ -5380,11 +6710,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             backup_offgrid_threshold=battery_config.get("backup_offgrid_threshold", 50),
             allow_charge=battery_config.get("allow_charge", True),
             allow_discharge=battery_config.get("allow_discharge", True),
+            active_balance_mode_enabled=battery_config.get(CONF_ACTIVE_BALANCE_MODE_ENABLED, False),
+            full_charge_voltage_taper_enabled=battery_config.get(
+                CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+                DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+            ),
         )
 
         # Restore persisted RS485 user preference and store entry reference for future persistence
         coordinator._config_entry = entry
         coordinator.rs485_user_disabled = battery_config.get("rs485_user_disabled", False)
+        coordinator.active_balance_mode_started_ts = battery_config.get("active_balance_mode_started_ts")
+        coordinator.active_balance_mode_run_date = battery_config.get("active_balance_mode_run_date")
+        coordinator.active_balance_mode_phase = battery_config.get("active_balance_mode_phase")
+        coordinator.active_balance_mode_top_reached = battery_config.get("active_balance_mode_top_reached", False)
+        coordinator.active_balance_mode_completed_date = battery_config.get("active_balance_mode_completed_date")
+        coordinator.active_balance_mode_completion_reason = battery_config.get("active_balance_mode_completion_reason")
+        coordinator.active_balance_mode_saved_max_soc = battery_config.get("active_balance_mode_saved_max_soc")
+        coordinator.active_balance_mode_start_delta_mv = battery_config.get("active_balance_mode_start_delta_mv")
+        coordinator.active_balance_mode_start_delta_source = battery_config.get("active_balance_mode_start_delta_source")
+        coordinator.active_balance_mode_start_max_cell_voltage = battery_config.get("active_balance_mode_start_max_cell_voltage")
+        coordinator.active_balance_mode_start_min_cell_voltage = battery_config.get("active_balance_mode_start_min_cell_voltage")
         coordinator._shadow_selects = {
             k[len("shadow_select_"):]: v
             for k, v in battery_config.items()

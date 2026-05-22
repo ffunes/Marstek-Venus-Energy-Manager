@@ -50,7 +50,9 @@
           "min_soc": "Minimum SOC (%)",
           "enable_charge_hysteresis": "Enable Charge Hysteresis",
           "charge_hysteresis_percent": "Hysteresis Percentage (%)",
-          "backup_offgrid_threshold": "Backup offgrid load threshold (W)"
+          "backup_offgrid_threshold": "Backup offgrid load threshold (W)",
+          "full_charge_voltage_taper_enabled": "Enable 100% charge voltage taper",
+          "active_balance_mode_enabled": "Enable 48h active balance mode"
         },
         "data_description": {
           "max_charge_power": "Maximum power allowed to charge the battery",
@@ -59,7 +61,9 @@
           "min_soc": "Minimum state of charge - battery won't discharge below this value",
           "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
           "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%",
-          "backup_offgrid_threshold": "Offgrid load above this value is treated as an active backup event, excluding the battery from PD control. Set higher if you have permanent loads (router, cameras) on the offgrid port."
+          "backup_offgrid_threshold": "Offgrid load above this value is treated as an active backup event, excluding the battery from PD control. Set higher if you have permanent loads (router, cameras) on the offgrid port.",
+          "full_charge_voltage_taper_enabled": "When the target is 100%, limit charge to 200 W from 3.45 V max cell voltage and 100 W from 3.53 V. Does not change active-balancing power.",
+          "active_balance_mode_enabled": "Enables 48h active cell balancing for this battery. While ON the battery is excluded from normal PD control. The switch turns off automatically when the run finishes (delta reached or 48h timeout). Combine with an automation to schedule the day/time you prefer."
         }
       },
       "time_slots": {
@@ -406,7 +410,9 @@
           "min_soc": "Minimum SOC (%)",
           "enable_charge_hysteresis": "Enable Charge Hysteresis",
           "charge_hysteresis_percent": "Hysteresis Percentage (%)",
-          "backup_offgrid_threshold": "Backup offgrid load threshold (W)"
+          "backup_offgrid_threshold": "Backup offgrid load threshold (W)",
+          "full_charge_voltage_taper_enabled": "Enable 100% charge voltage taper",
+          "active_balance_mode_enabled": "Enable 48h active balance mode"
         },
         "data_description": {
           "max_charge_power": "Maximum power allowed to charge the battery",
@@ -415,7 +421,9 @@
           "min_soc": "Minimum state of charge",
           "enable_charge_hysteresis": "Prevents battery from charging when SOC is near maximum",
           "charge_hysteresis_percent": "Battery will not charge until SOC drops to (max_soc - hysteresis). Ex: Max SOC 100% with 5% hysteresis = no charge until 95%",
-          "backup_offgrid_threshold": "Offgrid load above this value is treated as an active backup event, excluding the battery from PD control. Set higher if you have permanent loads (router, cameras) on the offgrid port."
+          "backup_offgrid_threshold": "Offgrid load above this value is treated as an active backup event, excluding the battery from PD control. Set higher if you have permanent loads (router, cameras) on the offgrid port.",
+          "full_charge_voltage_taper_enabled": "When the target is 100%, limit charge to 200 W from 3.45 V max cell voltage and 100 W from 3.53 V. Does not change active-balancing power.",
+          "active_balance_mode_enabled": "Enables 48h active cell balancing for this battery. While ON the battery is excluded from normal PD control. The switch turns off automatically when the run finishes (delta reached or 48h timeout). Combine with an automation to schedule the day/time you prefer."
         }
       },
       "time_slots": {
@@ -744,6 +752,12 @@
       "battery_allow_discharge": {
         "name": "Allow Discharge"
       },
+      "full_charge_voltage_taper": {
+        "name": "100% Charge Voltage Taper"
+      },
+      "active_balance_mode": {
+        "name": "Active Balance Mode"
+      },
       "automation_charging_active": {
         "name": "External Price Charging"
       },
@@ -790,6 +804,7 @@
           "manual": "Manual Mode",
           "grid_charging": "Charging from Grid",
           "weekly_full_charge": "Weekly Full Charge",
+          "active_balance_mode": "Active Balance Mode",
           "charge_delayed": "Charge Delayed",
           "waiting_for_solar": "Waiting for Solar",
           "charging_to_setpoint": "Charging to Setpoint",
@@ -818,6 +833,7 @@
           "idle": "Idle",
           "disabled": "Disabled",
           "charging": "Charging to 100%",
+          "active_balancing": "Active balancing",
           "complete": "Complete"
         }
       },

@@ -127,6 +127,33 @@ class BalanceMonitor:
         state = self._states[host]
         now = datetime.now(timezone.utc)
 
+        # Weekly full charge now owns the top-balancing phase. Do not start the
+        # legacy OCV rest hold while that flow is still charging/balancing.
+        weekly_owns_top = (
+            self._is_weekly_charge_day()
+            and not getattr(self._controller, "weekly_full_charge_complete", False)
+        )
+        # The per-battery scheduled active-balance mode also owns this battery
+        # while running — let it drive its own CHARGE/HOLD/DISCHARGE cycle without
+        # the OCV monitor latching ``balance_hold`` and suppressing discharge.
+        active_balance_owns = False
+        is_running = getattr(self._controller, "_is_active_balance_mode_running", None)
+        if callable(is_running):
+            try:
+                active_balance_owns = bool(is_running(coordinator))
+            except Exception:  # pragma: no cover - defensive
+                active_balance_owns = False
+
+        if weekly_owns_top or active_balance_owns:
+            if state.phase != "IDLE" or coordinator.balance_hold:
+                coordinator.balance_hold = False
+                state.phase = "IDLE"
+                state.phase_started = None
+                state.stable_polls = 0
+                state.prev_vmax = None
+                await self._persist_state(host, state)
+            return
+
         if state.phase == "IDLE":
             await self._process_idle(coordinator, state, soc, power, vmax, vmin, now)
         elif state.phase == "WAITING_OCV":
@@ -253,6 +280,52 @@ class BalanceMonitor:
         await self._persist_state(host, state)
 
     # ------------------------------------------------------------------
+    # External entry point — called by the active-balance controller
+    # ------------------------------------------------------------------
+
+    async def async_record_active_balance_transition(
+        self,
+        coordinator: Any,
+        vmax: float,
+        vmin: float,
+        soc: float | None,
+        from_phase: str | None,
+        to_phase: str,
+    ) -> None:
+        """Record a delta reading when the active-balance mode switches phase.
+
+        The current use case is the CHARGE/HOLD -> DISCHARGE transition, which is
+        the natural inflection point to observe the cell delta. Saved with type
+        ``active_balance_transition`` so it does not feed the OCV-based evaluator
+        or trend alerts; it just shows up in the cell-delta sensor history.
+        """
+        try:
+            vmax_f = float(vmax)
+            vmin_f = float(vmin)
+        except (TypeError, ValueError):
+            return
+        try:
+            soc_f = float(soc) if soc is not None else None
+        except (TypeError, ValueError):
+            soc_f = None
+        delta_mv = (vmax_f - vmin_f) * 1000
+        extra = {"from_phase": from_phase, "to_phase": to_phase}
+        await self._save_reading(
+            coordinator.host,
+            delta_mv,
+            vmax_f,
+            vmin_f,
+            soc_f,
+            "active_balance_transition",
+            extra=extra,
+        )
+
+    def get_recent_readings(self, host: str, limit: int = 10) -> list[dict]:
+        """Return the most-recent stored readings (newest last)."""
+        readings = self._data.get(host, {}).get("readings", [])
+        return list(readings[-limit:])
+
+    # ------------------------------------------------------------------
     # Persistence and evaluation
     # ------------------------------------------------------------------
 
@@ -265,6 +338,7 @@ class BalanceMonitor:
         soc: float,
         reading_type: str,
         coordinator: Any = None,
+        extra: dict | None = None,
     ) -> str:
         bat = self._data.setdefault(
             host, {"readings": [], "consecutive_red": 0}
@@ -277,6 +351,8 @@ class BalanceMonitor:
             "soc": soc,
             "type": reading_type,
         }
+        if extra:
+            entry.update({k: v for k, v in extra.items() if v is not None})
         bat["readings"].append(entry)
         bat["readings"] = bat["readings"][-BALANCE_HISTORY_MAX:]
 

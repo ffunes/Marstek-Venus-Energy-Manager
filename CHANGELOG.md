@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- **Per-battery 48h active balance mode**: Each battery can now enable a scheduled active-balancing run and choose the weekday it starts. While running, that battery is excluded from normal PD allocation and uses the same 90/30/30 W cell-voltage profile as weekly full-charge balancing. The run ends when the cell delta reaches the reasonable range (`<= 50 mV`) or after 48 hours.
+
+### Changed
+- **Active balancing hysteresis added**: The 90 W charge phase now starts only once the highest cell has fallen to 3.45 V and continues until 3.53 V before falling back to 30 W hold charge, preventing repeated 30/90 W oscillation and avoiding premature charge retries while the BMS still reports full. The 3.62 V discharge trigger remains as the hard safety limit, while a detected BMS charge cutoff during high-SOC charge/hold also starts the 30 W discharge micro-cycle.
+- **Active balancing full-BMS lockout recovery**: If the integration is reloaded while a full battery is still in standby with near-zero power and `max_cell_voltage` remains above 3.45 V, active balancing now reconstructs the discharge phase and keeps discharging at 30 W until the cell settles to 3.45 V. This recovery no longer interrupts an active charge phase around 3.52 V.
+- **Scheduled active balance phase persistence**: The 48h per-battery active balance mode now persists its current phase (`CHARGE`, `HOLD`, or `DISCHARGE`) and restores it after an integration reload, so a battery that was charging before restart continues the charge cycle instead of being treated as an idle/full lockout recovery.
+
+### Fixed
+- **Active balance notifications stay dismissed**: Start/result notifications for the 48h active balance mode now use per-run notification IDs, clean up legacy IDs, and dismiss the matching start notification when the run completes so previously dismissed notifications are not resurrected by later balance events.
+
+## [1.8.3] - 2026-05-17
+
+### Changed
+- **Active top-balancing uses the documented 90/30/30 W profile**: After all batteries reach 100%/BMS cutoff, the weekly full-charge flow now keeps control for 4 hours and applies cell-voltage micro-cycles: 90 W charge below 3.52 V, 30 W hold charge below 3.60 V, and 30 W discharge above 3.62 V until the highest cell falls to 3.50 V. The same active-balancing profile is also applied whenever a user sets a battery's normal max SOC to 100% and that battery reaches the top; with solar charge delay enabled, that per-battery normal balancing is released as soon as the PD input detects household demand.
+- **Normal high-SOC charge protection now uses cell voltage**: The charge taper now limits normal charge to 200 W from 95% SOC and also reacts to `max_cell_voltage`, capping normal charge to 90 W once the highest cell reaches 3.45 V. If the highest cell reaches 3.60 V, charge is paused for that battery until it settles back to 3.50 V. The controller also tracks daily high-SOC/top-balancing exposure per battery and stops extending normal high-SOC charging after 4 hours per day, while leaving weekly/manual full-charge balancing paths available.
+
+### Fixed
+- **Normal balance voltage taper no longer rebounds after settling**: Once a battery enters the 90 W voltage taper because `max_cell_voltage` reached 3.45 V, the taper now stays latched while the battery remains in the high-SOC/top-balancing zone. This prevents charge power from rising again when the cell voltage briefly settles below 3.45 V.
+- **Single-battery idle state after zero-power selection**: The load-sharing selector now clears active battery state and split-load hold counters before the single-battery fast path when requested power is 0 W. This prevents one-battery systems from retaining load-sharing state intended for multi-battery split holds while the controller is intentionally idle.
+
 ## [1.8.2] - 2026-05-15
 
 ### Added

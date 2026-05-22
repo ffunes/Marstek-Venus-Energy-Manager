@@ -9,8 +9,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED, CONF_ENABLE_CHARGE_DELAY, CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY, CONF_MANUAL_MODE_ENABLED, CONF_PREDICTIVE_CHARGING_OVERRIDDEN, CONF_ENABLE_HOURLY_BALANCE
+from .const import (
+    DOMAIN,
+    CONF_ACTIVE_BALANCE_MODE_ENABLED,
+    CONF_CAPACITY_PROTECTION_ENABLED,
+    CONF_ENABLE_CHARGE_DELAY,
+    CONF_ENABLE_HOURLY_BALANCE,
+    CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
+    CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+    CONF_MANUAL_MODE_ENABLED,
+    CONF_PREDICTIVE_CHARGING_OVERRIDDEN,
+)
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +44,8 @@ async def async_setup_entry(
         if controller:
             entities.append(BatteryAllowChargeSwitch(hass, entry, controller, coordinator))
             entities.append(BatteryAllowDischargeSwitch(hass, entry, controller, coordinator))
+            entities.append(BatteryFullChargeVoltageTaperSwitch(hass, entry, controller, coordinator))
+            entities.append(BatteryActiveBalanceModeSwitch(hass, entry, controller, coordinator))
 
     # Add manual mode switch (system-level, always present)
     if controller:
@@ -242,6 +255,103 @@ class BatteryAllowDischargeSwitch(BatteryAllowOperationSwitch):
     _block_source = "user_battery_discharge_disabled"
     _direction = "discharge"
     _icon = "mdi:battery-arrow-down"
+
+
+class BatteryFullChargeVoltageTaperSwitch(SwitchEntity):
+    """Switch enabling 100% charge voltage tapering for one battery."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller, coordinator) -> None:
+        self.hass = hass
+        self.entry = entry
+        self.controller = controller
+        self.coordinator = coordinator
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "full_charge_voltage_taper"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_full_charge_voltage_taper"
+        self._attr_icon = "mdi:battery-clock"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        return bool(getattr(self.coordinator, CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED, True))
+
+    def _persist(self, enabled: bool) -> None:
+        setattr(self.coordinator, CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED, enabled)
+        self.coordinator.persist_battery_config(CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED, enabled)
+
+    def _clear_runtime_state(self) -> None:
+        self.controller._normal_balance_last_tick.pop(self.coordinator, None)
+        self.controller._normal_balance_charge_paused.pop(self.coordinator, None)
+        self.controller._normal_balance_voltage_tapered.pop(self.coordinator, None)
+        self.controller.remove_charge_block("normal_balance_pause", coordinator=self.coordinator)
+        self.controller.remove_charge_block("normal_balance_daily_limit", coordinator=self.coordinator)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        self._persist(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        self._persist(False)
+        self._clear_runtime_state()
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "name": self.coordinator.name,
+            "manufacturer": "Marstek",
+            "model": "Venus",
+        }
+
+
+class BatteryActiveBalanceModeSwitch(SwitchEntity):
+    """Switch enabling scheduled 48h active balancing for one battery."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller, coordinator) -> None:
+        self.hass = hass
+        self.entry = entry
+        self.controller = controller
+        self.coordinator = coordinator
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "active_balance_mode"
+        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_active_balance_mode"
+        self._attr_icon = "mdi:battery-sync"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        return bool(getattr(self.coordinator, CONF_ACTIVE_BALANCE_MODE_ENABLED, False))
+
+    def _persist(self, enabled: bool) -> None:
+        setattr(self.coordinator, CONF_ACTIVE_BALANCE_MODE_ENABLED, enabled)
+        self.coordinator.persist_battery_config(CONF_ACTIVE_BALANCE_MODE_ENABLED, enabled)
+
+    async def async_turn_on(self, **kwargs) -> None:
+        self._persist(True)
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        self._persist(False)
+        if self.controller._is_active_balance_mode_running(self.coordinator):
+            await self.controller._complete_active_balance_mode(
+                self.coordinator,
+                "disabled",
+                dt_util.now().date().isoformat(),
+                mark_completed=False,
+            )
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        return {
+            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "name": self.coordinator.name,
+            "manufacturer": "Marstek",
+            "model": "Venus",
+        }
 
 
 class PredictiveChargingSwitch(SwitchEntity):

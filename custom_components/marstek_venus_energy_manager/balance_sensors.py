@@ -34,7 +34,7 @@ async def async_setup_entry(
         host = coordinator.host
         init = monitor.get_initial_state(host)
 
-        delta = CellDeltaSensor(coordinator, init)
+        delta = CellDeltaSensor(coordinator, init, monitor)
         status = BalanceStatusSensor(coordinator, init)
         trend = DeltaTrendSensor(coordinator, init)
         last_read = LastBalanceReadSensor(coordinator, init)
@@ -103,9 +103,12 @@ class CellDeltaSensor(_BalanceBaseSensor):
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_icon = "mdi:sine-wave"
 
-    def __init__(self, coordinator: Any, init: dict) -> None:
+    HISTORY_LIMIT = 10
+
+    def __init__(self, coordinator: Any, init: dict, monitor: BalanceMonitor) -> None:
         self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_cell_delta"
         self._attr_native_value: float | None = None
+        self._monitor = monitor
         super().__init__(coordinator, init)
 
     def _apply_init(self, init: dict) -> None:
@@ -117,6 +120,14 @@ class CellDeltaSensor(_BalanceBaseSensor):
     @property
     def native_value(self):
         return self._attr_native_value
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        readings = self._monitor.get_recent_readings(
+            self._coordinator.host, self.HISTORY_LIMIT
+        )
+        # Reverse so attribute order is newest -> oldest, which is friendlier in the UI.
+        return {"history": list(reversed(readings))}
 
 
 class BalanceStatusSensor(_BalanceBaseSensor):
