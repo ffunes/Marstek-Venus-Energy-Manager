@@ -718,7 +718,8 @@
       "options": {
         "nordpool": "Nordpool",
         "pvpc": "PVPC (Spain – ESIOS REE)",
-        "ckw": "CKW (Switzerland)"
+        "ckw": "CKW (Switzerland)",
+        "epex": "EPEX Spot (e.g. aWATTar)"
       }
     }
   },

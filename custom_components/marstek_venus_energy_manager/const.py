@@ -1985,6 +1985,7 @@ CONF_RT_PRICE_DISCHARGE_CONTROL = "rt_price_discharge_control"
 PRICE_INTEGRATION_NORDPOOL = "nordpool"
 PRICE_INTEGRATION_PVPC = "pvpc"
 PRICE_INTEGRATION_CKW = "ckw"
+PRICE_INTEGRATION_EPEX = "epex"
 
 # Configuration Number Definitions (for config entities exposed in the UI)
 CONFIG_NUMBER_DEFINITIONS = [

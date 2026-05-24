@@ -90,6 +90,7 @@ from .const import (
     PRICE_INTEGRATION_NORDPOOL,
     PRICE_INTEGRATION_PVPC,
     PRICE_INTEGRATION_CKW,
+    PRICE_INTEGRATION_EPEX,
     CONF_METER_INVERTED,
     CONF_PREDICTIVE_SAFETY_MARGIN_KWH,
     DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
@@ -3851,6 +3852,42 @@ class ChargeDischargeController:
                 _LOGGER.debug("Dynamic pricing: failed to parse CKW entry %s: %s", entry, exc)
         return slots
 
+    def _parse_epex_prices(self, attrs: dict) -> list:
+        """Parse EPEX Spot (e.g. aWATTar) price attributes.
+
+        Expected format in 'data':
+            [{"start_time": "2026-05-22T00:00:00+02:00",
+              "end_time":   "2026-05-22T01:00:00+02:00",
+              "price_per_kwh": 0.14977}, ...]
+        Hourly slots in EUR/kWh, typically covering today and tomorrow
+        once published.
+        Returns list[PriceSlot] in local naive time.
+        """
+        from homeassistant.util import dt as dt_util
+        from datetime import datetime as _dt
+
+        slots = []
+        entries = attrs.get("data") or []
+        for entry in entries:
+            try:
+                start = entry.get("start_time")
+                end = entry.get("end_time")
+                price_val = entry.get("price_per_kwh")
+                if start is None or end is None or price_val is None:
+                    continue
+                if isinstance(start, str):
+                    start = _dt.fromisoformat(start)
+                if isinstance(end, str):
+                    end = _dt.fromisoformat(end)
+                if hasattr(start, "tzinfo") and start.tzinfo is not None:
+                    start = dt_util.as_local(start).replace(tzinfo=None)
+                if hasattr(end, "tzinfo") and end.tzinfo is not None:
+                    end = dt_util.as_local(end).replace(tzinfo=None)
+                slots.append(PriceSlot(start=start, end=end, price=float(price_val)))
+            except Exception as exc:
+                _LOGGER.debug("Dynamic pricing: failed to parse EPEX entry %s: %s", entry, exc)
+        return slots
+
     def _get_price_unit(self) -> str:
         """Return the price unit label for the configured integration."""
         if self.price_integration_type == PRICE_INTEGRATION_CKW:
@@ -3869,6 +3906,12 @@ class ChargeDischargeController:
         if self.price_integration_type == PRICE_INTEGRATION_CKW:
             now = datetime.now()
             for slot in self._parse_ckw_prices(price_state.attributes):
+                if slot.start <= now < slot.end:
+                    return slot.price
+
+        if self.price_integration_type == PRICE_INTEGRATION_EPEX:
+            now = datetime.now()
+            for slot in self._parse_epex_prices(price_state.attributes):
                 if slot.start <= now < slot.end:
                     return slot.price
 
@@ -3899,6 +3942,8 @@ class ChargeDischargeController:
             raw_slots = self._parse_pvpc_prices(attrs)
         elif self.price_integration_type == PRICE_INTEGRATION_CKW:
             raw_slots = self._parse_ckw_prices(attrs)
+        elif self.price_integration_type == PRICE_INTEGRATION_EPEX:
+            raw_slots = self._parse_epex_prices(attrs)
         else:
             # Nordpool
             raw_slots = self._parse_nordpool_prices(attrs)
