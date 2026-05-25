@@ -220,12 +220,10 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week",
-          "enable_balance_monitor": "Celbalancemonitor inschakelen"
+          "weekly_full_charge_day": "Dag van de week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
         }
       },
       "charge_delay": {
@@ -580,12 +578,10 @@
         "title": "Configuratie wekelijkse volledige lading",
         "description": "Selecteer de dag van de week waarop batterijen tot 100% moeten worden opgeladen voor celbalancering. Na het bereiken van 100% keert het systeem terug naar uw geconfigureerde maximale laadlimiet.",
         "data": {
-          "weekly_full_charge_day": "Dag van de week",
-          "enable_balance_monitor": "Celbalancemonitor inschakelen"
+          "weekly_full_charge_day": "Dag van de week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen.",
-          "enable_balance_monitor": "Wanneer ingeschakeld, analyseert het systeem de celspanningsbalans na elke volledige lading en geeft een melding als onbalans wordt gedetecteerd. Slaat ook de zonne-oplaadvertraging over op die dag zodat de batterij 100% bereikt en in drijflading blijft zolang er zon is."
+          "weekly_full_charge_day": "Dag waarop batterijen tot 100% worden geladen, ongeacht de geconfigureerde maximale SOC. Dit helpt bij het balanceren van batterijcellen."
         }
       },
       "charge_delay": {

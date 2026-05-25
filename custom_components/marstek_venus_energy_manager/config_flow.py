@@ -38,7 +38,6 @@ from .const import (
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
     CONF_ENABLE_BALANCE_MONITOR,
-    DEFAULT_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
@@ -900,7 +899,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
-            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = user_input.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
+            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = True
             return await self.async_step_charge_delay()
 
         return self.async_show_form(
@@ -915,7 +914,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
-                    vol.Required(CONF_ENABLE_BALANCE_MONITOR, default=DEFAULT_ENABLE_BALANCE_MONITOR): bool,
                 }
             ),
         )
@@ -1183,6 +1181,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_ENABLE_SYSTEM_POWER_LIMITS] = DEFAULT_ENABLE_SYSTEM_POWER_LIMITS
                 self.config_data[CONF_SYSTEM_MAX_CHARGE_POWER] = DEFAULT_SYSTEM_MAX_CHARGE_POWER
                 self.config_data[CONF_SYSTEM_MAX_DISCHARGE_POWER] = DEFAULT_SYSTEM_MAX_DISCHARGE_POWER
+                self.config_data[CONF_ENABLE_BALANCE_MONITOR] = True
                 return self.async_create_entry(
                     title="Marstek Venus Energy Manager", data=self.config_data
                 )
@@ -1219,6 +1218,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input["system_max_discharge_power"] if enable_system_limits
                 else DEFAULT_SYSTEM_MAX_DISCHARGE_POWER
             )
+            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = True
             return self.async_create_entry(
                 title="Marstek Venus Energy Manager", data=self.config_data
             )
@@ -1406,6 +1406,7 @@ class OptionsFlowHandler(OptionsFlow):
         """Merge config_data into existing entry data, save, and reload."""
         new_data = dict(self.config_entry.data)
         new_data.update(self.config_data)
+        new_data[CONF_ENABLE_BALANCE_MONITOR] = True
         self.hass.config_entries.async_update_entry(
             self.config_entry, data=new_data
         )
@@ -2301,12 +2302,10 @@ class OptionsFlowHandler(OptionsFlow):
         """Configure weekly full charge day in options flow."""
         existing_config = self.config_entry.data
         current_day = existing_config.get(CONF_WEEKLY_FULL_CHARGE_DAY, "sun")
-        current_balance = existing_config.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
-
         if user_input is not None:
             self.config_data[CONF_ENABLE_WEEKLY_FULL_CHARGE] = True
             self.config_data[CONF_WEEKLY_FULL_CHARGE_DAY] = user_input["weekly_full_charge_day"]
-            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = user_input.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
+            self.config_data[CONF_ENABLE_BALANCE_MONITOR] = True
             return await self._save_and_finish()
 
         return self.async_show_form(
@@ -2321,7 +2320,6 @@ class OptionsFlowHandler(OptionsFlow):
                                 mode=SelectSelectorMode.DROPDOWN,
                             )
                         ),
-                    vol.Required(CONF_ENABLE_BALANCE_MONITOR, default=current_balance): bool,
                 }
             ),
         )

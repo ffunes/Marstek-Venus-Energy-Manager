@@ -220,12 +220,10 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag",
-          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
+          "weekly_full_charge_day": "Wochentag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
         }
       },
       "charge_delay": {
@@ -580,12 +578,10 @@
         "title": "Konfiguration der wöchentlichen Vollladung",
         "description": "Wählen Sie den Wochentag aus, an dem die Batterien zur Zellenbalancierung auf 100% geladen werden sollen. Nach Erreichen von 100% kehrt das System zu Ihrem konfigurierten maximalen Ladelimit zurück.",
         "data": {
-          "weekly_full_charge_day": "Wochentag",
-          "enable_balance_monitor": "Zellenbalance-Monitor aktivieren"
+          "weekly_full_charge_day": "Wochentag"
         },
         "data_description": {
-          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen.",
-          "enable_balance_monitor": "Wenn aktiviert, analysiert das System das Zellenspannungsgleichgewicht nach jeder Vollladung und gibt Warnungen aus, wenn ein Ungleichgewicht festgestellt wird. Außerdem wird die Solarladeverzögerung an diesem Tag übersprungen, damit die Batterie 100% erreicht und bei Sonnenschein in der Erhaltungsladung bleibt."
+          "weekly_full_charge_day": "Tag, an dem die Batterien unabhängig vom konfigurierten maximalen SOC auf 100% geladen werden. Dies hilft beim Ausgleich der Batteriezellen."
         }
       },
       "charge_delay": {

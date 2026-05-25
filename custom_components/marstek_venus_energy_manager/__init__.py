@@ -32,8 +32,6 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
-    CONF_ENABLE_BALANCE_MONITOR,
-    DEFAULT_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
@@ -360,7 +358,7 @@ class ChargeDischargeController:
         self._delay_safety_margin_h = config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._delay_soc_setpoint_enabled = config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._balance_monitor_enabled = config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
+        self._balance_monitor_enabled = True
         self._predictive_safety_margin_kwh: float = config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_unlocked = False       # True when delay has been unlocked today
         self._delay_setpoint_reached = False      # True once SOC first reached the setpoint
@@ -955,7 +953,7 @@ class ChargeDischargeController:
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
         self._delay_soc_setpoint_enabled = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT_ENABLED, DEFAULT_DELAY_SOC_SETPOINT_ENABLED)
         self._delay_soc_setpoint = self.config_entry.data.get(CONF_DELAY_SOC_SETPOINT, DEFAULT_DELAY_SOC_SETPOINT)
-        self._balance_monitor_enabled = self.config_entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR)
+        self._balance_monitor_enabled = True
         self._predictive_safety_margin_kwh = self.config_entry.data.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         self._charge_delay_status["soc_setpoint"] = self._delay_soc_setpoint if self._delay_soc_setpoint_enabled else None
         self.charge_delay_enabled = self.config_entry.data.get(
@@ -6164,15 +6162,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if controller._hourly_balance_mgr is not None:
         await controller._hourly_balance_mgr.async_setup()
 
-    # Set up balance monitor if enabled
-    balance_monitor = None
-    if entry.data.get(CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR):
-        from .balance_monitor import BalanceMonitor
-        balance_monitor = BalanceMonitor(hass, entry, controller)
-        await balance_monitor.async_setup()
-        for coordinator in coordinators:
-            await balance_monitor.async_restore_coordinator(coordinator)
-        controller._balance_monitor = balance_monitor
+    # Set up balance monitor. This is always enabled so users always get
+    # battery health history from top-voltage balance measurements.
+    from .balance_monitor import BalanceMonitor
+    balance_monitor = BalanceMonitor(hass, entry, controller)
+    await balance_monitor.async_setup()
+    for coordinator in coordinators:
+        await balance_monitor.async_restore_coordinator(coordinator)
+    controller._balance_monitor = balance_monitor
 
     hass.data[DOMAIN][entry.entry_id] = {
         "coordinators": coordinators,

@@ -11,7 +11,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .balance_monitor import BalanceMonitor, BalanceSensorGroup
-from .const import DOMAIN, CONF_ENABLE_BALANCE_MONITOR
+from .const import DOMAIN
 
 
 async def async_setup_entry(
@@ -20,9 +20,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up balance sensor entities — one group of 5 per battery."""
-    if not entry.data.get(CONF_ENABLE_BALANCE_MONITOR, False):
-        return
-
     monitor: BalanceMonitor | None = hass.data[DOMAIN][entry.entry_id].get("balance_monitor")
     if monitor is None:
         return

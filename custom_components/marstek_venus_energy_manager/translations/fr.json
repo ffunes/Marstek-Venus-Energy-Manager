@@ -220,12 +220,10 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine",
-          "enable_balance_monitor": "Activer le moniteur d'équilibrage des cellules"
+          "weekly_full_charge_day": "Jour de la semaine"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "enable_balance_monitor": "Lorsqu'activé, le système analyse l'équilibre de tension des cellules après chaque charge complète et alerte en cas de déséquilibre détecté. Contourne également le retard de charge solaire ce jour-là afin que la batterie atteigne 100% et reste en charge d'entretien tant qu'il y a du soleil."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
         }
       },
       "charge_delay": {
@@ -580,12 +578,10 @@
         "title": "Configuration de la charge complète hebdomadaire",
         "description": "Sélectionnez le jour de la semaine où les batteries doivent se charger à 100% pour l'équilibrage des cellules. Après avoir atteint 100%, le système revient à votre limite de charge maximale configurée.",
         "data": {
-          "weekly_full_charge_day": "Jour de la semaine",
-          "enable_balance_monitor": "Activer le moniteur d'équilibrage des cellules"
+          "weekly_full_charge_day": "Jour de la semaine"
         },
         "data_description": {
-          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie.",
-          "enable_balance_monitor": "Lorsqu'activé, le système analyse l'équilibre de tension des cellules après chaque charge complète et alerte en cas de déséquilibre détecté. Contourne également le retard de charge solaire ce jour-là afin que la batterie atteigne 100% et reste en charge d'entretien tant qu'il y a du soleil."
+          "weekly_full_charge_day": "Jour où les batteries se chargeront à 100% quel que soit le SOC maximum configuré. Cela aide à équilibrer les cellules de la batterie."
         }
       },
       "charge_delay": {

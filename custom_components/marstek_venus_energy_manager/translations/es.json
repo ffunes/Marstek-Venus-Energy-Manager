@@ -220,12 +220,10 @@
         "title": "Configuración de carga completa semanal",
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana",
-          "enable_balance_monitor": "Activar monitor de balance de celdas"
+          "weekly_full_charge_day": "Día de la semana"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
-          "enable_balance_monitor": "Al activar esta opción, el sistema analiza el balance de voltaje de las celdas tras cada carga completa y genera alertas si se detecta desbalanceo. También omite el retraso de carga solar ese día para que la batería llegue al 100% y permanezca en flotación mientras haya sol."
+          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
         }
       },
       "charge_delay": {
@@ -580,12 +578,10 @@
         "title": "Configuración de carga completa semanal",
         "description": "Selecciona el día de la semana en el que las baterías deben cargarse al 100% para el balanceo de celdas. Una vez alcanzado el 100%, el sistema revertirá al límite de carga máximo configurado.",
         "data": {
-          "weekly_full_charge_day": "Día de la semana",
-          "enable_balance_monitor": "Activar monitor de balance de celdas"
+          "weekly_full_charge_day": "Día de la semana"
         },
         "data_description": {
-          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería.",
-          "enable_balance_monitor": "Al activar esta opción, el sistema analiza el balance de voltaje de las celdas tras cada carga completa y genera alertas si se detecta desbalanceo. También omite el retraso de carga solar ese día para que la batería llegue al 100% y permanezca en flotación mientras haya sol."
+          "weekly_full_charge_day": "Día en el que las baterías se cargarán al 100% independientemente del SOC máximo configurado. Esto ayuda a equilibrar las celdas de la batería."
         }
       },
       "charge_delay": {

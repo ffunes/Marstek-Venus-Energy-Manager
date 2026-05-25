@@ -19,7 +19,6 @@ from .const import (
     CYCLE_SENSOR_DEFINITIONS,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
-    CONF_ENABLE_BALANCE_MONITOR,
     CONF_ENABLE_PREDICTIVE_CHARGING,
     CONF_CHARGING_TIME_SLOT,
     CONF_SOLAR_FORECAST_SENSOR,
@@ -57,7 +56,6 @@ from .const import (
     DEFAULT_DELAY_SAFETY_MARGIN_MIN,
     DEFAULT_DELAY_SOC_SETPOINT_ENABLED,
     DEFAULT_DELAY_SOC_SETPOINT,
-    DEFAULT_ENABLE_BALANCE_MONITOR,
     DEFAULT_CAPACITY_PROTECTION_SOC,
     DEFAULT_CAPACITY_PROTECTION_LIMIT,
     CONF_PREDICTIVE_CHARGING_MODE,
@@ -724,9 +722,7 @@ class ConfigurationSummarySensor(SensorEntity):
         attrs["weekly_full_charge_enabled"] = weekly_enabled
         if weekly_enabled:
             attrs["weekly_full_charge_day"] = data.get(CONF_WEEKLY_FULL_CHARGE_DAY)
-            attrs["balance_monitor_enabled"] = data.get(
-                CONF_ENABLE_BALANCE_MONITOR, DEFAULT_ENABLE_BALANCE_MONITOR
-            )
+            attrs["balance_monitor_enabled"] = True
 
         # --- Charge delay ---
         charge_delay = data.get(CONF_ENABLE_CHARGE_DELAY, False)

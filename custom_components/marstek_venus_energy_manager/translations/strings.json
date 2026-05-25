@@ -220,12 +220,10 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week",
-          "enable_balance_monitor": "Enable cell balance monitor"
+          "weekly_full_charge_day": "Day of the week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
-          "enable_balance_monitor": "When enabled, the system analyzes cell voltage balance after each full charge and alerts if imbalance is detected. Also bypasses the solar charge delay on the full charge day so the battery reaches 100% and stays in float while there is sun."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
         }
       },
       "charge_delay": {
@@ -578,12 +576,10 @@
         "title": "Weekly Full Charge Configuration",
         "description": "Select the day of the week when batteries should charge to 100% for cell balancing. After reaching 100%, the system reverts to your configured maximum charge limit.",
         "data": {
-          "weekly_full_charge_day": "Day of the week",
-          "enable_balance_monitor": "Enable cell balance monitor"
+          "weekly_full_charge_day": "Day of the week"
         },
         "data_description": {
-          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells.",
-          "enable_balance_monitor": "When enabled, the system analyzes cell voltage balance after each full charge and alerts if imbalance is detected. Also bypasses the solar charge delay on the full charge day so the battery reaches 100% and stays in float while there is sun."
+          "weekly_full_charge_day": "Day when batteries will charge to 100% regardless of configured max SOC. This helps balance battery cells."
         }
       },
       "charge_delay": {

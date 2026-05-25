@@ -1816,7 +1816,6 @@ CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY = "enable_weekly_full_charge_delay"
 CONF_WEEKLY_FULL_CHARGE_SKIP_DELAY = "weekly_full_charge_skip_delay"
 DEFAULT_WEEKLY_FULL_CHARGE_SKIP_DELAY = False
 CONF_ENABLE_BALANCE_MONITOR = "enable_balance_monitor"
-DEFAULT_ENABLE_BALANCE_MONITOR = False
 
 # Cell Balance Monitor
 BALANCE_STORAGE_KEY = "balance_history"
