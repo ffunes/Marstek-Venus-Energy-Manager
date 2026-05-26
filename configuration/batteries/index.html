@@ -1703,6 +1703,7 @@
 <hr />
 <h2 id="soc-and-power-limits-at-runtime">SOC and power limits at runtime<a class="headerlink" href="#soc-and-power-limits-at-runtime" title="Permanent link">&para;</a></h2>
 <p>Max/min SOC and max charge/discharge power values can be adjusted at any time using the integration's sliders without reconfiguring. Changes are persisted and restored on every Home Assistant restart.</p>
+<p>If you raise a battery's <strong>Max SOC</strong> to <code>100 %</code>, that battery uses voltage-based top protection: 95 W charge throttle from <code>max_cell_voltage &gt;= 3.48 V</code>, then charging stops at 3.58 V and the integration waits 60 s to record the balance measurement. Charging is left stopped at that voltage with no forced discharge — the normal SOC/charge logic decides when to resume. See <a href="../../features/cell-balance-monitor/#100-charge-voltage-taper">Cell balance monitor</a> for the exact entry and exit conditions.</p>
 <p><img alt="SOC and power sliders" src="../../assets/screenshots/configuration/battery-runtime-sliders.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <hr />
 <h2 id="backup-offgrid-threshold-at-runtime">Backup offgrid threshold at runtime<a class="headerlink" href="#backup-offgrid-threshold-at-runtime" title="Permanent link">&para;</a></h2>

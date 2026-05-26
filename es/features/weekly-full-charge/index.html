@@ -1569,19 +1569,23 @@
 
 
 <h1 id="carga-semanal-completa">Carga semanal completa<a class="headerlink" href="#carga-semanal-completa" title="Permanent link">&para;</a></h1>
-<p>Carga las baterías al <strong>100 % una vez por semana</strong> para equilibrar las celdas y mantener la salud de la batería (cell balancing).</p>
+<p>Carga las baterías al <strong>100 % una vez por semana</strong> para que el pack llegue a la ventana superior de balanceo LFP y la integración pueda medir el desbalanceo de celdas en condiciones repetibles.</p>
 <h2 id="comportamiento">Comportamiento<a class="headerlink" href="#comportamiento" title="Permanent link">&para;</a></h2>
 <ol>
-<li>El día configurado de la semana, si el SOC máximo habitual es inferior al 100 %, la integración eleva temporalmente el límite de corte de carga al 100 %.</li>
-<li>La batería carga hasta el 100 % de SOC.</li>
-<li>Una vez alcanzado el 100 %, el límite de SOC máximo vuelve automáticamente al valor configurado por el usuario.</li>
+<li>El día configurado de la semana, si el SOC máximo habitual es inferior al 100 %, la integración eleva temporalmente el límite de corte de carga de la batería al 100 %.</li>
+<li>La batería carga hasta que entra la reducción por voltaje en la parte alta.</li>
+<li>Desde <code>max_cell_voltage &gt;= 3.48 V</code>, la carga se limita a 95 W.</li>
+<li>En <code>max_cell_voltage &gt;= 3.58 V</code>, la carga se detiene y la integración espera 60 segundos.</li>
+<li>Tras la espera, el monitor de equilibrio registra <code>delta_mV = (Vmax - Vmin) * 1000</code>.</li>
+<li>Tras finalizar, el límite de SOC máximo vuelve automáticamente al valor configurado por el usuario.</li>
 </ol>
+<p>La carga semanal completa usa el mismo perfil de voltaje que una batería configurada normalmente con <code>max_soc = 100</code>. La función semanal solo eleva el objetivo a 100 %; no usa un algoritmo de balanceo distinto.</p>
 <h2 id="monitor-de-equilibrio-de-celdas">Monitor de equilibrio de celdas<a class="headerlink" href="#monitor-de-equilibrio-de-celdas" title="Permanent link">&para;</a></h2>
-<p>El paso de configuración de carga semanal completa incluye una opción para activar el <strong>monitor de equilibrio de celdas</strong>. Cuando está activo, la integración mide la diferencia de tensión entre la celda más y menos cargada después de cada carga completa, para hacer seguimiento de la salud de la batería a lo largo del tiempo.</p>
+<p>El <strong>monitor de equilibrio de celdas</strong> está siempre activo. Registra la diferencia de tensión entre la celda más alta y la más baja tras cada medición en tensión alta, y mantiene actualizados los sensores, la tendencia y las alertas.</p>
 <p>Consulta <a href="../cell-balance-monitor/">Monitor de equilibrio de celdas</a> para más detalles.</p>
 <h2 id="interaccion-con-el-retraso-de-carga-solar">Interacción con el retraso de carga solar<a class="headerlink" href="#interaccion-con-el-retraso-de-carga-solar" title="Permanent link">&para;</a></h2>
-<p>Si el <a href="../solar-charge-delay/">retraso de carga solar</a> está activo, la carga semanal se postpone mientras la producción solar prevista sea suficiente para alcanzar el 100 %. La batería solo empieza a cargar desde la red cuando el modelo solar determina que el sol no completará la carga.</p>
-<p>Cuando el monitor de equilibrio de celdas está activado, el retraso de carga solar se omite automáticamente el día de la carga semanal para que la batería permanezca en flotación mientras haya sol disponible, dando más tiempo a las celdas para equilibrarse pasivamente antes de tomar la lectura OCV.</p>
+<p>Si el <a href="../solar-charge-delay/">retraso de carga solar</a> está activo, la carga semanal puede aplazarse mientras la producción solar prevista sea suficiente para alcanzar el 100 %.</p>
+<p>Cuando la carga semanal completa está activa, la integración puede omitir el retraso para que la batería alcance el punto de medición en tensión alta y la lectura de balance no se pierda.</p>
 <h2 id="registro-modbus-implicado">Registro Modbus implicado<a class="headerlink" href="#registro-modbus-implicado" title="Permanent link">&para;</a></h2>
 <p>La función manipula el registro <strong>44000</strong> (charging cutoff) de la batería para elevar temporalmente el límite.</p>
 <div class="admonition info">
