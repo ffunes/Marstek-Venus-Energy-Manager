@@ -1659,6 +1659,17 @@
 </ul>
 <p>The weekly full charge does not use a different balance profile. It only changes the target SOC to 100%; voltage thresholds, charge power and measurement logic are the same.</p>
 <h3 id="charge-profile">Charge profile<a class="headerlink" href="#charge-profile" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart TD
+    A([Normal charging]) --&gt; B(Charge with configured charge limit)
+    B --&gt; C{max_cell_voltage &lt; 3.48 V}
+    C --&gt;|Yes| A
+    C --&gt;|No| D([Limited charging])
+    D --&gt; E(Charge with 95 W)
+    E --&gt; F{max_cell_voltage &lt; 3.58 V}
+    F --&gt;|Yes| D
+    F --&gt;|No| G(Stop charging and wait 60 s)
+    G --&gt; H("Record cell_delta = (cell_Vmax - cell_Vmin) * 1000")
+    H --&gt; I([Normal SOC charge/discharge logic])</code></pre>
 <table>
 <thead>
 <tr>
