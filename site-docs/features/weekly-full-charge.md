@@ -2,22 +2,28 @@
 
 Charges batteries to **100% once a week** so the pack reaches the LFP top-balancing window and the integration can measure cell imbalance under repeatable conditions.
 
-## Behaviour
+## Charge profiles
 
-1. On the configured day of the week, if the usual max SOC is below 100%, the integration temporarily raises the battery charge cutoff to 100%.
-2. The battery charges until the top-voltage taper takes over.
-3. From `max_cell_voltage >= 3.48 V`, charge is limited to 95 W.
-4. At `max_cell_voltage >= 3.58 V`, charging stops and the integration waits 60 seconds.
-5. After the wait, the cell balance monitor records `delta_mV = (Vmax - Vmin) * 1000`.
-6. After completion, the max SOC limit automatically reverts to the user's configured value.
+| Profile | Description | Default |
+| --- | --- | --- |
+| **100% charge voltage taper** | Slows charge near top voltage window to allow some minor cell balancing | On |
+| **Active cell balancing** | Full cell balancing - repeated slow charge/discharge near top voltage window until `cell_delta_V` drops below 0.03 V or switched off | Off |
 
-The weekly full charge uses the same voltage profile as a normal battery configured with `max_soc = 100`. The weekly feature only raises the target to 100%; it does not use a separate balancing algorithm.
+!!! note These profiles can be switched on/off for each battery
+
+The 100% charge voltage taper uses the same voltage profile as a normal battery configured with `max_soc = 100`. The weekly feature only raises the target to 100%; it does not use a separate balancing algorithm.
+
+Active cell balancing repeatedly cycles slow charge or discharge near the top voltage window until the measured top-voltage delta is at or below 0.03 V, or until the user turns the switch off.
+
+!!! warning Active cell balancing is **very slow**. Reducing the top-of-charge cell delta by roughly 5 mV typically takes around 24 hours of cumulative time at the top of the balance window.
+
+See [Cell balancing](cell-balance-monitor.md) for full details.
 
 ## Cell balance monitor
 
-The **cell balance monitor** is always active. It records the voltage spread between the highest and lowest cell after each top-voltage measurement and keeps the sensor history, trend and alerts updated.
+The **cell balance monitor** is only active when checked in the Weekly Full Charge Configuration. It records the voltage spread between the highest and lowest cell after each top-voltage measurement and keeps the sensor history, trend and alerts updated.
 
-See [Cell balance monitor](cell-balance-monitor.md) for full details.
+See [Advanced options](configuration/advanced.md) for full details.
 
 ## Interaction with solar charge delay
 
