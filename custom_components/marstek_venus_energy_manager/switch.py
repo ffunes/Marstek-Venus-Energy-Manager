@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -456,10 +457,26 @@ class TimeSlotSwitch(SwitchEntity):
         slot = slots[self._slot_index]
         days = slot.get("days", [])
         days_str = ", ".join(d.capitalize() for d in days) if days else "None"
+        # Map "battery_N" config keys to user-facing battery names so consumers
+        # (the panel tooltip) can show which battery a scope/limit refers to.
+        batteries = self.entry.data.get("batteries", [])
+        battery_names = {
+            f"battery_{i + 1}": (b.get(CONF_NAME) or f"Battery {i + 1}")
+            for i, b in enumerate(batteries)
+        }
+        scope = slot.get("battery_scope", "all")
         return {
             "schedule": f"{slot.get('start_time', '??')}-{slot.get('end_time', '??')}",
             "days": days_str,
-            "apply_to_charge": slot.get("apply_to_charge", False),
+            "battery_scope": scope,
+            "battery_scope_name": "all" if scope == "all" else battery_names.get(scope, scope),
+            "mode": slot.get("mode", "pd"),
+            "allow_charge": slot.get("allow_charge", False),
+            "allow_discharge": slot.get("allow_discharge", True),
+            "soc_override_enabled": slot.get("soc_override_enabled", False),
+            "power_override_enabled": slot.get("power_override_enabled", False),
+            "battery_limits": slot.get("battery_limits", {}),
+            "battery_names": battery_names,
         }
 
     async def _update_slot_enabled(self, enabled: bool) -> None:

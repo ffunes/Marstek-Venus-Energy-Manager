@@ -27,6 +27,7 @@ from .const import (
     CONF_CHARGING_TIME_SLOT,
     CONF_SOLAR_FORECAST_SENSOR,
     CONF_HOUSEHOLD_CONSUMPTION_SENSOR,
+    CONF_SOLAR_PRODUCTION_SENSOR,
     CONF_MAX_CONTRACTED_POWER,
     DEFAULT_BASE_CONSUMPTION_KWH,
     SOC_REEVALUATION_THRESHOLD,
@@ -152,6 +153,119 @@ PLATFORMS: list[Platform] = [
     Platform.BUTTON,
 ]
 
+# Sidebar dashboard panel served with the integration.
+PANEL_URL_PATH = "marstek-venus"
+PANEL_STATIC_PATH = "/marstek_venus_energy_manager_static"
+PANEL_TITLE = "Marstek Venus"
+PANEL_ICON = "mdi:home-battery"
+_PANEL_REGISTERED_KEY = "_panel_registered"
+_STATIC_REGISTERED_KEY = "_panel_static_registered"
+
+
+async def _async_register_frontend_panel(hass: HomeAssistant, entry: ConfigEntry | None = None) -> None:
+    """Register (or refresh) the custom sidebar panel.
+
+    Serves the integration's ``frontend`` directory as a static path (once per
+    HA run) and (re)registers the ``marstek-venus-panel`` web component as a
+    sidebar panel on every setup, so the module URL and config payload refresh
+    when the integration reloads. The configured grid/home power sensors are
+    forwarded to the panel so the energy-flow diagram can wire its Grid/Home
+    nodes without hardcoding.
+
+    The module URL is cache-busted by the JS file's mtime so any edit to the
+    dashboard is picked up by the browser after a reload — without needing an
+    integration version bump.
+    Non-critical: failures are logged but never block integration setup.
+    """
+    try:
+        from pathlib import Path
+
+        from homeassistant.components import frontend, panel_custom
+        from homeassistant.components.http import StaticPathConfig
+
+        frontend_dir = Path(__file__).parent / "frontend"
+        domain_data = hass.data.setdefault(DOMAIN, {})
+
+        # Static path can only be registered once per HA run.
+        if not domain_data.get(_STATIC_REGISTERED_KEY):
+            await hass.http.async_register_static_paths(
+                [StaticPathConfig(PANEL_STATIC_PATH, str(frontend_dir), cache_headers=False)]
+            )
+            domain_data[_STATIC_REGISTERED_KEY] = True
+
+        # Cache-bust by the JS file mtime (changes on every edit/deploy); fall
+        # back to the integration version if the file can't be stat'd.
+        js_file = frontend_dir / "marstek-panel.js"
+        try:
+            cache_bust = str(int(js_file.stat().st_mtime))
+        except Exception:  # noqa: BLE001
+            from homeassistant.loader import async_get_integration
+
+            try:
+                cache_bust = (await async_get_integration(hass, DOMAIN)).version or "0"
+            except Exception:  # noqa: BLE001
+                cache_bust = "0"
+
+        panel_config = {"domain": DOMAIN, "title": PANEL_TITLE}
+        if entry is not None:
+            from .const import (
+                CONF_HOUSEHOLD_CONSUMPTION_SENSOR,
+                CONF_SOLAR_FORECAST_SENSOR,
+                CONF_SOLAR_PRODUCTION_SENSOR,
+            )
+
+            data = entry.data
+            # consumption_sensor is the net grid meter (+import / -export) the PD
+            # loop regulates — it is the Grid node of the flow diagram.
+            if data.get("consumption_sensor"):
+                panel_config["grid_entity"] = data["consumption_sensor"]
+            if data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR):
+                panel_config["home_entity"] = data[CONF_HOUSEHOLD_CONSUMPTION_SENSOR]
+            if data.get(CONF_SOLAR_FORECAST_SENSOR):
+                panel_config["solar_forecast_entity"] = data[CONF_SOLAR_FORECAST_SENSOR]
+            # Real-time PV production for the Solar node when panels are not wired
+            # through the battery MPPT inputs (external inverter).
+            if data.get(CONF_SOLAR_PRODUCTION_SENSOR):
+                panel_config["solar_entity"] = data[CONF_SOLAR_PRODUCTION_SENSOR]
+
+        # Remove any previous registration so the module URL / config refresh.
+        try:
+            frontend.async_remove_panel(hass, PANEL_URL_PATH)
+        except Exception:  # noqa: BLE001 - not registered yet is fine
+            pass
+
+        await panel_custom.async_register_panel(
+            hass,
+            frontend_url_path=PANEL_URL_PATH,
+            webcomponent_name="marstek-venus-panel",
+            module_url=f"{PANEL_STATIC_PATH}/marstek-panel.js?v={cache_bust}",
+            sidebar_title=PANEL_TITLE,
+            sidebar_icon=PANEL_ICON,
+            require_admin=False,
+            config=panel_config,
+        )
+        domain_data[_PANEL_REGISTERED_KEY] = True
+        _LOGGER.info(
+            "Registered Marstek Venus sidebar panel at /%s (v=%s)", PANEL_URL_PATH, cache_bust
+        )
+    except Exception as e:  # noqa: BLE001 - panel is optional, never block setup
+        _LOGGER.warning("Could not register Marstek Venus sidebar panel: %s", e)
+
+
+@callback
+def _async_unregister_frontend_panel(hass: HomeAssistant) -> None:
+    """Remove the sidebar panel when the last config entry unloads."""
+    if not hass.data.get(DOMAIN, {}).get(_PANEL_REGISTERED_KEY):
+        return
+    try:
+        from homeassistant.components import frontend
+
+        frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    except Exception as e:  # noqa: BLE001
+        _LOGGER.debug("Error removing Marstek Venus panel: %s", e)
+    finally:
+        hass.data[DOMAIN][_PANEL_REGISTERED_KEY] = False
+
 
 class ChargeDischargeController:
     """Controller to manage charge/discharge logic for all batteries."""
@@ -257,6 +371,7 @@ class ChargeDischargeController:
         self.charging_time_slot = config_entry.data.get(CONF_CHARGING_TIME_SLOT, None)
         self.solar_forecast_sensor = config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, None)
         self.household_consumption_sensor = config_entry.data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, None)
+        self.solar_production_sensor = config_entry.data.get(CONF_SOLAR_PRODUCTION_SENSOR, None)
         self.max_contracted_power = config_entry.data.get(CONF_MAX_CONTRACTED_POWER, 7000)
 
         # Household consumption accumulator (integration of power sensor over solar+battery window)
@@ -268,7 +383,22 @@ class ChargeDischargeController:
         # Solar production accumulator (house + battery_net - grid, integrated over the day)
         self._solar_production_accumulator = 0.0
         self._solar_accumulator_date = None  # date when solar accumulator was last reset
-        
+
+        # Exact full-day energy totals, integrated from the REAL power sensors
+        # (solar_production_sensor / household_consumption_sensor) at control-loop
+        # cadence, reset at local midnight, persisted/restored. Surfaced as the
+        # system_daily_solar_energy / system_daily_home_energy sensors.
+        self._daily_solar_energy_kwh = 0.0
+        self._daily_solar_energy_date = None
+        self._daily_home_energy_kwh = 0.0
+        self._daily_home_energy_date = None
+        # Exact daily grid import/export (kWh), sign-split from the net consumption
+        # meter (+import / -export). Surfaced as system_daily_grid_import_energy /
+        # system_daily_grid_export_energy. Shared reset date (one source sensor).
+        self._daily_grid_import_energy_kwh = 0.0
+        self._daily_grid_export_energy_kwh = 0.0
+        self._daily_grid_energy_date = None
+
         # State tracking for predictive charging
         self.grid_charging_active = False  # True when mode is active
         self.last_evaluation_soc = None    # SOC at last check
@@ -1080,6 +1210,7 @@ class ChargeDischargeController:
         )
         self.solar_forecast_sensor = self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, None)
         self.household_consumption_sensor = self.config_entry.data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, None)
+        self.solar_production_sensor = self.config_entry.data.get(CONF_SOLAR_PRODUCTION_SENSOR, None)
         self.predictive_charging_mode = self.config_entry.data.get(CONF_PREDICTIVE_CHARGING_MODE, PREDICTIVE_MODE_TIME_SLOT)
         self.price_sensor = self.config_entry.data.get(CONF_PRICE_SENSOR, None)
         self.price_integration_type = self.config_entry.data.get(CONF_PRICE_INTEGRATION_TYPE, PRICE_INTEGRATION_NORDPOOL)
@@ -5411,6 +5542,11 @@ class ChargeDischargeController:
             self._consumption_tracker.handle_accumulator_daily_reset()
             await self._consumption_tracker.accumulate_household_consumption()
             await self._consumption_tracker.accumulate_solar_production()
+            # Exact full-day totals from the real power sensors (panel "Energía hoy")
+            self._consumption_tracker.handle_daily_energy_reset()
+            await self._consumption_tracker.accumulate_daily_solar_energy()
+            await self._consumption_tracker.accumulate_daily_home_energy()
+            await self._consumption_tracker.accumulate_daily_grid_energy()
             self._consumption_tracker.maybe_save_accumulators()
 
         # === BALANCE MONITOR ===
@@ -6303,6 +6439,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Marstek Venus Energy Manager from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
+    # Register the sidebar dashboard panel (once per HA instance, non-blocking).
+    await _async_register_frontend_panel(hass, entry)
+
     # Migration: Add default version for existing installations
     from .const import CONF_BATTERY_VERSION, DEFAULT_VERSION
 
@@ -6469,6 +6608,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Restore household and solar accumulators from persistent storage
     await consumption_tracker.load_accumulators()
+    await consumption_tracker.load_daily_energy()
 
     # Restore weekly charge completion state from previous session
     await controller._weekly_charge_mgr.load_state()
@@ -6664,6 +6804,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         if unload_ok:
             hass.data[DOMAIN].pop(entry.entry_id, None)
+
+    # Remove the sidebar panel only when no config entries remain.
+    remaining = [
+        e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id
+    ]
+    if not remaining:
+        _async_unregister_frontend_panel(hass)
 
     return unload_ok
 

@@ -97,12 +97,27 @@ class ActiveBalanceModeManager:
         coordinator,
         vmax_f: float,
     ) -> float:
-        """Lower the charge retry point by 1 mV after the BMS rejects charge."""
+        """Lower the charge retry point after the BMS rejects charge.
+
+        Steps the retry voltage down by ``ACTIVE_BALANCE_ADAPTIVE_RESUME_STEP_V``,
+        but also forces it strictly below the voltage at which the charge was
+        rejected. Without the vmax-relative bound a BMS that refuses charge at a
+        low resting voltage (e.g. SOC-100 full lockout at vmax ~3.48 V) leaves the
+        DISCHARGE target (min(retry, stop)) at or above the current vmax, so the
+        escape discharge never runs and the run ping-pongs between CHARGE and
+        DISCHARGE forever. Bounding by vmax guarantees a real discharge that drops
+        SOC off the lockout so the next charge is accepted. In the original
+        high-vmax OVP case (rejection near the stop voltage) the current-step
+        bound still dominates, so behaviour there is unchanged.
+        """
         current = self._active_balance_charge_resume_target(coordinator)
         next_target = round(
             max(
                 ACTIVE_BALANCE_ADAPTIVE_MIN_RESUME_CELL_VOLTAGE,
-                current - ACTIVE_BALANCE_ADAPTIVE_RESUME_STEP_V,
+                min(
+                    current - ACTIVE_BALANCE_ADAPTIVE_RESUME_STEP_V,
+                    vmax_f - ACTIVE_BALANCE_ADAPTIVE_RESUME_STEP_V,
+                ),
             ),
             3,
         )
@@ -741,7 +756,26 @@ class ActiveBalanceModeManager:
                     )
                 except (TypeError, ValueError):
                     vmax_high = False
-                if vmax_high:
+                try:
+                    soc_f = float(soc_now) if soc_now is not None else None
+                except (TypeError, ValueError):
+                    soc_f = None
+                # A near-full pack reports SOC ~100% while the resting max-cell
+                # voltage can still sit below the resume threshold. In that state
+                # the BMS refuses the high-power pre-top charge (delivers ~0 W in
+                # Standby), so vmax never climbs to
+                # ACTIVE_BALANCE_CHARGE_RESUME_CELL_VOLTAGE and PRE_TOP_CHARGE
+                # would hammer max_charge_power forever. Treat near-full SOC, or a
+                # charge the BMS is rejecting at high SOC, as "top reached" and
+                # hand off to the low-power CHARGE phase whose 95 W trickle the
+                # BMS still accepts.
+                soc_at_top = soc_f is not None and soc_f >= 99
+                pre_top_charge_stalled = (
+                    soc_f is not None
+                    and soc_f >= 95
+                    and self._active_balance_charge_rejected_detected(coordinator, "CHARGE")
+                )
+                if vmax_high or soc_at_top or pre_top_charge_stalled:
                     top_reached = True
                     coordinator.active_balance_mode_top_reached = True
                     coordinator.active_balance_mode_phase = "CHARGE"
@@ -754,10 +788,15 @@ class ActiveBalanceModeManager:
                         },
                     )
                     _LOGGER.info(
-                        "%s: active balance mode reached top-balance zone (soc=%s, vmax=%s)",
+                        "%s: active balance mode reached top-balance zone "
+                        "(soc=%s, vmax=%s, vmax_high=%s, soc_at_top=%s, "
+                        "charge_stalled=%s)",
                         coordinator.name,
                         soc_now,
                         vmax_now,
+                        vmax_high,
+                        soc_at_top,
+                        pre_top_charge_stalled,
                     )
 
             if not top_reached:

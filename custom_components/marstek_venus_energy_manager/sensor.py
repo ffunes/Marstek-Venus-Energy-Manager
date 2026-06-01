@@ -3,7 +3,11 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -117,10 +121,11 @@ async def async_setup_entry(
         for definition in sensor_defs:
             entities.append(MarstekVenusSensor(coordinator, definition))
 
-    # Add aggregate sensors if there are multiple batteries
-    if len(coordinators) > 1:
-        for definition in AGGREGATE_SENSOR_DEFINITIONS:
-            entities.append(MarstekVenusAggregateSensor(coordinators, definition, entry, hass))
+    # Add aggregate sensors. Created even for a single-battery system so the
+    # "Marstek Venus System" device never exposes `unavailable` entities — with
+    # one battery each aggregate simply mirrors that battery's value.
+    for definition in AGGREGATE_SENSOR_DEFINITIONS:
+        entities.append(MarstekVenusAggregateSensor(coordinators, definition, entry, hass))
 
     # System alarm sensor — only for v2 batteries (only version with alarm/fault registers)
     v2_coordinators = [c for c in coordinators if c.battery_version == "v2"]
@@ -139,9 +144,12 @@ async def async_setup_entry(
     # Add discharge window diagnostic sensor (always, even without slots)
     entities.append(DischargeWindowSensor(hass, entry))
 
-    # Add active batteries diagnostic sensor (only with multiple batteries)
+    # Add active batteries diagnostic sensor. The controller updates its
+    # load-sharing tracking even for a single battery (see
+    # _select_batteries_for_operation), so this reflects charging/discharging/idle
+    # instead of staying unavailable.
     controller = hass.data[DOMAIN][entry.entry_id].get("controller")
-    if controller and len(coordinators) > 1:
+    if controller:
         entities.append(ActiveBatteriesSensor(hass, entry, controller, coordinators))
 
     # Add weekly full charge status sensor (when weekly charge is enabled)
@@ -167,6 +175,18 @@ async def async_setup_entry(
     # Add daily grid-at-min-soc energy sensor (feeds into consumption estimation)
     if controller:
         entities.append(DailyGridAtMinSocSensor(controller))
+
+    # Exact daily energy totals from the real power sensors (panel "Energía hoy").
+    # Each is added only when its source sensor is configured.
+    if controller and getattr(controller, "solar_production_sensor", None):
+        entities.append(DailySolarEnergySensor(controller))
+    if controller and getattr(controller, "household_consumption_sensor", None):
+        entities.append(DailyHomeEnergySensor(controller))
+    # Grid import/export are sign-split from the net consumption meter, which is
+    # always configured, so these are always added.
+    if controller and getattr(controller, "consumption_sensor", None):
+        entities.append(DailyGridImportEnergySensor(controller))
+        entities.append(DailyGridExportEnergySensor(controller))
 
 
 
@@ -1191,6 +1211,156 @@ class NonResponsiveBatteriesSensor(SensorEntity):
                     "consecutive_failures": getattr(coordinator, "_consecutive_failures", 0),
                 }
         return attrs
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class DailySolarEnergySensor(SensorEntity):
+    """Exact daily solar production (kWh), integrated from the real solar power sensor.
+
+    The controller integrates the configured solar_production_sensor at control-loop
+    cadence and resets at local midnight (see ConsumptionTracker); this entity just
+    surfaces that running total. total_increasing so HA handles the daily reset.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "system_daily_solar_energy"
+    _attr_unique_id = "marstek_venus_system_daily_solar_energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:solar-power"
+    _attr_should_poll = True
+
+    def __init__(self, controller) -> None:
+        """Initialize the daily solar energy sensor."""
+        self._controller = controller
+
+    @property
+    def native_value(self) -> float:
+        """Return today's accumulated solar production in kWh."""
+        return round(self._controller._daily_solar_energy_kwh, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class DailyHomeEnergySensor(SensorEntity):
+    """Exact daily home consumption (kWh), integrated from the real household power sensor.
+
+    Mirrors DailySolarEnergySensor but for the household_consumption_sensor. Unlike the
+    predictive-charging windowed accumulator, this integrates the full 24 h.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "system_daily_home_energy"
+    _attr_unique_id = "marstek_venus_system_daily_home_energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:home-lightning-bolt"
+    _attr_should_poll = True
+
+    def __init__(self, controller) -> None:
+        """Initialize the daily home energy sensor."""
+        self._controller = controller
+
+    @property
+    def native_value(self) -> float:
+        """Return today's accumulated home consumption in kWh."""
+        return round(self._controller._daily_home_energy_kwh, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class DailyGridImportEnergySensor(SensorEntity):
+    """Exact daily grid import (kWh), integrated from the net consumption meter.
+
+    The controller integrates the positive half of the consumption_sensor (power
+    drawn FROM the grid) at control-loop cadence and resets at local midnight
+    (see ConsumptionTracker); this entity surfaces that running total.
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "system_daily_grid_import_energy"
+    _attr_unique_id = "marstek_venus_system_daily_grid_import_energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:transmission-tower-import"
+    _attr_should_poll = True
+
+    def __init__(self, controller) -> None:
+        """Initialize the daily grid import energy sensor."""
+        self._controller = controller
+
+    @property
+    def native_value(self) -> float:
+        """Return today's accumulated grid import in kWh."""
+        return round(self._controller._daily_grid_import_energy_kwh, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class DailyGridExportEnergySensor(SensorEntity):
+    """Exact daily grid export (kWh), integrated from the net consumption meter.
+
+    Mirrors DailyGridImportEnergySensor but for the negative half of the
+    consumption_sensor (power fed TO the grid).
+    """
+
+    _attr_has_entity_name = True
+    _attr_translation_key = "system_daily_grid_export_energy"
+    _attr_unique_id = "marstek_venus_system_daily_grid_export_energy"
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_native_unit_of_measurement = "kWh"
+    _attr_suggested_display_precision = 2
+    _attr_icon = "mdi:transmission-tower-export"
+    _attr_should_poll = True
+
+    def __init__(self, controller) -> None:
+        """Initialize the daily grid export energy sensor."""
+        self._controller = controller
+
+    @property
+    def native_value(self) -> float:
+        """Return today's accumulated grid export in kWh."""
+        return round(self._controller._daily_grid_export_energy_kwh, 2)
 
     @property
     def device_info(self):

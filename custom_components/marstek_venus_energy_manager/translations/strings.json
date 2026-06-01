@@ -857,6 +857,18 @@
       "active_batteries": {
         "name": "Active Batteries"
       },
+      "system_daily_solar_energy": {
+        "name": "Daily Solar Production"
+      },
+      "system_daily_home_energy": {
+        "name": "Daily Home Consumption"
+      },
+      "system_daily_grid_import_energy": {
+        "name": "Daily Grid Import"
+      },
+      "system_daily_grid_export_energy": {
+        "name": "Daily Grid Export"
+      },
       "non_responsive_batteries": {
         "name": "Non-Responsive Batteries"
       },

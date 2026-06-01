@@ -57,10 +57,16 @@ class ConsumptionTracker:
         self._accumulator_store: Store = Store(
             hass, 1, f"{DOMAIN}.{config_entry.entry_id}.accumulators"
         )
+        self._daily_energy_store: Store = Store(
+            hass, 1, f"{DOMAIN}.{config_entry.entry_id}.daily_energy"
+        )
 
         # Transient state (not exposed to sensors)
         self._household_last_accumulation_time: Optional[float] = None
         self._solar_last_accumulation_time: Optional[float] = None
+        self._daily_solar_last_time: Optional[float] = None
+        self._daily_home_last_time: Optional[float] = None
+        self._daily_grid_last_time: Optional[float] = None
         self._grid_at_min_soc_save_counter: int = 0
         self._accumulator_last_save_monotonic: float = 0.0
         self._solar_noon_cache: Optional[tuple[date, float]] = None
@@ -170,6 +176,148 @@ class ConsumptionTracker:
             )
         except Exception as e:
             _LOGGER.warning("Failed to load accumulators from storage: %s", e)
+
+    def save_daily_energy(self) -> None:
+        """Fire-and-forget: persist the exact daily solar/home/grid energy totals."""
+        ctrl = self._controller
+        # The grid meter (consumption_sensor) is always configured, so this always
+        # has something worth saving (import/export); the date is keyed to today.
+        asyncio.create_task(self._daily_energy_store.async_save({
+            "date": date.today().isoformat(),
+            "solar_kwh": round(ctrl._daily_solar_energy_kwh, 4),
+            "home_kwh": round(ctrl._daily_home_energy_kwh, 4),
+            "grid_import_kwh": round(ctrl._daily_grid_import_energy_kwh, 4),
+            "grid_export_kwh": round(ctrl._daily_grid_export_energy_kwh, 4),
+        }))
+
+    async def load_daily_energy(self) -> None:
+        """Restore the daily solar/home/grid energy totals (today's values only)."""
+        ctrl = self._controller
+        try:
+            data = await self._daily_energy_store.async_load()
+            if not data or data.get("date") != date.today().isoformat():
+                return
+            today = date.today()
+            ctrl._daily_solar_energy_kwh = float(data.get("solar_kwh", 0.0))
+            ctrl._daily_solar_energy_date = today
+            ctrl._daily_home_energy_kwh = float(data.get("home_kwh", 0.0))
+            ctrl._daily_home_energy_date = today
+            ctrl._daily_grid_import_energy_kwh = float(data.get("grid_import_kwh", 0.0))
+            ctrl._daily_grid_export_energy_kwh = float(data.get("grid_export_kwh", 0.0))
+            ctrl._daily_grid_energy_date = today
+            _LOGGER.info(
+                "Restored daily energy totals from storage: solar=%.2f kWh, home=%.2f kWh, "
+                "grid import=%.2f kWh, grid export=%.2f kWh",
+                ctrl._daily_solar_energy_kwh, ctrl._daily_home_energy_kwh,
+                ctrl._daily_grid_import_energy_kwh, ctrl._daily_grid_export_energy_kwh,
+            )
+        except Exception as e:
+            _LOGGER.warning("Failed to load daily energy from storage: %s", e)
+
+    # ------------------------------------------------------------------
+    # Exact daily energy totals (real power sensors, full day)
+    # ------------------------------------------------------------------
+
+    def handle_daily_energy_reset(self) -> None:
+        """Reset the exact daily solar/home totals at local-midnight rollover."""
+        ctrl = self._controller
+        today = date.today()
+        if ctrl._daily_solar_energy_date != today:
+            if ctrl._daily_solar_energy_date is not None:
+                _LOGGER.info(
+                    "Daily solar energy reset (was %.2f kWh for %s)",
+                    ctrl._daily_solar_energy_kwh, ctrl._daily_solar_energy_date,
+                )
+            ctrl._daily_solar_energy_kwh = 0.0
+            self._daily_solar_last_time = None
+            ctrl._daily_solar_energy_date = today
+        if ctrl._daily_home_energy_date != today:
+            if ctrl._daily_home_energy_date is not None:
+                _LOGGER.info(
+                    "Daily home energy reset (was %.2f kWh for %s)",
+                    ctrl._daily_home_energy_kwh, ctrl._daily_home_energy_date,
+                )
+            ctrl._daily_home_energy_kwh = 0.0
+            self._daily_home_last_time = None
+            ctrl._daily_home_energy_date = today
+        if ctrl._daily_grid_energy_date != today:
+            if ctrl._daily_grid_energy_date is not None:
+                _LOGGER.info(
+                    "Daily grid energy reset (import=%.2f export=%.2f kWh for %s)",
+                    ctrl._daily_grid_import_energy_kwh,
+                    ctrl._daily_grid_export_energy_kwh,
+                    ctrl._daily_grid_energy_date,
+                )
+            ctrl._daily_grid_import_energy_kwh = 0.0
+            ctrl._daily_grid_export_energy_kwh = 0.0
+            self._daily_grid_last_time = None
+            ctrl._daily_grid_energy_date = today
+
+    def _read_power_kw(self, entity_id: str) -> Optional[float]:
+        """Read a power entity and return its value in kW, or None if unusable."""
+        state = self._hass.states.get(entity_id)
+        if state is None or state.state in ("unknown", "unavailable"):
+            return None
+        try:
+            value = float(state.state)
+        except (ValueError, TypeError):
+            return None
+        unit = state.attributes.get("unit_of_measurement", "W")
+        return value if unit == "kW" else value / 1000.0
+
+    async def accumulate_daily_solar_energy(self) -> None:
+        """Integrate the real solar production power sensor → exact daily kWh."""
+        ctrl = self._controller
+        if not ctrl.solar_production_sensor:
+            return
+        power_kw = self._read_power_kw(ctrl.solar_production_sensor)
+        if power_kw is None:
+            self._daily_solar_last_time = None
+            return
+        now = monotonic()
+        if self._daily_solar_last_time is not None:
+            dt_hours = (now - self._daily_solar_last_time) / 3600.0
+            if dt_hours > 0:
+                ctrl._daily_solar_energy_kwh += max(0.0, power_kw) * dt_hours
+        self._daily_solar_last_time = now
+
+    async def accumulate_daily_home_energy(self) -> None:
+        """Integrate the real household consumption power sensor → exact daily kWh."""
+        ctrl = self._controller
+        if not ctrl.household_consumption_sensor:
+            return
+        power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
+        if power_kw is None:
+            self._daily_home_last_time = None
+            return
+        now = monotonic()
+        if self._daily_home_last_time is not None:
+            dt_hours = (now - self._daily_home_last_time) / 3600.0
+            if dt_hours > 0:
+                ctrl._daily_home_energy_kwh += max(0.0, power_kw) * dt_hours
+        self._daily_home_last_time = now
+
+    async def accumulate_daily_grid_energy(self) -> None:
+        """Integrate the net grid meter → exact daily import/export kWh.
+
+        Sign convention of the consumption sensor: positive = importing from the
+        grid, negative = exporting to it. Each half integrates separately so the
+        panel can show both totals.
+        """
+        ctrl = self._controller
+        power_kw = self._read_power_kw(ctrl.consumption_sensor)
+        if power_kw is None:
+            self._daily_grid_last_time = None
+            return
+        now = monotonic()
+        if self._daily_grid_last_time is not None:
+            dt_hours = (now - self._daily_grid_last_time) / 3600.0
+            if dt_hours > 0:
+                if power_kw >= 0:
+                    ctrl._daily_grid_import_energy_kwh += power_kw * dt_hours
+                else:
+                    ctrl._daily_grid_export_energy_kwh += -power_kw * dt_hours
+        self._daily_grid_last_time = now
 
     # ------------------------------------------------------------------
     # Consumption history queries
@@ -1135,6 +1283,7 @@ class ConsumptionTracker:
         if now_mono - self._accumulator_last_save_monotonic >= 300:
             self._accumulator_last_save_monotonic = now_mono
             self.save_accumulators()
+            self.save_daily_energy()
 
     async def maybe_save_grid_at_min_soc_history(self) -> None:
         """Persist consumption history every ~5 min during grid-at-min-soc accumulation.
