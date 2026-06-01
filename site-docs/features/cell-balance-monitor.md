@@ -59,28 +59,29 @@ The weekly full charge does not use a different balance profile. It only changes
 
 ```mermaid
 flowchart TD
-    A([Normal charging]) --> B(Charge with configured charge limit)
+    A([100% charge voltage taper start]) --> B(Charge with configured charge limit)
     B --> C{max_cell_voltage < 3.48 V}
     C -->|Yes| A
-    C -->|No| D([Limited charging])
+    C -->|No| D([Limit charging])
     D --> E(Charge with 95 W)
     E --> F{max_cell_voltage < 3.58 V}
     F -->|Yes| D
-    F -->|No| G(Stop charging and wait 60 s)
-    G --> H("Record cell_delta = (cell_Vmax - cell_Vmin) * 1000")
-    H --> I([Normal SOC charge/discharge logic])
+    F -->|No| G([100% charge voltage taper stop])
+    G --> H(Resume normal SOC charge/discharge logic)
+    G --> I(Wait 60s)
+    I --> J("Record cell_delta = (cell_Vmax - cell_Vmin) * 1000")
 ```
     
 | Condition for one battery | Action |
-|---|---:|
+|---|---|
 | `max_cell_voltage` below 3.48 V | Normal configured charge limit |
 | `max_cell_voltage` at or above 3.48 V | Limit charge to 95 W |
-| `max_cell_voltage` at or above 3.58 V | Stop charging and wait 60 s |
+| `max_cell_voltage` at or above 3.58 V | Resume normal SOC charge/discharge logic |
 | After the 60 s wait | Record `delta_mV = (Vmax - Vmin) * 1000` |
 
-The logic is voltage based. SOC is deliberately not used to decide when the top-voltage taper starts or stops, because SOC can be less reliable near the top than the cell-voltage registers.
+The logic is voltage based. SOC is deliberately not used to decide when the top-voltage taper starts or stops, because SOC can be less reliable near the top than the cell-voltage registers. There is no extra voltage hysteresis in this path. 
 
-There is no extra voltage hysteresis in this path. Once the battery reaches 3.58 V and the reading has been taken, the integration does not force a discharge. It leaves charging stopped at that voltage and lets the normal SOC/charge logic decide when future charging is allowed again.
+Once the battery reaches 3.58 V, the normal SOC charge/discharge logic with hysteresis is resumed. The 60-second delta-V measurement still runs as a best-effort diagnostic; if it did not finish before completion, a one-shot snapshot is captured at completion time under phase `top_charge_taper_complete`.
 
 In a multi-battery system, this is evaluated per battery. One battery can be limited or paused while another continues charging normally.
 
@@ -91,6 +92,32 @@ Active balance mode is a stronger per-battery recovery mode for packs that need 
 When the switch is enabled, that battery is excluded from normal PD control. The rest of the batteries can continue to operate normally. The integration temporarily raises the battery charge target to 100% and commands charge directly for that battery.
 
 ### Active balance profile
+
+```mermaid
+flowchart TD
+    A([Active balance start]) --> B(Charge with configured charge limit)
+    B --> C{max_cell_voltage < 3.49 V}
+    C -->|Yes| A
+    C -->|No| D([Regulated top charge])
+    D --> E(Charge with 95 W)
+    E --> F{max_cell_voltage < 3.58 V}
+    F -->|Yes| D
+    F -->|No| G([Measurement wait])
+    G --> H(Stop charge/discharge)
+    H --> I(Wait 60s)
+    I --> J("Measure cell_delta = (cell_Vmax - cell_Vmin) * 1000")
+    J --> K{cell_delta > 0.03 V}
+    K -->|Yes| L(Discharge with 25 W)
+    L --> M{max_cell_voltage <= 3.49 V}
+    M --> |Yes| D
+    M --> |No| L
+    K --> |No| N([Final discharge])
+    N --> O(Discharge with 25 W)
+    O --> P{max_cell_voltage <= 3.48 V}
+    P --> |No| N
+    P --> |Yes| Q([Active balance stop]) 
+```
+
 
 | Phase | Action |
 |---|---|
