@@ -8,6 +8,11 @@
     "@ffunes"
   ],
   "config_flow": true,
+  "dependencies": [
+    "http",
+    "frontend",
+    "panel_custom"
+  ],
   "documentation": "https://github.com/ffunes/marstek-venus-energy-manager",
   "integration_type": "device",
   "iot_class": "local_polling",
