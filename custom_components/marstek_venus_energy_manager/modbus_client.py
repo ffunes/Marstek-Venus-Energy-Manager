@@ -8,7 +8,6 @@ from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ConnectionException, ModbusIOException
 import asyncio
 import inspect
-import socket
 from typing import Optional
 
 import logging
@@ -153,11 +152,6 @@ class MarstekModbusClient:
 
             if connected:
                 await asyncio.sleep(0.2)  # Wait for connection to stabilize
-                # Enable TCP keepalive so the OS detects a dead/half-open socket
-                # (e.g. after a battery reboot) within ~90s and tears it down,
-                # instead of leaving it ESTABLISHED until the kernel's default
-                # timeout (hours). Lets the next poll create a fresh connection.
-                self._enable_tcp_keepalive()
                 _LOGGER.info(
                     "Connected to Modbus server at %s:%s with unit %s",
                     self.host,
@@ -183,29 +177,6 @@ class MarstekModbusClient:
                     e,
                 )
             return False
-
-    def _enable_tcp_keepalive(self) -> None:
-        """Enable TCP keepalive on the live pymodbus socket.
-
-        Probe a dead peer after 60s idle, then every 10s up to 3 times, so a
-        half-open connection is detected and closed in ~90s. Best-effort: the
-        socket may be unavailable or the platform may lack some options.
-        """
-        try:
-            transport = getattr(self.client, "transport", None)
-            sock = transport.get_extra_info("socket") if transport is not None else None
-            if sock is None:
-                return
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            if hasattr(socket, "TCP_KEEPIDLE"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
-            if hasattr(socket, "TCP_KEEPINTVL"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)
-            if hasattr(socket, "TCP_KEEPCNT"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
-            _LOGGER.debug("TCP keepalive enabled on Modbus socket %s:%s", self.host, self.port)
-        except Exception as e:
-            _LOGGER.debug("Could not set TCP keepalive on %s:%s: %s", self.host, self.port, e)
 
     async def async_close(self) -> None:
         """
