@@ -14,6 +14,8 @@ adjustment = P + D
 new_power = current_power + adjustment
 ```
 
+Because the loop is event-driven (variable cadence), the `P` term and the rate limit are internally scaled by the real elapsed time between sensor updates, so the tuning behaves the same regardless of how fast your sensor publishes.
+
 ### Default parameters
 
 | Parameter | Value | Description |
@@ -21,7 +23,7 @@ new_power = current_power + adjustment
 | `Kp` | `0.65` | Proportional gain |
 | `Kd` | `0.5` | Derivative gain |
 | Deadband | `±40 W` | Dead zone: ignores small errors |
-| Rate limit | `±500 W/cycle` | Maximum change per cycle |
+| Rate limit | `±800 W/cycle` | Maximum change per cycle |
 
 ## Control cadence
 
@@ -39,7 +41,7 @@ If the error is less than ±40 W, the controller does not adjust power. This pre
 
 ### Rate limiting
 
-Power changes are limited per cycle to smooth transitions and protect the battery from abrupt changes. A "cycle" is one control update, which is now driven by each new sensor value — so with a fast sensor (e.g. 1 s updates) the effective power-ramp rate rises accordingly. Lower the limit if the response feels abrupt.
+Power changes are limited per cycle to smooth transitions and protect the battery from abrupt changes. A "cycle" is one control update, driven by each new sensor value. The configured per-cycle limit is internally scaled by the real elapsed time between updates, so the effective ramp rate (W/s) stays constant regardless of how fast the sensor publishes. Lower the limit if the response feels abrupt.
 
 ### Oscillation detection
 
@@ -48,6 +50,14 @@ The controller monitors frequent direction reversals (charge↔discharge). If su
 ### Directional hysteresis
 
 Prevents direction changes from momentary load variations (such as appliance start-ups). The controller requires the error to exceed a threshold for several cycles before switching from charging to discharging or vice versa.
+
+### Derivative filtering
+
+The derivative term is low-pass filtered (short time constant) before it reaches the output. Differentiating a barely-smoothed grid signal would otherwise amplify meter quantisation and inverter PWM noise and inject it into battery power; filtering keeps the derivative useful without that noise.
+
+### Measured-power anti-windup
+
+The controller assumes each battery delivers exactly the power it was commanded. When a battery cannot — for example because of SOC/voltage taper or ramp lag — the controller detects the sustained shortfall by comparing the command against the measured AC power, and re-anchors its internal baseline to reality. This prevents the control output from "winding up" past what the hardware actually delivered, which would otherwise cause an overshoot or a brief grid export when the load later drops.
 
 ## Backup function exclusion
 

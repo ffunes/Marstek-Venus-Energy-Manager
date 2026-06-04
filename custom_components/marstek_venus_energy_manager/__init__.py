@@ -319,8 +319,21 @@ class ChargeDischargeController:
         self.ki = 0.0          # Integral gain (DISABLED - using pure PD control)
         self.error_integral = 0.0      # Accumulated error
         self.previous_error = 0.0      # Previous error for derivative
-        self.dt = 2.0                  # Control loop time in seconds
+        self.dt = 2.0                  # Nominal control loop time (s); used to normalize cadence-dependent terms
         self.integral_decay = 0.90     # Leaky integrator: 10% decay per cycle
+
+        # Derivative low-pass filter: smooth the noisy grid derivative so the D term
+        # does not inject sensor/PWM/quantization noise into the output. EMA whose
+        # alpha is computed per-cycle from real elapsed time (alpha = dt/(tau+dt)).
+        self.derivative_tau = 3.0       # seconds; larger = smoother but more lag
+        self.derivative_filtered = 0.0  # filtered derivative state
+
+        # Measured-power anti-windup (back-calculation): re-anchor the incremental
+        # base to the battery's real AC output when commanded power is not being
+        # delivered (saturation/ramp lag not captured by the capacity clamp).
+        self.saturation_backcalc_threshold = 150.0  # W shortfall to count as saturation
+        self.saturation_backcalc_cycles = 3          # sustained cycles before re-anchoring
+        self._saturation_cycles = 0
 
         # Oscillation detection for auto-reset
         self.sign_changes = 0           # Count of consecutive sign changes in error
@@ -5579,6 +5592,26 @@ class ChargeDischargeController:
                 stopped = True
         return stopped
 
+    def _measured_battery_power(self):
+        """Aggregate measured AC power across batteries, in controller convention.
+
+        The ac_power register is + discharge / - charge (see aggregate_sensors), the
+        opposite of the controller's + charge / - discharge, so it is negated. Uses
+        the AC-side power (what the grid meter sees, excludes DC PV on vA/vD). Returns
+        None if no battery reports a value (e.g. right after a restart).
+        """
+        total = 0.0
+        seen = False
+        for coordinator in self.coordinators:
+            if not coordinator.data:
+                continue
+            value = coordinator.data.get("ac_power")
+            if value is None:
+                continue
+            total += -float(value)
+            seen = True
+        return total if seen else None
+
     async def async_update_charge_discharge(self, now=None):
         """Run one control cycle, guarded against overlapping triggers.
 
@@ -6004,10 +6037,37 @@ class ChargeDischargeController:
         # error < 0: grid power below target → need to charge more / discharge less
         # active_target was calculated before deadband check (reuse it here)
         error = sensor_actual - active_target
-        
+
+        # ANTI-WINDUP (back-calculation): the incremental loop assumes the batteries
+        # delivered exactly the last commanded power. When they can't (SOC/voltage
+        # taper, ramp lag, internal derating not captured by the capacity clamp),
+        # previous_power drifts past reality and the integral-like P term winds up,
+        # causing an overshoot/export spike when load later drops. Re-anchor the
+        # increment base to the MEASURED AC power once under-delivery is sustained
+        # (a single cycle may just be scan-interval lag). The sign guard prevents a
+        # transient near-zero reading from flipping direction, and we only ever clamp
+        # the base DOWN toward reality, never inflate it.
+        measured_power = self._measured_battery_power()
+        if (
+            measured_power is not None
+            and self.previous_power != 0
+            and (self.previous_power > 0) == (measured_power >= 0)
+            and abs(self.previous_power) - abs(measured_power) > self.saturation_backcalc_threshold
+        ):
+            self._saturation_cycles += 1
+            if self._saturation_cycles >= self.saturation_backcalc_cycles:
+                _LOGGER.debug(
+                    "PD anti-windup: re-anchoring base %.0fW -> measured %.0fW (shortfall %.0fW)",
+                    self.previous_power, measured_power,
+                    abs(self.previous_power) - abs(measured_power),
+                )
+                self.previous_power = measured_power
+        else:
+            self._saturation_cycles = 0
+
         # Note: Oscillation detection moved to end of method (after checking restrictions)
         # This prevents false positives when controller is paused by time slot restrictions
-        
+
         # Only process integral if Ki > 0 (integral is enabled)
         if self.ki > 0:
             # DIRECTIONAL RESET: If integral is working AGAINST the current error, it's obsolete
@@ -6058,15 +6118,27 @@ class ChargeDischargeController:
             # Safety valve: suppress derivative to avoid spike from stale data
             real_dt = self.dt
             error_derivative = 0.0
-        elif previous_update_time is not None:
-            real_dt = max(1.0, min((sensor_update_time - previous_update_time).total_seconds(), 30.0))
-            error_derivative = (error - self.previous_error) / real_dt
+            self.derivative_filtered = 0.0  # drop stale derivative state
         else:
-            real_dt = self.dt
-            error_derivative = (error - self.previous_error) / real_dt
+            if previous_update_time is not None:
+                real_dt = max(1.0, min((sensor_update_time - previous_update_time).total_seconds(), 30.0))
+            else:
+                real_dt = self.dt
+            error_derivative_raw = (error - self.previous_error) / real_dt
+            # Low-pass the derivative: differentiating a barely-filtered grid signal
+            # (2-sample moving average) amplifies PWM/quantization noise, which the D
+            # term would otherwise inject into the output. EMA with a real-time alpha.
+            d_alpha = real_dt / (self.derivative_tau + real_dt)
+            self.derivative_filtered += d_alpha * (error_derivative_raw - self.derivative_filtered)
+            error_derivative = self.derivative_filtered
         
         # PID terms
-        P = self.kp * error
+        # The P term is applied incrementally (new_power -= P) every cycle, so it acts
+        # as integral action whose effective rate scales with cycle frequency. The loop
+        # is now event-driven (variable cadence, ~1 s) rather than a fixed 2 s timer, so
+        # scale by real elapsed time normalized to the nominal dt — this keeps the
+        # per-second correction, and therefore the tuning, independent of cadence.
+        P = self.kp * error * (real_dt / self.dt)
         I = self.ki * self.error_integral
         D = self.kd * error_derivative
         
@@ -6078,17 +6150,21 @@ class ChargeDischargeController:
         # Apply adjustment to previous power to get new target
         new_power_raw = self.previous_power - pd_adjustment  # Minus because we're correcting the imbalance
         
-        # RATE LIMITER: Prevent abrupt changes that cause overshoot
+        # RATE LIMITER: Prevent abrupt changes that cause overshoot. The configured
+        # value is a per-cycle cap calibrated for the nominal dt; scale by real elapsed
+        # time so the effective ramp rate (W/s) stays constant under the variable
+        # event-driven cadence (otherwise faster cycles would multiply the ramp rate).
+        max_change = self.max_power_change_per_cycle * (real_dt / self.dt)
         power_change = new_power_raw - self.previous_power
-        if abs(power_change) > self.max_power_change_per_cycle:
+        if abs(power_change) > max_change:
             # Clamp the change to maximum allowed rate
             sign = 1 if power_change > 0 else -1
-            new_power = self.previous_power + (sign * self.max_power_change_per_cycle)
+            new_power = self.previous_power + (sign * max_change)
             if self._should_log_rate_limiter(power_change):
                 _LOGGER.info(
                     "PD rate limiter: requested_change=%.1fW limit=+/-%.0fW applied_change=%.1fW",
                     power_change,
-                    self.max_power_change_per_cycle,
+                    max_change,
                     new_power - self.previous_power,
                 )
         else:
