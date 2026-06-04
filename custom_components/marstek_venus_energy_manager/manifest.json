@@ -20,7 +20,7 @@
   "requirements": [
     "pymodbus>=3.5.0"
   ],
-  "version": "2.0.1b1",
+  "version": "2.0.1b2",
   "zeroconf": [
     "_modbus._tcp.local."
   ]

@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.1b2] - 2026-06-04
+
+### Changed
+- **Lowered default PD gains to curb overshoot**: Defaults are now Kp 0.35 / Kd 0.3 (was 0.65 / 0.5). Existing installs still on the old defaults are migrated automatically (config entry v3→v4); hand-tuned gains are left untouched. [`const.py`](custom_components/marstek_venus_energy_manager/const.py), [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py), [`config_flow.py`](custom_components/marstek_venus_energy_manager/config_flow.py).
+
 ## [2.0.1b1] - 2026-06-04
 
 > **Note:** This release contains changes for the dashboard panel. After updating, hard-refresh the browser (**Ctrl+F5**, or Cmd+Shift+R on macOS) to load the new version — a cached panel may otherwise persist.

@@ -2020,8 +2020,11 @@ CONF_SYSTEM_MAX_CHARGE_POWER = "system_max_charge_power"
 CONF_SYSTEM_MAX_DISCHARGE_POWER = "system_max_discharge_power"
 
 # Default PD Controller Parameters
-DEFAULT_PD_KP = 0.65
-DEFAULT_PD_KD = 0.5
+# Lowered from Kp 0.65 / Kd 0.5 to curb overshoot under the cadence-independent
+# control loop; existing installs on the old defaults are migrated (see
+# async_migrate_entry, config entry v3 -> v4).
+DEFAULT_PD_KP = 0.35
+DEFAULT_PD_KD = 0.3
 DEFAULT_PD_DEADBAND = 40
 DEFAULT_PD_MAX_POWER_CHANGE = 800
 DEFAULT_PD_DIRECTION_HYSTERESIS = 60

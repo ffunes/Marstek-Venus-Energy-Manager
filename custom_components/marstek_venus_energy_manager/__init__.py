@@ -6578,8 +6578,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     v1 -> v2: add port to unique_ids and device identifiers.
     v2 -> v3: expand time slots from {apply_to_charge} to per-direction tick schema.
+    v3 -> v4: lower PD defaults (Kp 0.65->0.35, Kd 0.5->0.3) for installs still on
+              the old defaults, to curb overshoot under the cadence-independent loop.
     """
-    if entry.version >= 3:
+    if entry.version >= 4:
         return True
 
     new_data = dict(entry.data)
@@ -6631,7 +6633,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             len(new_slots),
         )
 
-    hass.config_entries.async_update_entry(entry, data=new_data, version=3)
+    if entry.version < 4:
+        # Lower the PD defaults to reduce overshoot. Only migrate installs still on
+        # the OLD defaults (or that never set Kp/Kd); hand-tuned values are left
+        # untouched. Require BOTH Kp and Kd to match the old defaults so a user who
+        # customized only one is treated as tuned.
+        OLD_DEFAULT_PD_KP = 0.65
+        OLD_DEFAULT_PD_KD = 0.5
+        on_old_kp = abs(float(new_data.get(CONF_PD_KP, OLD_DEFAULT_PD_KP)) - OLD_DEFAULT_PD_KP) < 1e-9
+        on_old_kd = abs(float(new_data.get(CONF_PD_KD, OLD_DEFAULT_PD_KD)) - OLD_DEFAULT_PD_KD) < 1e-9
+        if on_old_kp and on_old_kd:
+            new_data[CONF_PD_KP] = DEFAULT_PD_KP
+            new_data[CONF_PD_KD] = DEFAULT_PD_KD
+            _LOGGER.info(
+                "Marstek: migrated config entry to version 4 (PD defaults Kp->%.2f, Kd->%.2f)",
+                DEFAULT_PD_KP, DEFAULT_PD_KD,
+            )
+        else:
+            _LOGGER.info(
+                "Marstek: config entry to version 4 (PD gains hand-tuned, left as Kp=%s, Kd=%s)",
+                new_data.get(CONF_PD_KP), new_data.get(CONF_PD_KD),
+            )
+
+    hass.config_entries.async_update_entry(entry, data=new_data, version=4)
     return True
 
 
