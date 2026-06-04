@@ -71,7 +71,7 @@ class ConsumptionTracker:
         self._daily_solar_last_power_kw: Optional[float] = None
         self._daily_home_last_power_kw: Optional[float] = None
         self._daily_grid_last_power_kw: Optional[float] = None
-        self._grid_at_min_soc_save_counter: int = 0
+        self._grid_at_min_soc_last_save_mono: float = 0.0
         self._accumulator_last_save_monotonic: float = 0.0
         self._solar_noon_cache: Optional[tuple[date, float]] = None
 
@@ -1354,12 +1354,13 @@ class ConsumptionTracker:
         """Persist consumption history every ~5 min during grid-at-min-soc accumulation.
 
         Called from the PD control loop when accumulating grid imports while SOC
-        is pinned to min_soc. Throttles writes to once every ~120 cycles
-        (~5 min at 2.5 s/cycle).
+        is pinned to min_soc. Throttles writes to once every ~5 min. Uses elapsed
+        monotonic time, not a cycle count, because the control loop is event-driven
+        (variable cadence) — a count would fire faster or slower with the sensor rate.
         """
-        self._grid_at_min_soc_save_counter += 1
-        if self._grid_at_min_soc_save_counter >= 120:
-            self._grid_at_min_soc_save_counter = 0
+        now_mono = monotonic()
+        if now_mono - self._grid_at_min_soc_last_save_mono >= 300:
+            self._grid_at_min_soc_last_save_mono = now_mono
             await self.save_consumption_history()
 
     async def async_save_all(self) -> None:

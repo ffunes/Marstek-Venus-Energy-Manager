@@ -584,7 +584,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=f"Marstek Venus {battery_num}"): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=502): int,
-                    vol.Required(CONF_SLAVE_ID, default=DEFAULT_SLAVE_ID): vol.All(int, vol.Range(min=1, max=247)),
+                    vol.Required(CONF_SLAVE_ID, default=DEFAULT_SLAVE_ID):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(CONF_BATTERY_VERSION, default=DEFAULT_VERSION):
                         SelectSelector(SelectSelectorConfig(
                             options=[
@@ -1748,7 +1749,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
-                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]): vol.All(int, vol.Range(min=1, max=247)),
+                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(
                         CONF_BATTERY_VERSION, default=defaults[CONF_BATTERY_VERSION]
                     ): SelectSelector(
@@ -2058,7 +2060,8 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
-                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]): vol.All(int, vol.Range(min=1, max=247)),
+                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(CONF_BATTERY_VERSION, default=defaults[CONF_BATTERY_VERSION]):
                         SelectSelector(SelectSelectorConfig(
                             options=[

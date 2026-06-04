@@ -311,9 +311,11 @@ class ChargeDischargeController:
         self.system_max_charge_power = config_entry.data.get(CONF_SYSTEM_MAX_CHARGE_POWER, DEFAULT_SYSTEM_MAX_CHARGE_POWER)
         self.system_max_discharge_power = config_entry.data.get(CONF_SYSTEM_MAX_DISCHARGE_POWER, DEFAULT_SYSTEM_MAX_DISCHARGE_POWER)
 
-        # Sensor filtering to avoid reacting to instantaneous spikes
-        self.sensor_history = []  # Keep last 3 readings for faster response
-        self.sensor_history_size = 2
+        # Sensor filtering to avoid reacting to instantaneous spikes. Time-constant
+        # EMA (alpha = elapsed/(tau+elapsed)) instead of a fixed N-sample average, so
+        # the smoothing time stays constant under the variable event-driven cadence.
+        self._grid_filter_tau = 2.0     # seconds; larger = smoother but more lag
+        self._grid_filter_ema = None    # filtered grid value (W); None until first sample
 
         # PID controller state variables (Ki currently disabled)
         self.ki = 0.0          # Integral gain (DISABLED - using pure PD control)
@@ -575,9 +577,9 @@ class ChargeDischargeController:
         self._consumption_tracker = None
 
         _LOGGER.info("PD Controller initialized (user-configurable): Kp=%.2f, Ki=%.2f, Kd=%.2f, "
-                     "Deadband=±%dW, Filter=%d samples, Hysteresis=%dW, MaxChange=%dW/cycle, Limits: ±%dW",
+                     "Deadband=±%dW, Filter τ=%.1fs, Hysteresis=%dW, MaxChange=%dW/cycle, Limits: ±%dW",
                      self.kp, self.ki, self.kd,
-                     self.deadband, self.sensor_history_size, self.direction_hysteresis,
+                     self.deadband, self._grid_filter_tau, self.direction_hysteresis,
                      self.max_power_change_per_cycle, self.max_discharge_capacity)
 
         _LOGGER.info("Predictive Grid Charging: %s (ICP limit: %dW)",
@@ -2770,7 +2772,7 @@ class ChargeDischargeController:
         self.last_error_sign = 0
         self.last_output_sign = 0
         self.previous_power = 0
-        self.sensor_history.clear()
+        self._grid_filter_ema = None
         self.first_execution = True  # Force re-initialization on next cycle
         
         _LOGGER.info("PID: State reset complete - system will re-initialize on next control cycle")
@@ -3230,11 +3232,21 @@ class ChargeDischargeController:
             _LOGGER.warning("Consumption sensor unavailable or invalid during predictive charging")
             return
 
-        # Apply sensor filtering
-        self.sensor_history.append(sensor_raw)
-        if len(self.sensor_history) > self.sensor_history_size:
-            self.sensor_history.pop(0)
-        sensor_filtered = sum(self.sensor_history) / len(self.sensor_history)
+        # Cadence-independent time bases (this loop runs event-driven too). The stored
+        # timestamp is shared with the main loop; exactly one of the two runs per cycle.
+        sensor_update_time = consumption_state.last_updated
+        previous_update_time = self._last_sensor_update_time
+        self._last_sensor_update_time = sensor_update_time
+        sensor_elapsed_s = (
+            (sensor_update_time - previous_update_time).total_seconds()
+            if previous_update_time is not None else None
+        )
+        base_dt = sensor_elapsed_s if (sensor_elapsed_s and sensor_elapsed_s > 0) else self.dt
+        real_dt = max(1.0, min(base_dt, 30.0))
+        scale_dt = max(0.1, min(base_dt, 30.0))
+
+        # Apply sensor filtering (shared time-constant EMA).
+        sensor_filtered = self._filter_grid_sample(sensor_raw, sensor_elapsed_s)
         
         # Get available batteries (respecting max_soc)
         available_batteries = self._get_available_batteries(is_charging=True)
@@ -3263,6 +3275,7 @@ class ChargeDischargeController:
         if not self._grid_charging_initialized:
             # Initialize for grid charging mode (first time entering)
             self.previous_error = error
+            self.derivative_filtered = 0.0  # drop any derivative carried from the main loop
             self.previous_power = -min(max_battery_charge, target_power)  # Start at max charge
             self._grid_charging_initialized = True
             self.first_execution = False  # Mark as initialized to avoid conflicts
@@ -3270,12 +3283,15 @@ class ChargeDischargeController:
             _LOGGER.info("Initialized predictive charging: target=%dW, initial_charge=%dW",
                         target_power, abs(self.previous_power))
         
-        # Calculate derivative
-        error_derivative = (error - self.previous_error) / self.dt
-        
-        # PD terms
-        P = self.kp * error
-        D = self.kd * error_derivative
+        # Calculate derivative over real elapsed time, low-pass filtered (see main loop).
+        error_derivative_raw = (error - self.previous_error) / real_dt
+        d_alpha = real_dt / (self.derivative_tau + real_dt)
+        self.derivative_filtered += d_alpha * (error_derivative_raw - self.derivative_filtered)
+
+        # PD terms. P is applied incrementally (integral action), so scale it by elapsed
+        # time normalized to the nominal dt to keep tuning cadence-independent.
+        P = self.kp * error * (scale_dt / self.dt)
+        D = self.kd * self.derivative_filtered
         pd_adjustment = P + D
         
         # Calculate new charging power (incremental)
@@ -3283,11 +3299,12 @@ class ChargeDischargeController:
         # If error < 0 (importing too much) -> reduce charging (adjustment is negative -> previous_power becomes less negative)
         new_power_raw = self.previous_power - pd_adjustment
         
-        # Apply rate limiter
+        # Apply rate limiter (per-cycle cap scaled to a constant W/s under variable cadence)
+        max_change = self.max_power_change_per_cycle * (scale_dt / self.dt)
         power_change = new_power_raw - self.previous_power
-        if abs(power_change) > self.max_power_change_per_cycle:
+        if abs(power_change) > max_change:
             sign = 1 if power_change > 0 else -1
-            clamped_change = sign * self.max_power_change_per_cycle
+            clamped_change = sign * max_change
             new_power = self.previous_power + clamped_change
             _LOGGER.info("Predictive: Rate limiter active (change: %.1fW → %.1fW)",
                         power_change, new_power - self.previous_power)
@@ -5612,6 +5629,22 @@ class ChargeDischargeController:
             seen = True
         return total if seen else None
 
+    def _filter_grid_sample(self, sensor_raw, elapsed_s):
+        """Time-constant EMA on the grid sample (replaces the fixed 2-sample average).
+
+        alpha = elapsed/(tau+elapsed) keeps the smoothing time constant regardless of
+        the variable event-driven cadence. The first sample seeds the filter directly.
+        elapsed_s == 0 (a stale recalculation, no new data) leaves the value unchanged;
+        elapsed_s None (callers that don't track elapsed) falls back to the nominal dt.
+        """
+        if self._grid_filter_ema is None:
+            self._grid_filter_ema = sensor_raw
+        elif elapsed_s is None or elapsed_s > 0:
+            dt = elapsed_s if (elapsed_s is not None and elapsed_s > 0) else self.dt
+            alpha = dt / (self._grid_filter_tau + dt)
+            self._grid_filter_ema += alpha * (sensor_raw - self._grid_filter_ema)
+        return self._grid_filter_ema
+
     async def async_update_charge_discharge(self, now=None):
         """Run one control cycle, guarded against overlapping triggers.
 
@@ -5785,6 +5818,12 @@ class ChargeDischargeController:
         )
         previous_update_time = self._last_sensor_update_time
         self._last_sensor_update_time = sensor_update_time
+        # Real time since the last sensor update — single source of truth for every
+        # cadence-dependent term (filter, derivative, P scaling, rate limiter).
+        sensor_elapsed_s = (
+            (sensor_update_time - previous_update_time).total_seconds()
+            if previous_update_time is not None else None
+        )
 
         if is_stale:
             self._stale_cycles += 1
@@ -5815,13 +5854,12 @@ class ChargeDischargeController:
                 )
         else:
             self._stale_cycles = 0
-            # Add to sensor history ONLY on real updates
-            self.sensor_history.append(sensor_raw)
-            if len(self.sensor_history) > self.sensor_history_size:
-                self.sensor_history.pop(0)
 
-        # Use moving average to smooth out instantaneous spikes
-        sensor_filtered = sum(self.sensor_history) / len(self.sensor_history) if self.sensor_history else sensor_raw
+        # Smooth instantaneous spikes with a time-constant EMA (advances only on a real
+        # update; a stale recalculation passes elapsed 0 and keeps the last value).
+        sensor_filtered = self._filter_grid_sample(
+            sensor_raw, 0.0 if is_stale else sensor_elapsed_s
+        )
 
         active_target = self.compute_active_target()
         min_charge = self.min_charge_power
@@ -5830,8 +5868,8 @@ class ChargeDischargeController:
         # Use filtered sensor directly - it shows the real grid imbalance we need to correct
         sensor_actual = sensor_filtered
 
-        if DEBUG_CONTROL_LOOP_DETAIL and len(self.sensor_history) >= self.sensor_history_size:
-            _LOGGER.debug("Sensor ready: raw=%.1fW, filtered=%.1fW", sensor_raw, sensor_filtered)
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("Sensor: raw=%.1fW, filtered=%.1fW", sensor_raw, sensor_filtered)
 
         # Adjust for excluded/additional devices before dynamic setpoint decisions.
         # Positive adjustment = reduce battery discharge (excluded devices)
@@ -5895,6 +5933,11 @@ class ChargeDischargeController:
             
             # Update previous_sensor for next cycle
             self.previous_sensor = sensor_filtered
+            # Keep the derivative reference current while idling in the deadband, so
+            # leaving it does not compute Δerror against a stale pre-deadband error
+            # over one sample (a derivative kick). Drop the filtered derivative too.
+            self.previous_error = sensor_actual - active_target
+            self.derivative_filtered = 0.0
             # NOTE: Do NOT clear load sharing state here. Batteries keep executing
             # their last command during deadband, so the active battery lists must
             # remain accurate for the diagnostic sensor.
@@ -5921,6 +5964,7 @@ class ChargeDischargeController:
             self.previous_sensor = sensor_actual
             # Initial power counteracts the difference from target grid power
             self.previous_power = -(sensor_actual - active_target)
+            self.derivative_filtered = 0.0  # drop any derivative carried across a mode change
             self.first_execution = False
 
             # Get available batteries and set initial power
@@ -6113,17 +6157,20 @@ class ChargeDischargeController:
             # Integral disabled - ensure it stays at zero
             self.error_integral = 0.0
         
-        # Calculate derivative using real elapsed time between sensor updates
+        # Time bases for the cadence-dependent terms. The derivative keeps a 1 s floor
+        # (dividing by a sub-second dt would amplify noise into a spike); the P-term and
+        # rate-limiter scaling use a smaller floor so they stay accurate for sub-second
+        # sensors (a 1 s floor there would over-weight fast cadences).
         if self._stale_cycles > self._max_stale_cycles:
             # Safety valve: suppress derivative to avoid spike from stale data
             real_dt = self.dt
+            scale_dt = self.dt
             error_derivative = 0.0
             self.derivative_filtered = 0.0  # drop stale derivative state
         else:
-            if previous_update_time is not None:
-                real_dt = max(1.0, min((sensor_update_time - previous_update_time).total_seconds(), 30.0))
-            else:
-                real_dt = self.dt
+            base_dt = sensor_elapsed_s if (sensor_elapsed_s and sensor_elapsed_s > 0) else self.dt
+            real_dt = max(1.0, min(base_dt, 30.0))
+            scale_dt = max(0.1, min(base_dt, 30.0))
             error_derivative_raw = (error - self.previous_error) / real_dt
             # Low-pass the derivative: differentiating a barely-filtered grid signal
             # (2-sample moving average) amplifies PWM/quantization noise, which the D
@@ -6138,7 +6185,7 @@ class ChargeDischargeController:
         # is now event-driven (variable cadence, ~1 s) rather than a fixed 2 s timer, so
         # scale by real elapsed time normalized to the nominal dt — this keeps the
         # per-second correction, and therefore the tuning, independent of cadence.
-        P = self.kp * error * (real_dt / self.dt)
+        P = self.kp * error * (scale_dt / self.dt)
         I = self.ki * self.error_integral
         D = self.kd * error_derivative
         
@@ -6154,7 +6201,7 @@ class ChargeDischargeController:
         # value is a per-cycle cap calibrated for the nominal dt; scale by real elapsed
         # time so the effective ramp rate (W/s) stays constant under the variable
         # event-driven cadence (otherwise faster cycles would multiply the ramp rate).
-        max_change = self.max_power_change_per_cycle * (real_dt / self.dt)
+        max_change = self.max_power_change_per_cycle * (scale_dt / self.dt)
         power_change = new_power_raw - self.previous_power
         if abs(power_change) > max_change:
             # Clamp the change to maximum allowed rate
