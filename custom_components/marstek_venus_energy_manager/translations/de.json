@@ -7,14 +7,12 @@
         "data": {
           "consumption_sensor": "Netzverbrauchssensor",
           "solar_forecast_sensor": "Solarprognose-Sensor (optional)",
-          "household_consumption_sensor": "Haushaltsverbrauchssensor (optional)",
           "solar_production_sensor": "Solarproduktionssensor (optional)",
           "meter_inverted": "Zählervorzeichen invertiert"
         },
         "data_description": {
           "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt. Der Controller passt die Batterien an, um diesen Wert nahe 0W zu halten.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet.",
-          "household_consumption_sensor": "Leistungssensor (W) zur Messung des gesamten Haushaltsverbrauchs. Wenn konfiguriert, verwenden prädiktive Ladung und Ladungsverzögerung echte Verbrauchsdaten anstatt sie aus der Batterieentladung zu schätzen.",
           "solar_production_sensor": "Echtzeit-PV-Produktionsleistungssensor (W/kW) von einem externen Wechselrichter, der nicht über die MPPT-Eingänge der Batterie geführt wird. Wird verwendet, um den Solar-Knoten im Energiefluss-Diagramm des Dashboards anzuzeigen. Leer lassen, wenn deine Module direkt den MPPT der Batterie speisen.",
           "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt."
         }
@@ -434,14 +432,12 @@
         "data": {
           "consumption_sensor": "Netzverbrauchssensor",
           "solar_forecast_sensor": "Solarprognose-Sensor (optional)",
-          "household_consumption_sensor": "Haushaltsverbrauchssensor (optional)",
           "solar_production_sensor": "Solarproduktionssensor (optional)",
           "meter_inverted": "Zählervorzeichen invertiert"
         },
         "data_description": {
           "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet.",
-          "household_consumption_sensor": "Leistungssensor (W) zur Messung des gesamten Haushaltsverbrauchs. Wenn konfiguriert, verwenden prädiktive Ladung und Ladungsverzögerung echte Verbrauchsdaten anstatt sie aus der Batterieentladung zu schätzen.",
           "solar_production_sensor": "Echtzeit-PV-Produktionsleistungssensor (W/kW) von einem externen Wechselrichter, der nicht über die MPPT-Eingänge der Batterie geführt wird. Wird verwendet, um den Solar-Knoten im Energiefluss-Diagramm des Dashboards anzuzeigen. Leer lassen, wenn deine Module direkt den MPPT der Batterie speisen.",
           "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt."
         }

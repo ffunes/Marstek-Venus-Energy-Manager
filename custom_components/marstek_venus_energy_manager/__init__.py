@@ -29,6 +29,7 @@ from .const import (
     CONF_HOUSEHOLD_CONSUMPTION_SENSOR,
     CONF_SOLAR_PRODUCTION_SENSOR,
     CONF_MAX_CONTRACTED_POWER,
+    should_use_household_sensor,
     DEFAULT_BASE_CONSUMPTION_KWH,
     SOC_REEVALUATION_THRESHOLD,
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
@@ -770,6 +771,16 @@ class ChargeDischargeController:
                 DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
             )
         )
+
+    @property
+    def use_household_consumption_sensor(self) -> bool:
+        """Whether to read the household sensor instead of deriving home power.
+
+        Honoured only when a household sensor is configured AND no solar sensor
+        exists; with solar, the derived value (grid + battery AC + solar) is
+        preferred. See should_use_household_sensor().
+        """
+        return should_use_household_sensor(self.config_entry.data)
 
     def _full_charge_voltage_taper_applies(self, coordinator) -> bool:
         """Return True when the current charge target is 100%, excluding active balance ownership."""

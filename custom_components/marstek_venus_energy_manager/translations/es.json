@@ -7,14 +7,12 @@
         "data": {
           "consumption_sensor": "Sensor de consumo de la red",
           "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "household_consumption_sensor": "Sensor de consumo del hogar (opcional)",
           "solar_production_sensor": "Sensor de producción solar (opcional)",
           "meter_inverted": "Signo del medidor invertido"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red. El controlador ajustará las baterías para mantener este valor cerca de 0W.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "household_consumption_sensor": "Sensor de potencia (W) que mide el consumo total del hogar. Cuando está configurado, la carga predictiva y la carga retrasada usarán datos de consumo real en lugar de estimar desde la descarga de batería.",
           "solar_production_sensor": "Sensor de potencia de producción fotovoltaica en tiempo real (W/kW) de un inversor externo que no pasa por las entradas MPPT de la batería. Se usa para mostrar el nodo Solar en el diagrama de flujo del panel. Déjalo vacío si tus paneles alimentan directamente el MPPT de la batería.",
           "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
         }
@@ -438,14 +436,12 @@
         "data": {
           "consumption_sensor": "Sensor de consumo de la red",
           "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "household_consumption_sensor": "Sensor de consumo del hogar (opcional)",
           "solar_production_sensor": "Sensor de producción solar (opcional)",
           "meter_inverted": "Signo del medidor invertido"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "household_consumption_sensor": "Sensor de potencia (W) que mide el consumo total del hogar. Cuando está configurado, la carga predictiva y la carga retrasada usarán datos de consumo real en lugar de estimar desde la descarga de batería.",
           "solar_production_sensor": "Sensor de potencia de producción fotovoltaica en tiempo real (W/kW) de un inversor externo que no pasa por las entradas MPPT de la batería. Se usa para mostrar el nodo Solar en el diagrama de flujo del panel. Déjalo vacío si tus paneles alimentan directamente el MPPT de la batería.",
           "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
         }

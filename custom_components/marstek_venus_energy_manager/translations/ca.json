@@ -7,14 +7,12 @@
         "data": {
           "consumption_sensor": "Sensor de consum de la xarxa",
           "solar_forecast_sensor": "Sensor de predicció solar (opcional)",
-          "household_consumption_sensor": "Sensor de consum de la llar (opcional)",
           "solar_production_sensor": "Sensor de producció solar (opcional)",
           "meter_inverted": "Signe del comptador invertit"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potència importada (+) o exportada (-) a la xarxa. El controlador ajustarà les bateries per mantenir aquest valor a prop de 0W.",
           "solar_forecast_sensor": "Sensor que proporciona la predicció de producció solar en kWh (ex: Solcast). Si es configura aquí, s'utilitzarà automàticament en càrrega predictiva i retard de càrrega solar.",
-          "household_consumption_sensor": "Sensor de potència (W) que mesura el consum total de la llar. Quan es configura, la càrrega predictiva i la càrrega retardada usaran dades de consum real en lloc d'estimar des de la descàrrega de bateria.",
           "solar_production_sensor": "Sensor de potència de producció fotovoltaica en temps real (W/kW) d'un inversor extern que no passa per les entrades MPPT de la bateria. S'utilitza per mostrar el node Solar al diagrama de flux del tauler. Deixa'l buit si els teus panells alimenten directament el MPPT de la bateria.",
           "meter_inverted": "Activa aquesta opció si el teu comptador utilitza el conveni oposat: positiu = exportació, negatiu = importació. La unitat (W/kW) es detecta automàticament."
         }
@@ -438,14 +436,12 @@
         "data": {
           "consumption_sensor": "Sensor de consum de la xarxa",
           "solar_forecast_sensor": "Sensor de predicció solar (opcional)",
-          "household_consumption_sensor": "Sensor de consum de la llar (opcional)",
           "solar_production_sensor": "Sensor de producció solar (opcional)",
           "meter_inverted": "Signe del comptador invertit"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potència importada (+) o exportada (-) a la xarxa.",
           "solar_forecast_sensor": "Sensor que proporciona la predicció de producció solar en kWh (ex: Solcast). Si es configura aquí, s'utilitzarà automàticament en càrrega predictiva i retard de càrrega solar.",
-          "household_consumption_sensor": "Sensor de potència (W) que mesura el consum total de la llar. Quan es configura, la càrrega predictiva i la càrrega retardada usaran dades de consum real en lloc d'estimar des de la descàrrega de bateria.",
           "solar_production_sensor": "Sensor de potència de producció fotovoltaica en temps real (W/kW) d'un inversor extern que no passa per les entrades MPPT de la bateria. S'utilitza per mostrar el node Solar al diagrama de flux del tauler. Deixa'l buit si els teus panells alimenten directament el MPPT de la bateria.",
           "meter_inverted": "Activa aquesta opció si el teu comptador utilitza el conveni oposat: positiu = exportació, negatiu = importació. La unitat (W/kW) es detecta automàticament."
         }

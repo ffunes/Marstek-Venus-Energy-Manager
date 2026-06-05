@@ -34,7 +34,6 @@ from .const import (
     CONF_CHARGING_TIME_SLOT,
     CONF_SOLAR_FORECAST_SENSOR,
     CONF_SOLAR_PRODUCTION_SENSOR,
-    CONF_HOUSEHOLD_CONSUMPTION_SENSOR,
     CONF_MAX_CONTRACTED_POWER,
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
@@ -480,17 +479,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     if unit not in ["kWh", "Wh"]:
                         errors["solar_forecast_sensor"] = "invalid_unit"
 
-            # Validate household consumption sensor if provided
-            household_sensor = user_input.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
-            if household_sensor:
-                household_state = self.hass.states.get(household_sensor)
-                if household_state is None:
-                    errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "sensor_not_found"
-                else:
-                    unit = household_state.attributes.get("unit_of_measurement", "")
-                    if unit not in ["W", "kW"]:
-                        errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "invalid_unit"
-
             # Validate solar production sensor if provided
             solar_sensor = user_input.get(CONF_SOLAR_PRODUCTION_SENSOR)
             if solar_sensor:
@@ -505,7 +493,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
                 self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                self.config_data[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = household_sensor
                 self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                 self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
                 return await self.async_step_batteries()
@@ -519,8 +506,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_METER_INVERTED, default=False):
                         BooleanSelector(),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Optional(CONF_HOUSEHOLD_CONSUMPTION_SENSOR):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
@@ -1930,17 +1915,6 @@ class OptionsFlowHandler(OptionsFlow):
                         if unit not in ["kWh", "Wh"]:
                             errors["solar_forecast_sensor"] = "invalid_unit"
 
-                # Validate household consumption sensor if provided
-                household_sensor = user_input.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
-                if household_sensor:
-                    household_state = self.hass.states.get(household_sensor)
-                    if household_state is None:
-                        errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "sensor_not_found"
-                    else:
-                        unit = household_state.attributes.get("unit_of_measurement", "")
-                        if unit not in ["W", "kW"]:
-                            errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "invalid_unit"
-
                 # Validate solar production sensor if provided
                 solar_sensor = user_input.get(CONF_SOLAR_PRODUCTION_SENSOR)
                 if solar_sensor:
@@ -1955,7 +1929,6 @@ class OptionsFlowHandler(OptionsFlow):
                 if not errors:
                     self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = household_sensor
                     self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                     self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
                     return await self._save_and_finish()
@@ -1963,7 +1936,6 @@ class OptionsFlowHandler(OptionsFlow):
             # Load current configuration with defensive defaults
             current_sensor = self.config_entry.data.get("consumption_sensor", "")
             current_forecast = self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, "")
-            current_household = self.config_entry.data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, "")
             current_solar = self.config_entry.data.get(CONF_SOLAR_PRODUCTION_SENSOR, "")
             current_inverted = self.config_entry.data.get(CONF_METER_INVERTED, False)
         except Exception as e:
@@ -1979,8 +1951,6 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Optional(CONF_METER_INVERTED, default=current_inverted):
                         BooleanSelector(),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR, description={"suggested_value": current_forecast} if current_forecast else {}):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Optional(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, description={"suggested_value": current_household} if current_household else {}):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR, description={"suggested_value": current_solar} if current_solar else {}):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),

@@ -7,14 +7,12 @@
         "data": {
           "consumption_sensor": "Netverbruikssensor",
           "solar_forecast_sensor": "Zonne-voorspellingssensor (optioneel)",
-          "household_consumption_sensor": "Huishoudelijke verbruikssensor (optioneel)",
           "solar_production_sensor": "Zonneproductiesensor (optioneel)",
           "meter_inverted": "Meterteken omgekeerd"
         },
         "data_description": {
           "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft. De controller past de batterijen aan om deze waarde dicht bij 0W te houden.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Indien hier geconfigureerd, wordt deze automatisch gebruikt voor voorspellend laden en zonne-oplaadvertraging.",
-          "household_consumption_sensor": "Vermogenssensor (W) die het totale huishoudelijke verbruik meet. Wanneer geconfigureerd, gebruiken voorspellend laden en laadvertraging echte verbruiksgegevens in plaats van schattingen op basis van batterijontlading.",
           "solar_production_sensor": "Realtime PV-productievermogenssensor (W/kW) van een externe omvormer die niet via de MPPT-ingangen van de batterij loopt. Wordt gebruikt om de Zon-node in het energiestroomdiagram van het dashboard te tonen. Laat leeg als je panelen rechtstreeks de MPPT van de batterij voeden.",
           "meter_inverted": "Schakel deze optie in als uw meter de omgekeerde conventie gebruikt: positief = export, negatief = import. De eenheid (W/kW) wordt automatisch gedetecteerd."
         }
@@ -434,14 +432,12 @@
         "data": {
           "consumption_sensor": "Netverbruikssensor",
           "solar_forecast_sensor": "Zonne-voorspellingssensor (optioneel)",
-          "household_consumption_sensor": "Huishoudelijke verbruikssensor (optioneel)",
           "solar_production_sensor": "Zonneproductiesensor (optioneel)",
           "meter_inverted": "Meterteken omgekeerd"
         },
         "data_description": {
           "consumption_sensor": "Sensor die geïmporteerd (+) of geëxporteerd (-) vermogen naar het net aangeeft.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Indien hier geconfigureerd, wordt deze automatisch gebruikt voor voorspellend laden en zonne-oplaadvertraging.",
-          "household_consumption_sensor": "Vermogenssensor (W) die het totale huishoudelijke verbruik meet. Wanneer geconfigureerd, gebruiken voorspellend laden en laadvertraging echte verbruiksgegevens in plaats van schattingen op basis van batterijontlading.",
           "solar_production_sensor": "Realtime PV-productievermogenssensor (W/kW) van een externe omvormer die niet via de MPPT-ingangen van de batterij loopt. Wordt gebruikt om de Zon-node in het energiestroomdiagram van het dashboard te tonen. Laat leeg als je panelen rechtstreeks de MPPT van de batterij voeden.",
           "meter_inverted": "Schakel deze optie in als uw meter de omgekeerde conventie gebruikt: positief = export, negatief = import. De eenheid (W/kW) wordt automatisch gedetecteerd."
         }

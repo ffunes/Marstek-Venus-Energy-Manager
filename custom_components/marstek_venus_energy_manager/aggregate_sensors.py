@@ -11,7 +11,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES, CONF_HOUSEHOLD_CONSUMPTION_SENSOR, CONF_SOLAR_PRODUCTION_SENSOR, pd_profile_from_params
+from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES, CONF_HOUSEHOLD_CONSUMPTION_SENSOR, CONF_SOLAR_PRODUCTION_SENSOR, pd_profile_from_params, should_use_household_sensor
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 
@@ -439,8 +439,8 @@ class MarstekVenusAggregateSensor(SensorEntity):
         """
         data = self.entry.data
 
-        home_eid = data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
-        if home_eid:
+        if should_use_household_sensor(data):
+            home_eid = data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
             w = self._read_power_w(home_eid)
             return None if w is None else round(w)
 

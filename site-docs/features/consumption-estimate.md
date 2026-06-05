@@ -10,18 +10,16 @@ The estimate is the **total home consumption during the solar+battery window** �
 
 ### Home consumption source
 
-The per-cycle home power comes from one of two sources, in order of preference:
+The per-cycle home power is **derived** from the values the integration already has:
 
-1. **Household consumption sensor** (optional) — a power sensor (W or kW) measuring total household electricity. When configured, it is read directly.
-2. **Derived** (default, no extra sensor needed) — computed from the values the integration already has:
+```
+home = grid + Σ(battery AC power) + solar
+```
 
-    ```
-    home = grid + Σ(battery AC power) + solar
-    ```
+This is the same value shown by the energy-flow diagram and the **`sensor.marstek_venus_system_home_consumption`** (Home Consumption, W) sensor. DC-coupled PV (MPPT) does not appear here — it is already netted into each battery's AC power at the inverter.
 
-    This is the same value shown by the energy-flow diagram and the **`sensor.marstek_venus_system_home_consumption`** (Home Consumption, W) sensor. DC-coupled PV (MPPT) does not appear here — it is already netted into each battery's AC power at the inverter.
-
-Both sources measure the same quantity (total house load), so predictive charging behaves the same with or without a dedicated household sensor. The household sensor is now purely an optional **precision override**.
+!!! note "Legacy household sensor"
+    A `household_consumption_sensor` saved on an older install is read directly **instead** of deriving, but **only when no solar production sensor is configured** — with a solar sensor the derived value is exact and preferred. The field is no longer offered in setup.
 
 ### Excluded / additional devices
 
@@ -60,7 +58,7 @@ While fewer than 7 real days have accumulated (e.g. just after installing the in
 
 ### Backfill from recorder history
 
-At startup, the integration recovers missing days by querying the **Home Assistant recorder** for the **Home Consumption** sensor (the household sensor when configured, otherwise `sensor.marstek_venus_system_home_consumption`). For each missing day it integrates that sensor's history over the consumption window, applies the excluded/additional-device adjustments, and stores the result exactly as the 23:55 capture would. This builds the history with real data even after an HA restart or a fresh installation.
+At startup, the integration recovers missing days by querying the **Home Assistant recorder** for the `sensor.marstek_venus_system_home_consumption` sensor (which already resolves to the derived value, or the legacy household sensor when applicable). For each missing day it integrates that sensor's history over the consumption window, applies the excluded/additional-device adjustments, and stores the result exactly as the 23:55 capture would. This builds the history with real data even after an HA restart or a fresh installation.
 
 ---
 

@@ -346,7 +346,7 @@ class ConsumptionTracker:
         (left-Riemann bias).
         """
         ctrl = self._controller
-        if ctrl.household_consumption_sensor:
+        if ctrl.use_household_consumption_sensor:
             power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
         else:
             power_kw = self._derive_home_power_kw()
@@ -507,14 +507,14 @@ class ConsumptionTracker:
     async def backfill_home_from_history(self, target_date: date) -> Optional[float]:
         """Integrate home power history for target_date → kWh.
 
-        Source is the household sensor when configured, otherwise the aggregate
-        Home Consumption sensor (derived grid + battery AC + solar). Only counts
-        time intervals that fall OUTSIDE the charging_time_slot (the solar+battery
-        window). Returns None if no usable data was found.
+        Integrates the aggregate Home Consumption sensor, which already resolves to
+        the household sensor or the derived value (grid + battery AC + solar) per the
+        active precedence. Only counts time intervals that fall OUTSIDE the
+        charging_time_slot (the solar+battery window). Returns None if no usable data.
         """
         ctrl = self._controller
 
-        source_entity = ctrl.household_consumption_sensor or self._home_consumption_entity_id()
+        source_entity = self._home_consumption_entity_id()
         if not source_entity:
             return None
 
@@ -1151,7 +1151,7 @@ class ConsumptionTracker:
             self._household_last_accumulation_time = None
             return
 
-        if ctrl.household_consumption_sensor:
+        if ctrl.use_household_consumption_sensor:
             power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
         else:
             power_kw = self._derive_home_power_kw()

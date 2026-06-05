@@ -15,6 +15,7 @@
 
 ### Changed
 - **Predictive charging no longer needs a dedicated household sensor**: real-time consumption accumulation, the 23:55 daily capture, and recorder backfill now use the derived home consumption (grid + battery + solar) when none is configured, replacing the cruder battery-discharge+grid estimate. The household sensor stays an optional precision override. [`consumption_tracker.py`](custom_components/marstek_venus_energy_manager/consumption_tracker.py).
+- **Household consumption sensor removed from setup**: the field is gone from the config and options flows. Home consumption is derived from grid + battery + solar; a previously configured sensor is still honoured, but only when no solar production sensor exists (with solar, the derived value is exact and preferred). [`config_flow.py`](custom_components/marstek_venus_energy_manager/config_flow.py), [`const.py`](custom_components/marstek_venus_energy_manager/const.py), [`aggregate_sensors.py`](custom_components/marstek_venus_energy_manager/aggregate_sensors.py), [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
 
 ## [2.0.1b2] - 2026-06-04
 

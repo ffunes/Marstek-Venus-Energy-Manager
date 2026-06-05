@@ -10,18 +10,16 @@ El estimado es el **consumo total del hogar durante la ventana solar+batería** 
 
 ### Origen del consumo del hogar
 
-La potencia del hogar de cada ciclo proviene de una de dos fuentes, por orden de preferencia:
+La potencia del hogar de cada ciclo se **deriva** de los valores que la integración ya tiene:
 
-1. **Sensor de consumo del hogar** (opcional) — un sensor de potencia (W o kW) que mide el consumo eléctrico total. Si está configurado, se lee directamente.
-2. **Derivado** (por defecto, sin sensor extra) — calculado a partir de valores que la integración ya tiene:
+```
+hogar = red + Σ(potencia AC de baterías) + solar
+```
 
-    ```
-    hogar = red + Σ(potencia AC de baterías) + solar
-    ```
+Es el mismo valor que muestra el diagrama de flujo de energía y el sensor **`sensor.marstek_venus_system_home_consumption`** (Consumo de la Casa, W). La FV acoplada en DC (MPPT) no aparece aquí — ya está neteada en la potencia AC de cada batería en el inversor.
 
-    Es el mismo valor que muestra el diagrama de flujo de energía y el sensor **`sensor.marstek_venus_system_home_consumption`** (Consumo de la Casa, W). La FV acoplada en DC (MPPT) no aparece aquí — ya está neteada en la potencia AC de cada batería en el inversor.
-
-Ambas fuentes miden la misma magnitud (carga total de la casa), así que la carga predictiva se comporta igual con o sin sensor dedicado. El sensor del hogar es ahora puramente un **override de precisión** opcional.
+!!! note "Sensor de hogar heredado"
+    Un `household_consumption_sensor` guardado en una instalación antigua se lee directamente **en vez** de derivar, pero **solo cuando no hay sensor de producción solar configurado** — con sensor solar, el valor derivado es exacto y preferido. El campo ya no se ofrece en la configuración.
 
 ### Dispositivos excluidos / adicionales
 
@@ -60,7 +58,7 @@ Mientras no haya 7 días reales acumulados (p. ej. recién instalada la integrac
 
 ### Backfill desde el historial del recorder
 
-Al arrancar, la integración recupera los días que falten consultando el **recorder de Home Assistant** para el sensor de **Consumo de la Casa** (el sensor del hogar si está configurado, en caso contrario `sensor.marstek_venus_system_home_consumption`). Para cada día que falte integra el historial de ese sensor sobre la ventana de consumo, aplica los ajustes de dispositivos excluidos/adicionales, y almacena el resultado igual que haría la captura de las 23:55. Así el historial se construye con datos reales incluso tras un reinicio de HA o una instalación nueva.
+Al arrancar, la integración recupera los días que falten consultando el **recorder de Home Assistant** para el sensor `sensor.marstek_venus_system_home_consumption` (que ya resuelve al valor derivado, o al sensor de hogar heredado cuando aplica). Para cada día que falte integra el historial de ese sensor sobre la ventana de consumo, aplica los ajustes de dispositivos excluidos/adicionales, y almacena el resultado igual que haría la captura de las 23:55. Así el historial se construye con datos reales incluso tras un reinicio de HA o una instalación nueva.
 
 ---
 
