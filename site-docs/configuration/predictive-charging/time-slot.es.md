@@ -8,7 +8,6 @@ Carga desde la red durante una **ventana horaria fija** (típicamente tarifa noc
 |---|---|
 | **Ventana horaria** | Inicio y fin de la franja de carga (p. ej. `02:00` – `05:00`) |
 | **Sensor de previsión solar** | Sensor de producción solar del día actual en kWh (opcional) |
-| **Potencia ICP contratada** | Límite de la conexión de red (W). Asegura que carga + consumo doméstico no supere el ICP |
 
 !!! danger "Cambio importante en v1.6.0"
     El campo de sensor de previsión solar ahora debe apuntar al sensor de **hoy** (p. ej. `sensor.solcast_pv_forecast_forecast_today`), no al de mañana.

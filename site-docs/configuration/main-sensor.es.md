@@ -33,6 +33,14 @@ Déjalo desactivado si no estás seguro.
 
 ---
 
+## Potencia máxima contratada
+
+La potencia contratada de tu conexión de red, en **W** (por defecto `7000`).
+
+La integración limita la carga de las baterías para que la **importación de red proyectada nunca supere este límite**, evitando que salte el diferencial. Aplica en **todos los modos** — control normal de setpoint, un objetivo/offset positivo, balance neto horario y carga predictiva desde red — no solo al cargar desde la red de forma programada. Solo limita la carga; nunca fuerza una descarga.
+
+---
+
 ## Sensor de previsión solar *(opcional)*
 
 Sensor que proporciona la producción solar estimada para hoy, en **kWh** o **Wh**.

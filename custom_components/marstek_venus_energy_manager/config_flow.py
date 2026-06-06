@@ -495,6 +495,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                 self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                 self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
+                self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                 return await self.async_step_batteries()
 
         return self.async_show_form(
@@ -505,6 +506,12 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_METER_INVERTED, default=False):
                         BooleanSelector(),
+                    vol.Required("max_contracted_power", default=7000):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+                            )
+                        ),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR):
@@ -875,7 +882,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_TIME_SLOT
                 if not self.config_data.get(CONF_SOLAR_FORECAST_SENSOR):
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = None
-                self.config_data["max_contracted_power"] = 7000
                 return await self.async_step_weekly_full_charge()
 
         return self.async_show_form(
@@ -953,7 +959,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                             "days": user_input["days"],
                         }
                         self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                        self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                         self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
                         self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
@@ -979,11 +984,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(
-                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
-            )
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )
@@ -1058,7 +1058,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -1094,9 +1093,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )
@@ -1148,7 +1144,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
                     self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -1172,9 +1167,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )
@@ -1931,6 +1923,7 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                     self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
+                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     return await self._save_and_finish()
 
             # Load current configuration with defensive defaults
@@ -1938,6 +1931,7 @@ class OptionsFlowHandler(OptionsFlow):
             current_forecast = self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, "")
             current_solar = self.config_entry.data.get(CONF_SOLAR_PRODUCTION_SENSOR, "")
             current_inverted = self.config_entry.data.get(CONF_METER_INVERTED, False)
+            current_max_power = self.config_entry.data.get("max_contracted_power", 7000)
         except Exception as e:
             _LOGGER.error("Error in options flow sensors: %s", e, exc_info=True)
             return self.async_abort(reason="unknown_error")
@@ -1950,6 +1944,12 @@ class OptionsFlowHandler(OptionsFlow):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_METER_INVERTED, default=current_inverted):
                         BooleanSelector(),
+                    vol.Required("max_contracted_power", default=current_max_power):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+                            )
+                        ),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR, description={"suggested_value": current_forecast} if current_forecast else {}):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR, description={"suggested_value": current_solar} if current_solar else {}):
@@ -2400,7 +2400,6 @@ class OptionsFlowHandler(OptionsFlow):
                 self.config_data["enable_predictive_charging"] = False
                 self.config_data["charging_time_slot"] = None
                 self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_TIME_SLOT
-                self.config_data["max_contracted_power"] = self.config_entry.data.get("max_contracted_power", 7000)
                 return await self._save_and_finish()
 
         is_predictive_enabled = self.config_entry.data.get("enable_predictive_charging", False)
@@ -2459,7 +2458,6 @@ class OptionsFlowHandler(OptionsFlow):
         existing_config = self.config_entry.data
         time_slot_current = existing_config.get("charging_time_slot", {})
         forecast_sensor_current = existing_config.get("solar_forecast_sensor", "")
-        max_power_current = existing_config.get("max_contracted_power", 7000)
 
         has_global_sensor = bool(self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR))
 
@@ -2487,7 +2485,6 @@ class OptionsFlowHandler(OptionsFlow):
                         "days": user_input["days"],
                     }
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
                     self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
                     return await self._save_and_finish()
@@ -2501,7 +2498,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "end_time": time_slot_current.get("end_time", "06:00:00"),
                 "days": time_slot_current.get("days", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
                 "sensor": forecast_sensor_current if forecast_sensor_current else "",
-                "power": max_power_current,
                 "margin": existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH),
                 "grid_margin": existing_config.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT),
             }
@@ -2511,7 +2507,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "end_time": "06:00:00",
                 "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
                 "sensor": "",
-                "power": 7000,
                 "margin": DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
                 "grid_margin": DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
             }
@@ -2533,9 +2528,6 @@ class OptionsFlowHandler(OptionsFlow):
             schema_dict[vol.Optional("solar_forecast_sensor", description={"suggested_value": defaults["sensor"]} if defaults["sensor"] else {})] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=defaults["power"])] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=defaults["margin"])] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )
@@ -2609,7 +2601,6 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -2622,7 +2613,6 @@ class OptionsFlowHandler(OptionsFlow):
         default_integration = existing_config.get(CONF_PRICE_INTEGRATION_TYPE, PRICE_INTEGRATION_NORDPOOL)
         default_sensor = existing_config.get(CONF_PRICE_SENSOR, "")
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
-        default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
         default_dp_discharge_control = existing_config.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
         default_margin = existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -2657,9 +2647,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "solar_forecast_sensor",
                 description={"suggested_value": default_forecast} if default_forecast else {}
             )] = EntitySelector(EntitySelectorConfig(domain="sensor"))
-        schema_dict[vol.Required("max_contracted_power", default=default_power)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=default_margin)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )
@@ -2712,7 +2699,6 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
                     self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -2726,7 +2712,6 @@ class OptionsFlowHandler(OptionsFlow):
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
         default_avg_sensor = existing_config.get(CONF_AVERAGE_PRICE_SENSOR, "")
         default_rt_discharge_control = existing_config.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-        default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
         default_margin = existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
         default_grid_margin = existing_config.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
@@ -2751,9 +2736,6 @@ class OptionsFlowHandler(OptionsFlow):
                 "solar_forecast_sensor",
                 description={"suggested_value": default_forecast} if default_forecast else {}
             )] = EntitySelector(EntitySelectorConfig(domain="sensor"))
-        schema_dict[vol.Required("max_contracted_power", default=default_power)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=default_margin)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
         )

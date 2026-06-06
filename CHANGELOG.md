@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1b5] - 2026-06-06
+
+### Changed
+- **Max Contracted Power moved to Sensors**: now set in the initial setup step and the Sensors options section instead of inside each predictive-charging mode — it is a property of the grid connection, not of predictive charging. Existing values are preserved; default stays `7000`. The Spain-specific "ICP" acronym was dropped from all UI labels (every language). [`config_flow.py`](custom_components/marstek_venus_energy_manager/config_flow.py), translations.
+- **Contracted power now caps grid import in every mode**: previously it only applied while predictive grid charging. The PD loop now clamps battery charging so projected grid import never exceeds the contracted power — a positive target/offset (user setpoint or hourly net balance) can no longer push the breaker past its limit. Charging only; never forces a discharge. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
+
 ## [2.0.1b4] - 2026-06-05
 
 ### Added

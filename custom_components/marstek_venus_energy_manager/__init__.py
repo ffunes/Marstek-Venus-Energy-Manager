@@ -6687,7 +6687,24 @@ class ChargeDischargeController:
                 new_power = max_total_charge
             elif new_power < -max_total_discharge:
                 new_power = -max_total_discharge
-        
+
+        # ICP CONTRACTED-POWER CLAMP: cap battery charging so the projected grid
+        # import stays at or below the contracted power, preventing the main breaker
+        # from tripping. Uses the real meter reading (sensor_filtered), not the
+        # excluded-devices/capacity-protection-adjusted sensor_actual, because the
+        # breaker sees total grid flow. Marginal model: shifting battery power by
+        # (new_power - previous_power) shifts grid by the same amount (more charge =
+        # more import). Only limits charging; never forces a discharge.
+        if self.max_contracted_power > 0 and new_power > 0:
+            charge_import_cap = self.max_contracted_power - sensor_filtered + self.previous_power
+            if new_power > charge_import_cap:
+                clamped = max(0.0, charge_import_cap)
+                _LOGGER.info(
+                    "ICP clamp: limiting charge %.0fW -> %.0fW (grid %.0fW, contracted %.0fW)",
+                    new_power, clamped, sensor_filtered, self.max_contracted_power,
+                )
+                new_power = clamped
+
         if DEBUG_CONTROL_LOOP_DETAIL:
             _LOGGER.debug("ChargeDischargeController: sensor_actual=%fW, previous_power=%fW, new_power=%fW (available: %d batteries)",
                          sensor_actual, self.previous_power, new_power, len(available_batteries))

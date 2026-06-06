@@ -8,13 +8,15 @@
           "consumption_sensor": "Grid consumption sensor",
           "solar_forecast_sensor": "Solar forecast sensor (optional)",
           "solar_production_sensor": "Solar production sensor (optional)",
-          "meter_inverted": "Inverted meter sign"
+          "meter_inverted": "Inverted meter sign",
+          "max_contracted_power": "Maximum contracted power (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid. The controller will adjust batteries to keep this value near 0W.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). If configured here, it will be used automatically for predictive charging and solar charge delay.",
           "solar_production_sensor": "Real-time PV production power sensor (W/kW) from an external inverter not wired through the battery MPPT inputs. Used to show the Solar node in the dashboard energy-flow diagram. Leave empty if your panels feed the battery MPPT directly.",
-          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically."
+          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically.",
+          "max_contracted_power": "Total contracted power in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "batteries": {
@@ -191,7 +193,6 @@
           "end_time": "End time (off-peak tariff)",
           "days": "Days of the week",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -200,7 +201,6 @@
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }
@@ -214,7 +214,6 @@
           "max_price_threshold": "Maximum price threshold (optional)",
           "dp_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -224,7 +223,6 @@
           "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
           "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the configured maximum price threshold. If no threshold is configured, it uses today's average price computed automatically from the price sensor. If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }
@@ -238,7 +236,6 @@
           "average_price_sensor": "Daily average price sensor (optional)",
           "rt_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -248,7 +245,6 @@
           "average_price_sensor": "If provided, this sensor's state is used as the threshold instead of the fixed value above — useful when your price integration already exposes a daily average. Leave empty to use the fixed threshold.",
           "rt_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the threshold (fixed or daily average). If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }
@@ -431,13 +427,15 @@
           "consumption_sensor": "Grid consumption sensor",
           "solar_forecast_sensor": "Solar forecast sensor (optional)",
           "solar_production_sensor": "Solar production sensor (optional)",
-          "meter_inverted": "Inverted meter sign"
+          "meter_inverted": "Inverted meter sign",
+          "max_contracted_power": "Maximum contracted power (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor that indicates imported (+) or exported (-) power to the grid.",
           "solar_forecast_sensor": "Sensor providing solar production forecast in kWh (e.g., Solcast). If configured here, it will be used automatically for predictive charging and solar charge delay.",
           "solar_production_sensor": "Real-time PV production power sensor (W/kW) from an external inverter not wired through the battery MPPT inputs. Used to show the Solar node in the dashboard energy-flow diagram. Leave empty if your panels feed the battery MPPT directly.",
-          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically."
+          "meter_inverted": "Enable this option if your meter uses the opposite convention: positive = export, negative = import. The unit (W/kW) is detected automatically.",
+          "max_contracted_power": "Total contracted power in watts. System won't exceed this limit when charging to avoid tripping the breaker"
         }
       },
       "batteries": {
@@ -614,7 +612,6 @@
           "end_time": "End time (off-peak tariff)",
           "days": "Days of the week",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -623,7 +620,6 @@
           "end_time": "End time of charging window (e.g., 06:00)",
           "days": "Days when grid charging is allowed",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }
@@ -637,7 +633,6 @@
           "max_price_threshold": "Maximum price threshold (optional)",
           "dp_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -647,7 +642,6 @@
           "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
           "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the configured maximum price threshold. If no threshold is configured, it uses today's average price computed automatically from the price sensor. If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }
@@ -661,7 +655,6 @@
           "average_price_sensor": "Daily average price sensor (optional)",
           "rt_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
-          "max_contracted_power": "Maximum contracted power ICP (W)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
           "predictive_grid_charge_margin_pct": "Predictive grid charge margin (%)"
         },
@@ -671,7 +664,6 @@
           "average_price_sensor": "If provided, this sensor's state is used as the threshold instead of the fixed value above — useful when your price integration already exposes a daily average. Leave empty to use the fixed threshold.",
           "rt_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the threshold (fixed or daily average). If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
-          "max_contracted_power": "Total contracted power (ICP) in watts. System won't exceed this limit when charging to avoid tripping the breaker",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
           "predictive_grid_charge_margin_pct": "Extra % charged from the grid on top of the solar-deficit, to hedge against optimistic solar forecasts. E.g. a 2 kWh grid need at 50% charges 3 kWh. 0 to disable (default). Capped at the gap to max SOC."
         }

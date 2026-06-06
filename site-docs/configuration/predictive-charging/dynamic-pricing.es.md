@@ -17,7 +17,6 @@ Selecciona automáticamente las **horas más baratas del día** para cubrir el d
 | **Tipo de integración de precios** | Nordpool / PVPC / CKW / EPEX Spot / ENTSO-e |
 | **Sensor de precio** | Entidad HA con el precio actual (y atributos de previsión horaria) |
 | **Umbral máximo de precio** | (Opcional) Precio techo; no carga aunque la hora sea "barata" si supera este valor. También se usa como umbral de descarga cuando el control de descarga por precio está activado |
-| **Potencia ICP contratada** | Límite de red para calcular la duración de carga necesaria |
 | **Descargar solo cuando el precio supere el umbral** | (Opcional) Descarga condicionada al precio actual — ver abajo |
 | **Margen de seguridad de previsión solar (kWh)** | (Opcional) Buffer de energía adicional añadido a la previsión de consumo antes de decidir si cargar (por defecto 0 kWh) |
 | **Margen de carga de red predictiva (%)** | (Opcional) Aumenta la cantidad de carga de red para cubrir previsiones solares optimistas — p. ej. una necesidad de 2 kWh de red al 50 % carga 3 kWh. Limitado al hueco hasta el SOC máximo (por defecto 0 %) |

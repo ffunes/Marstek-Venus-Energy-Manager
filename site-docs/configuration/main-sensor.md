@@ -33,6 +33,14 @@ Leave it disabled if you are unsure.
 
 ---
 
+## Maximum contracted power
+
+The contracted power of your grid connection, in **W** (default `7000`).
+
+The integration caps battery charging so that **projected grid import never exceeds this limit**, preventing the main breaker from tripping. This applies in **every mode** — normal setpoint control, a positive target/offset, hourly net balance and predictive grid charging — not only while charging from the grid on a schedule. It only limits charging; it never forces a discharge.
+
+---
+
 ## Solar forecast sensor *(optional)*
 
 Sensor providing today's estimated solar production in **kWh** or **Wh**.
