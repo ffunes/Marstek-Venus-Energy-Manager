@@ -16,12 +16,15 @@ Select how many Marstek Venus units you have (1–6). The integration will ask y
 | **Name** | Unique identifier (e.g. "Venus 1") | — |
 | **Host** | IP address of the Modbus TCP converter | — |
 | **Port** | Modbus TCP port | `502` |
+| **Modbus Slave ID** | Map several batteries to one IP:port using distinct slave ids | 1 |
 | **Version** | Battery model | — |
-| **Max charge/discharge power** | Rated power of your setup | — |
-| **Max SOC** | Stop charging at this percentage | `100 %` |
-| **Min SOC** | Stop discharging at this percentage | `12 %` |
-| **Charge hysteresis** | Margin to avoid rapid cycling near the charge limit | — |
-| **Backup offgrid threshold** | Minimum offgrid load (W) to be considered an active backup event | `50 W` |
+| **Max charge/discharge power (W)** | Rated charge/discharge power of your setup | — |
+| **Max SOC (%)** | Stop charging at this percentage | `100 %` |
+| **Min SOC (%)** | Stop discharging at this percentage | `12 %` |
+| **Enable Charge Hysteresis** | Prevents battery from charging when SOC is near maximum | Off |
+| **Hysteresis Percentage (%)** | Margin to avoid rapid cycling near the charge limit | — |
+| **Backup offgrid threshold (W)** | Minimum offgrid load (W) to be considered an active backup event | `50 W` |
+| **Enable 100% charge voltage taper** | For 100% SOC limit charge to 95W at 3.48V max cell and stop at 3.58V to measure cell imbalance after 60 seconds | On |
 
 ### Battery versions
 
