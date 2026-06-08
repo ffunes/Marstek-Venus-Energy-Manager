@@ -1210,6 +1210,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1662,7 +1690,7 @@
 
 
 <h1 id="carga-predictiva-modo-precio-en-tiempo-real">Carga predictiva — Modo Precio en Tiempo Real<a class="headerlink" href="#carga-predictiva-modo-precio-en-tiempo-real" title="Permanent link">&para;</a></h1>
-<p>Activa o desactiva la carga desde la red en cada ciclo del controlador (~2,5 s) en función del <strong>precio actual de la electricidad</strong>.</p>
+<p>Activa o desactiva la carga desde la red en cada ciclo del controlador (dirigido por eventos) en función del <strong>precio actual de la electricidad</strong>.</p>
 <p>A diferencia del Modo Precio Dinámico, no requiere previsión de precios ni evaluación nocturna. Reacciona puramente al precio en curso.</p>
 <h2 id="configuracion">Configuración<a class="headerlink" href="#configuracion" title="Permanent link">&para;</a></h2>
 <table>
@@ -1690,18 +1718,18 @@
 <td>(Opcional) Descarga condicionada al precio actual — ver abajo</td>
 </tr>
 <tr>
-<td><strong>Potencia máxima contratada ICP (W)</strong></td>
-<td>Potencia máxima al cargar para evitar disparar el diferencial (por defecto 7000 W)</td>
-</tr>
-<tr>
 <td><strong>Margen de seguridad de previsión solar (kWh)</strong></td>
 <td>Buffer de energía adicional añadido a la previsión de consumo antes de decidir si cargar (por defecto 0 kWh)</td>
+</tr>
+<tr>
+<td><strong>Margen de carga de red predictiva (%)</strong></td>
+<td>Aumenta la cantidad de carga de red para cubrir previsiones solares optimistas — p. ej. una necesidad de 2 kWh de red al 50 % carga 3 kWh. Limitado al hueco hasta el SOC máximo (por defecto 0 %)</td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Formulario de configuración — Modo Precio en Tiempo Real" src="../../../../assets/screenshots/configuration/predictive-charging/real-time-price-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <h2 id="comportamiento-de-carga">Comportamiento de carga<a class="headerlink" href="#comportamiento-de-carga" title="Permanent link">&para;</a></h2>
-<p>Cada ciclo (~2,5 s) el controlador evalúa si arrancar o detener la carga desde la red:</p>
+<p>Cada ciclo (dirigido por eventos) el controlador evalúa si arrancar o detener la carga desde la red:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Si precio_actual ≤ umbral:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    Y si (batería + solar) &lt; consumo_esperado:
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        → Activar carga desde la red
@@ -1719,7 +1747,7 @@
 <hr />
 <h2 id="control-de-descarga-por-precio">Control de descarga por precio<a class="headerlink" href="#control-de-descarga-por-precio" title="Permanent link">&para;</a></h2>
 <p>La opción <strong>"Descargar solo cuando el precio supere el umbral"</strong> añade una condición adicional al comportamiento de descarga, independiente de la carga.</p>
-<p>Cuando está activa, en <strong>cada ciclo del controlador (~2,5 s)</strong> se comprueba si el precio actual justifica la descarga usando el mismo umbral que para la carga:</p>
+<p>Cuando está activa, en <strong>cada ciclo del controlador (dirigido por eventos)</strong> se comprueba si el precio actual justifica la descarga usando el mismo umbral que para la carga:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Si precio_actual &gt; umbral:
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    → Descarga permitida (el controlador PD opera con normalidad)
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>Si precio_actual ≤ umbral:

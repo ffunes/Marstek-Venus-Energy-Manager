@@ -1176,6 +1176,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1731,6 +1759,10 @@
 <p>Do not modify these values unless you understand PD control theory and how it interacts with inverter response times. <strong>Default values work correctly for the vast majority of installations.</strong></p>
 </div>
 <p>Allows tuning the internal PD controller parameters. All values can also be adjusted at runtime from the integration's configuration entities without restarting.</p>
+<div class="admonition tip">
+<p class="admonition-title">Prefer profiles</p>
+<p>Most users don't need to touch these by hand. The <strong>PD tuning profile</strong> selector applies vetted <code>Kp</code>/<code>Kd</code>/rate-limit presets in one click, and the <strong>PD Control Quality</strong> sensor shows whether the result is stable, oscillating or sluggish. See <a href="../../features/pd-controller/#tuning-profiles">PD controller → Tuning profiles</a>.</p>
+</div>
 <table>
 <thead>
 <tr>
@@ -1743,13 +1775,13 @@
 <tbody>
 <tr>
 <td><strong>Kp</strong></td>
-<td><code>0.65</code></td>
+<td><code>0.35</code></td>
 <td>0.1 – 2.0</td>
 <td>Proportional gain. Higher = faster response but more overshoot</td>
 </tr>
 <tr>
 <td><strong>Kd</strong></td>
-<td><code>0.5</code></td>
+<td><code>0.3</code></td>
 <td>0.0 – 2.0</td>
 <td>Derivative gain. Higher = smoother transitions but slower response</td>
 </tr>

@@ -836,6 +836,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#margen-de-carga-de-red" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Margen de carga de red
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sistemas-multibateria" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1162,6 +1173,34 @@
     
   
     Carga semanal completa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
   
 
     
@@ -1543,6 +1582,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#margen-de-carga-de-red" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Margen de carga de red
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sistemas-multibateria" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1627,6 +1677,11 @@
 </code></pre></div>
 <p><code>hueco_hasta_max</code> es la distancia en kWh desde el SOC actual hasta <code>max_soc</code>. La producción solar en exceso sobre el consumo del hogar carga la batería el resto del camino durante el día.</p>
 <p><strong>Ejemplo</strong>: la batería necesita 5 kWh para llegar a max_soc. La previsión solar es de 13 kWh y el consumo estimado es de 10 kWh — un excedente de 3 kWh disponible para la batería. La integración carga solo <strong>2 kWh</strong> desde la red; la solar gestiona los 3 kWh restantes durante el día.</p>
+<h3 id="margen-de-carga-de-red">Margen de carga de red<a class="headerlink" href="#margen-de-carga-de-red" title="Permanent link">&para;</a></h3>
+<p>El cálculo de la carga de red confía en la previsión solar. Cuando la previsión es optimista — o el tiempo resulta peor de lo previsto — la solar puede no aportar el excedente esperado y la batería termina el día por debajo de <code>max_soc</code>. El <strong>Margen de Carga de Red Predictiva</strong> (%) opcional cubre este riesgo aumentando la cantidad de red:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>carga_red = max(0, hueco_hasta_max − excedente_solar) × (1 + margen%)
+</code></pre></div>
+<p>Siguiendo el ejemplo anterior, una necesidad de 2 kWh de red con un margen del <strong>50 %</strong> carga <strong>3 kWh</strong> desde la red en su lugar. El resultado se limita a <code>hueco_hasta_max</code>, por lo que el margen nunca puede cargar por encima de <code>max_soc</code>. El valor por defecto es <code>0 %</code> (desactivado); también se aplica a la reevaluación de la tarde en precio dinámico. Configúralo en el <strong>asistente de configuración</strong>, en el flujo de opciones, o con el slider <code>number.*_predictive_grid_charge_margin_pct</code> en la pestaña <strong>Control</strong> del panel.</p>
 <h3 id="sistemas-multibateria">Sistemas multibatería<a class="headerlink" href="#sistemas-multibateria" title="Permanent link">&para;</a></h3>
 <p>En sistemas con varias baterías a distintos niveles de SOC, la carga de red se distribuye <strong>proporcionalmente al hueco individual de cada batería hasta max_soc</strong>. Una batería más lejos del máximo recibe una mayor parte; una batería ya próxima al máximo se apoya principalmente en la solar. Esto evita sobrecargar una única unidad desde la red y minimiza la importación total.</p>
 <hr />

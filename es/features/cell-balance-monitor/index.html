@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/es/features/cell-balance-monitor/">
       
       
+        <link rel="prev" href="../weekly-full-charge/">
+      
+      
+        <link rel="next" href="../peak-shaving/">
       
       
         
@@ -308,10 +312,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../pd-controller/" class="md-tabs__link">
           
   
@@ -893,28 +899,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -932,7 +941,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1050,6 +1059,258 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Tabla de contenidos">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Tabla de contenidos
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#por-que-es-necesario-en-baterias-lfp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por qué es necesario en baterías LFP
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#la-curva-de-carga-lfp-en-detalle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        La curva de carga LFP en detalle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disponibilidad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disponibilidad
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reduccion-por-voltaje-al-100" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reducción por voltaje al 100 %
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Reducción por voltaje al 100 %">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perfil-de-carga" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perfil de carga
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recalibracion-de-soc-con-tension-alta-atascada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recalibración de SOC con tensión alta atascada
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#modo-de-balanceo-activo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modo de balanceo activo
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Modo de balanceo activo">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#perfil-de-balanceo-activo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perfil de balanceo activo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#por-que-estos-umbrales-de-tension" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por qué estos umbrales de tensión
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#por-que-tarda-tanto" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Por qué tarda tanto
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#como-se-mide-el-desbalanceo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cómo se mide el desbalanceo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#umbrales" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Umbrales
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notificaciones" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notificaciones
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#entidades-de-sensor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entidades de sensor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostico" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnóstico
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1455,6 +1716,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#recalibracion-de-soc-con-tension-alta-atascada" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recalibración de SOC con tensión alta atascada
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1688,6 +1960,28 @@
 <p>La lógica se basa en tensión de celda. El SOC no se usa para decidir cuándo empieza o termina la reducción por voltaje, porque cerca del final de carga los registros de tensión de celda son más fiables que el SOC reportado.</p>
 <p>No hay histéresis adicional de voltaje en esta ruta. Cuando la batería llega a 3.58 V y se toma la lectura, la integración no fuerza una descarga. Deja la carga parada en esa tensión y permite que la lógica normal de SOC/carga decida cuándo se podrá volver a cargar.</p>
 <p>En sistemas con varias baterías, la lógica se evalúa por batería. Una batería puede estar limitada o pausada mientras otra sigue cargando con normalidad.</p>
+<h3 id="recalibracion-de-soc-con-tension-alta-atascada">Recalibración de SOC con tensión alta atascada<a class="headerlink" href="#recalibracion-de-soc-con-tension-alta-atascada" title="Permanent link">&para;</a></h3>
+<p>Algunos packs llegan al punto de pausa de 3.58 V mientras el BMS sigue reportando un SOC muy por debajo del total (por ejemplo 60–70 %). Esa diferencia indica que el contador de coulombs del BMS se ha desviado: las celdas están realmente llenas pero el SOC reportado es incorrecto.</p>
+<p>Cuando esto ocurre, quedarse en 3.58 V nunca deja que el BMS se corrija. Por eso, en vez de pausar, la integración sigue cargando a la potencia reducida de 95 W hasta que el propio BMS corta, <em>intentando</em> que recalibre el SOC al 100 %.</p>
+<p>Es un intento de mejor esfuerzo, no una solución garantizada. Que un corte en la parte alta de la curva realmente reinicie el SOC reportado depende del firmware del BMS: algunos packs saltan al 100 % con un corte por sobretensión, otros no. La integración solo crea las condiciones para una recalibración — no puede obligar al BMS a aplicarla.</p>
+<p>El override se activa automáticamente cuando se cumple <strong>todo</strong> lo siguiente:</p>
+<ul>
+<li>el objetivo de carga es 100 % (la reducción aplica), y</li>
+<li><code>max_cell_voltage</code> ha alcanzado el punto de pausa de 3.58 V, y</li>
+<li>el BMS sigue reportando un SOC por debajo del 90 %.</li>
+</ul>
+<p>Es autolimitado:</p>
+<ul>
+<li>la carga continúa solo a 95 W (la potencia suave de reducción), no a plena potencia;</li>
+<li>el corte del BMS se detecta cuando la potencia de la batería cae a ≤ 10 W y el inversor reporta Standby durante 5 ciclos consecutivos (~10 s). En ese momento el override se enclava y se reanuda la pausa normal de 3.58 V, dejando que el SOC se recalibre;</li>
+<li>una vez que el SOC marca 90 % o más (tras recalibrar), la condición ya no se cumple, así que el override no se vuelve a disparar;</li>
+<li>el enclavamiento solo se rearma cuando la batería sale de la zona alta (<code>max_cell_voltage</code> por debajo de 3.48 V), para que una carga completa posterior pueda recalibrar de nuevo si hace falta.</li>
+</ul>
+<p>Como depende de un objetivo de carga del 100 %, nunca afecta al ciclado diario normal con un <code>max_soc</code> más bajo. Tampoco se ejecuta mientras el <a href="#modo-de-balanceo-activo">modo de balanceo activo</a> controla la batería — ese modo tiene prioridad.</p>
+<div class="admonition note">
+<p class="admonition-title">Desbalance de celdas</p>
+<p>El override no comprueba primero la dispersión entre celdas. En un pack muy desbalanceado, la celda más alta puede llegar al corte por sobretensión del BMS antes de que el pack esté lleno, así que la recalibración es correcta pero el balanceo queda para ciclos posteriores. El BMS sigue protegiendo cada celda de forma individual.</p>
+</div>
 <h2 id="modo-de-balanceo-activo">Modo de balanceo activo<a class="headerlink" href="#modo-de-balanceo-activo" title="Permanent link">&para;</a></h2>
 <p>El modo de balanceo activo es una ruta de recuperación más fuerte para baterías que necesitan más tiempo en la ventana de balanceo.</p>
 <p>Cuando el switch está activado, esa batería queda excluida del control PD normal. El resto de baterías pueden seguir funcionando normalmente. La integración eleva temporalmente el objetivo de carga de esa batería al 100 % y ordena carga directa para esa batería.</p>
@@ -1714,15 +2008,15 @@
 </tr>
 <tr>
 <td>Si <code>delta_V &gt; 0.03 V</code></td>
-<td>Descarga a 25 W hasta <code>max_cell_voltage &lt;= 3.49 V</code> y vuelve a cargar</td>
+<td>Descarga a 200 W hasta <code>max_cell_voltage &lt;= 3.49 V</code> y vuelve a cargar</td>
 </tr>
 <tr>
 <td>Si <code>delta_V &lt;= 0.03 V</code></td>
-<td>Descarga final a 25 W hasta <code>max_cell_voltage &lt;= 3.48 V</code>, termina y apaga el switch</td>
+<td>Descarga final a 200 W hasta <code>max_cell_voltage &lt;= 3.48 V</code>, termina y apaga el switch</td>
 </tr>
 </tbody>
 </table>
-<p>Si el BMS acepta el comando de carga pero la batería no carga realmente antes de llegar a 3.58 V, la integración lo interpreta como rechazo de carga. Primero descarga y después baja el voltaje de reintento en 0.01 V, hasta un mínimo de 3.40 V, para que el siguiente ciclo empiece desde un punto en el que el BMS tenga más probabilidad de aceptar carga.</p>
+<p>Si el BMS corta la carga antes de que <code>max_cell_voltage</code> llegue a 3.58 V, la integración lo interpreta como rechazo de carga. El rechazo solo se detecta cuando no circula corriente (potencia de batería ~0 W), así que las celdas ya están en reposo: registra una medición del delta de celdas en ese punto, en vez de terminar el ciclo sin lectura. Después descarga y baja el voltaje de reintento en 0.01 V. El voltaje de reintento rebajado <strong>se mantiene entre ciclos de carga/descarga</strong>, bajando otros 0.01 V en cada nuevo rechazo hasta un suelo de 3.40 V, de modo que el pack se va bajando progresivamente hasta que el BMS vuelve a aceptar carga. El voltaje de reintento se restablece a su valor por defecto solo cuando el pack llega a la parte alta de 3.58 V, o cuando el ciclo termina.</p>
 <p>El modo de balanceo activo no tiene un límite fijo de 48 horas. Se ejecuta hasta que el delta medido en tensión alta es igual o inferior a 0.03 V, o hasta que el usuario apaga el switch.</p>
 <h2 id="por-que-estos-umbrales-de-tension">Por qué estos umbrales de tensión<a class="headerlink" href="#por-que-estos-umbrales-de-tension" title="Permanent link">&para;</a></h2>
 <p>Todos los cortes de tensión usados por la reducción al 100 % y por el modo de balanceo activo se eligen contra la curva LFP descrita arriba. Ninguno de estos números es arbitrario.</p>
@@ -1757,7 +2051,7 @@
 </tr>
 <tr>
 <td><strong>3,48 V (otra vez)</strong></td>
-<td>Suelo de descarga al final del ciclo — la descarga final a 25 W tras completar un balanceo activo se detiene aquí</td>
+<td>Suelo de descarga al final del ciclo — la descarga final a 200 W tras completar un balanceo activo se detiene aquí</td>
 <td>El mismo umbral usado para entrar en la reducción se reutiliza para salir de la ventana de balanceo. Parar a 3,48 V deja al pack justo por debajo del comienzo de la rodilla superior sin devolverlo del todo a la meseta profunda. Quedarse a 3,55 – 3,58 V durante mucho tiempo acelera el envejecimiento calendario, así que la integración baja deliberadamente al borde inferior de la ventana antes de soltar el control.</td>
 </tr>
 <tr>
@@ -1777,7 +2071,7 @@
 </tr>
 </tbody>
 </table>
-<p>Las potencias de 95 W y 25 W están emparejadas con estos umbrales a propósito. Son lo bastante bajas como para que la tensión de celda medida bajo carga esté dominada por la propia química de la celda y no por la caída IR (resistiva) en la celda, en las pletinas y en los shunts del BMS. Cargar o descargar a cientos de vatios en la rodilla desplazaría la lectura aparente decenas de milivoltios y arruinaría tanto las comprobaciones de los umbrales como la medida final del delta.</p>
+<p>La potencia de carga de 95 W está emparejada con los umbrales de carga a propósito: es lo bastante baja como para que la tensión de celda medida <em>durante la carga</em> esté dominada por la propia química de la celda y no por la caída IR (resistiva) en la celda, en las pletinas y en los shunts del BMS. Cargar a cientos de vatios en la rodilla desplazaría la lectura aparente decenas de milivoltios y arruinaría la comprobación del umbral de 3.58 V. La descarga es de 200 W porque el delta de celdas siempre se mide en <strong>reposo</strong> —se paran tanto la carga como la descarga durante 60 s antes de tomar la lectura—, así que la mayor potencia de descarga solo baja el pack más rápido entre mediciones y nunca contamina el delta registrado.</p>
 <h2 id="por-que-tarda-tanto">Por qué tarda tanto<a class="headerlink" href="#por-que-tarda-tanto" title="Permanent link">&para;</a></h2>
 <p>El balanceo de celdas <strong>no</strong> es un proceso rápido — y los packs Marstek Venus no son una excepción. Hay dos razones.</p>
 <p><strong>1. La corriente de balanceo pasivo es muy pequeña.</strong> Un BMS LFP típico drena la celda más alta a través de una resistencia con una corriente de entre 30 mA y 150 mA. Los packs Marstek Venus se mueven por la parte baja de ese rango. Para una celda de 100 Ah, un drenaje de 50 mA quita solo unos 0,05 % de SOC por hora a la celda alta. Por eso igualar diferencias incluso pequeñas entre celdas requiere muchas horas seguidas dentro de la ventana de balanceo.</p>
@@ -1790,7 +2084,7 @@
 <p>Esa es también la razón por la que el modo de balanceo activo no tiene una "vía rápida":</p>
 <ul>
 <li>el límite de 95 W de carga por encima de 3,48 V está pensado para mantener al pack en la rodilla el tiempo suficiente para que el BMS avance, en lugar de atravesarla en segundos;</li>
-<li>los 25 W de descarga entre reintentos están pensados para que el pack se quede cerca de 3,49 V sin salir de la ventana;</li>
+<li>los 200 W de descarga entre reintentos bajan el pack de vuelta al voltaje de reintento sin salir de la ventana;</li>
 <li>el bucle de balanceo activo puede ejecutarse indefinidamente, porque cualquier duración por debajo de "muchas horas" difícilmente moverá el delta.</li>
 </ul>
 <p>Si el objetivo es recuperar un pack visiblemente desbalanceado, lo correcto es activar el modo de balanceo activo y <strong>dejarlo funcionando toda la noche (o más tiempo) y mirar el resultado al día siguiente</strong>. Mirar el delta de celdas en tiempo real esperando movimientos en cuestión de minutos solo lleva a frustración.</p>
@@ -1942,6 +2236,14 @@
 <td>Fase actual de medición al 100 %, si existe</td>
 </tr>
 <tr>
+<td><code>soc_recal_active</code></td>
+<td>Si la carga se mantiene más allá de la pausa de 3.58 V para recalibrar un SOC reportado bajo</td>
+</tr>
+<tr>
+<td><code>soc_recal_bms_cutoff</code></td>
+<td>Si se ha alcanzado el corte del BMS durante la recalibración (override enclavado)</td>
+</tr>
+<tr>
 <td><code>charge_limit_w</code></td>
 <td>Límite efectivo de carga por batería antes del reparto</td>
 </tr>
@@ -1984,6 +2286,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Pie" >
+        
+          
+          <a href="../weekly-full-charge/" class="md-footer__link md-footer__link--prev" aria-label="Anterior: Carga semanal completa">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Anterior
+              </span>
+              <div class="md-ellipsis">
+                Carga semanal completa
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../peak-shaving/" class="md-footer__link md-footer__link--next" aria-label="Siguiente: Peak shaving">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Siguiente
+              </span>
+              <div class="md-ellipsis">
+                Peak shaving
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">

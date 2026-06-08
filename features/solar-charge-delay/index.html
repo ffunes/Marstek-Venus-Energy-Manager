@@ -1071,6 +1071,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1616,6 +1644,10 @@
 <li><strong>Forecast improves</strong> while the delay is still active → the system keeps waiting for the sun to charge the battery.</li>
 </ul>
 <p>Once the delay is unlocked it stays unlocked for the rest of the day.</p>
+<div class="admonition note">
+<p class="admonition-title">Transient forecast gaps and manual re-evaluation</p>
+<p>A configured forecast sensor that reads <code>unavailable</code>/<code>unknown</code> for a moment — while it refreshes, or during the window after a Home Assistant restart before all sensors have loaded — no longer disables the delay for the whole day. The delay is held through a short grace window (sensor state <code>Waiting for forecast</code>) and only unlocks if the sensor stays unavailable past it. If the delay did already unlock and you want it back the same day, <strong>toggle the Solar Charge Delay switch off and then on</strong>: that re-evaluates the delay from scratch instead of waiting for the midnight reset.</p>
+</div>
 <h2 id="soc-setpoint">SOC setpoint<a class="headerlink" href="#soc-setpoint" title="Permanent link">&para;</a></h2>
 <p>An optional SOC setpoint (12–90 %, disabled by default) splits charging into two phases:</p>
 <ol>

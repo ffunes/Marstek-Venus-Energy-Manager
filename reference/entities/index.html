@@ -1068,6 +1068,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1471,6 +1499,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#pd-control-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PD Control Quality
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#aggregate-sensors" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1698,6 +1737,17 @@
     <span class="md-ellipsis">
       
         Integration Status
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pd-control-quality" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PD Control Quality
       
     </span>
   </a>
@@ -2034,6 +2084,10 @@
 <td><code>select.*_force_mode</code></td>
 <td>None / Charge / Discharge</td>
 </tr>
+<tr>
+<td><code>select.marstek_venus_system_pd_tuning_profile</code></td>
+<td>Very smooth / Smooth / Balanced / Aggressive / Very aggressive / Custom — one-click PD presets that set <code>Kp</code>, <code>Kd</code> and the rate limit together (deadband stays user-owned)</td>
+</tr>
 </tbody>
 </table>
 <h2 id="switches">Switches<a class="headerlink" href="#switches" title="Permanent link">&para;</a></h2>
@@ -2178,6 +2232,39 @@
 </tr>
 </tbody>
 </table>
+<h3 id="pd-control-quality">PD Control Quality<a class="headerlink" href="#pd-control-quality" title="Permanent link">&para;</a></h3>
+<p><code>sensor.marstek_venus_system_pd_control_quality</code> reports how well the PD controller holds the grid target, so the effect of a <a href="../../features/pd-controller/#tuning-profiles">tuning profile</a> or slider change is visible. The state is a verdict:</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stable</code></td>
+<td>PD tracks the target well</td>
+</tr>
+<tr>
+<td><code>oscillating</code></td>
+<td>Hunting — use a smoother profile or raise the deadband</td>
+</tr>
+<tr>
+<td><code>sluggish</code></td>
+<td>Too slow — use a more aggressive profile</td>
+</tr>
+<tr>
+<td><code>battery_limited</code></td>
+<td>Battery full/empty or at its power rail; the PD cannot act (not a tuning issue)</td>
+</tr>
+<tr>
+<td><code>collecting_data</code></td>
+<td>Warming up</td>
+</tr>
+</tbody>
+</table>
+<p>Attributes: <code>rms_error_w</code> (average grid-tracking error), <code>oscillation_per_min</code>, the active <code>kp</code> / <code>kd</code> / <code>deadband_w</code> / <code>max_power_change_w</code>, and <code>active_profile</code>. The metric is a 60 s rolling average and is paused briefly after a target change and while battery-limited, so allow 1–2 min after a change.</p>
 <h3 id="aggregate-sensors">Aggregate sensors<a class="headerlink" href="#aggregate-sensors" title="Permanent link">&para;</a></h3>
 <p>Available under the <code>sensor.marstek_venus_system_*</code> prefix, summing values across all batteries:</p>
 <ul>
@@ -2187,14 +2274,16 @@
 <li><code>system_total_discharging_energy</code> — Total system discharging energy</li>
 <li><code>grid_at_min_soc</code> — Grid import during min SOC periods (kWh)</li>
 <li><code>system_alarm_status</code> — Aggregated alarm state across all batteries (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); attributes list active conditions per battery</li>
-<li><code>household_energy_today</code> — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.</li>
+<li><code>system_home_consumption</code> — Instantaneous home consumption (W). Reads the household sensor when configured, otherwise derives it from <code>grid + battery AC + solar</code>.</li>
+<li><code>system_daily_home_energy</code> — Today's home consumption (kWh), integrated from the Home Consumption value above. Resets at midnight (local time).</li>
 <li><code>system_battery_power</code> — Total system power</li>
 <li><code>system_battery_soc</code> — System average SOC</li>
 <li><code>system_total_charging_energy</code> — Total system charging energy</li>
 <li><code>system_total_discharging_energy</code> — Total system discharging energy</li>
 <li><code>grid_at_min_soc</code> — Grid import during min SOC periods (kWh)</li>
 <li><code>system_alarm_status</code> — Aggregated alarm state across all batteries (<code>OK</code> / <code>Warning</code> / <code>Fault</code>); attributes list active conditions per battery</li>
-<li><code>household_energy_today</code> — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.</li>
+<li><code>system_home_consumption</code> — Instantaneous home consumption (W). Reads the household sensor when configured, otherwise derives it from <code>grid + battery AC + solar</code>.</li>
+<li><code>system_daily_home_energy</code> — Today's home consumption (kWh), integrated from the Home Consumption value above. Resets at midnight (local time).</li>
 </ul>
 <h3 id="configuration-summary">Configuration Summary<a class="headerlink" href="#configuration-summary" title="Permanent link">&para;</a></h3>
 <p><code>sensor.marstek_venus_system_configuration_summary</code> is a hidden diagnostic sensor intended for support reports. It exposes configuration attributes without battery IP addresses or ports.</p>

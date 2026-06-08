@@ -18,7 +18,7 @@
         <link rel="prev" href="../consumption-estimate/">
       
       
-        <link rel="next" href="../peak-shaving/">
+        <link rel="next" href="../cell-balance-monitor/">
       
       
         
@@ -1162,6 +1162,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1580,6 +1608,10 @@
 <li>Tras finalizar, el límite de SOC máximo vuelve automáticamente al valor configurado por el usuario.</li>
 </ol>
 <p>La carga semanal completa usa el mismo perfil de voltaje que una batería configurada normalmente con <code>max_soc = 100</code>. La función semanal solo eleva el objetivo a 100 %; no usa un algoritmo de balanceo distinto.</p>
+<div class="admonition note">
+<p class="admonition-title">SOC desviado</p>
+<p>Si un pack llega a 3.58 V mientras el BMS sigue reportando un SOC por debajo del 90 %, la carga <em>no</em> se pausa en el paso 4: la integración sigue cargando a 95 W hasta que el BMS corta, <em>intentando</em> que recalibre el SOC al 100 % para que la carga semanal pueda completarse. Es de mejor esfuerzo y depende del firmware del BMS — no está garantizado. Ver <a href="../cell-balance-monitor/#recalibracion-de-soc-con-tension-alta-atascada">Recalibración de SOC con tensión alta atascada</a>.</p>
+</div>
 <h2 id="monitor-de-equilibrio-de-celdas">Monitor de equilibrio de celdas<a class="headerlink" href="#monitor-de-equilibrio-de-celdas" title="Permanent link">&para;</a></h2>
 <p>El <strong>monitor de equilibrio de celdas</strong> está siempre activo. Registra la diferencia de tensión entre la celda más alta y la más baja tras cada medición en tensión alta, y mantiene actualizados los sensores, la tendencia y las alertas.</p>
 <p>Consulta <a href="../cell-balance-monitor/">Monitor de equilibrio de celdas</a> para más detalles.</p>
@@ -1647,13 +1679,13 @@
         
         
           
-          <a href="../peak-shaving/" class="md-footer__link md-footer__link--next" aria-label="Siguiente: Peak shaving">
+          <a href="../cell-balance-monitor/" class="md-footer__link md-footer__link--next" aria-label="Siguiente: Monitor de equilibrio de celdas">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Siguiente
               </span>
               <div class="md-ellipsis">
-                Peak shaving
+                Monitor de equilibrio de celdas
               </div>
             </div>
             <div class="md-footer__button md-icon">

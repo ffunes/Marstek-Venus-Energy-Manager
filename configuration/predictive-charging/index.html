@@ -836,6 +836,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#grid-charge-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grid charge margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#multi-battery-systems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1162,6 +1173,34 @@
     
   
     Weekly full charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
   
 
     
@@ -1543,6 +1582,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#grid-charge-margin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Grid charge margin
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#multi-battery-systems" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1627,6 +1677,11 @@
 </code></pre></div>
 <p><code>gap_to_max</code> is the kWh distance from the current SOC to <code>max_soc</code>. Solar output in excess of household demand charges the battery the rest of the way during the day.</p>
 <p><strong>Example</strong>: the battery needs 5 kWh to reach max_soc. Solar forecast is 13 kWh, expected consumption is 10 kWh — a surplus of 3 kWh available for the battery. The integration charges only <strong>2 kWh</strong> from the grid; solar handles the remaining 3 kWh during the day.</p>
+<h3 id="grid-charge-margin">Grid charge margin<a class="headerlink" href="#grid-charge-margin" title="Permanent link">&para;</a></h3>
+<p>The grid-charge calculation trusts the solar forecast. When the forecast is optimistic — or the weather turns out worse than predicted — solar may not deliver the expected surplus and the battery ends the day below <code>max_soc</code>. The optional <strong>Predictive Grid Charge Margin</strong> (%) hedges this by topping up the grid amount:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>grid_charge = max(0, gap_to_max − solar_surplus) × (1 + margin%)
+</code></pre></div>
+<p>Continuing the example above, a 2 kWh grid need with a <strong>50 %</strong> margin charges <strong>3 kWh</strong> from the grid instead. The result is capped at <code>gap_to_max</code>, so the margin can never charge past <code>max_soc</code>. Default is <code>0 %</code> (off); it also applies to the dynamic-pricing evening re-evaluation. Set it in the <strong>setup wizard</strong>, the options flow, or via the <code>number.*_predictive_grid_charge_margin_pct</code> slider on the dashboard <strong>Control</strong> tab.</p>
 <h3 id="multi-battery-systems">Multi-battery systems<a class="headerlink" href="#multi-battery-systems" title="Permanent link">&para;</a></h3>
 <p>In systems with multiple batteries at different SOC levels the grid charge is distributed <strong>proportionally to each battery's individual gap to max_soc</strong>. A battery further from full receives a larger share; a battery already close to full relies mostly on solar for its remainder. This prevents overcharging any single unit from the grid and minimises total grid import.</p>
 <hr />

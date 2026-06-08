@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://ffunes.github.io/Marstek-Venus-Energy-Manager/features/cell-balance-monitor/">
       
       
+        <link rel="prev" href="../weekly-full-charge/">
+      
+      
+        <link rel="next" href="../peak-shaving/">
       
       
         
@@ -308,10 +312,12 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../pd-controller/" class="md-tabs__link">
           
   
@@ -893,28 +899,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
         
           
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
             
   
   
@@ -932,7 +941,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_4">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1050,6 +1059,258 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-is-needed-on-lfp-batteries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this is needed on LFP batteries
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-lfp-charge-curve-in-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The LFP charge curve in detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#availability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Availability
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#100-charge-voltage-taper" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        100% charge voltage taper
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="100% charge voltage taper">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#charge-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Charge profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#soc-recalibration-on-a-stuck-top-voltage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC recalibration on a stuck top voltage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#active-balance-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active balance mode
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Active balance mode">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#active-balance-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Active balance profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-these-voltage-thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why these voltage thresholds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-takes-so-long" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this takes so long
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-imbalance-is-measured" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How imbalance is measured
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thresholds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thresholds
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notifications" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notifications
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensor-entities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensor entities
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#diagnostics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagnostics
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1455,6 +1716,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#soc-recalibration-on-a-stuck-top-voltage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SOC recalibration on a stuck top voltage
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1700,6 +1972,28 @@
 <p>The logic is voltage based. SOC is deliberately not used to decide when the top-voltage taper starts or stops, because SOC can be less reliable near the top than the cell-voltage registers. There is no extra voltage hysteresis in this path. </p>
 <p>Once the battery reaches 3.58 V, the normal SOC charge/discharge logic with hysteresis is resumed. The 60-second delta-V measurement still runs as a best-effort diagnostic; if it did not finish before completion, a one-shot snapshot is captured at completion time under phase <code>top_charge_taper_complete</code>.</p>
 <p>In a multi-battery system, this is evaluated per battery. One battery can be limited or paused while another continues charging normally.</p>
+<h3 id="soc-recalibration-on-a-stuck-top-voltage">SOC recalibration on a stuck top voltage<a class="headerlink" href="#soc-recalibration-on-a-stuck-top-voltage" title="Permanent link">&para;</a></h3>
+<p>Some packs reach the 3.58 V pause point while the BMS still reports a SOC well below full (for example 60–70%). That gap is a sign the BMS coulomb counter has drifted: the cells are genuinely full but the reported SOC is wrong.</p>
+<p>When this happens, holding at 3.58 V never lets the BMS correct itself. So instead of pausing, the integration keeps charging at the 95 W tapered power until the BMS itself cuts off, <em>attempting</em> to make it recalibrate SOC to 100%.</p>
+<p>This is a best-effort attempt, not a guaranteed fix. Whether a top-of-curve cutoff actually resets the reported SOC depends on the BMS firmware: some packs snap to 100% on an over-voltage cutoff, others do not. The integration only creates the conditions for a recalibration — it cannot force the BMS to apply one.</p>
+<p>The override triggers automatically whenever <strong>all</strong> of these are true:</p>
+<ul>
+<li>the charge target is 100% (the taper applies), and</li>
+<li><code>max_cell_voltage</code> has reached the 3.58 V pause point, and</li>
+<li>the BMS still reports SOC below 90%.</li>
+</ul>
+<p>It is self-limiting:</p>
+<ul>
+<li>charging continues at 95 W only (the gentle taper power), not full power;</li>
+<li>a BMS cutoff is detected when battery power collapses to ≤ 10 W and the inverter reports Standby for 5 consecutive cycles (~10 s). At that point the override latches off and the normal 3.58 V pause resumes, letting the SOC recalibrate;</li>
+<li>once the SOC reads 90% or more (after recalibration), the condition no longer matches, so the override does not fire again;</li>
+<li>the latch only re-arms after the battery leaves the top zone (<code>max_cell_voltage</code> below 3.48 V), so a later full charge can recalibrate again if needed.</li>
+</ul>
+<p>Because this is gated on a 100% charge target, it never affects normal daily cycling at a lower <code>max_soc</code>. It also does not run while <a href="#active-balance-mode">active balance mode</a> owns the battery — that mode takes priority.</p>
+<div class="admonition note">
+<p class="admonition-title">Cell imbalance</p>
+<p>The override does not check the cell spread first. On a badly imbalanced pack the highest cell can hit the BMS over-voltage cutoff before the pack is full, so the recalibration is correct but balancing is left to later cycles. The BMS still protects each cell individually.</p>
+</div>
 <h2 id="active-balance-mode">Active balance mode<a class="headerlink" href="#active-balance-mode" title="Permanent link">&para;</a></h2>
 <p>Active balance mode is a stronger per-battery recovery mode for packs that need more time in the balancing window.</p>
 <p>When the switch is enabled, that battery is excluded from normal PD control. The rest of the batteries can continue to operate normally. The integration temporarily raises the battery charge target to 100% and commands charge directly for that battery.</p>
@@ -1748,15 +2042,15 @@
 </tr>
 <tr>
 <td>If <code>delta_V &gt; 0.03 V</code></td>
-<td>Discharge at 25 W until <code>max_cell_voltage &lt;= 3.49 V</code>, then charge again</td>
+<td>Discharge at 200 W until <code>max_cell_voltage &lt;= 3.49 V</code>, then charge again</td>
 </tr>
 <tr>
 <td>If <code>delta_V &lt;= 0.03 V</code></td>
-<td>Final discharge at 25 W until <code>max_cell_voltage &lt;= 3.48 V</code>, then finish and turn the switch off</td>
+<td>Final discharge at 200 W until <code>max_cell_voltage &lt;= 3.48 V</code>, then finish and turn the switch off</td>
 </tr>
 </tbody>
 </table>
-<p>If the BMS accepts the charge command but does not actually charge before reaching 3.58 V, the integration treats that as charge rejection. It discharges first and lowers the retry voltage by 0.01 V, down to a minimum of 3.40 V, so the next cycle can restart from a point where the BMS is more likely to accept charge.</p>
+<p>If the BMS cuts charge before <code>max_cell_voltage</code> reaches 3.58 V, the integration treats that as charge rejection. Rejection is only detected when no current is flowing (battery power ~0 W), so the cells are already at rest: it records a cell delta measurement at that point instead of ending the run with no reading. It then discharges and steps the retry voltage down by 0.01 V. The lowered retry voltage is <strong>kept across charge/discharge cycles</strong>, ratcheting down another 0.01 V on each further rejection to a floor of 3.40 V, so the pack is progressively dropped until the BMS accepts charge again. The retry voltage is reset to its default only when the pack reaches the 3.58 V top, or when the run finishes.</p>
 <p>Active balance mode has no fixed 48-hour timeout. It runs until the measured top-voltage delta is at or below 0.03 V, or until the user turns the switch off.</p>
 <h2 id="why-these-voltage-thresholds">Why these voltage thresholds<a class="headerlink" href="#why-these-voltage-thresholds" title="Permanent link">&para;</a></h2>
 <p>Every voltage cutoff used by the 100 % taper and the active balance mode was picked against the LFP curve described above. None of these numbers are arbitrary.</p>
@@ -1791,7 +2085,7 @@
 </tr>
 <tr>
 <td><strong>3.48 V (again)</strong></td>
-<td>End-of-cycle discharge floor — the 25 W final discharge after a completed active-balance run stops here</td>
+<td>End-of-cycle discharge floor — the 200 W final discharge after a completed active-balance run stops here</td>
 <td>The same threshold used to enter the taper is reused to leave the balance window. Stopping at 3.48 V brings the pack just off the upper knee without dropping it back onto the deep plateau. Sitting at 3.55 – 3.58 V for long periods accelerates calendar ageing, so the integration deliberately bleeds the pack down to the lower edge of the window before releasing control.</td>
 </tr>
 <tr>
@@ -1811,7 +2105,7 @@
 </tr>
 </tbody>
 </table>
-<p>The 95 W and 25 W power values are paired with these thresholds intentionally. They are low enough that the cell voltage measured under load is dominated by the cell's actual chemistry rather than by IR (resistive) drop across the cell, busbars and BMS shunts. Charging or discharging at hundreds of watts in the knee would shift the apparent reading by tens of millivolts and ruin both the threshold checks and the final delta measurement.</p>
+<p>The 95 W charge power is paired with the charge thresholds intentionally: it is low enough that the cell voltage measured <em>while charging</em> is dominated by the cell's actual chemistry rather than by IR (resistive) drop across the cell, busbars and BMS shunts. Charging at hundreds of watts in the knee would shift the apparent reading by tens of millivolts and ruin the 3.58 V threshold check. The discharge runs at 200 W because the cell delta is always measured at <strong>rest</strong> — both charge and discharge are stopped for 60 s before the reading is taken — so the higher discharge power only moves the pack down faster between measurements and never contaminates the recorded delta.</p>
 <h2 id="why-this-takes-so-long">Why this takes so long<a class="headerlink" href="#why-this-takes-so-long" title="Permanent link">&para;</a></h2>
 <p>Cell balancing is <strong>not</strong> a fast process — and Marstek Venus packs are no exception. There are two reasons.</p>
 <p><strong>1. Passive balancing current is small.</strong> A typical LFP BMS bleeds the highest cell through a balance resistor at somewhere between 30 mA and 150 mA. The Marstek Venus packs sit at the low end of that range. For a 100 Ah cell, a 50 mA bleed removes only about 0.05 % SOC per hour from the high cell. Equalising even small SOC differences between cells therefore requires many hours of continuous time in the balance window.</p>
@@ -1824,7 +2118,7 @@
 <p>This is also why active balance mode does not have a "fast" path:</p>
 <ul>
 <li>the 95 W charge cap above 3.48 V is set so the pack stays in the knee long enough for the BMS to make progress, rather than ramming through it in seconds;</li>
-<li>the 25 W discharge between retries is set so the pack stays near 3.49 V without dropping out of the window;</li>
+<li>the 200 W discharge between retries brings the pack back down to the retry voltage without dropping out of the window;</li>
 <li>the active-balance loop is allowed to run indefinitely, because anything short of "many hours" is unlikely to move the needle.</li>
 </ul>
 <p>If the goal is to restore a noticeably unbalanced pack, the right approach is to enable active balance mode and <strong>leave it running overnight (or longer) and check the result the next day</strong>. Watching the cell delta in real time and expecting movement within minutes will only cause frustration.</p>
@@ -1976,6 +2270,14 @@
 <td>Current 100% top-measurement phase, if any</td>
 </tr>
 <tr>
+<td><code>soc_recal_active</code></td>
+<td>Whether the charge is being kept past the 3.58 V pause to recalibrate a low reported SOC</td>
+</tr>
+<tr>
+<td><code>soc_recal_bms_cutoff</code></td>
+<td>Whether the BMS cutoff has been reached during recalibration (override latched off)</td>
+</tr>
+<tr>
 <td><code>charge_limit_w</code></td>
 <td>Effective per-battery charge limit before allocation</td>
 </tr>
@@ -2018,6 +2320,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../weekly-full-charge/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Weekly full charge">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Weekly full charge
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../peak-shaving/" class="md-footer__link md-footer__link--next" aria-label="Next: Peak shaving">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Peak shaving
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">

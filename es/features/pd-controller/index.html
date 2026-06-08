@@ -1047,6 +1047,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#perfiles-de-ajuste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perfiles de ajuste
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensor-de-calidad-de-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensor de calidad de control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cadencia-de-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cadencia de control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mecanismos-de-estabilizacion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1096,6 +1129,28 @@
     <span class="md-ellipsis">
       
         Histéresis direccional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtrado-del-termino-derivativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtrado del término derivativo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anti-windup-por-potencia-medida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-windup por potencia medida
       
     </span>
   </a>
@@ -1226,6 +1281,34 @@
     
   
     Carga semanal completa
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
   
 
     
@@ -1612,6 +1695,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#perfiles-de-ajuste" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perfiles de ajuste
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sensor-de-calidad-de-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sensor de calidad de control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cadencia-de-control" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cadencia de control
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#mecanismos-de-estabilizacion" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1661,6 +1777,28 @@
     <span class="md-ellipsis">
       
         Histéresis direccional
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#filtrado-del-termino-derivativo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtrado del término derivativo
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anti-windup-por-potencia-medida" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anti-windup por potencia medida
       
     </span>
   </a>
@@ -1737,7 +1875,7 @@
 
 
 <h1 id="controlador-pd">Controlador PD<a class="headerlink" href="#controlador-pd" title="Permanent link">&para;</a></h1>
-<p>El controlador PD (Proporcional-Derivativo) es el núcleo de la integración. Se ejecuta cada <strong>2,5 segundos</strong> y ajusta la potencia de la batería para mantener el flujo de red cercano al objetivo configurado (por defecto, 0 W).</p>
+<p>El controlador PD (Proporcional-Derivativo) es el núcleo de la integración. Se ejecuta <strong>dirigido por eventos</strong> —recalcula cada vez que el sensor de consumo de red publica un valor nuevo— y ajusta la potencia de la batería para mantener el flujo de red cercano al objetivo configurado (por defecto, 0 W).</p>
 <h2 id="algoritmo">Algoritmo<a class="headerlink" href="#algoritmo" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>error = grid_power - target_power
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -1747,6 +1885,7 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>ajuste = P + D
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>nueva_potencia = potencia_actual + ajuste
 </code></pre></div>
+<p>Como el lazo es dirigido por eventos (cadencia variable), el término <code>P</code> y el límite de rampa se escalan internamente por el tiempo real transcurrido entre actualizaciones del sensor, de modo que el ajuste se comporta igual independientemente de la rapidez con que publique tu sensor.</p>
 <h3 id="parametros-por-defecto">Parámetros por defecto<a class="headerlink" href="#parametros-por-defecto" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -1759,12 +1898,12 @@
 <tbody>
 <tr>
 <td><code>Kp</code></td>
-<td><code>0.65</code></td>
+<td><code>0.35</code></td>
 <td>Ganancia proporcional</td>
 </tr>
 <tr>
 <td><code>Kd</code></td>
-<td><code>0.5</code></td>
+<td><code>0.3</code></td>
 <td>Ganancia derivativa</td>
 </tr>
 <tr>
@@ -1774,20 +1913,136 @@
 </tr>
 <tr>
 <td>Rate limit</td>
-<td><code>±500 W/ciclo</code></td>
+<td><code>±800 W/ciclo</code></td>
 <td>Límite de cambio por ciclo</td>
 </tr>
 </tbody>
 </table>
+<div class="admonition note">
+<p class="admonition-title">Defaults rebajados</p>
+<p><code>Kp</code>/<code>Kd</code> se rebajaron de <code>0.65</code>/<code>0.5</code> a <code>0.35</code>/<code>0.3</code> para frenar el sobreimpulso bajo el lazo dirigido por eventos. Las instalaciones que sigan en los defaults antiguos se migran automáticamente; los valores ajustados a mano se respetan.</p>
+</div>
+<h2 id="perfiles-de-ajuste">Perfiles de ajuste<a class="headerlink" href="#perfiles-de-ajuste" title="Permanent link">&para;</a></h2>
+<p>En vez de ajustar las ganancias a mano, elige un <strong>perfil de ajuste</strong> (<code>select.*_pd_tuning_profile</code>): un preset de un clic que fija <code>Kp</code>, <code>Kd</code> y el límite de rampa a la vez. Ordenados de más suave a más rápido:</p>
+<table>
+<thead>
+<tr>
+<th>Perfil</th>
+<th>Kp</th>
+<th>Kd</th>
+<th>Rate limit</th>
+<th>Cuándo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Muy suave</td>
+<td>0.22</td>
+<td>0.15</td>
+<td>400 W</td>
+<td>Medidor ruidoso, cero cabeceo; calmo pero lento</td>
+</tr>
+<tr>
+<td>Suave</td>
+<td>0.30</td>
+<td>0.25</td>
+<td>600 W</td>
+<td>Conservador</td>
+</tr>
+<tr>
+<td>Equilibrado</td>
+<td>0.35</td>
+<td>0.30</td>
+<td>800 W</td>
+<td>Por defecto — vale para la mayoría</td>
+</tr>
+<tr>
+<td>Agresivo</td>
+<td>0.55</td>
+<td>0.45</td>
+<td>1200 W</td>
+<td>Medidor limpio, respuesta rápida</td>
+</tr>
+<tr>
+<td>Personalizado</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>Manual: ajusta tú los sliders</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Elegir un perfil escribe sus tres ganancias y las recarga en caliente (sin reinicio).</li>
+<li>Mover a mano cualquiera de esos tres sliders pasa el perfil a <strong>Personalizado</strong> automáticamente; tu valor se conserva.</li>
+<li><strong>El deadband no forma parte de los perfiles.</strong> Es tu preferencia de precisión / ruido del medidor <em>y</em> la referencia contra la que mide el sensor de calidad, así que queda como un slider aparte que controlas tú. Cambiarlo no cambia el perfil activo.</li>
+</ul>
+<p>En el dashboard, el selector de perfil y el sensor de calidad están al principio de la sección <strong>Controlador PD</strong> de la pestaña Control.</p>
+<h2 id="sensor-de-calidad-de-control">Sensor de calidad de control<a class="headerlink" href="#sensor-de-calidad-de-control" title="Permanent link">&para;</a></h2>
+<p><code>sensor.marstek_venus_system_pd_control_quality</code> muestra de un vistazo cómo de bien mantiene el PD el objetivo de red, para que veas el efecto de un cambio de perfil/slider en vez de adivinar.</p>
+<p>El <strong>estado es un veredicto</strong>, no un número:</p>
+<table>
+<thead>
+<tr>
+<th>Estado</th>
+<th>Significado</th>
+<th>Qué hacer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Estable</td>
+<td>El PD sigue bien el objetivo</td>
+<td>Nada</td>
+</tr>
+<tr>
+<td>Oscilando</td>
+<td>Cabeceo (carga↔descarga frecuente)</td>
+<td>Usa un perfil más suave, o sube el deadband</td>
+</tr>
+<tr>
+<td>Lento</td>
+<td>Demasiado lento para alcanzar</td>
+<td>Usa un perfil más agresivo</td>
+</tr>
+<tr>
+<td>Limitado por batería</td>
+<td>Batería llena/vacía o en su límite de potencia — el PD no puede actuar</td>
+<td>No es problema de ajuste</td>
+</tr>
+<tr>
+<td>Recopilando datos</td>
+<td>Calentando (recién arrancado)</td>
+<td>Espera</td>
+</tr>
+</tbody>
+</table>
+<p>Los atributos llevan las cifras crudas: <code>rms_error_w</code> (error medio de seguimiento), <code>oscillation_per_min</code>, las ganancias activas y <code>active_profile</code>.</p>
+<p><strong>Cómo ajustar:</strong></p>
+<ol>
+<li>Mira el veredicto (y <code>rms_error_w</code>).</li>
+<li><code>Oscilando</code> → baja un perfil (Agresivo → Equilibrado → Suave). <code>Lento</code> → sube.</li>
+<li>Espera <strong>1–2 minutos</strong> — la métrica es una media móvil de 60 s, así que va con retraso.</li>
+<li>Repite hasta <code>Estable</code>.</li>
+</ol>
+<p>La métrica es robusta frente a lecturas falsas: se pausa brevemente tras cualquier cambio de objetivo (balance neto horario, protección de capacidad, cambio manual de objetivo…) y mientras la batería está limitada, para no inflar la lectura.</p>
+<h2 id="cadencia-de-control">Cadencia de control<a class="headerlink" href="#cadencia-de-control" title="Permanent link">&para;</a></h2>
+<p>El controlador es <strong>dirigido por eventos</strong>: recalcula en el instante en que el sensor de consumo de red publica un valor nuevo, por lo que reacciona a la cadencia nativa del sensor (a menudo una vez por segundo) en lugar de esperar a un tick de temporizador fijo.</p>
+<p>En paralelo corre un <strong>watchdog de 2 segundos</strong>. Mientras el sensor se actualiza con normalidad casi no hace nada —el evento ya procesó el último valor—; su función es mantener en marcha los subsistemas basados en tiempo y forzar una <strong>recálculo de seguridad si el sensor se queda en silencio</strong> (tras ~30 s sin actualizaciones el controlador reevalúa en vez de mantener el último comando indefinidamente).</p>
+<p>Un lock evita ejecuciones solapadas: si un ciclo sigue en curso cuando se dispara el siguiente trigger, ese trigger se descarta (el ciclo en curso ya lee el estado actual). Así las escrituras Modbus a la batería quedan serializadas.</p>
 <h2 id="mecanismos-de-estabilizacion">Mecanismos de estabilización<a class="headerlink" href="#mecanismos-de-estabilizacion" title="Permanent link">&para;</a></h2>
 <h3 id="deadband-zona-muerta">Deadband (zona muerta)<a class="headerlink" href="#deadband-zona-muerta" title="Permanent link">&para;</a></h3>
 <p>Si el error es menor de ±40 W, el controlador no ajusta la potencia. Evita micro-oscilaciones continuas por ruido del sensor.</p>
 <h3 id="rate-limiting">Rate limiting<a class="headerlink" href="#rate-limiting" title="Permanent link">&para;</a></h3>
-<p>El cambio de potencia se limita a ±500 W por ciclo para suavizar las transiciones y proteger la batería de cambios bruscos.</p>
+<p>El cambio de potencia se limita por ciclo para suavizar las transiciones y proteger la batería de cambios bruscos. Un «ciclo» es una actualización de control, que se dispara con cada valor nuevo del sensor. El límite por ciclo configurado se escala internamente por el tiempo real transcurrido entre actualizaciones, de modo que la tasa efectiva de rampa (W/s) se mantiene constante independientemente de la rapidez con que publique el sensor. Baja el límite si la respuesta se siente brusca.</p>
 <h3 id="deteccion-de-oscilaciones">Detección de oscilaciones<a class="headerlink" href="#deteccion-de-oscilaciones" title="Permanent link">&para;</a></h3>
 <p>El controlador monitoriza reversiones de dirección (carga↔descarga) frecuentes. Si detecta oscilación sostenida, reduce temporalmente la ganancia efectiva.</p>
 <h3 id="histeresis-direccional">Histéresis direccional<a class="headerlink" href="#histeresis-direccional" title="Permanent link">&para;</a></h3>
 <p>Evita cambios de dirección por variaciones de carga momentáneas (como el arranque de electrodomésticos). El controlador requiere que el error supere un umbral durante varios ciclos antes de cambiar de carga a descarga o viceversa.</p>
+<h3 id="filtrado-del-termino-derivativo">Filtrado del término derivativo<a class="headerlink" href="#filtrado-del-termino-derivativo" title="Permanent link">&para;</a></h3>
+<p>El término derivativo se filtra con un paso-bajo (constante de tiempo corta) antes de llegar a la salida. Derivar una señal de red apenas suavizada amplificaría el ruido de cuantización del medidor y el PWM del inversor, inyectándolo en la potencia de la batería; el filtrado mantiene el derivativo útil sin ese ruido.</p>
+<h3 id="anti-windup-por-potencia-medida">Anti-windup por potencia medida<a class="headerlink" href="#anti-windup-por-potencia-medida" title="Permanent link">&para;</a></h3>
+<p>El controlador asume que cada batería entrega exactamente la potencia comandada. Cuando no puede —por ejemplo por reducción (taper) de SOC/voltaje o por retardo de rampa—, el controlador detecta el déficit sostenido comparando el comando con la potencia AC medida y reancla su línea base interna a la realidad. Así evita que la salida de control «se acumule» (windup) por encima de lo que el hardware entregó realmente, lo que de otro modo causaría un sobreimpulso o una breve exportación a red cuando la carga baja después.</p>
 <h2 id="exclusion-por-funcion-de-reserva">Exclusión por función de reserva<a class="headerlink" href="#exclusion-por-funcion-de-reserva" title="Permanent link">&para;</a></h2>
 <p>Una batería queda excluida del controlador PD cuando se cumplen <strong>las dos</strong> condiciones siguientes:</p>
 <ol>

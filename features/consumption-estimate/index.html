@@ -1087,22 +1087,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#method-1-battery-discharge-unmet-demand-default" class="md-nav__link">
+  <a href="#home-consumption-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Method 1 — Battery discharge + unmet demand (default)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Method 1 — Battery discharge + unmet demand (default)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#actual-battery-discharge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Actual battery discharge
+        Home consumption source
       
     </span>
   </a>
@@ -1110,10 +1098,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#unmet-demand-grid-at-min-soc" class="md-nav__link">
+  <a href="#excluded-additional-devices" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unmet demand — Grid at min SOC
+        Excluded / additional devices
       
     </span>
   </a>
@@ -1124,20 +1112,15 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#method-2-household-consumption-sensor-optional" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#real-time-accumulation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Method 2 — Household consumption sensor (optional)
+        Real-time accumulation
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1214,17 +1197,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-the-grid-at-min-soc-component-matters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why the grid-at-min-SOC component matters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#diagnostic-sensor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1259,6 +1231,34 @@
     
   
     Weekly full charge
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
   
 
     
@@ -1629,22 +1629,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#method-1-battery-discharge-unmet-demand-default" class="md-nav__link">
+  <a href="#home-consumption-source" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Method 1 — Battery discharge + unmet demand (default)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Method 1 — Battery discharge + unmet demand (default)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#actual-battery-discharge" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Actual battery discharge
+        Home consumption source
       
     </span>
   </a>
@@ -1652,10 +1640,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#unmet-demand-grid-at-min-soc" class="md-nav__link">
+  <a href="#excluded-additional-devices" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unmet demand — Grid at min SOC
+        Excluded / additional devices
       
     </span>
   </a>
@@ -1666,20 +1654,15 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#method-2-household-consumption-sensor-optional" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#real-time-accumulation" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Method 2 — Household consumption sensor (optional)
+        Real-time accumulation
       
     </span>
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -1756,17 +1739,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#why-the-grid-at-min-soc-component-matters" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Why the grid-at-min-SOC component matters
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#diagnostic-sensor" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1806,91 +1778,56 @@
 <p>Predictive charging needs to know how much energy your home consumes each day to decide whether grid charging is needed. Instead of a fixed value, the integration calculates a <strong>dynamic consumption estimate</strong> from the real history of the past 7 days.</p>
 <hr />
 <h2 id="what-the-estimate-measures">What the estimate measures<a class="headerlink" href="#what-the-estimate-measures" title="Permanent link">&para;</a></h2>
-<p>The integration supports two accumulation methods depending on whether an optional <strong>household consumption sensor</strong> is configured.</p>
-<h3 id="method-1-battery-discharge-unmet-demand-default">Method 1 — Battery discharge + unmet demand (default)<a class="headerlink" href="#method-1-battery-discharge-unmet-demand-default" title="Permanent link">&para;</a></h3>
-<p>When no household consumption sensor is configured, the estimated consumption for a day is the sum of two components:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Day consumption = Actual battery discharge + Unmet demand (grid at min SOC)
+<p>The estimate is the <strong>total home consumption during the solar+battery window</strong> — the hours outside the grid-charging time slot, when the battery is expected to cover the house. It is averaged over the last 7 days.</p>
+<h3 id="home-consumption-source">Home consumption source<a class="headerlink" href="#home-consumption-source" title="Permanent link">&para;</a></h3>
+<p>The per-cycle home power is <strong>derived</strong> from the values the integration already has:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>home = grid + Σ(battery AC power) + solar
 </code></pre></div>
-<h4 id="actual-battery-discharge">Actual battery discharge<a class="headerlink" href="#actual-battery-discharge" title="Permanent link">&para;</a></h4>
-<p>The energy the battery has discharged during the day, read directly from each battery's coordinator (<code>total_daily_discharging_energy</code>). This value resets at midnight according to the battery's internal clock.</p>
-<h4 id="unmet-demand-grid-at-min-soc">Unmet demand — Grid at min SOC<a class="headerlink" href="#unmet-demand-grid-at-min-soc" title="Permanent link">&para;</a></h4>
-<p>When <strong>all batteries are at min SOC</strong> and can no longer discharge, the household must draw from the grid to cover its consumption. That grid-imported energy is real household consumption the battery could not serve.</p>
-<p>The integration accumulates it in real time every controller cycle (~2.5 s) while all of these conditions are simultaneously met:</p>
-<table>
-<thead>
-<tr>
-<th>Condition</th>
-<th>Detail</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>All batteries at min SOC</td>
-<td>No battery available to discharge</td>
-</tr>
-<tr>
-<td>No active grid charging</td>
-<td>System is not in predictive/dynamic pricing charge mode</td>
-</tr>
-<tr>
-<td>Within a discharge window</td>
-<td>A time slot is active, or no time slots are configured</td>
-</tr>
-<tr>
-<td>Grid is importing</td>
-<td>Grid sensor reads a positive value</td>
-</tr>
-</tbody>
-</table>
-<p>When all conditions are met, the accumulator grows proportionally to grid import:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>increment (kWh) = grid_power (W) × 2.5 s / 3,600,000
+<p>This is the same value shown by the energy-flow diagram and the <strong><code>sensor.marstek_venus_system_home_consumption</code></strong> (Home Consumption, W) sensor. DC-coupled PV (MPPT) does not appear here — it is already netted into each battery's AC power at the inverter.</p>
+<div class="admonition note">
+<p class="admonition-title">Legacy household sensor</p>
+<p>A <code>household_consumption_sensor</code> saved on an older install is read directly <strong>instead</strong> of deriving, but <strong>only when no solar production sensor is configured</strong> — with a solar sensor the derived value is exact and preferred. The field is no longer offered in setup.</p>
+</div>
+<h3 id="excluded-additional-devices">Excluded / additional devices<a class="headerlink" href="#excluded-additional-devices" title="Permanent link">&para;</a></h3>
+<p>If you have configured <a href="excluded-devices.md">excluded or additional devices</a>, the home power is corrected before accumulation:</p>
+<ul>
+<li><strong>Excluded</strong> (<code>included_in_consumption = true</code>): the device is already in the home/grid reading but the battery should not cover it → its power is <strong>subtracted</strong>.</li>
+<li><strong>Additional</strong> (<code>included_in_consumption = false</code>): the device is not visible to the home reading but the battery should cover it → its power is <strong>added</strong>.</li>
+</ul>
+<hr />
+<h2 id="real-time-accumulation">Real-time accumulation<a class="headerlink" href="#real-time-accumulation" title="Permanent link">&para;</a></h2>
+<p>On every control cycle (event-driven, at the grid sensor's cadence), the home power is integrated into a daily accumulator <strong>only while <code>is_in_consumption_window()</code> is true</strong>: all 24 hours when no charging time slot is configured, or the hours outside the charging slot on slot days. This scoping ensures the measured window matches what predictive charging expects when it later projects remaining demand.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>increment (kWh) = home_power (W) × Δt (s) / 3,600,000
 </code></pre></div>
-<p>This accumulator is exposed as the <strong><code>Grid at Min SOC</code></strong> sensor (kWh) and resets at midnight.</p>
-<h3 id="method-2-household-consumption-sensor-optional">Method 2 — Household consumption sensor (optional)<a class="headerlink" href="#method-2-household-consumption-sensor-optional" title="Permanent link">&para;</a></h3>
-<p>If a <strong>household consumption sensor</strong> is configured (a power sensor in W or kW measuring total household electricity consumption), the integration integrates it directly to build the daily figure instead of using the battery discharge + grid-at-min-SOC calculation.</p>
-<p>Accumulation only runs while <code>is_in_consumption_window()</code> is true: all 24 hours when no charging time slot is configured, or the hours outside the charging slot on slot days. This scoping ensures the measured window matches what predictive charging expects when it later uses the average to project remaining demand.</p>
-<p>The accumulated daily value is exposed as the <strong><code>Household Energy Today</code></strong> sensor (kWh) and resets at midnight.</p>
+<p><code>Δt</code> is the real elapsed time since the previous sample, so it adapts to the variable cadence. The running daily value is exposed as the <code>household_consumption_battery_window_kwh</code> attribute on <code>binary_sensor.marstek_venus_system_predictive_charging_active</code>, and is persisted so it survives restarts within the same day.</p>
 <hr />
 <h2 id="daily-capture-at-2355">Daily capture at 23:55<a class="headerlink" href="#daily-capture-at-2355" title="Permanent link">&para;</a></h2>
-<p>Every day at <strong>23:55 (local time)</strong> the integration saves the day's consumption by computing:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>day_value = accumulated_battery_discharge + grid_at_min_soc_accumulated
-</code></pre></div>
-<p>The value is only stored if it is ≥ 1.5 kWh (to discard days without meaningful data). If lower, that day's entry is omitted from the history.</p>
+<p>Every day at <strong>23:55 (local time)</strong> the integration snapshots the accumulator into the 7-day history before it resets at midnight. The value is only stored if it is ≥ 1.5 kWh (to discard days without meaningful data).</p>
 <hr />
 <h2 id="7-day-history">7-day history<a class="headerlink" href="#7-day-history" title="Permanent link">&para;</a></h2>
-<p>The integration maintains a rolling history of the last <strong>7 entries</strong> in <code>(date, kWh)</code> format. This history is persisted to disk so it survives Home Assistant restarts.</p>
+<p>The integration maintains a rolling history of the last <strong>7 entries</strong> in <code>(date, kWh)</code> format, persisted to disk so it survives Home Assistant restarts.</p>
 <h3 id="fallback-value">Fallback value<a class="headerlink" href="#fallback-value" title="Permanent link">&para;</a></h3>
-<p>While fewer than 7 real days have accumulated (e.g. just after installing the integration), missing entries are filled with the fallback value <strong><code>DEFAULT_BASE_CONSUMPTION_KWH = 5.0 kWh</code></strong>. This value acts only as a placeholder and is replaced as soon as real data is available.</p>
+<p>While fewer than 7 real days have accumulated (e.g. just after installing the integration), missing entries are filled with the fallback value <strong><code>DEFAULT_BASE_CONSUMPTION_KWH = 5.0 kWh</code></strong>. This acts only as a placeholder and is replaced as soon as real data is available.</p>
 <h3 id="backfill-from-recorder-history">Backfill from recorder history<a class="headerlink" href="#backfill-from-recorder-history" title="Permanent link">&para;</a></h3>
-<p>At startup, the integration automatically tries to recover any missing days by querying the <strong>Home Assistant recorder</strong>. For each of the past 7 days it queries:</p>
-<ul>
-<li><code>sensor.marstek_venus_system_daily_discharging_energy</code> — battery discharge</li>
-<li><code>sensor.marstek_venus_system_daily_grid_at_min_soc_energy</code> — unmet demand</li>
-</ul>
-<p>And sums both values exactly as the 23:55 capture would. This ensures that even after an HA restart or a fresh installation, the history is built with real data from the very first moment.</p>
+<p>At startup, the integration recovers missing days by querying the <strong>Home Assistant recorder</strong> for the <code>sensor.marstek_venus_system_home_consumption</code> sensor (which already resolves to the derived value, or the legacy household sensor when applicable). For each missing day it integrates that sensor's history over the consumption window, applies the excluded/additional-device adjustments, and stores the result exactly as the 23:55 capture would. This builds the history with real data even after an HA restart or a fresh installation.</p>
 <hr />
 <h2 id="7-day-rolling-average">7-day rolling average<a class="headerlink" href="#7-day-rolling-average" title="Permanent link">&para;</a></h2>
 <p>The consumption estimate used by predictive charging is the <strong>arithmetic mean</strong> of all values in the history:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>expected_consumption = Σ(consumption_i) / n days
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>expected_consumption = Σ(consumption_i) / n days
 </code></pre></div>
 <p>where <code>n</code> may be less than 7 if not enough real days have accumulated yet (fallback values also count in the average until replaced).</p>
 <hr />
 <h2 id="full-example">Full example<a class="headerlink" href="#full-example" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Monday:    battery discharged 4.2 kWh + grid at min SOC 0.8 kWh = 5.0 kWh
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>Tuesday:   battery discharged 5.1 kWh + grid at min SOC 0.0 kWh = 5.1 kWh
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>Wednesday: battery discharged 3.8 kWh + grid at min SOC 1.5 kWh = 5.3 kWh
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>Thursday:  battery discharged 4.5 kWh + grid at min SOC 0.3 kWh = 4.8 kWh
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>Friday:    battery discharged 4.9 kWh + grid at min SOC 0.0 kWh = 4.9 kWh
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>Saturday:  battery discharged 6.1 kWh + grid at min SOC 0.2 kWh = 6.3 kWh
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>Sunday:    battery discharged 5.5 kWh + grid at min SOC 0.5 kWh = 6.0 kWh
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>Expected consumption = (5.0 + 5.1 + 5.3 + 4.8 + 4.9 + 6.3 + 6.0) / 7 = 5.34 kWh
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>Monday:    home consumption (battery window) = 5.0 kWh
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>Tuesday:   home consumption (battery window) = 5.1 kWh
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>Wednesday: home consumption (battery window) = 5.3 kWh
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>Thursday:  home consumption (battery window) = 4.8 kWh
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>Friday:    home consumption (battery window) = 4.9 kWh
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>Saturday:  home consumption (battery window) = 6.3 kWh
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>Sunday:    home consumption (battery window) = 6.0 kWh
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>Expected consumption = (5.0 + 5.1 + 5.3 + 4.8 + 4.9 + 6.3 + 6.0) / 7 = 5.34 kWh
 </code></pre></div>
-<p>Without the grid-at-min-SOC component (discharge only), the average would have been 4.87 kWh — 9% lower, which could have led to under-charging.</p>
-<hr />
-<h2 id="why-the-grid-at-min-soc-component-matters">Why the grid-at-min-SOC component matters<a class="headerlink" href="#why-the-grid-at-min-soc-component-matters" title="Permanent link">&para;</a></h2>
-<p>Without this adjustment, days when the battery empties before midnight are <strong>underestimated</strong> in the history: only the battery discharge is recorded, but the household's real consumption was higher. The resulting average would undervalue consumption, causing the system to charge less than needed the following night.</p>
-<p>By adding the energy that entered from the grid while all batteries were at min SOC within a discharge window, the history reflects the <strong>total real household consumption</strong>, not just what the battery could cover.</p>
 <hr />
 <h2 id="diagnostic-sensor">Diagnostic sensor<a class="headerlink" href="#diagnostic-sensor" title="Permanent link">&para;</a></h2>
 <table>
@@ -1904,11 +1841,12 @@
 <tbody>
 <tr>
 <td><code>sensor.marstek_venus_system_daily_grid_at_min_soc_energy</code></td>
-<td>Grid energy accumulated during min SOC periods</td>
+<td>Grid energy imported while all batteries were at min SOC during a discharge window — household demand the battery could not cover</td>
 <td>Midnight (local time)</td>
 </tr>
 </tbody>
 </table>
+<p>This <strong>Grid at Min SOC</strong> sensor is informational: it shows demand the battery missed because it was empty. It is no longer summed into the consumption estimate (the derived home consumption already captures total house load, including the part served from the grid).</p>
 <p>The <code>binary_sensor.marstek_venus_system_predictive_charging_active</code> sensor exposes the 7-day consumption history and the count of real vs. fallback entries in its attributes, useful to verify the learning status.</p>
 <p><img alt="Consumption history attributes in HA" src="../../assets/screenshots/features/consumption-estimate-attributes.png" style="display: block; margin: 0 auto;" width="700" /></p>
 

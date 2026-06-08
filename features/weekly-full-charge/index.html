@@ -18,7 +18,7 @@
         <link rel="prev" href="../consumption-estimate/">
       
       
-        <link rel="next" href="../peak-shaving/">
+        <link rel="next" href="../cell-balance-monitor/">
       
       
         
@@ -1162,6 +1162,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1597,6 +1625,10 @@
 <p>Active cell balancing repeatedly cycles slow charge or discharge near the top voltage window until the measured top-voltage delta is at or below 0.03 V, or until the user turns the switch off.</p>
 <p>!!! warning Active cell balancing is <strong>very slow</strong>. Reducing the top-of-charge cell delta by roughly 5 mV typically takes around 24 hours of cumulative time at the top of the balance window.</p>
 <p>See <a href="../cell-balance-monitor/">Cell balancing</a> for full details.</p>
+<div class="admonition note">
+<p class="admonition-title">Drifted SOC</p>
+<p>If a pack reaches 3.58 V while the BMS still reports SOC below 90%, charging is <em>not</em> paused at step 4: the integration keeps charging at 95 W until the BMS cuts off, <em>attempting</em> to make it recalibrate SOC to 100% so the weekly charge can complete. This is best-effort and depends on the BMS firmware — it is not guaranteed. See <a href="../cell-balance-monitor/#soc-recalibration-on-a-stuck-top-voltage">SOC recalibration on a stuck top voltage</a>.</p>
+</div>
 <h2 id="cell-balance-monitor">Cell balance monitor<a class="headerlink" href="#cell-balance-monitor" title="Permanent link">&para;</a></h2>
 <p>The <strong>cell balance monitor</strong> is only active when checked in the Weekly Full Charge Configuration. It records the voltage spread between the highest and lowest cell after each top-voltage measurement and keeps the sensor history, trend and alerts updated.</p>
 <p>See <a href="configuration/advanced.md">Advanced options</a> for full details.</p>
@@ -1664,13 +1696,13 @@
         
         
           
-          <a href="../peak-shaving/" class="md-footer__link md-footer__link--next" aria-label="Next: Peak shaving">
+          <a href="../cell-balance-monitor/" class="md-footer__link md-footer__link--next" aria-label="Next: Cell balance monitor">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Peak shaving
+                Cell balance monitor
               </div>
             </div>
             <div class="md-footer__button md-icon">

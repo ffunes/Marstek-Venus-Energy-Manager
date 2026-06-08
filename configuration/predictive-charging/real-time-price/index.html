@@ -1210,6 +1210,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1662,7 +1690,7 @@
 
 
 <h1 id="predictive-charging-real-time-price-mode">Predictive charging — Real-Time Price mode<a class="headerlink" href="#predictive-charging-real-time-price-mode" title="Permanent link">&para;</a></h1>
-<p>Activates or deactivates grid charging every controller cycle (~2.5 s) based on the <strong>current electricity price</strong>.</p>
+<p>Activates or deactivates grid charging every controller cycle (event-driven) based on the <strong>current electricity price</strong>.</p>
 <p>Unlike Dynamic Pricing mode, it requires no price forecast and no overnight evaluation. It reacts purely to the live price.</p>
 <h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
 <table>
@@ -1690,18 +1718,18 @@
 <td>(Optional) Price-gated discharge — see below</td>
 </tr>
 <tr>
-<td><strong>Maximum contracted power ICP (W)</strong></td>
-<td>Maximum power when charging to avoid tripping the breaker (default 7000 W)</td>
-</tr>
-<tr>
 <td><strong>Solar forecast safety margin (kWh)</strong></td>
 <td>Extra energy buffer added to the consumption forecast before deciding whether to charge (default 0 kWh)</td>
+</tr>
+<tr>
+<td><strong>Predictive grid charge margin (%)</strong></td>
+<td>Tops up the grid-charge amount to hedge optimistic solar forecasts — e.g. a 2 kWh grid need at 50 % charges 3 kWh. Capped at the gap to max SOC (default 0 %)</td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Configuration form — Real-Time Price mode" src="../../../assets/screenshots/configuration/predictive-charging/real-time-price-form.png" style="display: block; margin: 0 auto;" width="650" /></p>
 <h2 id="charging-behaviour">Charging behaviour<a class="headerlink" href="#charging-behaviour" title="Permanent link">&para;</a></h2>
-<p>Every cycle (~2.5 s) the controller evaluates whether to start or stop grid charging:</p>
+<p>Every cycle (event-driven) the controller evaluates whether to start or stop grid charging:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>If current_price ≤ threshold:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    And if (battery + solar) &lt; expected_consumption:
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>        → Activate grid charging
@@ -1719,7 +1747,7 @@
 <hr />
 <h2 id="price-based-discharge-control">Price-based discharge control<a class="headerlink" href="#price-based-discharge-control" title="Permanent link">&para;</a></h2>
 <p>The <strong>"Only discharge when price exceeds threshold"</strong> option adds an extra condition to discharge behaviour, independent of charging.</p>
-<p>When active, <strong>every controller cycle (~2.5 s)</strong> checks whether the current price justifies discharge using the same threshold as for charging:</p>
+<p>When active, <strong>every controller cycle (event-driven)</strong> checks whether the current price justifies discharge using the same threshold as for charging:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>If current_price &gt; threshold:
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    → Discharge allowed (PD controller operates normally)
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>If current_price ≤ threshold:

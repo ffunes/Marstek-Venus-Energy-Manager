@@ -1071,6 +1071,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1637,7 +1665,7 @@
 <h1 id="hourly-net-balance">Hourly Net Balance<a class="headerlink" href="#hourly-net-balance" title="Permanent link">&para;</a></h1>
 <p>Tracks grid import and export within each civil hour and adjusts the PD setpoint in real time to drive the net energy toward a configurable target. The default target is 0 Wh — net zero each hour — but you can shift it to allow a fixed import or target a fixed export.</p>
 <h2 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
-<p>Every PD cycle (~2.5 s) the manager:</p>
+<p>Every PD control cycle (event-driven, at the grid sensor's cadence) the manager:</p>
 <ol>
 <li>Accumulates grid import and export for the current civil hour.</li>
 <li>Computes the deficit versus the target: <code>deficit = target_net_Wh − (imp_Wh − exp_Wh)</code>.</li>

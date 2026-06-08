@@ -1232,6 +1232,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1737,16 +1765,16 @@
 <td>(Opcional) Precio techo; no carga aunque la hora sea "barata" si supera este valor. También se usa como umbral de descarga cuando el control de descarga por precio está activado</td>
 </tr>
 <tr>
-<td><strong>Potencia ICP contratada</strong></td>
-<td>Límite de red para calcular la duración de carga necesaria</td>
-</tr>
-<tr>
 <td><strong>Descargar solo cuando el precio supere el umbral</strong></td>
 <td>(Opcional) Descarga condicionada al precio actual — ver abajo</td>
 </tr>
 <tr>
 <td><strong>Margen de seguridad de previsión solar (kWh)</strong></td>
 <td>(Opcional) Buffer de energía adicional añadido a la previsión de consumo antes de decidir si cargar (por defecto 0 kWh)</td>
+</tr>
+<tr>
+<td><strong>Margen de carga de red predictiva (%)</strong></td>
+<td>(Opcional) Aumenta la cantidad de carga de red para cubrir previsiones solares optimistas — p. ej. una necesidad de 2 kWh de red al 50 % carga 3 kWh. Limitado al hueco hasta el SOC máximo (por defecto 0 %)</td>
 </tr>
 </tbody>
 </table>
@@ -1767,7 +1795,7 @@
 <hr />
 <h2 id="control-de-descarga-por-precio">Control de descarga por precio<a class="headerlink" href="#control-de-descarga-por-precio" title="Permanent link">&para;</a></h2>
 <p>La opción <strong>"Descargar solo cuando el precio supere el umbral"</strong> añade una condición adicional al comportamiento de descarga.</p>
-<p>Cuando está activa, en <strong>cada ciclo del controlador (~2,5 s)</strong> se evalúa si el precio actual permite la descarga:</p>
+<p>Cuando está activa, en <strong>cada ciclo del controlador (dirigido por eventos)</strong> se evalúa si el precio actual permite la descarga:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Si precio_actual &gt; umbral:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    → Descarga permitida (el controlador PD opera con normalidad)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Si precio_actual &lt;= umbral:

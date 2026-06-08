@@ -1232,6 +1232,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cell balance monitor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1737,16 +1765,16 @@
 <td>(Optional) Price ceiling; does not charge even during "cheap" hours if the price exceeds this value. Also used as the discharge threshold when price-based discharge control is enabled</td>
 </tr>
 <tr>
-<td><strong>Maximum contracted grid power ICP (W)</strong></td>
-<td>Grid limit used to calculate required charging duration</td>
-</tr>
-<tr>
 <td><strong>Only discharge when price is above threshold</strong></td>
 <td>(Optional) Price-gated discharge — see below</td>
 </tr>
 <tr>
 <td><strong>Solar forecast safety margin (kWh)</strong></td>
 <td>(Optional) Extra energy buffer added to consumption forecast before deciding whether to charge (default 0 kWh)</td>
+</tr>
+<tr>
+<td><strong>Predictive grid charge margin (%)</strong></td>
+<td>(Optional) Tops up the grid-charge amount to hedge optimistic solar forecasts — e.g. a 2 kWh grid need at 50 % charges 3 kWh. Capped at the gap to max SOC (default 0 %)</td>
 </tr>
 </tbody>
 </table>
@@ -1767,7 +1795,7 @@
 <hr />
 <h2 id="price-based-discharge-control">Price-based discharge control<a class="headerlink" href="#price-based-discharge-control" title="Permanent link">&para;</a></h2>
 <p>The <strong>"Only discharge when price is above threshold"</strong> option adds an extra condition to discharge behaviour.</p>
-<p>When active, <strong>every controller cycle (~2.5 s)</strong> checks whether the current price allows discharge:</p>
+<p>When active, <strong>every controller cycle (event-driven)</strong> checks whether the current price allows discharge:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>If current_price &gt; threshold:
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    → Discharge allowed (PD controller operates normally)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>If current_price &lt;= threshold:

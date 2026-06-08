@@ -1176,6 +1176,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../features/cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../features/peak-shaving/" class="md-nav__link">
         
   
@@ -1731,6 +1759,10 @@
 <p>No modifiques estos valores salvo que entiendas la teoría de control PD y cómo interactúa con los tiempos de respuesta del inversor. <strong>Los valores por defecto funcionan correctamente en la gran mayoría de instalaciones.</strong></p>
 </div>
 <p>Permite ajustar los parámetros internos del controlador PD. Todos los valores son modificables también en tiempo de ejecución desde las entidades de configuración de la integración, sin necesidad de reiniciar.</p>
+<div class="admonition tip">
+<p class="admonition-title">Mejor usa perfiles</p>
+<p>La mayoría de usuarios no necesita tocar esto a mano. El selector de <strong>perfil de ajuste PD</strong> aplica presets validados de <code>Kp</code>/<code>Kd</code>/límite de rampa en un clic, y el sensor de <strong>calidad de control PD</strong> indica si el resultado es estable, oscilante o lento. Ver <a href="../../features/pd-controller/#perfiles-de-ajuste">Controlador PD → Perfiles de ajuste</a>.</p>
+</div>
 <table>
 <thead>
 <tr>
@@ -1743,13 +1775,13 @@
 <tbody>
 <tr>
 <td><strong>Kp</strong></td>
-<td><code>0.65</code></td>
+<td><code>0.35</code></td>
 <td>0.1 – 2.0</td>
 <td>Ganancia proporcional. Mayor valor = respuesta más rápida pero más sobreoscilación</td>
 </tr>
 <tr>
 <td><strong>Kd</strong></td>
-<td><code>0.5</code></td>
+<td><code>0.3</code></td>
 <td>0.0 – 2.0</td>
 <td>Ganancia derivativa. Mayor valor = transiciones más suaves pero respuesta más lenta</td>
 </tr>

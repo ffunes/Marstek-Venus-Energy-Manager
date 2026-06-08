@@ -1071,6 +1071,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1616,6 +1644,10 @@
 <li><strong>La previsión mejora</strong> mientras el retraso sigue activo → el sistema sigue esperando a que el sol cargue la batería.</li>
 </ul>
 <p>Una vez que el retraso se desbloquea, permanece desbloqueado el resto del día.</p>
+<div class="admonition note">
+<p class="admonition-title">Cortes transitorios de la previsión y reevaluación manual</p>
+<p>Que un sensor de previsión configurado lea <code>unavailable</code>/<code>unknown</code> por un instante —mientras se actualiza, o durante la ventana tras reiniciar Home Assistant antes de que todos los sensores hayan cargado— ya <strong>no</strong> desactiva el retraso durante todo el día. El retraso se mantiene mediante una breve ventana de gracia (estado del sensor <code>Waiting for forecast</code>) y solo se desbloquea si el sensor sigue no disponible al superarla. Si el retraso ya se había desbloqueado y quieres recuperarlo el mismo día, <strong>desactiva y vuelve a activar el switch de Retraso de Carga Solar</strong>: eso reevalúa el retraso desde cero en lugar de esperar al reinicio de medianoche.</p>
+</div>
 <h2 id="soc-de-arranque-del-retraso">SOC de arranque del retraso<a class="headerlink" href="#soc-de-arranque-del-retraso" title="Permanent link">&para;</a></h2>
 <p>Un SOC de setpoint opcional (12–90 %, desactivado por defecto) divide la carga en dos fases:</p>
 <ol>

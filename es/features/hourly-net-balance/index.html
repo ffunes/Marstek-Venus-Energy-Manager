@@ -1071,6 +1071,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -1637,7 +1665,7 @@
 <h1 id="balance-neto-horario">Balance Neto Horario<a class="headerlink" href="#balance-neto-horario" title="Permanent link">&para;</a></h1>
 <p>Registra la importación y exportación de red dentro de cada hora civil y ajusta el punto de trabajo del controlador PD en tiempo real para llevar la energía neta hacia un objetivo configurable. El objetivo por defecto es 0 Wh — balance neto cero cada hora — aunque puede desplazarse para permitir una importación fija o apuntar a una exportación fija.</p>
 <h2 id="como-funciona">Cómo funciona<a class="headerlink" href="#como-funciona" title="Permanent link">&para;</a></h2>
-<p>En cada ciclo del controlador PD (~2,5 s), el gestor:</p>
+<p>En cada ciclo del controlador PD (dirigido por eventos, a la cadencia del sensor de red), el gestor:</p>
 <ol>
 <li>Acumula importación y exportación de red para la hora civil actual.</li>
 <li>Calcula el déficit respecto al objetivo: <code>déficit = objetivo_neto_Wh − (imp_Wh − exp_Wh)</code>.</li>

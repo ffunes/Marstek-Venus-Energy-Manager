@@ -1234,6 +1234,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../cell-balance-monitor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitor de equilibrio de celdas
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../peak-shaving/" class="md-nav__link">
         
   
@@ -2243,6 +2271,7 @@
 <h2 id="exclusion-de-baterias-sin-respuesta">Exclusión de baterías sin respuesta<a class="headerlink" href="#exclusion-de-baterias-sin-respuesta" title="Permanent link">&para;</a></h2>
 <p>Cuando una batería no entrega la potencia solicitada de forma reiterada — por ejemplo, por un fallo de comunicación Modbus o por una autoprotección del firmware — la integración lo detecta y la retira temporalmente del grupo activo.</p>
 <p>Una batería se marca como sin respuesta cuando su potencia entregada es inferior al 5 % de la consigna durante <strong>3 ciclos de control consecutivos</strong>. Una vez marcada, entra en una <strong>ventana de exclusión de 5 minutos</strong> durante la cual no recibe nuevas consignas y las baterías restantes absorben su parte de la carga. Al expirar la ventana, el contador de fallos se reinicia y la batería vuelve a ser elegible.</p>
+<p>Los cortes de descarga a SOC bajo están exentos. En el <strong>20 % de SOC</strong> o por debajo (o justo por encima del SOC mínimo configurado), el BMS puede cortar la descarga por su cuenta — por ejemplo una celda débil que cae bajo carga — aunque el SOC reportado siga por encima del mínimo. La batería confirma el comando pero entrega 0 W; esto se trata como un corte esperado del BMS y no como un fallo, así que permanece en el grupo. Es el equivalente al manejo del corte del BMS a SOC alto en el lado de carga.</p>
 <p>Este mecanismo impide que una sola batería con problemas degrade silenciosamente el rendimiento del sistema sin generar alarmas ni requerir intervención manual.</p>
 <h2 id="modos-compatibles">Modos compatibles<a class="headerlink" href="#modos-compatibles" title="Permanent link">&para;</a></h2>
 <p>La distribución multi-batería se aplica en todos los modos:
