@@ -4,7 +4,7 @@ Registra la importación y exportación de red dentro de cada hora civil y ajust
 
 ## Cómo funciona
 
-En cada ciclo del controlador PD (~2,5 s), el gestor:
+En cada ciclo del controlador PD (dirigido por eventos, a la cadencia del sensor de red), el gestor:
 
 1. Acumula importación y exportación de red para la hora civil actual.
 2. Calcula el déficit respecto al objetivo: `déficit = objetivo_neto_Wh − (imp_Wh − exp_Wh)`.

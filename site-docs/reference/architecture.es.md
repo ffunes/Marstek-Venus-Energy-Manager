@@ -24,7 +24,7 @@ flowchart TD
 
 | Archivo | Clase principal | Responsabilidad |
 |---|---|---|
-| `__init__.py` | `ChargeDischargeController` | Bucle de control principal (cada 2,5 s), algoritmo PD, distribución multi-batería |
+| `__init__.py` | `ChargeDischargeController` | Bucle de control principal (dirigido por eventos del sensor de red + watchdog de 2 s), algoritmo PD, distribución multi-batería |
 | `coordinator.py` | `MarstekVenusDataUpdateCoordinator` | Polling periódico de datos Modbus, actualización de entidades |
 | `modbus_client.py` | `MarstekModbusClient` | Comunicación TCP asíncrona con pymodbus, reintentos con backoff |
 | `config_flow.py` | — | Asistente de configuración multi-paso en HA UI |

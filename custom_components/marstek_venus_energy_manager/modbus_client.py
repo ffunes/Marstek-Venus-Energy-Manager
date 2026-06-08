@@ -7,7 +7,7 @@ a Marstek Venus battery system asynchronously.
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ConnectionException, ModbusIOException
 import asyncio
-import socket
+import inspect
 from typing import Optional
 
 import logging
@@ -33,13 +33,29 @@ def _marstek_v3_packet_correction(sending: bool, data: bytes) -> bytes:
     return data
 
 
+def _detect_slave_kwarg(client) -> str:
+    """Return the keyword pymodbus uses to address the slave/unit id.
+
+    pymodbus renamed this parameter from ``slave`` to ``device_id`` across 3.x
+    releases. Inspect the live method signature so we pass the right one
+    regardless of the version Home Assistant bundles.
+    """
+    try:
+        params = inspect.signature(client.read_holding_registers).parameters
+        if "device_id" in params:
+            return "device_id"
+    except (ValueError, TypeError):
+        pass
+    return "slave"
+
+
 class MarstekModbusClient:
     """
     Wrapper for pymodbus AsyncModbusTcpClient with helper methods
     for async reading/writing and interpreting common data types.
     """
 
-    def __init__(self, host: str, port: int = 502, message_wait_ms: int = 50, timeout: int = 10, is_v3: bool = False):
+    def __init__(self, host: str, port: int = 502, message_wait_ms: int = 50, timeout: int = 10, is_v3: bool = False, slave_id: int = 1):
         """
         Initialize Modbus client with host, port, message wait time, and timeout.
 
@@ -49,6 +65,7 @@ class MarstekModbusClient:
             message_wait_ms (int): Delay in ms between Modbus messages.
             timeout (int): Connection timeout in seconds.
             is_v3 (bool): If True, enable v3 firmware packet correction.
+            slave_id (int): Modbus slave/unit id to address (default 1).
         """
         self.host = host
         self.port = port
@@ -76,7 +93,8 @@ class MarstekModbusClient:
             self.client.trace_packet = _marstek_v3_packet_correction
 
         self.client.message_wait_milliseconds = message_wait_ms
-        self.unit_id = 1  # Default Unit ID
+        self.unit_id = slave_id  # Modbus slave/unit id for this battery
+        self._slave_kwarg = _detect_slave_kwarg(self.client)  # "slave" or "device_id"
         self._is_shutting_down = False  # Flag to suppress errors during shutdown
 
     def set_shutting_down(self, value: bool) -> None:
@@ -134,11 +152,6 @@ class MarstekModbusClient:
 
             if connected:
                 await asyncio.sleep(0.2)  # Wait for connection to stabilize
-                # Enable TCP keepalive so the OS detects a dead/half-open socket
-                # (e.g. after a battery reboot) within ~90s and tears it down,
-                # instead of leaving it ESTABLISHED until the kernel's default
-                # timeout (hours). Lets the next poll create a fresh connection.
-                self._enable_tcp_keepalive()
                 _LOGGER.info(
                     "Connected to Modbus server at %s:%s with unit %s",
                     self.host,
@@ -164,29 +177,6 @@ class MarstekModbusClient:
                     e,
                 )
             return False
-
-    def _enable_tcp_keepalive(self) -> None:
-        """Enable TCP keepalive on the live pymodbus socket.
-
-        Probe a dead peer after 60s idle, then every 10s up to 3 times, so a
-        half-open connection is detected and closed in ~90s. Best-effort: the
-        socket may be unavailable or the platform may lack some options.
-        """
-        try:
-            transport = getattr(self.client, "transport", None)
-            sock = transport.get_extra_info("socket") if transport is not None else None
-            if sock is None:
-                return
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            if hasattr(socket, "TCP_KEEPIDLE"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 60)
-            if hasattr(socket, "TCP_KEEPINTVL"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)
-            if hasattr(socket, "TCP_KEEPCNT"):
-                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)
-            _LOGGER.debug("TCP keepalive enabled on Modbus socket %s:%s", self.host, self.port)
-        except Exception as e:
-            _LOGGER.debug("Could not set TCP keepalive on %s:%s: %s", self.host, self.port, e)
 
     async def async_close(self) -> None:
         """
@@ -258,7 +248,7 @@ class MarstekModbusClient:
 
             try:
                 result = await asyncio.wait_for(
-                    self.client.read_holding_registers(address=register, count=count),
+                    self.client.read_holding_registers(address=register, count=count, **{self._slave_kwarg: self.unit_id}),
                     timeout=self._timeout,
                 )
                 if result.isError():
@@ -349,7 +339,8 @@ class MarstekModbusClient:
                         for reg in regs:
                             byte_array.append((reg >> 8) & 0xFF)
                             byte_array.append(reg & 0xFF)
-                        return byte_array.decode("ascii", errors="ignore").rstrip('\x00')
+                        text = byte_array.decode("ascii", errors="ignore").rstrip('\x00')
+                        return "".join(char for char in text if char.isprintable())
 
                     elif data_type == "bit":
                         if bit_index is None or not (0 <= bit_index < 16):
@@ -419,7 +410,7 @@ class MarstekModbusClient:
                 if DEBUG_RAW_MODBUS_READS:
                     _LOGGER.debug("Modbus write: register=%d/0x%04X value=%s", register, register, value)
                 result = await asyncio.wait_for(
-                    self.client.write_register(address=register, value=value),
+                    self.client.write_register(address=register, value=value, **{self._slave_kwarg: self.unit_id}),
                     timeout=self._timeout,
                 )
                 return not result.isError()

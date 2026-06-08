@@ -85,6 +85,32 @@ Once the battery reaches 3.58 V, the normal SOC charge/discharge logic with hyst
 
 In a multi-battery system, this is evaluated per battery. One battery can be limited or paused while another continues charging normally.
 
+### SOC recalibration on a stuck top voltage
+
+Some packs reach the 3.58 V pause point while the BMS still reports a SOC well below full (for example 60–70%). That gap is a sign the BMS coulomb counter has drifted: the cells are genuinely full but the reported SOC is wrong.
+
+When this happens, holding at 3.58 V never lets the BMS correct itself. So instead of pausing, the integration keeps charging at the 95 W tapered power until the BMS itself cuts off, *attempting* to make it recalibrate SOC to 100%.
+
+This is a best-effort attempt, not a guaranteed fix. Whether a top-of-curve cutoff actually resets the reported SOC depends on the BMS firmware: some packs snap to 100% on an over-voltage cutoff, others do not. The integration only creates the conditions for a recalibration — it cannot force the BMS to apply one.
+
+The override triggers automatically whenever **all** of these are true:
+
+- the charge target is 100% (the taper applies), and
+- `max_cell_voltage` has reached the 3.58 V pause point, and
+- the BMS still reports SOC below 90%.
+
+It is self-limiting:
+
+- charging continues at 95 W only (the gentle taper power), not full power;
+- a BMS cutoff is detected when battery power collapses to ≤ 10 W and the inverter reports Standby for 5 consecutive cycles (~10 s). At that point the override latches off and the normal 3.58 V pause resumes, letting the SOC recalibrate;
+- once the SOC reads 90% or more (after recalibration), the condition no longer matches, so the override does not fire again;
+- the latch only re-arms after the battery leaves the top zone (`max_cell_voltage` below 3.48 V), so a later full charge can recalibrate again if needed.
+
+Because this is gated on a 100% charge target, it never affects normal daily cycling at a lower `max_soc`. It also does not run while [active balance mode](#active-balance-mode) owns the battery — that mode takes priority.
+
+!!! note "Cell imbalance"
+    The override does not check the cell spread first. On a badly imbalanced pack the highest cell can hit the BMS over-voltage cutoff before the pack is full, so the recalibration is correct but balancing is left to later cycles. The BMS still protects each cell individually.
+
 ## Active balance mode
 
 Active balance mode is a stronger per-battery recovery mode for packs that need more time in the balancing window.
@@ -127,7 +153,7 @@ flowchart TD
 | If `delta_V > 0.03 V` | Discharge at 200 W until `max_cell_voltage <= 3.49 V`, then charge again |
 | If `delta_V <= 0.03 V` | Final discharge at 200 W until `max_cell_voltage <= 3.48 V`, then finish and turn the switch off |
 
-If the BMS accepts the charge command but does not actually charge before reaching 3.58 V, the integration treats that as charge rejection. It discharges first and lowers the retry voltage by 0.01 V, down to a minimum of 3.40 V, so the next cycle can restart from a point where the BMS is more likely to accept charge.
+If the BMS cuts charge before `max_cell_voltage` reaches 3.58 V, the integration treats that as charge rejection. Rejection is only detected when no current is flowing (battery power ~0 W), so the cells are already at rest: it records a cell delta measurement at that point instead of ending the run with no reading. It then discharges and steps the retry voltage down by 0.01 V. The lowered retry voltage is **kept across charge/discharge cycles**, ratcheting down another 0.01 V on each further rejection to a floor of 3.40 V, so the pack is progressively dropped until the BMS accepts charge again. The retry voltage is reset to its default only when the pack reaches the 3.58 V top, or when the run finishes.
 
 Active balance mode has no fixed 48-hour timeout. It runs until the measured top-voltage delta is at or below 0.03 V, or until the user turns the switch off.
 
@@ -141,12 +167,12 @@ Every voltage cutoff used by the 100 % taper and the active balance mode was pic
 | **3.48 V** | Trigger for tapering the charge to 95 W | A little above the knee. The small margin confirms the pack is genuinely in the balance window — and not just on a brief voltage bounce caused by a load step — before reducing power. |
 | **3.49 V** | Discharge floor between active-balance retries; switch-over from coarse to regulated charge | Sits just inside the balance window. Stopping the discharge here keeps the pack in the zone where the BMS can still see and bleed the high cell. Going lower would push the pack off the knee and waste the time already spent balancing. |
 | **3.58 V** | Top measurement point; stop charge and wait 60 s before reading the delta | High enough that even the *lowest* cell is firmly in the knee, so the spread between cells is meaningful. Low enough that the *highest* cell is still safely below the 3.65 V LFP datasheet ceiling and the BMS over-voltage cutoff. The ~70 mV headroom is intentional: the spread between cells is what we are trying to measure, and you must leave room for it. |
-| **3.48 V (again)** | End-of-cycle discharge floor — the 25 W final discharge after a completed active-balance run stops here | The same threshold used to enter the taper is reused to leave the balance window. Stopping at 3.48 V brings the pack just off the upper knee without dropping it back onto the deep plateau. Sitting at 3.55 – 3.58 V for long periods accelerates calendar ageing, so the integration deliberately bleeds the pack down to the lower edge of the window before releasing control. |
+| **3.48 V (again)** | End-of-cycle discharge floor — the 200 W final discharge after a completed active-balance run stops here | The same threshold used to enter the taper is reused to leave the balance window. Stopping at 3.48 V brings the pack just off the upper knee without dropping it back onto the deep plateau. Sitting at 3.55 – 3.58 V for long periods accelerates calendar ageing, so the integration deliberately bleeds the pack down to the lower edge of the window before releasing control. |
 | **3.40 V** | Lower bound for the active-balance retry voltage when charge rejection is detected | The integration drops the retry voltage by 0.01 V each time the BMS rejects charge, but never below 3.40 V. Going further down exits the balance window entirely and forces a long, wasteful re-climb up the curve. |
 | **0.03 V (30 mV)** | Active-balance completion threshold | Considered "balanced enough" for an LFP pack at the top of the knee. Pushing for tighter values (10 mV or less) is rarely productive because passive balancing currents are tiny — see the next section. |
 | **0.05 V (50 mV)** | Green / yellow status boundary | A pack reading below 50 mV at the top is considered healthy. This is more conservative than typical LFP vendor specs (often 80 – 100 mV) because the measurement is taken in the balance window, where differences between cells are exaggerated. |
 
-The 95 W and 25 W power values are paired with these thresholds intentionally. They are low enough that the cell voltage measured under load is dominated by the cell's actual chemistry rather than by IR (resistive) drop across the cell, busbars and BMS shunts. Charging or discharging at hundreds of watts in the knee would shift the apparent reading by tens of millivolts and ruin both the threshold checks and the final delta measurement.
+The 95 W charge power is paired with the charge thresholds intentionally: it is low enough that the cell voltage measured *while charging* is dominated by the cell's actual chemistry rather than by IR (resistive) drop across the cell, busbars and BMS shunts. Charging at hundreds of watts in the knee would shift the apparent reading by tens of millivolts and ruin the 3.58 V threshold check. The discharge runs at 200 W because the cell delta is always measured at **rest** — both charge and discharge are stopped for 60 s before the reading is taken — so the higher discharge power only moves the pack down faster between measurements and never contaminates the recorded delta.
 
 ## Why this takes so long
 
@@ -165,7 +191,7 @@ That figure is consistent both with the bleed-current arithmetic above and with 
 This is also why active balance mode does not have a "fast" path:
 
 - the 95 W charge cap above 3.48 V is set so the pack stays in the knee long enough for the BMS to make progress, rather than ramming through it in seconds;
-- the 25 W discharge between retries is set so the pack stays near 3.49 V without dropping out of the window;
+- the 200 W discharge between retries brings the pack back down to the retry voltage without dropping out of the window;
 - the active-balance loop is allowed to run indefinitely, because anything short of "many hours" is unlikely to move the needle.
 
 If the goal is to restore a noticeably unbalanced pack, the right approach is to enable active balance mode and **leave it running overnight (or longer) and check the result the next day**. Watching the cell delta in real time and expecting movement within minutes will only cause frustration.
@@ -230,6 +256,8 @@ The **Integration Status** sensor exposes a `normal_balance_protection` attribut
 | `delta_V` | Current voltage spread in volts |
 | `voltage_taper_latched` | Whether the 95 W taper is currently active |
 | `active_balance_phase` | Current 100% top-measurement phase, if any |
+| `soc_recal_active` | Whether the charge is being kept past the 3.58 V pause to recalibrate a low reported SOC |
+| `soc_recal_bms_cutoff` | Whether the BMS cutoff has been reached during recalibration (override latched off) |
 | `charge_limit_w` | Effective per-battery charge limit before allocation |
 
 Active balance mode also exposes its current phase, measured delta, command power and retry voltage through the integration status diagnostics.

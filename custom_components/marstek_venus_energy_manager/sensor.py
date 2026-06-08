@@ -21,6 +21,8 @@ from .const import (
     EFFICIENCY_SENSOR_DEFINITIONS,
     STORED_ENERGY_SENSOR_DEFINITIONS,
     CYCLE_SENSOR_DEFINITIONS,
+    SOLAR_POWER_SENSOR_DEFINITIONS,
+    BATTERY_CELL_POWER_SENSOR_DEFINITIONS,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
     CONF_ENABLE_PREDICTIVE_CHARGING,
@@ -89,8 +91,8 @@ from .const import (
     DEFAULT_SLOT_ALLOW_DISCHARGE,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
-from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor, DailyGridAtMinSocSensor, SystemAlarmSensor
-from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor, MarstekVenusCycleSensor
+from .aggregate_sensors import AGGREGATE_SENSOR_DEFINITIONS, MarstekVenusAggregateSensor, DailyGridAtMinSocSensor, SystemAlarmSensor, PdControlQualitySensor
+from .calculated_sensors import MarstekVenusEfficiencySensor, MarstekVenusStoredEnergySensor, MarstekVenusCycleSensor, MarstekVenusSolarPowerSensor, MarstekVenusBatteryCellPowerSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +142,13 @@ async def async_setup_entry(
             entities.append(MarstekVenusStoredEnergySensor(coordinator, definition))
         for definition in CYCLE_SENSOR_DEFINITIONS:
             entities.append(MarstekVenusCycleSensor(coordinator, definition))
+        # DC-coupled PV total + solar-corrected battery power exist only on
+        # Venus D/A (units with MPPT registers).
+        if coordinator.battery_version in ("vA", "vD"):
+            for definition in SOLAR_POWER_SENSOR_DEFINITIONS:
+                entities.append(MarstekVenusSolarPowerSensor(coordinator, definition))
+            for definition in BATTERY_CELL_POWER_SENSOR_DEFINITIONS:
+                entities.append(MarstekVenusBatteryCellPowerSensor(coordinator, definition))
 
     # Add discharge window diagnostic sensor (always, even without slots)
     entities.append(DischargeWindowSensor(hass, entry))
@@ -176,11 +185,21 @@ async def async_setup_entry(
     if controller:
         entities.append(DailyGridAtMinSocSensor(controller))
 
+    # Add PD control-quality diagnostic sensor (feeds the tuning-profile feedback)
+    if controller:
+        entities.append(PdControlQualitySensor(controller))
+
     # Exact daily energy totals from the real power sensors (panel "Energía hoy").
     # Each is added only when its source sensor is configured.
     if controller and getattr(controller, "solar_production_sensor", None):
         entities.append(DailySolarEnergySensor(controller))
-    if controller and getattr(controller, "household_consumption_sensor", None):
+    # Added when a dedicated household sensor OR the (always-present) net grid
+    # meter is configured: with no household sensor the daily total is derived
+    # from grid + battery AC + solar, matching the power-flow Home Consumption sensor.
+    if controller and (
+        getattr(controller, "household_consumption_sensor", None)
+        or getattr(controller, "consumption_sensor", None)
+    ):
         entities.append(DailyHomeEnergySensor(controller))
     # Grid import/export are sign-split from the net consumption meter, which is
     # always configured, so these are always added.
@@ -217,7 +236,7 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
         # Set entity attributes
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -266,7 +285,7 @@ class MarstekVenusSensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -1197,7 +1216,9 @@ class NonResponsiveBatteriesSensor(SensorEntity):
                 attrs[coordinator.name] = {
                     "excluded": True,
                     "unreachable": unreachable,
-                    "reason": "non_delivery",
+                    "reason": info.get("reason") or "non_delivery",
+                    "retry_attempted": info.get("retry_attempted", False),
+                    "wake_attempted": info.get("wake_attempted", False),
                     "cooldown_minutes": info["cooldown_minutes"],
                     "remaining_minutes": round(remaining_min, 1),
                     "consecutive_failures": getattr(coordinator, "_consecutive_failures", 0),
@@ -1206,7 +1227,9 @@ class NonResponsiveBatteriesSensor(SensorEntity):
                 attrs[coordinator.name] = {
                     "excluded": unreachable,
                     "unreachable": unreachable,
-                    "reason": "connection_unavailable" if unreachable else None,
+                    "reason": "connection_unavailable" if unreachable else (info.get("reason") if info else None),
+                    "retry_attempted": info.get("retry_attempted", False) if info else False,
+                    "wake_attempted": info.get("wake_attempted", False) if info else False,
                     "fail_count": info["fail_count"] if info else 0,
                     "consecutive_failures": getattr(coordinator, "_consecutive_failures", 0),
                 }
@@ -1262,10 +1285,12 @@ class DailySolarEnergySensor(SensorEntity):
 
 
 class DailyHomeEnergySensor(SensorEntity):
-    """Exact daily home consumption (kWh), integrated from the real household power sensor.
+    """Exact daily home consumption (kWh), integrated from the household power.
 
-    Mirrors DailySolarEnergySensor but for the household_consumption_sensor. Unlike the
-    predictive-charging windowed accumulator, this integrates the full 24 h.
+    Uses the dedicated household_consumption_sensor when configured; otherwise the
+    value is derived from grid + battery AC + solar, matching the power-flow Home
+    Consumption sensor. Unlike the predictive-charging windowed accumulator, this
+    integrates the full 24 h.
     """
 
     _attr_has_entity_name = True

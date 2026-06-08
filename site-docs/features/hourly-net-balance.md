@@ -4,7 +4,7 @@ Tracks grid import and export within each civil hour and adjusts the PD setpoint
 
 ## How it works
 
-Every PD cycle (~2.5 s) the manager:
+Every PD control cycle (event-driven, at the grid sensor's cadence) the manager:
 
 1. Accumulates grid import and export for the current civil hour.
 2. Computes the deficit versus the target: `deficit = target_net_Wh − (imp_Wh − exp_Wh)`.

@@ -37,7 +37,7 @@ flowchart TD
 
 | Step | Description | Required |
 |------|-------------|:--------:|
-| [Main sensor](main-sensor.md) | Grid consumption sensor, solar sensor and household consumption sensor | ✅ |
+| [Main sensor](main-sensor.md) | Grid consumption sensor and solar sensor (home consumption is derived) | ✅ |
 | Batteries | Number of battery units | ✅ |
 | [Batteries](batteries.md) | Per-battery config : name, IP, port, version, power limits and SOC | ✅ |
 | [Time slots](time-slots.md) | Discharge/charge windows with per-slot parameters | ❌ |

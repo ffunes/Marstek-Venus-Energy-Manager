@@ -34,7 +34,6 @@ from .const import (
     CONF_CHARGING_TIME_SLOT,
     CONF_SOLAR_FORECAST_SENSOR,
     CONF_SOLAR_PRODUCTION_SENSOR,
-    CONF_HOUSEHOLD_CONSUMPTION_SENSOR,
     CONF_MAX_CONTRACTED_POWER,
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
@@ -48,6 +47,8 @@ from .const import (
     CONF_DELAY_SOC_SETPOINT,
     DEFAULT_DELAY_SOC_SETPOINT,
     CONF_BATTERY_VERSION,
+    CONF_SLAVE_ID,
+    DEFAULT_SLAVE_ID,
     DEFAULT_VERSION,
     REGISTER_MAP,
     MAX_POWER_BY_VERSION,
@@ -96,6 +97,8 @@ from .const import (
     CONF_METER_INVERTED,
     CONF_PREDICTIVE_SAFETY_MARGIN_KWH,
     DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
+    CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
+    DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
     CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     SLOT_BATTERY_SCOPE_ALL,
@@ -411,7 +414,7 @@ def _finalize_slot(step_a: dict, step_b: dict | None) -> dict:
 class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Marstek Venus Energy Manager."""
 
-    VERSION = 3
+    VERSION = 5
 
     def __init__(self):
         """Initialize the config flow."""
@@ -423,10 +426,10 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current_battery_data = {}  # Stores connection data between battery steps
         self._pending_slot_step_a: dict | None = None  # Buffer between slot step A and step B
 
-    async def _test_connection(self, host: str, port: int, version: str = "v2") -> bool:
+    async def _test_connection(self, host: str, port: int, version: str = "v2", slave_id: int = DEFAULT_SLAVE_ID) -> bool:
         """Test connection to a Marstek Venus battery using version-specific register."""
-        _LOGGER.info("Testing connection to %s:%s (%s)", host, port, version)
-        client = MarstekModbusClient(host, port)
+        _LOGGER.info("Testing connection to %s:%s (%s) slave %s", host, port, version, slave_id)
+        client = MarstekModbusClient(host, port, slave_id=slave_id)
         try:
             connected = await client.async_connect()
             if not connected:
@@ -476,17 +479,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     if unit not in ["kWh", "Wh"]:
                         errors["solar_forecast_sensor"] = "invalid_unit"
 
-            # Validate household consumption sensor if provided
-            household_sensor = user_input.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
-            if household_sensor:
-                household_state = self.hass.states.get(household_sensor)
-                if household_state is None:
-                    errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "sensor_not_found"
-                else:
-                    unit = household_state.attributes.get("unit_of_measurement", "")
-                    if unit not in ["W", "kW"]:
-                        errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "invalid_unit"
-
             # Validate solar production sensor if provided
             solar_sensor = user_input.get(CONF_SOLAR_PRODUCTION_SENSOR)
             if solar_sensor:
@@ -501,9 +493,9 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
                 self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                self.config_data[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = household_sensor
                 self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                 self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
+                self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                 return await self.async_step_batteries()
 
         return self.async_show_form(
@@ -514,9 +506,13 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_METER_INVERTED, default=False):
                         BooleanSelector(),
+                    vol.Required("max_contracted_power", default=7000):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+                            )
+                        ),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Optional(CONF_HOUSEHOLD_CONSUMPTION_SENSOR):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
@@ -556,10 +552,12 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+            slave_id = user_input.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
             connection_result = await self._test_connection(
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 battery_version,
+                slave_id,
             )
             if not connection_result:
                 errors["base"] = "cannot_connect"
@@ -568,6 +566,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
+                    CONF_SLAVE_ID: slave_id,
                     CONF_BATTERY_VERSION: battery_version,
                 }
                 return await self.async_step_battery_limits()
@@ -579,6 +578,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=f"Marstek Venus {battery_num}"): str,
                     vol.Required(CONF_HOST): str,
                     vol.Required(CONF_PORT, default=502): int,
+                    vol.Required(CONF_SLAVE_ID, default=DEFAULT_SLAVE_ID):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(CONF_BATTERY_VERSION, default=DEFAULT_VERSION):
                         SelectSelector(SelectSelectorConfig(
                             options=[
@@ -881,7 +882,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_TIME_SLOT
                 if not self.config_data.get(CONF_SOLAR_FORECAST_SENSOR):
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = None
-                self.config_data["max_contracted_power"] = 7000
                 return await self.async_step_weekly_full_charge()
 
         return self.async_show_form(
@@ -959,8 +959,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                             "days": user_input["days"],
                         }
                         self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                        self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                         self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                        self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
                         return await self.async_step_weekly_full_charge()
                 except Exception as e:
@@ -984,13 +984,11 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(
-                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
-            )
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(
@@ -1060,10 +1058,10 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
                     return await self.async_step_weekly_full_charge()
             except Exception as e:
@@ -1095,11 +1093,11 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(
@@ -1146,10 +1144,10 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
                     self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
                     return await self.async_step_weekly_full_charge()
             except Exception as e:
@@ -1169,11 +1167,11 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             schema_dict[vol.Optional("solar_forecast_sensor")] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=7000)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(
@@ -1624,17 +1622,23 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         old_port: int,
         new_host: str,
         new_port: int,
+        old_slave: int = DEFAULT_SLAVE_ID,
+        new_slave: int = DEFAULT_SLAVE_ID,
     ) -> None:
-        """Rename entity unique_ids and device identifiers when a battery's host/port changes.
+        """Rename entity unique_ids and device identifiers when a battery's host/port/slave changes.
 
         Preserves long-term statistics and history by keeping the same entity_id.
-        Battery-level entities use unique_id `{host}_{port}_{key}`; the device identifier
-        is `(DOMAIN, "{host}_{port}")`. Both are rewritten in place.
+        Battery-level keys follow `coordinator.device_key` (`{host}_{port}` for
+        slave 1, `{host}_{port}_{slave}` otherwise); the device identifier is
+        `(DOMAIN, device_key)`. Both are rewritten in place.
         """
-        old_prefix = f"{old_host}_{old_port}_"
-        new_prefix = f"{new_host}_{new_port}_"
-        old_device_id = f"{old_host}_{old_port}"
-        new_device_id = f"{new_host}_{new_port}"
+        def _device_key(host: str, port: int, slave: int) -> str:
+            return f"{host}_{port}" if slave == 1 else f"{host}_{port}_{slave}"
+
+        old_device_id = _device_key(old_host, old_port, old_slave)
+        new_device_id = _device_key(new_host, new_port, new_slave)
+        old_prefix = f"{old_device_id}_"
+        new_prefix = f"{new_device_id}_"
 
         ent_reg = er.async_get(self.hass)
         for ent in list(ent_reg.entities.values()):
@@ -1674,8 +1678,9 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+            slave_id = user_input.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
             if not await self._test_connection(
-                user_input[CONF_HOST], user_input[CONF_PORT], battery_version
+                user_input[CONF_HOST], user_input[CONF_PORT], battery_version, slave_id
             ):
                 errors["base"] = "cannot_connect"
             else:
@@ -1686,22 +1691,24 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 old_host = original.get(CONF_HOST)
                 old_port = original.get(CONF_PORT)
+                old_slave = original.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
                 new_host = user_input[CONF_HOST]
                 new_port = user_input[CONF_PORT]
 
                 if (
                     old_host
                     and old_port
-                    and (old_host != new_host or old_port != new_port)
+                    and (old_host != new_host or old_port != new_port or old_slave != slave_id)
                 ):
                     self._migrate_battery_registry_ids(
-                        entry, old_host, old_port, new_host, new_port
+                        entry, old_host, old_port, new_host, new_port, old_slave, slave_id
                     )
 
                 updated = dict(original)
                 updated[CONF_NAME] = user_input[CONF_NAME]
                 updated[CONF_HOST] = new_host
                 updated[CONF_PORT] = new_port
+                updated[CONF_SLAVE_ID] = slave_id
                 updated[CONF_BATTERY_VERSION] = battery_version
                 self._reconfigure_batteries.append(updated)
                 self.battery_index += 1
@@ -1722,6 +1729,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: current.get(CONF_NAME, f"Marstek Venus {battery_num}"),
             CONF_HOST: current.get(CONF_HOST, ""),
             CONF_PORT: current.get(CONF_PORT, 502),
+            CONF_SLAVE_ID: current.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID),
             CONF_BATTERY_VERSION: current.get(CONF_BATTERY_VERSION, DEFAULT_VERSION),
         }
 
@@ -1732,6 +1740,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
+                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(
                         CONF_BATTERY_VERSION, default=defaults[CONF_BATTERY_VERSION]
                     ): SelectSelector(
@@ -1771,7 +1781,7 @@ class OptionsFlowHandler(OptionsFlow):
         self._pending_slot_step_a: dict | None = None  # Buffer between slot step A and step B
         _LOGGER.info("OptionsFlowHandler initialized successfully for entry: %s", config_entry.entry_id)
 
-    async def _test_connection(self, host: str, port: int, version: str = "v2") -> bool:
+    async def _test_connection(self, host: str, port: int, version: str = "v2", slave_id: int = DEFAULT_SLAVE_ID) -> bool:
         """Test connection to a Marstek Venus battery.
 
         If a coordinator already holds a connection to this host, temporarily
@@ -1782,12 +1792,12 @@ class OptionsFlowHandler(OptionsFlow):
         if soc_register is None:
             return False
 
-        # Check if there's an active coordinator for this host
+        # Check if there's an active coordinator for this host + slave id
         entry_data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id, {})
         coordinators = entry_data.get("coordinators", [])
         existing_coordinator = None
         for coordinator in coordinators:
-            if coordinator.host == host:
+            if coordinator.host == host and coordinator.slave_id == slave_id:
                 existing_coordinator = coordinator
                 break
 
@@ -1804,7 +1814,7 @@ class OptionsFlowHandler(OptionsFlow):
                 await asyncio.sleep(0.5)
 
                 # Test with a fresh connection
-                test_client = MarstekModbusClient(host, port)
+                test_client = MarstekModbusClient(host, port, slave_id=slave_id)
                 try:
                     connected = await test_client.async_connect()
                     if not connected:
@@ -1836,7 +1846,7 @@ class OptionsFlowHandler(OptionsFlow):
         else:
             _LOGGER.info("No existing coordinator for %s - opening new connection", host)
             # No existing coordinator for this host - open new connection directly
-            client = MarstekModbusClient(host, port)
+            client = MarstekModbusClient(host, port, slave_id=slave_id)
             try:
                 connected = await client.async_connect()
                 if not connected:
@@ -1897,17 +1907,6 @@ class OptionsFlowHandler(OptionsFlow):
                         if unit not in ["kWh", "Wh"]:
                             errors["solar_forecast_sensor"] = "invalid_unit"
 
-                # Validate household consumption sensor if provided
-                household_sensor = user_input.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
-                if household_sensor:
-                    household_state = self.hass.states.get(household_sensor)
-                    if household_state is None:
-                        errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "sensor_not_found"
-                    else:
-                        unit = household_state.attributes.get("unit_of_measurement", "")
-                        if unit not in ["W", "kW"]:
-                            errors[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = "invalid_unit"
-
                 # Validate solar production sensor if provided
                 solar_sensor = user_input.get(CONF_SOLAR_PRODUCTION_SENSOR)
                 if solar_sensor:
@@ -1922,17 +1921,17 @@ class OptionsFlowHandler(OptionsFlow):
                 if not errors:
                     self.config_data["consumption_sensor"] = user_input["consumption_sensor"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data[CONF_HOUSEHOLD_CONSUMPTION_SENSOR] = household_sensor
                     self.config_data[CONF_SOLAR_PRODUCTION_SENSOR] = solar_sensor
                     self.config_data[CONF_METER_INVERTED] = user_input.get(CONF_METER_INVERTED, False)
+                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     return await self._save_and_finish()
 
             # Load current configuration with defensive defaults
             current_sensor = self.config_entry.data.get("consumption_sensor", "")
             current_forecast = self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR, "")
-            current_household = self.config_entry.data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, "")
             current_solar = self.config_entry.data.get(CONF_SOLAR_PRODUCTION_SENSOR, "")
             current_inverted = self.config_entry.data.get(CONF_METER_INVERTED, False)
+            current_max_power = self.config_entry.data.get("max_contracted_power", 7000)
         except Exception as e:
             _LOGGER.error("Error in options flow sensors: %s", e, exc_info=True)
             return self.async_abort(reason="unknown_error")
@@ -1945,9 +1944,13 @@ class OptionsFlowHandler(OptionsFlow):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_METER_INVERTED, default=current_inverted):
                         BooleanSelector(),
+                    vol.Required("max_contracted_power", default=current_max_power):
+                        NumberSelector(
+                            NumberSelectorConfig(
+                                min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX
+                            )
+                        ),
                     vol.Optional(CONF_SOLAR_FORECAST_SENSOR, description={"suggested_value": current_forecast} if current_forecast else {}):
-                        EntitySelector(EntitySelectorConfig(domain="sensor")),
-                    vol.Optional(CONF_HOUSEHOLD_CONSUMPTION_SENSOR, description={"suggested_value": current_household} if current_household else {}):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
                     vol.Optional(CONF_SOLAR_PRODUCTION_SENSOR, description={"suggested_value": current_solar} if current_solar else {}):
                         EntitySelector(EntitySelectorConfig(domain="sensor")),
@@ -1994,10 +1997,12 @@ class OptionsFlowHandler(OptionsFlow):
 
             if user_input is not None:
                 battery_version = user_input.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+                slave_id = user_input.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
                 connection_result = await self._test_connection(
                     user_input[CONF_HOST],
                     user_input[CONF_PORT],
                     battery_version,
+                    slave_id,
                 )
                 if not connection_result:
                     errors["base"] = "cannot_connect"
@@ -2006,6 +2011,7 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_NAME: user_input[CONF_NAME],
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
+                        CONF_SLAVE_ID: slave_id,
                         CONF_BATTERY_VERSION: battery_version,
                     }
                     return await self.async_step_battery_limits()
@@ -2016,6 +2022,7 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_NAME: current_battery.get(CONF_NAME, f"Marstek Venus {battery_num}"),
                     CONF_HOST: current_battery.get(CONF_HOST, ""),
                     CONF_PORT: current_battery.get(CONF_PORT, 502),
+                    CONF_SLAVE_ID: current_battery.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID),
                     CONF_BATTERY_VERSION: current_battery.get(CONF_BATTERY_VERSION, DEFAULT_VERSION),
                 }
             else:
@@ -2023,6 +2030,7 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_NAME: f"Marstek Venus {battery_num}",
                     CONF_HOST: "",
                     CONF_PORT: 502,
+                    CONF_SLAVE_ID: DEFAULT_SLAVE_ID,
                     CONF_BATTERY_VERSION: DEFAULT_VERSION,
                 }
         except Exception as e:
@@ -2036,6 +2044,8 @@ class OptionsFlowHandler(OptionsFlow):
                     vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
+                    vol.Required(CONF_SLAVE_ID, default=defaults[CONF_SLAVE_ID]):
+                        vol.All(NumberSelector(NumberSelectorConfig(min=1, max=247, step=1, mode=NumberSelectorMode.BOX)), vol.Coerce(int)),
                     vol.Required(CONF_BATTERY_VERSION, default=defaults[CONF_BATTERY_VERSION]):
                         SelectSelector(SelectSelectorConfig(
                             options=[
@@ -2390,7 +2400,6 @@ class OptionsFlowHandler(OptionsFlow):
                 self.config_data["enable_predictive_charging"] = False
                 self.config_data["charging_time_slot"] = None
                 self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_TIME_SLOT
-                self.config_data["max_contracted_power"] = self.config_entry.data.get("max_contracted_power", 7000)
                 return await self._save_and_finish()
 
         is_predictive_enabled = self.config_entry.data.get("enable_predictive_charging", False)
@@ -2449,7 +2458,6 @@ class OptionsFlowHandler(OptionsFlow):
         existing_config = self.config_entry.data
         time_slot_current = existing_config.get("charging_time_slot", {})
         forecast_sensor_current = existing_config.get("solar_forecast_sensor", "")
-        max_power_current = existing_config.get("max_contracted_power", 7000)
 
         has_global_sensor = bool(self.config_entry.data.get(CONF_SOLAR_FORECAST_SENSOR))
 
@@ -2477,8 +2485,8 @@ class OptionsFlowHandler(OptionsFlow):
                         "days": user_input["days"],
                     }
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
                     return await self._save_and_finish()
             except Exception as e:
                 _LOGGER.error("Error validating predictive charging config: %s", e)
@@ -2490,8 +2498,8 @@ class OptionsFlowHandler(OptionsFlow):
                 "end_time": time_slot_current.get("end_time", "06:00:00"),
                 "days": time_slot_current.get("days", ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]),
                 "sensor": forecast_sensor_current if forecast_sensor_current else "",
-                "power": max_power_current,
                 "margin": existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH),
+                "grid_margin": existing_config.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT),
             }
         else:
             defaults = {
@@ -2499,8 +2507,8 @@ class OptionsFlowHandler(OptionsFlow):
                 "end_time": "06:00:00",
                 "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
                 "sensor": "",
-                "power": 7000,
                 "margin": DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
+                "grid_margin": DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
             }
 
         schema_dict = {
@@ -2520,11 +2528,11 @@ class OptionsFlowHandler(OptionsFlow):
             schema_dict[vol.Optional("solar_forecast_sensor", description={"suggested_value": defaults["sensor"]} if defaults["sensor"] else {})] = EntitySelector(
                 EntitySelectorConfig(domain="sensor")
             )
-        schema_dict[vol.Required("max_contracted_power", default=defaults["power"])] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=defaults["margin"])] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=defaults["grid_margin"])] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(
@@ -2593,10 +2601,10 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_PRICE_SENSOR] = price_sensor
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
                     return await self._save_and_finish()
             except Exception as e:
                 _LOGGER.error("Error validating dynamic pricing config: %s", e)
@@ -2605,10 +2613,10 @@ class OptionsFlowHandler(OptionsFlow):
         default_integration = existing_config.get(CONF_PRICE_INTEGRATION_TYPE, PRICE_INTEGRATION_NORDPOOL)
         default_sensor = existing_config.get(CONF_PRICE_SENSOR, "")
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
-        default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
         default_dp_discharge_control = existing_config.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
         default_margin = existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+        default_grid_margin = existing_config.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
         schema_dict: dict = {
             vol.Required(CONF_PRICE_INTEGRATION_TYPE, default=default_integration):
@@ -2639,11 +2647,11 @@ class OptionsFlowHandler(OptionsFlow):
                 "solar_forecast_sensor",
                 description={"suggested_value": default_forecast} if default_forecast else {}
             )] = EntitySelector(EntitySelectorConfig(domain="sensor"))
-        schema_dict[vol.Required("max_contracted_power", default=default_power)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=default_margin)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=default_grid_margin)] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(
@@ -2691,10 +2699,10 @@ class OptionsFlowHandler(OptionsFlow):
                     self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
                     self.config_data[CONF_AVERAGE_PRICE_SENSOR] = avg_sensor
                     self.config_data[CONF_RT_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data["max_contracted_power"] = user_input["max_contracted_power"]
                     self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
                     self.config_data["charging_time_slot"] = None
                     self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
                     return await self._save_and_finish()
             except Exception as e:
                 _LOGGER.error("Error validating real-time price config: %s", e)
@@ -2704,9 +2712,9 @@ class OptionsFlowHandler(OptionsFlow):
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
         default_avg_sensor = existing_config.get(CONF_AVERAGE_PRICE_SENSOR, "")
         default_rt_discharge_control = existing_config.get(CONF_RT_PRICE_DISCHARGE_CONTROL, False)
-        default_power = existing_config.get("max_contracted_power", 7000)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
         default_margin = existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+        default_grid_margin = existing_config.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
         schema_dict: dict = {
             vol.Required(CONF_PRICE_SENSOR, default=default_sensor if default_sensor else vol.UNDEFINED):
@@ -2728,11 +2736,11 @@ class OptionsFlowHandler(OptionsFlow):
                 "solar_forecast_sensor",
                 description={"suggested_value": default_forecast} if default_forecast else {}
             )] = EntitySelector(EntitySelectorConfig(domain="sensor"))
-        schema_dict[vol.Required("max_contracted_power", default=default_power)] = NumberSelector(
-            NumberSelectorConfig(min=1000, max=15000, step=100, mode=NumberSelectorMode.BOX)
-        )
         schema_dict[vol.Optional(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, default=default_margin)] = NumberSelector(
             NumberSelectorConfig(min=0, max=20, step=0.1, unit_of_measurement="kWh", mode=NumberSelectorMode.BOX)
+        )
+        schema_dict[vol.Optional(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, default=default_grid_margin)] = NumberSelector(
+            NumberSelectorConfig(min=0, max=100, step=5, unit_of_measurement="%", mode=NumberSelectorMode.BOX)
         )
 
         return self.async_show_form(

@@ -78,6 +78,7 @@ Only present when the [cell balance monitor](../features/cell-balance-monitor.md
 | Entity | Options |
 |---|---|
 | `select.*_force_mode` | None / Charge / Discharge |
+| `select.marstek_venus_system_pd_tuning_profile` | Very smooth / Smooth / Balanced / Aggressive / Very aggressive / Custom — one-click PD presets that set `Kp`, `Kd` and the rate limit together (deadband stays user-owned) |
 
 ## Switches
 
@@ -127,6 +128,20 @@ The sensor also exposes blocker diagnostics as attributes:
 | `battery_charge_blockers` | Active per-battery charge blockers grouped by battery, including manual allow-charge, maximum SOC, and charge hysteresis |
 | `battery_discharge_blockers` | Active per-battery discharge blockers grouped by battery, including manual allow-discharge and minimum SOC |
 
+### PD Control Quality
+
+`sensor.marstek_venus_system_pd_control_quality` reports how well the PD controller holds the grid target, so the effect of a [tuning profile](../features/pd-controller.md#tuning-profiles) or slider change is visible. The state is a verdict:
+
+| State | Meaning |
+|---|---|
+| `stable` | PD tracks the target well |
+| `oscillating` | Hunting — use a smoother profile or raise the deadband |
+| `sluggish` | Too slow — use a more aggressive profile |
+| `battery_limited` | Battery full/empty or at its power rail; the PD cannot act (not a tuning issue) |
+| `collecting_data` | Warming up |
+
+Attributes: `rms_error_w` (average grid-tracking error), `oscillation_per_min`, the active `kp` / `kd` / `deadband_w` / `max_power_change_w`, and `active_profile`. The metric is a 60 s rolling average and is paused briefly after a target change and while battery-limited, so allow 1–2 min after a change.
+
 ### Aggregate sensors
 
 Available under the `sensor.marstek_venus_system_*` prefix, summing values across all batteries:
@@ -137,14 +152,16 @@ Available under the `sensor.marstek_venus_system_*` prefix, summing values acros
 - `system_total_discharging_energy` — Total system discharging energy
 - `grid_at_min_soc` — Grid import during min SOC periods (kWh)
 - `system_alarm_status` — Aggregated alarm state across all batteries (`OK` / `Warning` / `Fault`); attributes list active conditions per battery
-- `household_energy_today` — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.
+- `system_home_consumption` — Instantaneous home consumption (W). Reads the household sensor when configured, otherwise derives it from `grid + battery AC + solar`.
+- `system_daily_home_energy` — Today's home consumption (kWh), integrated from the Home Consumption value above. Resets at midnight (local time).
 - `system_battery_power` — Total system power
 - `system_battery_soc` — System average SOC
 - `system_total_charging_energy` — Total system charging energy
 - `system_total_discharging_energy` — Total system discharging energy
 - `grid_at_min_soc` — Grid import during min SOC periods (kWh)
 - `system_alarm_status` — Aggregated alarm state across all batteries (`OK` / `Warning` / `Fault`); attributes list active conditions per battery
-- `household_energy_today` — Today's household energy consumption accumulated from the optional household power sensor, during the solar+battery window (kWh). Only present when a household consumption sensor is configured. Resets at midnight.
+- `system_home_consumption` — Instantaneous home consumption (W). Reads the household sensor when configured, otherwise derives it from `grid + battery AC + solar`.
+- `system_daily_home_energy` — Today's home consumption (kWh), integrated from the Home Consumption value above. Resets at midnight (local time).
 
 ### Configuration Summary
 

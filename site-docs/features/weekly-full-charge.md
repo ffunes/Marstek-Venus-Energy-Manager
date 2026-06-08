@@ -18,6 +18,9 @@ Active cell balancing repeatedly cycles slow charge or discharge near the top vo
 
 See [Cell balancing](cell-balance-monitor.md) for full details.
 
+!!! note "Drifted SOC"
+    If a pack reaches 3.58 V while the BMS still reports SOC below 90%, charging is *not* paused at step 4: the integration keeps charging at 95 W until the BMS cuts off, *attempting* to make it recalibrate SOC to 100% so the weekly charge can complete. This is best-effort and depends on the BMS firmware — it is not guaranteed. See [SOC recalibration on a stuck top voltage](cell-balance-monitor.md#soc-recalibration-on-a-stuck-top-voltage).
+
 ## Cell balance monitor
 
 The **cell balance monitor** is only active when checked in the Weekly Full Charge Configuration. It records the voltage spread between the highest and lowest cell after each top-voltage measurement and keeps the sensor history, trend and alerts updated.

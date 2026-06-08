@@ -138,6 +138,8 @@ Cuando una batería no entrega la potencia solicitada de forma reiterada — por
 
 Una batería se marca como sin respuesta cuando su potencia entregada es inferior al 5 % de la consigna durante **3 ciclos de control consecutivos**. Una vez marcada, entra en una **ventana de exclusión de 5 minutos** durante la cual no recibe nuevas consignas y las baterías restantes absorben su parte de la carga. Al expirar la ventana, el contador de fallos se reinicia y la batería vuelve a ser elegible.
 
+Los cortes de descarga a SOC bajo están exentos. En el **20 % de SOC** o por debajo (o justo por encima del SOC mínimo configurado), el BMS puede cortar la descarga por su cuenta — por ejemplo una celda débil que cae bajo carga — aunque el SOC reportado siga por encima del mínimo. La batería confirma el comando pero entrega 0 W; esto se trata como un corte esperado del BMS y no como un fallo, así que permanece en el grupo. Es el equivalente al manejo del corte del BMS a SOC alto en el lado de carga.
+
 Este mecanismo impide que una sola batería con problemas degrade silenciosamente el rendimiento del sistema sin generar alarmas ni requerir intervención manual.
 
 ## Modos compatibles

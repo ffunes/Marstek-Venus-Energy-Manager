@@ -66,6 +66,7 @@ Solo presentes cuando el [monitor de equilibrio de celdas](../features/cell-bala
 | Entidad | Opciones |
 |---|---|
 | `select.*_force_mode` | None / Charge / Discharge |
+| `select.marstek_venus_system_pd_tuning_profile` | Muy suave / Suave / Equilibrado / Agresivo / Personalizado — presets de PD de un clic que fijan `Kp`, `Kd` y el límite de rampa a la vez (el deadband lo controla el usuario) |
 
 ## Switches
 
@@ -115,6 +116,20 @@ El sensor también expone diagnósticos del registro de bloqueos como atributos:
 | `battery_charge_blockers` | Bloqueos de carga activos por batería, agrupados por batería, incluyendo permitir carga, SOC máximo e histéresis de carga |
 | `battery_discharge_blockers` | Bloqueos de descarga activos por batería, agrupados por batería, incluyendo permitir descarga y SOC mínimo |
 
+### Calidad de control PD
+
+`sensor.marstek_venus_system_pd_control_quality` indica cómo de bien mantiene el controlador PD el objetivo de red, para que se vea el efecto de un [perfil de ajuste](../features/pd-controller.md#perfiles-de-ajuste) o un cambio de slider. El estado es un veredicto:
+
+| Estado | Significado |
+|---|---|
+| `stable` | El PD sigue bien el objetivo |
+| `oscillating` | Cabeceo — usa un perfil más suave o sube el deadband |
+| `sluggish` | Demasiado lento — usa un perfil más agresivo |
+| `battery_limited` | Batería llena/vacía o en su límite de potencia; el PD no puede actuar (no es problema de ajuste) |
+| `collecting_data` | Calentando |
+
+Atributos: `rms_error_w` (error medio de seguimiento), `oscillation_per_min`, los `kp` / `kd` / `deadband_w` / `max_power_change_w` activos, y `active_profile`. La métrica es una media móvil de 60 s y se pausa brevemente tras un cambio de objetivo y mientras está limitada por batería, así que espera 1–2 min tras un cambio.
+
 ### Sensores agregados
 
 Disponibles bajo el prefijo `sensor.marstek_venus_system_*`, suman los valores de todas las baterías:
@@ -125,7 +140,8 @@ Disponibles bajo el prefijo `sensor.marstek_venus_system_*`, suman los valores d
 - `system_total_discharging_energy` — Energía total descargada (sistema)
 - `grid_at_min_soc` — Importación de red durante periodos en SOC mínimo (kWh)
 - `system_alarm_status` — Estado de alarma agregado de todas las baterías (`OK` / `Warning` / `Fault`); los atributos listan las condiciones activas por batería
-- `household_energy_today` — Consumo energético del hogar acumulado hoy a partir del sensor de potencia opcional, durante la franja solar+batería (kWh). Solo presente cuando hay un sensor de consumo del hogar configurado. Se reinicia a medianoche.
+- `system_home_consumption` — Consumo instantáneo del hogar (W). Lee el sensor del hogar si está configurado, en caso contrario lo deriva de `red + AC de baterías + solar`.
+- `system_daily_home_energy` — Consumo del hogar de hoy (kWh), integrado del valor de Consumo de la Casa anterior. Se reinicia a medianoche (hora local).
 
 ### Resumen de Configuración
 

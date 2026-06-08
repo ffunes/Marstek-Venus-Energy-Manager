@@ -74,7 +74,8 @@ class BalanceMonitor:
 
     async def async_restore_coordinator(self, coordinator: Any) -> None:
         """Restore state machine phase for a coordinator after HA restart."""
-        host = coordinator.host
+        await self._migrate_legacy_host_key(coordinator)
+        host = coordinator.device_key
         bat = self._data.get(host, {})
         phase = bat.get("phase", "IDLE")
         phase_started = None
@@ -103,6 +104,25 @@ class BalanceMonitor:
                 phase,
             )
 
+    async def _migrate_legacy_host_key(self, coordinator: Any) -> None:
+        """Rename persisted data keyed by bare host to the device_key scheme.
+
+        Pre-slave-id installs keyed balance data by host alone. device_key is
+        ``{host}_{port}`` for slave 1, so rename the old entry in place to keep
+        history. No-op once migrated or for fresh installs.
+        """
+        legacy = coordinator.host
+        new_key = coordinator.device_key
+        if legacy != new_key and legacy in self._data and new_key not in self._data:
+            self._data[new_key] = self._data.pop(legacy)
+            await self._store.async_save(self._data)
+            _LOGGER.info(
+                "[%s] Balance monitor: migrated store key %s -> %s",
+                coordinator.name,
+                legacy,
+                new_key,
+            )
+
     # ------------------------------------------------------------------
     # Main entry point — called every coordinator poll cycle
     # ------------------------------------------------------------------
@@ -113,7 +133,7 @@ class BalanceMonitor:
         Imbalance readings are now recorded only by explicit 3.55 V top-charge
         measurements and active-balance measurements.
         """
-        host = coordinator.host
+        host = coordinator.device_key
         if host not in self._states:
             self._states[host] = _BatteryState()
 
@@ -158,7 +178,7 @@ class BalanceMonitor:
         delta_mv = (vmax_f - vmin_f) * 1000
         extra = {"from_phase": from_phase, "to_phase": to_phase}
         await self._save_reading(
-            coordinator.host,
+            coordinator.device_key,
             delta_mv,
             vmax_f,
             vmin_f,
@@ -187,7 +207,7 @@ class BalanceMonitor:
             soc_f = None
         delta_mv = (vmax_f - vmin_f) * 1000
         await self._save_reading(
-            coordinator.host,
+            coordinator.device_key,
             delta_mv,
             vmax_f,
             vmin_f,
@@ -216,7 +236,7 @@ class BalanceMonitor:
             soc_f = None
         delta_mv = (vmax_f - vmin_f) * 1000
         await self._save_reading(
-            coordinator.host,
+            coordinator.device_key,
             delta_mv,
             vmax_f,
             vmin_f,

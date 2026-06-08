@@ -27,7 +27,7 @@ from .const import (
     EXTERNAL_NET_BALANCE_CANDIDATES,
 )
 
-_EXTERNAL_DETECT_MAX_ATTEMPTS = 20  # ~50 s at 2.5 s/cycle
+_EXTERNAL_DETECT_WINDOW_S = 50.0  # give up detecting after this long (cadence-independent; was 20 cycles)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -61,7 +61,7 @@ class HourlyBalanceManager:
         # Internal state and save throttle
         self._last_theoretical_offset_w: float = 0.0
         self._last_block_reason: str | None = None
-        self._save_counter: int = 0
+        self._last_save_monotonic: float = 0.0
 
         # Registered sensor entities for push updates
         self._sensors: list[Any] = []
@@ -72,6 +72,7 @@ class HourlyBalanceManager:
         self._ext_snapshot: float | None = None
         self._ext_detected: bool = False
         self._ext_detect_attempts: int = 0
+        self._ext_detect_started_mono: float | None = None
 
     # ------------------------------------------------------------------
     # Setup / teardown
@@ -169,6 +170,8 @@ class HourlyBalanceManager:
         Positive sensor value is assumed to mean net export to grid.
         """
         self._ext_detect_attempts += 1
+        if self._ext_detect_started_mono is None:
+            self._ext_detect_started_mono = monotonic()
         found_all_in_states = True
 
         for candidate in EXTERNAL_NET_BALANCE_CANDIDATES:
@@ -176,8 +179,8 @@ class HourlyBalanceManager:
             if state is None:
                 found_all_in_states = False
                 _LOGGER.debug(
-                    "HourlyBalance: candidate %s not in states yet (attempt %d/%d)",
-                    candidate, self._ext_detect_attempts, _EXTERNAL_DETECT_MAX_ATTEMPTS,
+                    "HourlyBalance: candidate %s not in states yet (attempt %d)",
+                    candidate, self._ext_detect_attempts,
                 )
                 continue
 
@@ -210,7 +213,11 @@ class HourlyBalanceManager:
             )
             return
 
-        if found_all_in_states or self._ext_detect_attempts >= _EXTERNAL_DETECT_MAX_ATTEMPTS:
+        elapsed = (
+            monotonic() - self._ext_detect_started_mono
+            if self._ext_detect_started_mono is not None else 0.0
+        )
+        if found_all_in_states or elapsed >= _EXTERNAL_DETECT_WINDOW_S:
             self._ext_detected = True
             _LOGGER.info(
                 "HourlyBalance: no external net balance sensor found (tried: %s), "
@@ -274,8 +281,10 @@ class HourlyBalanceManager:
             self.clear_offset()
             return
 
-        # Lazy detection for sensors not yet in the state machine at startup
-        if not self._ext_detected and self._ext_detect_attempts < _EXTERNAL_DETECT_MAX_ATTEMPTS:
+        # Lazy detection for sensors not yet in the state machine at startup.
+        # _detect_external_sensor() sets _ext_detected once it succeeds or the
+        # time window elapses, so this guard alone bounds the retries.
+        if not self._ext_detected:
             await self._detect_external_sensor()
 
         # Determine integration source and read the current value.
@@ -440,10 +449,11 @@ class HourlyBalanceManager:
         self._controller.set_setpoint_offset("hourly_balance", offset_w)
         self._last_offset_w = offset_w
 
-        # Throttled save (~120 cycles ≈ 5 min at 2.5 s/cycle)
-        self._save_counter += 1
-        if self._save_counter >= 120:
-            self._save_counter = 0
+        # Throttled save (~5 min). Time-based, not a cycle count: the control loop
+        # is event-driven (variable cadence) so a count would drift the interval.
+        now_mono = monotonic()
+        if now_mono - self._last_save_monotonic >= 300:
+            self._last_save_monotonic = now_mono
             await self._save()
 
         self._push_sensors()

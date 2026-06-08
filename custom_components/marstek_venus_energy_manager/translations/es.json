@@ -7,16 +7,16 @@
         "data": {
           "consumption_sensor": "Sensor de consumo de la red",
           "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "household_consumption_sensor": "Sensor de consumo del hogar (opcional)",
           "solar_production_sensor": "Sensor de producción solar (opcional)",
-          "meter_inverted": "Signo del medidor invertido"
+          "meter_inverted": "Signo del medidor invertido",
+          "max_contracted_power": "Potencia máxima contratada (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red. El controlador ajustará las baterías para mantener este valor cerca de 0W.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "household_consumption_sensor": "Sensor de potencia (W) que mide el consumo total del hogar. Cuando está configurado, la carga predictiva y la carga retrasada usarán datos de consumo real en lugar de estimar desde la descarga de batería.",
           "solar_production_sensor": "Sensor de potencia de producción fotovoltaica en tiempo real (W/kW) de un inversor externo que no pasa por las entradas MPPT de la batería. Se usa para mostrar el nodo Solar en el diagrama de flujo del panel. Déjalo vacío si tus paneles alimentan directamente el MPPT de la batería.",
-          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
+          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente.",
+          "max_contracted_power": "Potencia total contratada en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
       "batteries": {
@@ -33,12 +33,14 @@
           "name": "Nombre",
           "host": "Dirección IP",
           "port": "Puerto Modbus",
+          "slave_id": "ID de esclavo Modbus",
           "battery_version": "Modelo de batería"
         },
         "data_description": {
           "name": "Nombre descriptivo para identificar esta batería",
           "host": "Dirección IP de la batería en tu red local",
           "port": "Puerto Modbus (normalmente 502)",
+          "slave_id": "ID de esclavo/unidad Modbus (por defecto 1). Cámbialo solo si un proxy Modbus expone varias baterías en una misma IP:puerto con ids de esclavo distintos.",
           "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
         }
       },
@@ -197,16 +199,16 @@
           "end_time": "Hora de fin (tarifa valle)",
           "days": "Días de la semana",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "dynamic_pricing_config": {
@@ -218,8 +220,8 @@
           "max_price_threshold": "Precio máximo (opcional)",
           "dp_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
@@ -227,8 +229,8 @@
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
           "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio máximo configurado. Si no hay umbral configurado, usa el precio medio del día calculado automáticamente a partir del sensor de precios. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "realtime_price_config": {
@@ -240,8 +242,8 @@
           "average_price_sensor": "Sensor de precio medio diario (opcional)",
           "rt_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "price_sensor": "Sensor cuyo estado es el precio eléctrico actual (ej: sensor.esios_pvpc, sensor.nordpool_kwh_es_eur_3_10_0). Funciona con cualquier sensor que exponga el precio del periodo actual como su estado.",
@@ -249,8 +251,8 @@
           "average_price_sensor": "Si se configura, su valor se usa como umbral en lugar del valor fijo anterior — útil cuando tu integración de precios ya expone un precio medio diario. Déjalo vacío para usar el umbral fijo.",
           "rt_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el umbral (fijo o precio medio diario). Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "weekly_full_charge": {
@@ -379,12 +381,14 @@
           "name": "Nombre",
           "host": "Dirección IP",
           "port": "Puerto Modbus",
+          "slave_id": "ID de esclavo Modbus",
           "battery_version": "Modelo de batería"
         },
         "data_description": {
           "name": "Nombre descriptivo para identificar esta batería",
           "host": "Nueva dirección IP de la batería en la red local",
           "port": "Puerto Modbus (normalmente 502)",
+          "slave_id": "ID de esclavo/unidad Modbus (por defecto 1). Cámbialo solo si un proxy Modbus expone varias baterías en una misma IP:puerto con ids de esclavo distintos.",
           "battery_version": "Selecciona la versión de tu modelo de batería"
         }
       }
@@ -428,16 +432,16 @@
         "data": {
           "consumption_sensor": "Sensor de consumo de la red",
           "solar_forecast_sensor": "Sensor de predicción solar (opcional)",
-          "household_consumption_sensor": "Sensor de consumo del hogar (opcional)",
           "solar_production_sensor": "Sensor de producción solar (opcional)",
-          "meter_inverted": "Signo del medidor invertido"
+          "meter_inverted": "Signo del medidor invertido",
+          "max_contracted_power": "Potencia máxima contratada (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor que indica la potencia importada (+) o exportada (-) a la red.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si se configura aquí, se usará automáticamente en carga predictiva y retraso de carga solar.",
-          "household_consumption_sensor": "Sensor de potencia (W) que mide el consumo total del hogar. Cuando está configurado, la carga predictiva y la carga retrasada usarán datos de consumo real en lugar de estimar desde la descarga de batería.",
           "solar_production_sensor": "Sensor de potencia de producción fotovoltaica en tiempo real (W/kW) de un inversor externo que no pasa por las entradas MPPT de la batería. Se usa para mostrar el nodo Solar en el diagrama de flujo del panel. Déjalo vacío si tus paneles alimentan directamente el MPPT de la batería.",
-          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente."
+          "meter_inverted": "Activa esta opción si tu medidor usa el convenio opuesto: positivo = exportación, negativo = importación. La unidad (W/kW) se detecta automáticamente.",
+          "max_contracted_power": "Potencia total contratada en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial"
         }
       },
       "batteries": {
@@ -454,12 +458,14 @@
           "name": "Nombre",
           "host": "Dirección IP",
           "port": "Puerto Modbus",
+          "slave_id": "ID de esclavo Modbus",
           "battery_version": "Modelo de batería"
         },
         "data_description": {
           "name": "Nombre descriptivo para identificar esta batería",
           "host": "Dirección IP de la batería en tu red local",
           "port": "Puerto Modbus (normalmente 502)",
+          "slave_id": "ID de esclavo/unidad Modbus (por defecto 1). Cámbialo solo si un proxy Modbus expone varias baterías en una misma IP:puerto con ids de esclavo distintos.",
           "battery_version": "Selecciona la versión del modelo de tu batería. Ev2 para modelos antiguos, Ev3 para modelos nuevos con mapa de registros actualizado, A (Venus A) o D (Venus D) para modelos de inversor híbrido"
         }
       },
@@ -618,16 +624,16 @@
           "end_time": "Hora de fin (tarifa valle)",
           "days": "Días de la semana",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "start_time": "Hora de inicio de la franja de carga (ej: 01:00, tarifa valle)",
           "end_time": "Hora de fin de la franja de carga (ej: 06:00)",
           "days": "Días en los que se permite cargar desde red",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "dynamic_pricing_config": {
@@ -639,8 +645,8 @@
           "max_price_threshold": "Precio máximo (opcional)",
           "dp_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "price_integration_type": "Selecciona tu integración de precios de electricidad",
@@ -648,8 +654,8 @@
           "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
           "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio máximo configurado. Si no hay umbral configurado, usa el precio medio del día calculado automáticamente a partir del sensor de precios. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "realtime_price_config": {
@@ -661,8 +667,8 @@
           "average_price_sensor": "Sensor de precio medio diario (opcional)",
           "rt_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
-          "max_contracted_power": "Potencia máxima contratada ICP (W)",
-          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)"
+          "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
+          "predictive_grid_charge_margin_pct": "Margen de carga de red predictiva (%)"
         },
         "data_description": {
           "price_sensor": "Sensor cuyo estado es el precio eléctrico actual (ej: sensor.esios_pvpc, sensor.nordpool_kwh_es_eur_3_10_0). Funciona con cualquier sensor que exponga el precio del periodo actual como su estado.",
@@ -670,8 +676,8 @@
           "average_price_sensor": "Si se configura, su valor se usa como umbral en lugar del valor fijo anterior — útil cuando tu integración de precios ya expone un precio medio diario. Déjalo vacío para usar el umbral fijo.",
           "rt_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el umbral (fijo o precio medio diario). Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
-          "max_contracted_power": "Potencia total contratada (ICP) en vatios. El sistema no superará este límite al cargar para evitar que salte el diferencial",
-          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería."
+          "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
+          "predictive_grid_charge_margin_pct": "Porcentaje extra cargado desde la red sobre el déficit solar, para cubrir previsiones solares optimistas. Ej.: una necesidad de 2 kWh de red al 50% carga 3 kWh. 0 para desactivar (por defecto). Limitado al margen hasta el SOC máximo."
         }
       },
       "weekly_full_charge": {
@@ -916,6 +922,19 @@
       "system_daily_home_energy": {
         "name": "Consumo Diario de la Casa"
       },
+      "system_home_consumption": {
+        "name": "Consumo de la Casa"
+      },
+      "system_pd_control_quality": {
+        "name": "Calidad de Control PD",
+        "state": {
+          "stable": "Estable",
+          "oscillating": "Oscilando",
+          "sluggish": "Lento",
+          "battery_limited": "Limitado por batería",
+          "collecting_data": "Recopilando datos"
+        }
+      },
       "system_daily_grid_import_energy": {
         "name": "Importación Diaria de Red"
       },
@@ -1040,6 +1059,12 @@
       },
       "mppt4_power": {
         "name": "Potencia MPPT4"
+      },
+      "solar_power": {
+        "name": "Potencia solar"
+      },
+      "battery_cell_power": {
+        "name": "Potencia de la Celda"
       },
       "round_trip_efficiency_total": {
         "name": "Eficiencia Total de Ciclo"
@@ -1190,6 +1215,17 @@
           "saturday": "Sábado",
           "sunday": "Domingo"
         }
+      },
+      "pd_tuning_profile": {
+        "name": "Perfil de Ajuste PD",
+        "state": {
+          "very_smooth": "Muy Suave",
+          "smooth": "Suave",
+          "balanced": "Equilibrado",
+          "aggressive": "Agresivo",
+          "very_aggressive": "Muy Agresivo",
+          "custom": "Personalizado"
+        }
       }
     },
     "number": {
@@ -1235,6 +1271,12 @@
       "pd_min_discharge_power": {
         "name": "PD Potencia Mínima Descarga"
       },
+      "pd_relay_cooldown": {
+        "name": "PD Tiempo Mínimo de Relé"
+      },
+      "pd_min_cycle_interval": {
+        "name": "PD Intervalo Mínimo de Ciclo"
+      },
       "pd_target_grid_power": {
         "name": "PD Potencia Objetivo Red"
       },
@@ -1267,6 +1309,9 @@
       },
       "predictive_safety_margin_kwh": {
         "name": "Margen de Seguridad Previsión Solar"
+      },
+      "predictive_grid_charge_margin_pct": {
+        "name": "Margen de Carga de Red Predictiva"
       }
     },
     "button": {

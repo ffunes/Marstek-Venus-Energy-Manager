@@ -32,6 +32,9 @@ Cada vez que el valor del sensor cambia en más de 0,05 kWh, la integración ree
 
 Una vez que el retraso se desbloquea, permanece desbloqueado el resto del día.
 
+!!! note "Cortes transitorios de la previsión y reevaluación manual"
+    Que un sensor de previsión configurado lea `unavailable`/`unknown` por un instante —mientras se actualiza, o durante la ventana tras reiniciar Home Assistant antes de que todos los sensores hayan cargado— ya **no** desactiva el retraso durante todo el día. El retraso se mantiene mediante una breve ventana de gracia (estado del sensor `Waiting for forecast`) y solo se desbloquea si el sensor sigue no disponible al superarla. Si el retraso ya se había desbloqueado y quieres recuperarlo el mismo día, **desactiva y vuelve a activar el switch de Retraso de Carga Solar**: eso reevalúa el retraso desde cero en lugar de esperar al reinicio de medianoche.
+
 ## SOC de arranque del retraso
 
 Un SOC de setpoint opcional (12–90 %, desactivado por defecto) divide la carga en dos fases:

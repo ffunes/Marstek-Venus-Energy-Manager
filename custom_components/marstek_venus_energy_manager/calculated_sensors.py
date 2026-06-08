@@ -42,7 +42,7 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -73,7 +73,7 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -92,7 +92,7 @@ class MarstekVenusStoredEnergySensor(CoordinatorEntity, SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
         self._attr_device_class = definition.get("device_class")
         self._attr_state_class = definition.get("state_class")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -122,7 +122,7 @@ class MarstekVenusStoredEnergySensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -141,7 +141,7 @@ class MarstekVenusCycleSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
         self._attr_state_class = definition.get("state_class")
         self._attr_icon = definition.get("icon")
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -167,7 +167,105 @@ class MarstekVenusCycleSensor(CoordinatorEntity, SensorEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
+            "name": self.coordinator.name,
+            "manufacturer": "Marstek",
+            "model": "Venus",
+        }
+
+
+class MarstekVenusSolarPowerSensor(CoordinatorEntity, SensorEntity):
+    """Total DC-coupled PV power for a Venus D/A unit: sum of its MPPT inputs."""
+
+    def __init__(
+        self, coordinator: MarstekVenusDataUpdateCoordinator, definition: dict
+    ) -> None:
+        """Initialize the solar power sensor."""
+        super().__init__(coordinator)
+        self.definition = definition
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
+        self._attr_device_class = definition.get("device_class")
+        self._attr_state_class = definition.get("state_class")
+        self._attr_native_unit_of_measurement = definition.get("unit")
+        self._attr_icon = definition.get("icon")
+        self._attr_should_poll = False
+        self._mppt_keys = definition["dependency_keys"]["mppt"]
+
+    @property
+    def native_value(self):
+        """Return the sum of this unit's MPPT power inputs (W)."""
+        if self.coordinator.data is None:
+            return None
+
+        total = 0
+        for key in self._mppt_keys:
+            value = self.coordinator.data.get(key)
+            if value is not None:
+                total += value
+        return round(total)
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
+            "name": self.coordinator.name,
+            "manufacturer": "Marstek",
+            "model": "Venus",
+        }
+
+
+class MarstekVenusBatteryCellPowerSensor(CoordinatorEntity, SensorEntity):
+    """True battery cell power for a Venus D/A unit: battery_power plus DC PV (MPPT).
+
+    The battery_power register mirrors the AC side with inverted sign and excludes
+    the DC PV, which charges the cells without crossing the AC port. Adding the
+    unit's MPPT recovers the battery's own power. Same sign as battery_power
+    (+ charge / - discharge).
+    """
+
+    def __init__(
+        self, coordinator: MarstekVenusDataUpdateCoordinator, definition: dict
+    ) -> None:
+        """Initialize the battery cell power sensor."""
+        super().__init__(coordinator)
+        self.definition = definition
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = definition["key"]
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
+        self._attr_device_class = definition.get("device_class")
+        self._attr_state_class = definition.get("state_class")
+        self._attr_native_unit_of_measurement = definition.get("unit")
+        self._attr_icon = definition.get("icon")
+        self._attr_should_poll = False
+        self._battery_key = definition["dependency_keys"]["battery"]
+        self._mppt_keys = definition["dependency_keys"]["mppt"]
+
+    @property
+    def native_value(self):
+        """Return battery_power plus this unit's MPPT total (W)."""
+        if self.coordinator.data is None:
+            return None
+
+        battery = self.coordinator.data.get(self._battery_key)
+        if battery is None:
+            return None
+        solar = 0
+        for key in self._mppt_keys:
+            value = self.coordinator.data.get(key)
+            if value is not None:
+                solar += value
+        return round(battery + solar)
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",

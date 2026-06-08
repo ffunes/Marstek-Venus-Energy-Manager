@@ -7,16 +7,16 @@
         "data": {
           "consumption_sensor": "Netzverbrauchssensor",
           "solar_forecast_sensor": "Solarprognose-Sensor (optional)",
-          "household_consumption_sensor": "Haushaltsverbrauchssensor (optional)",
           "solar_production_sensor": "Solarproduktionssensor (optional)",
-          "meter_inverted": "Zählervorzeichen invertiert"
+          "meter_inverted": "Zählervorzeichen invertiert",
+          "max_contracted_power": "Maximale Vertragsleistung (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt. Der Controller passt die Batterien an, um diesen Wert nahe 0W zu halten.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet.",
-          "household_consumption_sensor": "Leistungssensor (W) zur Messung des gesamten Haushaltsverbrauchs. Wenn konfiguriert, verwenden prädiktive Ladung und Ladungsverzögerung echte Verbrauchsdaten anstatt sie aus der Batterieentladung zu schätzen.",
           "solar_production_sensor": "Echtzeit-PV-Produktionsleistungssensor (W/kW) von einem externen Wechselrichter, der nicht über die MPPT-Eingänge der Batterie geführt wird. Wird verwendet, um den Solar-Knoten im Energiefluss-Diagramm des Dashboards anzuzeigen. Leer lassen, wenn deine Module direkt den MPPT der Batterie speisen.",
-          "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt."
+          "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt.",
+          "max_contracted_power": "Gesamt-Vertragsleistung in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
       "batteries": {
@@ -187,16 +187,16 @@
           "end_time": "Endzeit (Niedrigtarif)",
           "days": "Wochentage",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "predictive_charging_mode": {
@@ -218,8 +218,8 @@
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
           "dp_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
@@ -227,8 +227,8 @@
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Wenn die preisbasierte Entladesteuerung aktiviert ist, wird dieser Wert auch als Entladeschwellenwert verwendet. Gleiche Einheit wie der Sensor verwenden: €/kWh für Nordpool/PVPC, CHF/kWh für CKW. Leer lassen, um alle Stunden zu verwenden und den Tagesdurchschnitt als Entladeschwellenwert zu nutzen.",
           "dp_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den konfigurierten maximalen Preisschwellenwert übersteigt. Wenn kein Schwellenwert konfiguriert ist, wird der automatisch aus dem Preissensor berechnete Tagesdurchschnitt verwendet. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "realtime_price_config": {
@@ -240,8 +240,8 @@
           "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
           "rt_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
@@ -249,8 +249,8 @@
           "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
           "rt_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Schwellenwert übersteigt. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "weekly_full_charge": {
@@ -428,16 +428,16 @@
         "data": {
           "consumption_sensor": "Netzverbrauchssensor",
           "solar_forecast_sensor": "Solarprognose-Sensor (optional)",
-          "household_consumption_sensor": "Haushaltsverbrauchssensor (optional)",
           "solar_production_sensor": "Solarproduktionssensor (optional)",
-          "meter_inverted": "Zählervorzeichen invertiert"
+          "meter_inverted": "Zählervorzeichen invertiert",
+          "max_contracted_power": "Maximale Vertragsleistung (W)"
         },
         "data_description": {
           "consumption_sensor": "Sensor, der importierte (+) oder exportierte (-) Leistung ins Netz anzeigt.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Wenn hier konfiguriert, wird er automatisch für prädiktive Ladung und Solarladungsverzögerung verwendet.",
-          "household_consumption_sensor": "Leistungssensor (W) zur Messung des gesamten Haushaltsverbrauchs. Wenn konfiguriert, verwenden prädiktive Ladung und Ladungsverzögerung echte Verbrauchsdaten anstatt sie aus der Batterieentladung zu schätzen.",
           "solar_production_sensor": "Echtzeit-PV-Produktionsleistungssensor (W/kW) von einem externen Wechselrichter, der nicht über die MPPT-Eingänge der Batterie geführt wird. Wird verwendet, um den Solar-Knoten im Energiefluss-Diagramm des Dashboards anzuzeigen. Leer lassen, wenn deine Module direkt den MPPT der Batterie speisen.",
-          "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt."
+          "meter_inverted": "Aktivieren Sie diese Option, wenn Ihr Zähler die umgekehrte Konvention verwendet: positiv = Export, negativ = Import. Die Einheit (W/kW) wird automatisch erkannt.",
+          "max_contracted_power": "Gesamt-Vertragsleistung in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden"
         }
       },
       "batteries": {
@@ -608,16 +608,16 @@
           "end_time": "Endzeit (Niedrigtarif)",
           "days": "Wochentage",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "start_time": "Startzeit des Ladefensters (z.B. 01:00, Niedrigtarif)",
           "end_time": "Endzeit des Ladefensters (z.B. 06:00)",
           "days": "Tage, an denen Netzladung erlaubt ist",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "predictive_charging_mode": {
@@ -639,8 +639,8 @@
           "max_price_threshold": "Maximaler Preisschwellenwert (€/kWh, optional)",
           "dp_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "price_integration_type": "Wählen Sie die Heimautomatisierungsintegration, die Strompreisdaten liefert",
@@ -648,8 +648,8 @@
           "max_price_threshold": "Stunden über diesem Preis werden nicht ausgewählt. Wenn die preisbasierte Entladesteuerung aktiviert ist, wird dieser Wert auch als Entladeschwellenwert verwendet. Gleiche Einheit wie der Sensor verwenden: €/kWh für Nordpool/PVPC, CHF/kWh für CKW. Leer lassen, um alle Stunden zu verwenden und den Tagesdurchschnitt als Entladeschwellenwert zu nutzen.",
           "dp_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den konfigurierten maximalen Preisschwellenwert übersteigt. Wenn kein Schwellenwert konfiguriert ist, wird der automatisch aus dem Preissensor berechnete Tagesdurchschnitt verwendet. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert (z.B. Solcast). Mit Solaranlage: konfigurieren — das System lädt nur dann aus dem Netz, wenn die Solarprognose unzureichend ist. Ohne Solaranlage: leer lassen — das System lädt, wenn die Batterieenergie für den Tag nicht ausreicht. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "realtime_price_config": {
@@ -661,8 +661,8 @@
           "average_price_sensor": "Tagesdurchschnittspreis-Sensor (optional)",
           "rt_price_discharge_control": "Nur entladen wenn Preis über Schwellenwert",
           "solar_forecast_sensor": "Solarprognose-Sensor (kWh)",
-          "max_contracted_power": "Maximale Vertragsleistung ICP (W)",
-          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)"
+          "predictive_safety_margin_kwh": "Solarprognose-Sicherheitspuffer (kWh)",
+          "predictive_grid_charge_margin_pct": "Prädiktive Netzladungs-Marge (%)"
         },
         "data_description": {
           "price_sensor": "Sensor, dessen Zustand der aktuelle Strompreis ist. Jeder Sensor, der den aktuellen Periodenpreis als Zustand anzeigt, funktioniert.",
@@ -670,8 +670,8 @@
           "average_price_sensor": "Wenn angegeben, wird dieser Wert als Schwellenwert anstelle des fixen Wertes verwendet. Leer lassen für den fixen Schwellenwert.",
           "rt_price_discharge_control": "Wenn aktiviert, entlädt die Batterie nur, wenn der aktuelle Strompreis den Schwellenwert übersteigt. Falls Entladezeitfenster konfiguriert sind, müssen beide Bedingungen erfüllt sein.",
           "solar_forecast_sensor": "Sensor, der die Solarproduktionsprognose in kWh liefert. Nicht erforderlich, wenn dieser Sensor bereits im ersten Schritt konfiguriert wurde — er wird automatisch verwendet.",
-          "max_contracted_power": "Gesamt-Vertragsleistung (ICP) in Watt. Das System überschreitet dieses Limit beim Laden nicht, um ein Auslösen der Sicherung zu vermeiden",
-          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität."
+          "predictive_safety_margin_kwh": "Zusätzlicher Energiepuffer, der der Verbrauchsprognose hinzugefügt wird. Nützlich, wenn die Solarprognose zu optimistisch ist. Auf 0 setzen zum Deaktivieren (Standard). Begrenzt auf Gesamtbatteriekapazität.",
+          "predictive_grid_charge_margin_pct": "Zusätzlicher Prozentsatz, der über das Solar-Defizit hinaus aus dem Netz geladen wird, um optimistische Solarprognosen abzufedern. Z. B. lädt ein Netzbedarf von 2 kWh bei 50% 3 kWh. 0 zum Deaktivieren (Standard). Auf die Lücke bis zum max. SOC begrenzt."
         }
       },
       "weekly_full_charge": {
@@ -916,6 +916,19 @@
       "system_daily_home_energy": {
         "name": "Täglicher Haushaltsverbrauch"
       },
+      "system_pd_control_quality": {
+        "name": "PD-Regelqualität",
+        "state": {
+          "stable": "Stabil",
+          "oscillating": "Schwingend",
+          "sluggish": "Träge",
+          "battery_limited": "Batteriebegrenzt",
+          "collecting_data": "Daten werden gesammelt"
+        }
+      },
+      "system_home_consumption": {
+        "name": "Haushaltsverbrauch"
+      },
       "system_daily_grid_import_energy": {
         "name": "Täglicher Netzbezug"
       },
@@ -1040,6 +1053,12 @@
       },
       "mppt4_power": {
         "name": "MPPT4-Leistung"
+      },
+      "solar_power": {
+        "name": "Solarleistung"
+      },
+      "battery_cell_power": {
+        "name": "Batteriezellenleistung"
       },
       "round_trip_efficiency_total": {
         "name": "Gesamtwirkungsgrad"
@@ -1190,6 +1209,17 @@
           "saturday": "Samstag",
           "sunday": "Sonntag"
         }
+      },
+      "pd_tuning_profile": {
+        "name": "PD-Tuning-Profil",
+        "state": {
+          "very_smooth": "Sehr sanft",
+          "smooth": "Sanft",
+          "balanced": "Ausgewogen",
+          "aggressive": "Aggressiv",
+          "very_aggressive": "Sehr aggressiv",
+          "custom": "Benutzerdefiniert"
+        }
       }
     },
     "number": {
@@ -1235,6 +1265,12 @@
       "pd_min_discharge_power": {
         "name": "PD Min. Entladeleistung"
       },
+      "pd_relay_cooldown": {
+        "name": "PD Relais-Mindestlaufzeit"
+      },
+      "pd_min_cycle_interval": {
+        "name": "PD Min. Zyklusintervall"
+      },
       "pd_target_grid_power": {
         "name": "PD Ziel-Netzleistung"
       },
@@ -1267,6 +1303,9 @@
       },
       "predictive_safety_margin_kwh": {
         "name": "Sicherheitspuffer Solarprognose"
+      },
+      "predictive_grid_charge_margin_pct": {
+        "name": "Prädiktive Netzladungs-Marge"
       }
     },
     "button": {

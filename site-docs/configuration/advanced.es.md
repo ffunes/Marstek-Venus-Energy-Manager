@@ -79,10 +79,13 @@ Ver [Balance neto horario](../features/hourly-net-balance.md) para el detalle de
 
 Permite ajustar los parámetros internos del controlador PD. Todos los valores son modificables también en tiempo de ejecución desde las entidades de configuración de la integración, sin necesidad de reiniciar.
 
+!!! tip "Mejor usa perfiles"
+    La mayoría de usuarios no necesita tocar esto a mano. El selector de **perfil de ajuste PD** aplica presets validados de `Kp`/`Kd`/límite de rampa en un clic, y el sensor de **calidad de control PD** indica si el resultado es estable, oscilante o lento. Ver [Controlador PD → Perfiles de ajuste](../features/pd-controller.md#perfiles-de-ajuste).
+
 | Parámetro | Por defecto | Rango | Descripción |
 |---|---|---|---|
-| **Kp** | `0.65` | 0.1 – 2.0 | Ganancia proporcional. Mayor valor = respuesta más rápida pero más sobreoscilación |
-| **Kd** | `0.5` | 0.0 – 2.0 | Ganancia derivativa. Mayor valor = transiciones más suaves pero respuesta más lenta |
+| **Kp** | `0.35` | 0.1 – 2.0 | Ganancia proporcional. Mayor valor = respuesta más rápida pero más sobreoscilación |
+| **Kd** | `0.3` | 0.0 – 2.0 | Ganancia derivativa. Mayor valor = transiciones más suaves pero respuesta más lenta |
 | **Deadband** | `40 W` | 0 – 200 W | Zona muerta. El controlador no actúa si el error es menor que este valor |
 | **Cambio máximo de potencia** | `800 W/ciclo` | 100 – 2000 W | Límite de variación por ciclo. Protege contra cambios bruscos |
 | **Histéresis direccional** | `60 W` | 0 – 200 W | Margen necesario para cambiar de carga a descarga o viceversa |

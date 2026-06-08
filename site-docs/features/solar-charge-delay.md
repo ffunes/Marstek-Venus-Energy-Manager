@@ -32,6 +32,9 @@ Every time the sensor value changes by more than 0.05 kWh, the integration re-ev
 
 Once the delay is unlocked it stays unlocked for the rest of the day.
 
+!!! note "Transient forecast gaps and manual re-evaluation"
+    A configured forecast sensor that reads `unavailable`/`unknown` for a moment — while it refreshes, or during the window after a Home Assistant restart before all sensors have loaded — no longer disables the delay for the whole day. The delay is held through a short grace window (sensor state `Waiting for forecast`) and only unlocks if the sensor stays unavailable past it. If the delay did already unlock and you want it back the same day, **toggle the Solar Charge Delay switch off and then on**: that re-evaluates the delay from scratch instead of waiting for the midnight reset.
+
 ## SOC setpoint
 
 An optional SOC setpoint (12–90 %, disabled by default) splits charging into two phases:

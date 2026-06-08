@@ -13,6 +13,11 @@ from .const import (
     DOMAIN,
     CONF_ENABLE_WEEKLY_FULL_CHARGE,
     CONF_WEEKLY_FULL_CHARGE_DAY,
+    CONF_PD_TUNING_PROFILE,
+    PD_PROFILE_CUSTOM,
+    PD_TUNING_PROFILES,
+    PD_TUNING_PROFILE_OPTIONS,
+    pd_profile_from_params,
 )
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
@@ -37,6 +42,9 @@ async def async_setup_entry(
     if entry.data.get(CONF_ENABLE_WEEKLY_FULL_CHARGE, False):
         entities.append(WeeklyFullChargeDaySelect(hass, entry))
 
+    # Add PD tuning profile select (system-level, always available)
+    entities.append(PdTuningProfileSelect(hass, entry))
+
     async_add_entities(entities)
 
 
@@ -52,7 +60,7 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_{definition['key']}"
+        self._attr_unique_id = f"{coordinator.device_key}_{definition['key']}"
         self._attr_options = list(definition["options"].keys())
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
@@ -87,7 +95,7 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
     def device_info(self):
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, f"{self.coordinator.host}_{self.coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self.coordinator.device_key}")},
             "name": self.coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -131,6 +139,74 @@ class WeeklyFullChargeDaySelect(SelectEntity):
         new_data[CONF_WEEKLY_FULL_CHARGE_DAY] = code
         self.hass.config_entries.async_update_entry(self.entry, data=new_data)
         _LOGGER.info("Weekly full charge day updated to %s (%s)", option, code)
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class PdTuningProfileSelect(SelectEntity):
+    """One-click PD tuning presets (system-level).
+
+    Selecting a preset writes its PD gain parameters (Kp, Kd, max power change)
+    into config_entry.data; the integration's existing config-entry update listener
+    then hot-reloads them. Deadband is intentionally left to the user. The "custom"
+    option leaves the sliders for manual fine-tuning. The displayed option is derived
+    from the live parameters, so moving a profiled slider by hand falls back to
+    "custom" automatically.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Initialize the PD tuning profile select."""
+        self.hass = hass
+        self.entry = entry
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "pd_tuning_profile"
+        self._attr_unique_id = f"{entry.entry_id}_pd_tuning_profile"
+        self._attr_icon = "mdi:tune-variant"
+        self._attr_options = list(PD_TUNING_PROFILE_OPTIONS)
+        self._attr_should_poll = False
+
+    @property
+    def current_option(self) -> str:
+        """Return the active profile.
+
+        An explicit "custom" selection sticks; otherwise the option is detected
+        from the live parameters so a manual slider change reflects as "custom".
+        """
+        if self.entry.data.get(CONF_PD_TUNING_PROFILE) == PD_PROFILE_CUSTOM:
+            return PD_PROFILE_CUSTOM
+        return pd_profile_from_params(self.entry.data)
+
+    async def async_select_option(self, option: str) -> None:
+        """Apply a profile (writes its gain params) or switch to manual mode."""
+        new_data = dict(self.entry.data)
+        new_data[CONF_PD_TUNING_PROFILE] = option
+        if option != PD_PROFILE_CUSTOM:
+            new_data.update(PD_TUNING_PROFILES[option])
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+        # The entry's update listener hot-reloads the controller's PD params.
+        _LOGGER.info("PD tuning profile set to %s", option)
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Refresh displayed option whenever the config entry changes.
+
+        Manual PD slider moves update config_entry.data via the number entities;
+        this keeps the profile select in sync (falling back to "custom").
+        """
+        self.async_on_remove(self.entry.add_update_listener(self._handle_entry_update))
+
+    async def _handle_entry_update(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        """Re-render the current option after a config entry update."""
         self.async_write_ha_state()
 
     @property

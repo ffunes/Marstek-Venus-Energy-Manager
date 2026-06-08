@@ -79,10 +79,13 @@ See [Hourly net balance](../features/hourly-net-balance.md) for how it works.
 
 Allows tuning the internal PD controller parameters. All values can also be adjusted at runtime from the integration's configuration entities without restarting.
 
+!!! tip "Prefer profiles"
+    Most users don't need to touch these by hand. The **PD tuning profile** selector applies vetted `Kp`/`Kd`/rate-limit presets in one click, and the **PD Control Quality** sensor shows whether the result is stable, oscillating or sluggish. See [PD controller → Tuning profiles](../features/pd-controller.md#tuning-profiles).
+
 | Parameter | Default | Range | Description |
 |---|---|---|---|
-| **Kp** | `0.65` | 0.1 – 2.0 | Proportional gain. Higher = faster response but more overshoot |
-| **Kd** | `0.5` | 0.0 – 2.0 | Derivative gain. Higher = smoother transitions but slower response |
+| **Kp** | `0.35` | 0.1 – 2.0 | Proportional gain. Higher = faster response but more overshoot |
+| **Kd** | `0.3` | 0.0 – 2.0 | Derivative gain. Higher = smoother transitions but slower response |
 | **Deadband** | `40 W` | 0 – 200 W | Dead zone. Controller does not act if the error is smaller than this value |
 | **Max power change** | `800 W/cycle` | 100 – 2000 W | Maximum change per cycle. Protects against abrupt swings |
 | **Direction hysteresis** | `60 W` | 0 – 200 W | Margin required to switch between charging and discharging |

@@ -2,7 +2,7 @@
 
 Owns:
 - Persistent stores for consumption history, household/solar accumulators and solar T_start
-- Daily 23:55 (local) capture of battery discharge or household consumption
+- Daily 23:55 (local) capture of home consumption (household sensor or derived)
 - Startup backfill from recorder history
 - Real-time accumulation of household consumption and solar production
 - Solar T_start detection plus astronomical sunrise/T_end estimation
@@ -67,7 +67,11 @@ class ConsumptionTracker:
         self._daily_solar_last_time: Optional[float] = None
         self._daily_home_last_time: Optional[float] = None
         self._daily_grid_last_time: Optional[float] = None
-        self._grid_at_min_soc_save_counter: int = 0
+        # Previous power sample (kW) for trapezoidal integration of the daily totals
+        self._daily_solar_last_power_kw: Optional[float] = None
+        self._daily_home_last_power_kw: Optional[float] = None
+        self._daily_grid_last_power_kw: Optional[float] = None
+        self._grid_at_min_soc_last_save_mono: float = 0.0
         self._accumulator_last_save_monotonic: float = 0.0
         self._solar_noon_cache: Optional[tuple[date, float]] = None
 
@@ -147,9 +151,11 @@ class ConsumptionTracker:
         asyncio.create_task(self.async_save_accumulators())
 
     async def async_save_accumulators(self) -> None:
-        """Await-able persist of household and solar accumulators (used on unload)."""
-        if not self._controller.household_consumption_sensor:
-            return
+        """Await-able persist of household and solar accumulators (used on unload).
+
+        Saved whether or not a dedicated household sensor exists: with none, the
+        household accumulator holds the derived home-consumption total.
+        """
         ctrl = self._controller
         try:
             await self._accumulator_store.async_save({
@@ -162,8 +168,6 @@ class ConsumptionTracker:
 
     async def load_accumulators(self) -> None:
         """Restore household and solar accumulators from storage (today's values only)."""
-        if not self._controller.household_consumption_sensor:
-            return
         try:
             data = await self._accumulator_store.async_load()
             if not data:
@@ -244,6 +248,7 @@ class ConsumptionTracker:
                 )
             ctrl._daily_solar_energy_kwh = 0.0
             self._daily_solar_last_time = None
+            self._daily_solar_last_power_kw = None
             ctrl._daily_solar_energy_date = today
         if ctrl._daily_home_energy_date != today:
             if ctrl._daily_home_energy_date is not None:
@@ -253,6 +258,7 @@ class ConsumptionTracker:
                 )
             ctrl._daily_home_energy_kwh = 0.0
             self._daily_home_last_time = None
+            self._daily_home_last_power_kw = None
             ctrl._daily_home_energy_date = today
         if ctrl._daily_grid_energy_date != today:
             if ctrl._daily_grid_energy_date is not None:
@@ -265,6 +271,7 @@ class ConsumptionTracker:
             ctrl._daily_grid_import_energy_kwh = 0.0
             ctrl._daily_grid_export_energy_kwh = 0.0
             self._daily_grid_last_time = None
+            self._daily_grid_last_power_kw = None
             ctrl._daily_grid_energy_date = today
 
     def _read_power_kw(self, entity_id: str) -> Optional[float]:
@@ -280,36 +287,82 @@ class ConsumptionTracker:
         return value if unit == "kW" else value / 1000.0
 
     async def accumulate_daily_solar_energy(self) -> None:
-        """Integrate the real solar production power sensor → exact daily kWh."""
+        """Integrate the real solar production power sensor → exact daily kWh.
+
+        Trapezoidal rule: averages the previous and current sample so a ramping
+        production curve is not systematically miscounted (left-Riemann bias).
+        """
         ctrl = self._controller
         if not ctrl.solar_production_sensor:
             return
         power_kw = self._read_power_kw(ctrl.solar_production_sensor)
         if power_kw is None:
             self._daily_solar_last_time = None
+            self._daily_solar_last_power_kw = None
             return
+        power_kw = max(0.0, power_kw)
         now = monotonic()
-        if self._daily_solar_last_time is not None:
+        if self._daily_solar_last_time is not None and self._daily_solar_last_power_kw is not None:
             dt_hours = (now - self._daily_solar_last_time) / 3600.0
             if dt_hours > 0:
-                ctrl._daily_solar_energy_kwh += max(0.0, power_kw) * dt_hours
+                avg_kw = (self._daily_solar_last_power_kw + power_kw) / 2.0
+                ctrl._daily_solar_energy_kwh += avg_kw * dt_hours
         self._daily_solar_last_time = now
+        self._daily_solar_last_power_kw = power_kw
+
+    def _derive_home_power_kw(self) -> Optional[float]:
+        """Derive instantaneous home consumption (kW) from grid + battery AC + solar.
+
+        Mirrors the aggregate Home Consumption power sensor (home = grid +
+        sum(ac_power) + external_solar) so the daily energy total integrates
+        exactly what the dashboard power flow shows. Used when no dedicated
+        household_consumption_sensor is configured.
+        """
+        ctrl = self._controller
+        if not ctrl.consumption_sensor:
+            return None
+        grid_kw = self._read_power_kw(ctrl.consumption_sensor)
+        if grid_kw is None:
+            return None
+        total_kw = grid_kw
+        for coordinator in ctrl.coordinators:
+            if coordinator.data:
+                ac = coordinator.data.get("ac_power")
+                if ac is not None:
+                    total_kw += ac / 1000.0
+        if ctrl.solar_production_sensor:
+            solar_kw = self._read_power_kw(ctrl.solar_production_sensor)
+            if solar_kw is not None:
+                total_kw += solar_kw
+        return max(0.0, total_kw)
 
     async def accumulate_daily_home_energy(self) -> None:
-        """Integrate the real household consumption power sensor → exact daily kWh."""
+        """Integrate household consumption power → exact daily kWh.
+
+        Prefers the user's dedicated household_consumption_sensor; when none is
+        configured, derives the same value the power-flow dashboard shows from
+        grid + battery AC + solar. Trapezoidal rule averages the previous and
+        current sample so a ramping load curve is not systematically miscounted
+        (left-Riemann bias).
+        """
         ctrl = self._controller
-        if not ctrl.household_consumption_sensor:
-            return
-        power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
+        if ctrl.use_household_consumption_sensor:
+            power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
+        else:
+            power_kw = self._derive_home_power_kw()
         if power_kw is None:
             self._daily_home_last_time = None
+            self._daily_home_last_power_kw = None
             return
+        power_kw = max(0.0, power_kw)
         now = monotonic()
-        if self._daily_home_last_time is not None:
+        if self._daily_home_last_time is not None and self._daily_home_last_power_kw is not None:
             dt_hours = (now - self._daily_home_last_time) / 3600.0
             if dt_hours > 0:
-                ctrl._daily_home_energy_kwh += max(0.0, power_kw) * dt_hours
+                avg_kw = (self._daily_home_last_power_kw + power_kw) / 2.0
+                ctrl._daily_home_energy_kwh += avg_kw * dt_hours
         self._daily_home_last_time = now
+        self._daily_home_last_power_kw = power_kw
 
     async def accumulate_daily_grid_energy(self) -> None:
         """Integrate the net grid meter → exact daily import/export kWh.
@@ -319,19 +372,47 @@ class ConsumptionTracker:
         panel can show both totals.
         """
         ctrl = self._controller
-        power_kw = self._read_power_kw(ctrl.consumption_sensor)
-        if power_kw is None:
+        # Use the same meter transform as the PD loop so a user-inverted meter
+        # (meter_inverted) keeps the +import / -export convention; otherwise the
+        # import and export totals would be swapped.
+        grid_w = ctrl._apply_meter_transform(self._hass.states.get(ctrl.consumption_sensor))
+        if grid_w is None:
             self._daily_grid_last_time = None
+            self._daily_grid_last_power_kw = None
             return
+        power_kw = grid_w / 1000.0
         now = monotonic()
-        if self._daily_grid_last_time is not None:
+        # Trapezoidal rule with zero-crossing split: when the meter sign flips
+        # between samples (import↔export), the interval is split at the crossing so
+        # each half is booked to the correct side instead of misclassifying the
+        # whole interval by the start sample's sign.
+        if self._daily_grid_last_time is not None and self._daily_grid_last_power_kw is not None:
             dt_hours = (now - self._daily_grid_last_time) / 3600.0
             if dt_hours > 0:
-                if power_kw >= 0:
-                    ctrl._daily_grid_import_energy_kwh += power_kw * dt_hours
+                prev_kw = self._daily_grid_last_power_kw
+                curr_kw = power_kw
+                if (prev_kw >= 0) == (curr_kw >= 0):
+                    kwh = (prev_kw + curr_kw) / 2.0 * dt_hours
+                    if kwh >= 0:
+                        ctrl._daily_grid_import_energy_kwh += kwh
+                    else:
+                        ctrl._daily_grid_export_energy_kwh += -kwh
                 else:
-                    ctrl._daily_grid_export_energy_kwh += -power_kw * dt_hours
+                    frac = abs(prev_kw) / (abs(prev_kw) + abs(curr_kw))
+                    dt_first = dt_hours * frac
+                    dt_second = dt_hours - dt_first
+                    kwh_first = prev_kw / 2.0 * dt_first
+                    kwh_second = curr_kw / 2.0 * dt_second
+                    if kwh_first >= 0:
+                        ctrl._daily_grid_import_energy_kwh += kwh_first
+                    else:
+                        ctrl._daily_grid_export_energy_kwh += -kwh_first
+                    if kwh_second >= 0:
+                        ctrl._daily_grid_import_energy_kwh += kwh_second
+                    else:
+                        ctrl._daily_grid_export_energy_kwh += -kwh_second
         self._daily_grid_last_time = now
+        self._daily_grid_last_power_kw = power_kw
 
     # ------------------------------------------------------------------
     # Consumption history queries
@@ -346,15 +427,14 @@ class ConsumptionTracker:
         return DEFAULT_BASE_CONSUMPTION_KWH
 
     async def get_dynamic_base_consumption(self) -> float:
-        """Get dynamic base consumption from 7-day average of daily discharge.
+        """Get dynamic base consumption from the 7-day average of daily home consumption.
 
-        Uses the daily discharging energy sensor which resets every 24 hours.
-        Daily values are automatically captured at 23:55 by scheduled task.
-        This method performs opportunistic backfill from history if needed.
+        Daily values are captured at 23:55 from the windowed home-energy
+        accumulator; this method opportunistically backfills missing days from
+        the Home Consumption sensor's recorder history.
         """
         ctrl = self._controller
         today = date.today()
-        entity_id = "sensor.marstek_venus_system_daily_discharging_energy"
 
         # OPPORTUNISTIC BACKFILL: Replace default entries with real data from HA history
         # This recovers real data after restarts or when defaults were pre-populated
@@ -365,21 +445,18 @@ class ConsumptionTracker:
             for days_ago in range(1, 8):  # Look back 7 days (excluding today)
                 past_date = today - timedelta(days=days_ago)
                 if past_date not in real_data_dates:
-                    if ctrl.household_consumption_sensor:
-                        value = await self.backfill_household_from_history(past_date)
-                        if value is not None and value >= 1.5:
-                            replaced = False
-                            for i, (d, c) in enumerate(ctrl._daily_consumption_history):
-                                if d == past_date:
-                                    ctrl._daily_consumption_history[i] = (past_date, value)
-                                    replaced = True
-                                    break
-                            if not replaced:
-                                ctrl._daily_consumption_history.append((past_date, value))
-                            ctrl._daily_consumption_history.sort(key=lambda x: x[0])
-                            ctrl._daily_consumption_history = ctrl._daily_consumption_history[-7:]
-                    else:
-                        await self.capture_from_history(entity_id, past_date)
+                    value = await self.backfill_home_from_history(past_date)
+                    if value is not None and value >= 1.5:
+                        replaced = False
+                        for i, (d, c) in enumerate(ctrl._daily_consumption_history):
+                            if d == past_date:
+                                ctrl._daily_consumption_history[i] = (past_date, value)
+                                replaced = True
+                                break
+                        if not replaced:
+                            ctrl._daily_consumption_history.append((past_date, value))
+                        ctrl._daily_consumption_history.sort(key=lambda x: x[0])
+                        ctrl._daily_consumption_history = ctrl._daily_consumption_history[-7:]
                     await asyncio.sleep(0.1)  # Small delay between history queries
 
         # Calculate average from history
@@ -413,125 +490,32 @@ class ConsumptionTracker:
 
         return average
 
-    async def capture_from_history(self, entity_id: str, target_date: date) -> None:
-        """Capture daily consumption from HA history for a specific date.
+    def _home_consumption_entity_id(self) -> Optional[str]:
+        """Resolve the aggregate Home Consumption power sensor's entity_id.
 
-        Gets the maximum value from the target date (final reading before reset).
-        Also queries the grid-at-min-soc sensor and sums both values to get the
-        full daily consumption estimate (battery discharge + unmet demand).
+        That sensor already encapsulates "household sensor if configured, else
+        derived (grid + battery AC + solar)", so its recorder history is the
+        single source for backfilling daily home consumption.
         """
-        ctrl = self._controller
+        from homeassistant.helpers import entity_registry as er
 
-        try:
-            from homeassistant.components.recorder import history
-        except ImportError:
-            _LOGGER.warning("Recorder history module not available for backfill")
-            return
-
-        local_tz = dt_util.get_time_zone(self._hass.config.time_zone) or dt_util.UTC
-        start_time = datetime.combine(target_date, datetime.min.time()).replace(tzinfo=local_tz)
-        end_time = datetime.combine(target_date, datetime.max.time()).replace(tzinfo=local_tz)
-
-        _LOGGER.debug(
-            "Backfill attempt: entity=%s, date=%s, range=%s to %s",
-            entity_id, target_date, start_time, end_time,
+        ent_reg = er.async_get(self._hass)
+        return ent_reg.async_get_entity_id(
+            "sensor", DOMAIN, "marstek_venus_system_system_home_consumption"
         )
 
-        try:
-            from homeassistant.components.recorder import get_instance
-            recorder_instance = get_instance(self._hass)
-            states = await recorder_instance.async_add_executor_job(
-                history.state_changes_during_period,
-                self._hass,
-                start_time,
-                end_time,
-                entity_id,
-            )
+    async def backfill_home_from_history(self, target_date: date) -> Optional[float]:
+        """Integrate home power history for target_date → kWh.
 
-            if entity_id not in states or len(states[entity_id]) == 0:
-                _LOGGER.debug("No history found for %s on %s", entity_id, target_date)
-                return
-
-            # Find the maximum value (final reading before reset)
-            max_value = 0.0
-            state_count = 0
-            for state in states[entity_id]:
-                state_count += 1
-                if state.state not in ['unknown', 'unavailable']:
-                    try:
-                        value = float(state.state)
-                        max_value = max(max_value, value)
-                    except (ValueError, TypeError):
-                        continue
-
-            _LOGGER.debug(
-                "Backfill query result: %d states found, max_value=%.2f for %s on %s",
-                state_count, max_value, entity_id, target_date,
-            )
-
-            # Also query the grid-at-min-soc sensor for this date and add it
-            grid_min_soc_entity_id = "sensor.marstek_venus_system_daily_grid_at_min_soc_energy"
-            grid_min_soc_value = 0.0
-            try:
-                grid_states = await recorder_instance.async_add_executor_job(
-                    history.state_changes_during_period,
-                    self._hass,
-                    start_time,
-                    end_time,
-                    grid_min_soc_entity_id,
-                )
-                if grid_min_soc_entity_id in grid_states:
-                    for state in grid_states[grid_min_soc_entity_id]:
-                        if state.state not in ['unknown', 'unavailable']:
-                            try:
-                                grid_min_soc_value = max(grid_min_soc_value, float(state.state))
-                            except (ValueError, TypeError):
-                                continue
-            except Exception as grid_err:
-                _LOGGER.debug(
-                    "Could not query grid-at-min-soc history for %s: %s", target_date, grid_err
-                )
-
-            total_value = round(max_value + grid_min_soc_value, 2)
-            if grid_min_soc_value > 0:
-                _LOGGER.debug(
-                    "Backfill grid-at-min-soc for %s: +%.3f kWh → total=%.3f kWh",
-                    target_date, grid_min_soc_value, total_value,
-                )
-
-            if total_value >= 1.5:
-                # Replace existing entry for this date (including defaults) or append
-                replaced = False
-                for i, (d, c) in enumerate(ctrl._daily_consumption_history):
-                    if d == target_date:
-                        ctrl._daily_consumption_history[i] = (target_date, total_value)
-                        replaced = True
-                        break
-                if not replaced:
-                    ctrl._daily_consumption_history.append((target_date, total_value))
-
-                _LOGGER.info(
-                    "Captured daily consumption from history: %.1f kWh for %s (%s, history: %d days)",
-                    total_value, target_date,
-                    "replaced default" if replaced else "new entry",
-                    len(ctrl._daily_consumption_history),
-                )
-
-                # Cleanup: keep only the 7 most recent entries
-                ctrl._daily_consumption_history.sort(key=lambda x: x[0])
-                ctrl._daily_consumption_history = ctrl._daily_consumption_history[-7:]
-        except Exception as e:
-            _LOGGER.error("Failed to capture from history for %s on %s: %s", entity_id, target_date, e)
-
-    async def backfill_household_from_history(self, target_date: date) -> Optional[float]:
-        """Integrate household power sensor history for target_date → kWh.
-
-        Only counts time intervals that fall OUTSIDE the charging_time_slot
-        (the solar+battery window). Returns None if no usable data was found.
+        Integrates the aggregate Home Consumption sensor, which already resolves to
+        the household sensor or the derived value (grid + battery AC + solar) per the
+        active precedence. Only counts time intervals that fall OUTSIDE the
+        charging_time_slot (the solar+battery window). Returns None if no usable data.
         """
         ctrl = self._controller
 
-        if not ctrl.household_consumption_sensor:
+        source_entity = self._home_consumption_entity_id()
+        if not source_entity:
             return None
 
         # Skip days that are not covered by the charging slot (battery doesn't operate those days)
@@ -579,15 +563,15 @@ class ConsumptionTracker:
                 self._hass,
                 start_time,
                 end_time,
-                ctrl.household_consumption_sensor,
+                source_entity,
             )
         except Exception as e:
-            _LOGGER.error("Household backfill query failed for %s: %s", target_date, e)
+            _LOGGER.error("Home consumption backfill query failed for %s: %s", target_date, e)
             return None
 
-        entity_states = states_map.get(ctrl.household_consumption_sensor, [])
+        entity_states = states_map.get(source_entity, [])
         if not entity_states:
-            _LOGGER.debug("No household sensor history for %s", target_date)
+            _LOGGER.debug("No home consumption history for %s", target_date)
             return None
 
         # Integrate power × dt over the consumption window
@@ -702,7 +686,6 @@ class ConsumptionTracker:
         if not ctrl.predictive_charging_enabled:
             return
 
-        entity_id = "sensor.marstek_venus_system_daily_discharging_energy"
         today = date.today()
 
         _LOGGER.info(
@@ -712,25 +695,6 @@ class ConsumptionTracker:
             sum(1 for _, c in ctrl._daily_consumption_history if c != DEFAULT_BASE_CONSUMPTION_KWH),
         )
 
-        if not ctrl.household_consumption_sensor:
-            # Battery discharge method: also capture today's running total from coordinators
-            coordinators_with_data = [c for c in ctrl.coordinators if c.data]
-            if coordinators_with_data:
-                today_value = round(sum(
-                    c.data.get("total_daily_discharging_energy", 0)
-                    for c in coordinators_with_data
-                ) + ctrl._daily_grid_at_min_soc_kwh, 2)
-                if today_value >= 1.5:
-                    for i, (d, c) in enumerate(ctrl._daily_consumption_history):
-                        if d == today:
-                            if c == DEFAULT_BASE_CONSUMPTION_KWH:
-                                ctrl._daily_consumption_history[i] = (today, today_value)
-                                _LOGGER.info(
-                                    "Startup backfill: replaced today's default with current value: %.2f kWh",
-                                    today_value,
-                                )
-                            break
-
         # Try to backfill past days from recorder history
         real_data_dates = {
             d for d, c in ctrl._daily_consumption_history if c != DEFAULT_BASE_CONSUMPTION_KWH
@@ -739,21 +703,18 @@ class ConsumptionTracker:
         for days_ago in range(1, 8):
             past_date = today - timedelta(days=days_ago)
             if past_date not in real_data_dates:
-                if ctrl.household_consumption_sensor:
-                    value = await self.backfill_household_from_history(past_date)
-                    if value is not None and value >= 1.5:
-                        replaced = False
-                        for i, (d, c) in enumerate(ctrl._daily_consumption_history):
-                            if d == past_date:
-                                ctrl._daily_consumption_history[i] = (past_date, value)
-                                replaced = True
-                                break
-                        if not replaced:
-                            ctrl._daily_consumption_history.append((past_date, value))
-                        ctrl._daily_consumption_history.sort(key=lambda x: x[0])
-                        ctrl._daily_consumption_history = ctrl._daily_consumption_history[-7:]
-                else:
-                    await self.capture_from_history(entity_id, past_date)
+                value = await self.backfill_home_from_history(past_date)
+                if value is not None and value >= 1.5:
+                    replaced = False
+                    for i, (d, c) in enumerate(ctrl._daily_consumption_history):
+                        if d == past_date:
+                            ctrl._daily_consumption_history[i] = (past_date, value)
+                            replaced = True
+                            break
+                    if not replaced:
+                        ctrl._daily_consumption_history.append((past_date, value))
+                    ctrl._daily_consumption_history.sort(key=lambda x: x[0])
+                    ctrl._daily_consumption_history = ctrl._daily_consumption_history[-7:]
                 await asyncio.sleep(0.1)
                 backfill_count += 1
 
@@ -822,14 +783,11 @@ class ConsumptionTracker:
         )
 
     async def capture_daily_consumption(self, now=None) -> None:
-        """Scheduled task to capture daily battery consumption.
+        """Scheduled task to capture daily home consumption.
 
-        Runs daily at 23:55 to capture the day's accumulated discharge energy
-        before the sensor resets at midnight. This ensures we always have
-        historical data for predictive charging calculations.
-
-        Reads directly from coordinator data (Modbus registers) to avoid
-        dependency on entity_id naming.
+        Runs daily at 23:55 to snapshot the windowed home-energy accumulator
+        into the 7-day history before it resets at midnight, so predictive
+        charging always has historical data.
 
         Args:
             now: Timestamp from scheduler (unused, for compatibility)
@@ -841,39 +799,21 @@ class ConsumptionTracker:
 
         today = date.today()
 
-        # --- BIFURCATION: household sensor vs battery discharge estimation ---
-        if ctrl.household_consumption_sensor:
-            current_value = round(ctrl._household_energy_accumulator, 2)
-            if current_value < 1.5:
-                _LOGGER.info(
-                    "Daily consumption capture: household accumulator low "
-                    "(%.2f kWh) — skipping. Today's value will be recovered "
-                    "from recorder history on the next predictive-charging cycle.",
-                    current_value,
-                )
-                return
-        else:
-            coordinators_with_data = [c for c in ctrl.coordinators if c.data]
-            if not coordinators_with_data:
-                _LOGGER.warning("Daily consumption capture: no coordinators with data available")
-                return
-
-            current_value = None  # assigned in try block below
+        # Consumption comes from the windowed home-energy accumulator, which
+        # integrates the household sensor when configured, otherwise the derived
+        # home power (grid + battery AC + solar). Both measure the same quantity:
+        # total home load during the solar+battery window.
+        current_value = round(ctrl._household_energy_accumulator, 2)
+        if current_value < 1.5:
+            _LOGGER.info(
+                "Daily consumption capture: accumulator low (%.2f kWh) — skipping. "
+                "Today's value will be recovered from recorder history on the next "
+                "predictive-charging cycle.",
+                current_value,
+            )
+            return
 
         try:
-            if not ctrl.household_consumption_sensor:
-                current_value = round(sum(
-                    c.data.get("total_daily_discharging_energy", 0)
-                    for c in coordinators_with_data
-                ) + ctrl._daily_grid_at_min_soc_kwh, 2)
-
-            if current_value < 1.5:
-                _LOGGER.warning(
-                    "Daily consumption capture: value too low (%.2f kWh), skipping",
-                    current_value,
-                )
-                return
-
             has_today = any(d == today for d, _ in ctrl._daily_consumption_history)
 
             if has_today:
@@ -1106,8 +1046,6 @@ class ConsumptionTracker:
         timestamp so the next sample doesn't integrate over the reset gap.
         """
         ctrl = self._controller
-        if not ctrl.household_consumption_sensor:
-            return
 
         today = date.today()
         if ctrl._household_accumulator_date != today:
@@ -1197,37 +1135,28 @@ class ConsumptionTracker:
         return max(0.0, (to_h - from_h) - overlap)
 
     async def accumulate_household_consumption(self) -> None:
-        """Integrate household power sensor → kWh accumulator (called every control cycle).
+        """Integrate home power → kWh accumulator (called every control cycle).
 
-        Only accumulates during the solar+battery window (outside charging_time_slot).
-        Uses monotonic time to avoid issues with system clock changes.
+        Prefers the dedicated household_consumption_sensor; when none is configured,
+        derives the same home power the dashboard shows (grid + battery AC + solar)
+        so installs without a household sensor still get an accurate consumption
+        estimate for predictive charging. Only accumulates during the solar+battery
+        window (outside charging_time_slot). Uses monotonic time to avoid issues
+        with system clock changes.
         """
         ctrl = self._controller
-
-        if not ctrl.household_consumption_sensor:
-            return
 
         if not self.is_in_consumption_window():
             # Outside measurement window — pause accumulation but don't reset timer
             self._household_last_accumulation_time = None
             return
 
-        state = self._hass.states.get(ctrl.household_consumption_sensor)
-        if state is None or state.state in ('unknown', 'unavailable'):
-            if state is None:
-                _LOGGER.warning(
-                    "Household consumption sensor %s not found",
-                    ctrl.household_consumption_sensor,
-                )
+        if ctrl.use_household_consumption_sensor:
+            power_kw = self._read_power_kw(ctrl.household_consumption_sensor)
+        else:
+            power_kw = self._derive_home_power_kw()
+        if power_kw is None:
             return
-
-        try:
-            power_w = float(state.state)
-        except (ValueError, TypeError):
-            return
-
-        unit = state.attributes.get("unit_of_measurement", "W")
-        power_kw = power_w / 1000.0 if unit == "W" else power_w
 
         # Adjust for excluded devices: remove power the battery doesn't cover and
         # add power the battery covers that isn't visible to the home sensor.
@@ -1303,12 +1232,13 @@ class ConsumptionTracker:
         """Persist consumption history every ~5 min during grid-at-min-soc accumulation.
 
         Called from the PD control loop when accumulating grid imports while SOC
-        is pinned to min_soc. Throttles writes to once every ~120 cycles
-        (~5 min at 2.5 s/cycle).
+        is pinned to min_soc. Throttles writes to once every ~5 min. Uses elapsed
+        monotonic time, not a cycle count, because the control loop is event-driven
+        (variable cadence) — a count would fire faster or slower with the sensor rate.
         """
-        self._grid_at_min_soc_save_counter += 1
-        if self._grid_at_min_soc_save_counter >= 120:
-            self._grid_at_min_soc_save_counter = 0
+        now_mono = monotonic()
+        if now_mono - self._grid_at_min_soc_last_save_mono >= 300:
+            self._grid_at_min_soc_last_save_mono = now_mono
             await self.save_consumption_history()
 
     async def async_save_all(self) -> None:

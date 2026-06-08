@@ -138,6 +138,8 @@ When a battery consistently fails to deliver the commanded power — for example
 
 A battery is flagged as non-responsive when its measured output is below 5% of the commanded setpoint for **3 consecutive control cycles**. Once flagged, it enters a **5-minute exclusion window** during which it receives no new commands and the remaining batteries absorb its share of the load. After the window expires the fail counter resets and the battery becomes eligible again.
 
+Discharge refusals at low SOC are exempt. At or below **20% SOC** (or just above the configured minimum SOC), the BMS can cut discharge on its own — for example a weak cell sagging under load — even though the reported SOC is still above the minimum. The battery then acknowledges the command but delivers 0 W; this is treated as an expected BMS cutoff rather than a fault, so it stays in the pool. This mirrors the high-SOC BMS-cutoff handling on the charge side.
+
 This mechanism prevents a single misbehaving battery from silently degrading system performance without raising alarms or requiring manual intervention.
 
 ## Compatible modes

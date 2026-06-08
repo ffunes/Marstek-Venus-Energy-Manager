@@ -13,6 +13,9 @@ Carga las baterías al **100 % una vez por semana** para que el pack llegue a la
 
 La carga semanal completa usa el mismo perfil de voltaje que una batería configurada normalmente con `max_soc = 100`. La función semanal solo eleva el objetivo a 100 %; no usa un algoritmo de balanceo distinto.
 
+!!! note "SOC desviado"
+    Si un pack llega a 3.58 V mientras el BMS sigue reportando un SOC por debajo del 90 %, la carga *no* se pausa en el paso 4: la integración sigue cargando a 95 W hasta que el BMS corta, *intentando* que recalibre el SOC al 100 % para que la carga semanal pueda completarse. Es de mejor esfuerzo y depende del firmware del BMS — no está garantizado. Ver [Recalibración de SOC con tensión alta atascada](cell-balance-monitor.md#recalibracion-de-soc-con-tension-alta-atascada).
+
 ## Monitor de equilibrio de celdas
 
 El **monitor de equilibrio de celdas** está siempre activo. Registra la diferencia de tensión entre la celda más alta y la más baja tras cada medición en tensión alta, y mantiene actualizados los sensores, la tendencia y las alertas.

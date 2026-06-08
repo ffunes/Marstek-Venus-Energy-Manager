@@ -17,9 +17,9 @@ Automatically selects the **cheapest hours of the day** to cover the calculated 
 | **Price integration type** | Nordpool / PVPC / CKW / EPEX Spot / ENTSO-e |
 | **Electricity price sensor** | HA entity with the current price (and hourly forecast attributes) |
 | **Max price threshold (€)** | (Optional) Price ceiling; does not charge even during "cheap" hours if the price exceeds this value. Also used as the discharge threshold when price-based discharge control is enabled |
-| **Maximum contracted grid power ICP (W)** | Grid limit used to calculate required charging duration |
 | **Only discharge when price is above threshold** | (Optional) Price-gated discharge — see below |
 | **Solar forecast safety margin (kWh)** | (Optional) Extra energy buffer added to consumption forecast before deciding whether to charge (default 0 kWh) |
+| **Predictive grid charge margin (%)** | (Optional) Tops up the grid-charge amount to hedge optimistic solar forecasts — e.g. a 2 kWh grid need at 50 % charges 3 kWh. Capped at the gap to max SOC (default 0 %) |
 
 ![Configuration form — Dynamic Pricing mode](../../assets/screenshots/configuration/predictive-charging/dynamic-pricing-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
@@ -47,7 +47,7 @@ If HA restarts after the 00:05 window without a prior evaluation, the controller
 
 The **"Only discharge when price is above threshold"** option adds an extra condition to discharge behaviour.
 
-When active, **every controller cycle (~2.5 s)** checks whether the current price allows discharge:
+When active, **every controller cycle (event-driven)** checks whether the current price allows discharge:
 
 ```
 If current_price > threshold:

@@ -75,6 +75,7 @@ plugins:
             Multi-battery management: Gestión multi-batería
             Daily consumption estimate: Estimación de consumo diario
             Weekly full charge: Carga semanal completa
+            Cell balance monitor: Monitor de equilibrio de celdas
             Peak shaving: Peak shaving
             Solar charge delay: Retraso de carga solar
             Load exclusion: Exclusión de cargas
@@ -138,6 +139,7 @@ nav:
       - Multi-battery management: features/multi-battery.md
       - Daily consumption estimate: features/consumption-estimate.md
       - Weekly full charge: features/weekly-full-charge.md
+      - Cell balance monitor: features/cell-balance-monitor.md
       - Peak shaving: features/peak-shaving.md
       - Solar charge delay: features/solar-charge-delay.md
       - Load exclusion: features/load-exclusion.md

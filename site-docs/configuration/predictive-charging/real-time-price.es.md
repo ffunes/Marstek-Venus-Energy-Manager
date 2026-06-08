@@ -1,6 +1,6 @@
 # Carga predictiva — Modo Precio en Tiempo Real
 
-Activa o desactiva la carga desde la red en cada ciclo del controlador (~2,5 s) en función del **precio actual de la electricidad**.
+Activa o desactiva la carga desde la red en cada ciclo del controlador (dirigido por eventos) en función del **precio actual de la electricidad**.
 
 A diferencia del Modo Precio Dinámico, no requiere previsión de precios ni evaluación nocturna. Reacciona puramente al precio en curso.
 
@@ -12,14 +12,14 @@ A diferencia del Modo Precio Dinámico, no requiere previsión de precios ni eva
 | **Umbral máximo de precio (€)** | (Opcional) Precio por debajo del cual se activa la carga desde la red |
 | **Sensor de precio medio diario** | (Opcional) Umbral dinámico en lugar del valor fijo |
 | **Descargar solo cuando el precio supere el umbral** | (Opcional) Descarga condicionada al precio actual — ver abajo |
-| **Potencia máxima contratada ICP (W)** | Potencia máxima al cargar para evitar disparar el diferencial (por defecto 7000 W) |
 | **Margen de seguridad de previsión solar (kWh)** | Buffer de energía adicional añadido a la previsión de consumo antes de decidir si cargar (por defecto 0 kWh) |
+| **Margen de carga de red predictiva (%)** | Aumenta la cantidad de carga de red para cubrir previsiones solares optimistas — p. ej. una necesidad de 2 kWh de red al 50 % carga 3 kWh. Limitado al hueco hasta el SOC máximo (por defecto 0 %) |
 
 ![Formulario de configuración — Modo Precio en Tiempo Real](../../assets/screenshots/configuration/predictive-charging/real-time-price-form.png){ width="650"  style="display: block; margin: 0 auto;"}
 
 ## Comportamiento de carga
 
-Cada ciclo (~2,5 s) el controlador evalúa si arrancar o detener la carga desde la red:
+Cada ciclo (dirigido por eventos) el controlador evalúa si arrancar o detener la carga desde la red:
 
 ```
 Si precio_actual ≤ umbral:
@@ -46,7 +46,7 @@ Si ninguno está disponible, el modo no actúa.
 
 La opción **"Descargar solo cuando el precio supere el umbral"** añade una condición adicional al comportamiento de descarga, independiente de la carga.
 
-Cuando está activa, en **cada ciclo del controlador (~2,5 s)** se comprueba si el precio actual justifica la descarga usando el mismo umbral que para la carga:
+Cuando está activa, en **cada ciclo del controlador (dirigido por eventos)** se comprueba si el precio actual justifica la descarga usando el mismo umbral que para la carga:
 
 ```
 Si precio_actual > umbral:

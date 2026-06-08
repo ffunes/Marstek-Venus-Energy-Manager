@@ -11,7 +11,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES
+from .const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES, CONF_HOUSEHOLD_CONSUMPTION_SENSOR, CONF_SOLAR_PRODUCTION_SENSOR, pd_profile_from_params, should_use_household_sensor
 from .coordinator import MarstekVenusDataUpdateCoordinator
 
 
@@ -80,6 +80,15 @@ AGGREGATE_SENSOR_DEFINITIONS = [
         "icon": "mdi:battery-minus",
         "precision": 2,
     },
+    {
+        "key": "system_home_consumption",
+        "name": "Home Consumption",
+        "unit": "W",
+        "device_class": SensorDeviceClass.POWER,
+        "state_class": SensorStateClass.MEASUREMENT,
+        "icon": "mdi:home-lightning-bolt",
+        "precision": 0,
+    },
 ]
 
 
@@ -112,6 +121,84 @@ class DailyGridAtMinSocSensor(SensorEntity):
     def native_value(self) -> float:
         """Return accumulated daily grid import at min SOC."""
         return round(self._controller._daily_grid_at_min_soc_kwh, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Marstek Venus System",
+            "manufacturer": "Marstek",
+            "model": "Venus Multi-Battery System",
+        }
+
+
+class PdControlQualitySensor(SensorEntity):
+    """Diagnostic sensor exposing PD control-loop quality so users can see the
+    effect of the tuning profile / sliders.
+
+    The state is a verdict (stable / oscillating / sluggish / battery_limited /
+    collecting_data) rather than a raw number, so it tells the user what to do
+    instead of showing a watt value that reads like a power flow. The underlying
+    grid-error RMS (W) and oscillation rate live in the attributes.
+    """
+
+    # Thresholds for the verdict. Oscillation is the dominant symptom of
+    # over-aggressive tuning (hunting); a high RMS with low oscillation is the
+    # signature of sluggish tuning that never catches up.
+    _OSC_HIGH_PER_MIN = 4.0
+    _RMS_HIGH_W = 150.0
+    _OSC_LOW_PER_MIN = 1.0
+
+    _STATES = ["stable", "oscillating", "sluggish", "battery_limited", "collecting_data"]
+
+    def __init__(self, controller) -> None:
+        """Initialize the sensor."""
+        self._controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_unique_id = "marstek_venus_system_pd_control_quality"
+        self._attr_translation_key = "system_pd_control_quality"
+        self._attr_device_class = SensorDeviceClass.ENUM
+        self._attr_options = list(self._STATES)
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_icon = "mdi:tune-vertical"
+        self._attr_should_poll = True  # metrics live on the controller; poll to refresh
+
+    @property
+    def native_value(self):
+        """Return the tuning verdict."""
+        c = self._controller
+        if getattr(c, "_pd_limited", False):
+            return "battery_limited"
+        rms = c.pd_quality_rms_error
+        if rms is None:
+            return "collecting_data"
+        return self._verdict(rms, c.pd_quality_oscillation_per_min)
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        """Expose the raw RMS error, oscillation rate, and active params/profile."""
+        c = self._controller
+        rms = c.pd_quality_rms_error
+        return {
+            "rms_error_w": round(rms) if rms is not None else None,
+            "oscillation_per_min": round(c.pd_quality_oscillation_per_min, 2),
+            "kp": c.kp,
+            "kd": c.kd,
+            "deadband_w": c.deadband,
+            "max_power_change_w": c.max_power_change_per_cycle,
+            "active_profile": pd_profile_from_params(c.config_entry.data),
+        }
+
+    @classmethod
+    def _verdict(cls, rms: float, osc: float) -> str:
+        """Derive the tuning verdict from the live metrics."""
+        if osc >= cls._OSC_HIGH_PER_MIN:
+            return "oscillating"  # hunting: smoother profile / higher deadband
+        if rms > cls._RMS_HIGH_W and osc < cls._OSC_LOW_PER_MIN:
+            return "sluggish"     # too slow: more aggressive profile
+        return "stable"
 
     @property
     def device_info(self):
@@ -173,6 +260,8 @@ class MarstekVenusAggregateSensor(SensorEntity):
             return self._calculate_daily_charging_energy()
         elif key == "system_daily_discharging_energy":
             return self._calculate_daily_discharging_energy()
+        elif key == "system_home_consumption":
+            return self._calculate_home_consumption()
 
         return None
 
@@ -326,6 +415,54 @@ class MarstekVenusAggregateSensor(SensorEntity):
             return None
 
         return round(total_energy, self.definition.get("precision", 2))
+
+    def _read_power_w(self, entity_id: str) -> float | None:
+        """Read a power entity and return its value in Watts, or None if unusable."""
+        state = self.hass.states.get(entity_id)
+        if state is None or state.state in ("unknown", "unavailable"):
+            return None
+        try:
+            value = float(state.state)
+        except (ValueError, TypeError):
+            return None
+        unit = state.attributes.get("unit_of_measurement", "W")
+        return value * 1000.0 if unit == "kW" else value
+
+    def _calculate_home_consumption(self) -> float | None:
+        """Calculate instantaneous household consumption (W).
+
+        Prefers the user's configured household sensor. Otherwise derives it from
+        the energy balance at the AC bus:
+            home = grid + sum(ac_power) + external_solar
+        DC-coupled PV (MPPT) does not appear here: it is already netted into each
+        battery's ac_power at the inverter. Mirrors the panel's flow derivation.
+        """
+        data = self.entry.data
+
+        if should_use_household_sensor(data):
+            home_eid = data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)
+            w = self._read_power_w(home_eid)
+            return None if w is None else round(w)
+
+        grid_eid = data.get("consumption_sensor")
+        grid_w = self._read_power_w(grid_eid) if grid_eid else None
+        if grid_w is None:
+            return None
+
+        total = grid_w
+        for coordinator in self.coordinators:
+            if coordinator.data:
+                ac = coordinator.data.get("ac_power")
+                if ac is not None:
+                    total += ac
+
+        solar_eid = data.get(CONF_SOLAR_PRODUCTION_SENSOR)
+        if solar_eid:
+            solar_w = self._read_power_w(solar_eid)
+            if solar_w is not None:
+                total += solar_w
+
+        return round(max(0.0, total))
 
     @property
     def device_info(self):

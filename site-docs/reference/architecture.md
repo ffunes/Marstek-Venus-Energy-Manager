@@ -24,7 +24,7 @@ flowchart TD
 
 | File | Main class | Responsibility |
 |---|---|---|
-| `__init__.py` | `ChargeDischargeController` | Main control loop (every 2.5 s), PD algorithm, multi-battery distribution |
+| `__init__.py` | `ChargeDischargeController` | Main control loop (event-driven on the grid sensor + 2 s watchdog), PD algorithm, multi-battery distribution |
 | `coordinator.py` | `MarstekVenusDataUpdateCoordinator` | Periodic Modbus data polling, entity updates |
 | `modbus_client.py` | `MarstekModbusClient` | Async TCP communication via pymodbus, retries with backoff |
 | `config_flow.py` | — | Multi-step configuration wizard in HA UI |

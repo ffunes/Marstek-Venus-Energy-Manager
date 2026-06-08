@@ -28,7 +28,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     for coordinator in coordinators:
-        host = coordinator.host
+        host = coordinator.device_key
         init = monitor.get_initial_state(host)
 
         delta = CellDeltaSensor(coordinator, init, monitor)
@@ -83,7 +83,7 @@ class _BalanceBaseSensor(SensorEntity):
     @property
     def device_info(self) -> dict:
         return {
-            "identifiers": {(DOMAIN, f"{self._coordinator.host}_{self._coordinator.port}")},
+            "identifiers": {(DOMAIN, f"{self._coordinator.device_key}")},
             "name": self._coordinator.name,
             "manufacturer": "Marstek",
             "model": "Venus",
@@ -103,7 +103,7 @@ class CellDeltaSensor(_BalanceBaseSensor):
     HISTORY_LIMIT = 10
 
     def __init__(self, coordinator: Any, init: dict, monitor: BalanceMonitor) -> None:
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_cell_delta"
+        self._attr_unique_id = f"{coordinator.device_key}_cell_delta"
         self._attr_native_value: float | None = None
         self._monitor = monitor
         super().__init__(coordinator, init)
@@ -121,7 +121,7 @@ class CellDeltaSensor(_BalanceBaseSensor):
     @property
     def extra_state_attributes(self) -> dict:
         readings = self._monitor.get_recent_readings(
-            self._coordinator.host, self.HISTORY_LIMIT
+            self._coordinator.device_key, self.HISTORY_LIMIT
         )
         # Reverse so attribute order is newest -> oldest, which is friendlier in the UI.
         return {"history": list(reversed(readings))}
@@ -132,7 +132,7 @@ class BalanceStatusSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:battery-heart-variant"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_balance_status"
+        self._attr_unique_id = f"{coordinator.device_key}_balance_status"
         self._status: str = "unknown"
         super().__init__(coordinator, init)
 
@@ -152,7 +152,7 @@ class DeltaTrendSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:trending-up"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_delta_trend"
+        self._attr_unique_id = f"{coordinator.device_key}_delta_trend"
         self._trend: str = "unknown"
         super().__init__(coordinator, init)
 
@@ -173,7 +173,7 @@ class LastBalanceReadSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:calendar-clock"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_last_balance_read"
+        self._attr_unique_id = f"{coordinator.device_key}_last_balance_read"
         self._ts: datetime | None = None
         super().__init__(coordinator, init)
 
@@ -206,7 +206,7 @@ class DeltaAvg4wSensor(_BalanceBaseSensor):
     _attr_icon = "mdi:chart-timeline-variant"
 
     def __init__(self, coordinator: Any, init: dict) -> None:
-        self._attr_unique_id = f"{coordinator.host}_{coordinator.port}_delta_avg_4w"
+        self._attr_unique_id = f"{coordinator.device_key}_delta_avg_4w"
         self._avg: float | None = None
         super().__init__(coordinator, init)
 

@@ -21,6 +21,12 @@ SCAN_INTERVAL = {
 CONF_BATTERY_VERSION = "battery_version"
 SUPPORTED_VERSIONS = ["v2", "v3", "vA", "vD"]
 
+# Modbus slave/unit id. Default 1 (Marstek factory default for a direct
+# connection). A Modbus TCP proxy that fans out to several batteries on one
+# host:port distinguishes them by slave id, so this must be configurable.
+CONF_SLAVE_ID = "slave_id"
+DEFAULT_SLAVE_ID = 1
+
 # Maximum power (W) per battery version — used by config_flow to set slider limits
 MAX_POWER_BY_VERSION = {
     "v2": 2500,
@@ -335,7 +341,7 @@ SENSOR_DEFINITIONS = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium"
+        "scan_interval": "high"
     },
     {
         # Minimum cell voltage 
@@ -349,7 +355,7 @@ SENSOR_DEFINITIONS = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium"
+        "scan_interval": "high"
     },
     {
         # Fault status bits indicating various device faults
@@ -910,7 +916,7 @@ SENSOR_DEFINITIONS_V3 = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium",
+        "scan_interval": "high",
     },
     {
         "name": "Min Cell Voltage",
@@ -923,7 +929,7 @@ SENSOR_DEFINITIONS_V3 = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium",
+        "scan_interval": "high",
     },
     {
         "name": "Battery Cycle Count",
@@ -1508,7 +1514,7 @@ SENSOR_DEFINITIONS_VA = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium",
+        "scan_interval": "high",
     },
     {
         "name": "Min Cell Voltage",
@@ -1521,7 +1527,7 @@ SENSOR_DEFINITIONS_VA = [
         "enabled_by_default": True,
         "data_type": "int16",
         "precision": 3,
-        "scan_interval": "medium",
+        "scan_interval": "high",
     },
     {
         "name": "WiFi Signal Strength",
@@ -1802,6 +1808,40 @@ CYCLE_SENSOR_DEFINITIONS = [
     }
 ]
 
+# Per-battery total DC-coupled PV power (sum of MPPT inputs) — vA/vD only.
+SOLAR_POWER_SENSOR_DEFINITIONS = [
+    {
+        "key": "solar_power",
+        "name": "Solar Power",
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "icon": "mdi:solar-power",
+        "dependency_keys": {
+            "mppt": ["mppt1_power", "mppt2_power", "mppt3_power", "mppt4_power"],
+        },
+    }
+]
+
+# Per-battery true battery cell power (DC terminal net of DC PV) — vA/vD only. The
+# battery_power register lumps in the DC PV feeding the bus, so subtract the unit's
+# MPPT to recover the battery's own charge/discharge. Sign follows battery_power
+# (+ charge / - discharge).
+BATTERY_CELL_POWER_SENSOR_DEFINITIONS = [
+    {
+        "key": "battery_cell_power",
+        "name": "Battery Cell Power",
+        "unit": "W",
+        "device_class": "power",
+        "state_class": "measurement",
+        "icon": "mdi:home-battery",
+        "dependency_keys": {
+            "battery": "battery_power",
+            "mppt": ["mppt1_power", "mppt2_power", "mppt3_power", "mppt4_power"],
+        },
+    }
+]
+
 # Predictive Grid Charging Configuration
 CONF_ENABLE_PREDICTIVE_CHARGING = "enable_predictive_charging"
 CONF_CHARGING_TIME_SLOT = "charging_time_slot"
@@ -1809,6 +1849,19 @@ CONF_SOLAR_FORECAST_SENSOR = "solar_forecast_sensor"
 CONF_SOLAR_PRODUCTION_SENSOR = "solar_production_sensor"
 CONF_HOUSEHOLD_CONSUMPTION_SENSOR = "household_consumption_sensor"
 CONF_MAX_CONTRACTED_POWER = "max_contracted_power"
+
+
+def should_use_household_sensor(data) -> bool:
+    """Whether to read the dedicated household sensor instead of deriving home power.
+
+    The household sensor is honoured only when configured AND no solar production
+    sensor exists. With a solar sensor the derived value (grid + battery AC + solar)
+    is fully accurate and preferred, so the household sensor (a legacy precision
+    override, no longer offered in the config flow) is ignored.
+    """
+    return bool(data.get(CONF_HOUSEHOLD_CONSUMPTION_SENSOR)) and not bool(
+        data.get(CONF_SOLAR_PRODUCTION_SENSOR)
+    )
 
 # Time slots (operation slots) — v3 schema keys
 CONF_TIME_SLOTS = "no_discharge_time_slots"  # legacy key, kept for compat
@@ -1847,6 +1900,13 @@ DEFAULT_BASE_CONSUMPTION_KWH = 5.0  # Fallback when no consumption history avail
 # Predictive charging safety margin
 CONF_PREDICTIVE_SAFETY_MARGIN_KWH = "predictive_safety_margin_kwh"
 DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH = 0.0  # kWh added to consumption forecast; 0 = no margin
+
+# Predictive charging grid-charge margin
+# Extra % charged from grid on top of the solar-deficit, to hedge against
+# optimistic solar forecasts / worse-than-expected weather. 0 = no margin.
+# Capped so the charge never exceeds the gap to max SOC.
+CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT = "predictive_grid_charge_margin_pct"
+DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT = 0.0
 
 # Re-evaluation thresholds
 SOC_REEVALUATION_THRESHOLD = 30  # Re-evaluate every 30% SOC drop
@@ -1888,6 +1948,24 @@ NORMAL_BALANCE_TAPER_CELL_VOLTAGE = 3.48
 NORMAL_BALANCE_PAUSE_CELL_VOLTAGE = 3.58
 NORMAL_BALANCE_CHARGE_POWER_W = 95
 NORMAL_BALANCE_MEASURE_WAIT_SECONDS = 60
+
+# SOC recalibration on a stuck top voltage.
+# Some packs hit the top cell voltage (pause point) while the BMS still reports a
+# SOC far below full — a sign the BMS coulomb counter has drifted. In that case,
+# instead of holding at the pause voltage, keep charging at the tapered power
+# until the BMS itself cuts off, which forces it to recalibrate SOC to 100%.
+NORMAL_BALANCE_RECAL_SOC_THRESHOLD = 90        # %: reported SOC below this at the pause voltage = miscalibration
+NORMAL_BALANCE_RECAL_CUTOFF_POWER_W = 10       # W: charge collapsed (BMS terminated)
+NORMAL_BALANCE_RECAL_CUTOFF_CYCLES = 5         # consecutive cycles to confirm the BMS cutoff
+NORMAL_BALANCE_RECAL_INVERTER_STANDBY = 1      # inverter_state raw value for Standby
+
+# BMS low-SOC discharge cutoff (low-SOC counterpart to NORMAL_BALANCE_RECAL_*).
+# Below this SOC the BMS may refuse to discharge on its own (protective cutoff,
+# e.g. a weak cell sagging under load) even though the reported SOC is still
+# above the configured min_soc. The battery then ACKs the discharge command but
+# delivers ~0W. Treat that as an expected BMS cutoff instead of a non-responsive
+# fault, so the battery stays in the PD pool.
+BMS_DISCHARGE_CUTOFF_SOC = 20                  # %: below this, refused discharge = BMS cutoff, not a fault
 
 # Active balance mode.
 # Once the battery has reached the top, keep the cells in the balancing window
@@ -1974,19 +2052,38 @@ CONF_PD_MAX_POWER_CHANGE = "pd_controller_max_power_change"
 CONF_PD_DIRECTION_HYSTERESIS = "pd_controller_direction_hysteresis"
 CONF_PD_MIN_CHARGE_POWER = "pd_min_charge_power"
 CONF_PD_MIN_DISCHARGE_POWER = "pd_min_discharge_power"
+CONF_PD_RELAY_COOLDOWN = "pd_relay_cooldown"
+CONF_PD_MIN_CYCLE_INTERVAL = "pd_min_cycle_interval"
 CONF_TARGET_GRID_POWER = "pd_target_grid_power"
 CONF_ENABLE_SYSTEM_POWER_LIMITS = "enable_system_power_limits"
 CONF_SYSTEM_MAX_CHARGE_POWER = "system_max_charge_power"
 CONF_SYSTEM_MAX_DISCHARGE_POWER = "system_max_discharge_power"
 
 # Default PD Controller Parameters
-DEFAULT_PD_KP = 0.65
-DEFAULT_PD_KD = 0.5
+# Lowered from Kp 0.65 / Kd 0.5 to curb overshoot under the cadence-independent
+# control loop; existing installs on the old defaults are migrated (see
+# async_migrate_entry, config entry v3 -> v4).
+DEFAULT_PD_KP = 0.35
+DEFAULT_PD_KD = 0.3
 DEFAULT_PD_DEADBAND = 40
 DEFAULT_PD_MAX_POWER_CHANGE = 800
 DEFAULT_PD_DIRECTION_HYSTERESIS = 60
 DEFAULT_PD_MIN_CHARGE_POWER = 0       # Minimum charge power (0 = disabled)
 DEFAULT_PD_MIN_DISCHARGE_POWER = 0    # Minimum discharge power (0 = disabled)
+# Relay anti-chatter: minimum time (s) the battery stays engaged after leaving
+# idle before it may return to 0. Stops the relay toggling on/off when the grid
+# signal hovers at the deadband edge during solar ramp-up/down. 0 = disabled
+# (default: preserves the pre-feature behaviour; opt-in via the slider).
+DEFAULT_PD_RELAY_COOLDOWN = 0
+# Power held in the already-engaged direction while the cooldown is running, when
+# the user's min charge/discharge power is 0 (otherwise that min is used).
+RELAY_COOLDOWN_HOLD_POWER = 100
+# Minimum spacing (s) between event-driven control cycles. The grid sensor can
+# publish several times per second; without a floor, each out-of-deadband cycle
+# issues a Modbus write burst, which slow TCP-serial bridges (e.g. Elfin EW11)
+# can choke on. Drops surplus sensor-triggered cycles; the 2 s safety timer is
+# never gated. 0 = disabled (pre-feature behaviour); default 1 s caps bursts.
+DEFAULT_PD_MIN_CYCLE_INTERVAL = 1.0
 DEFAULT_TARGET_GRID_POWER = 0
 DEFAULT_ENABLE_SYSTEM_POWER_LIMITS = False
 DEFAULT_SYSTEM_MAX_CHARGE_POWER = 0       # 0 = disabled
@@ -1994,6 +2091,75 @@ DEFAULT_SYSTEM_MAX_DISCHARGE_POWER = 0    # 0 = disabled
 
 # Legacy alias so existing __init__.py imports don't break during transition
 DEFAULT_SLOT_TARGET_GRID_POWER = DEFAULT_TARGET_GRID_POWER
+
+# PD Tuning Profiles
+# One-click presets for the PD response-shape parameters (Kp, Kd, max power
+# change). Selecting a profile writes those at once; the "custom" profile leaves
+# the sliders to the user. Profiles are ordered smoothest → fastest. "balanced"
+# equals the shipping defaults, so an untouched install maps onto it.
+#
+# Deadband is deliberately NOT part of the profiles: it is both the user's
+# precision/meter-noise preference and the reference the control-quality sensor
+# measures against (oscillation is counted only outside the deadband). Bundling it
+# into a profile would clobber that preference and bias the sensor's own yardstick.
+CONF_PD_TUNING_PROFILE = "pd_tuning_profile"
+PD_PROFILE_CUSTOM = "custom"
+DEFAULT_PD_TUNING_PROFILE = PD_PROFILE_CUSTOM
+
+PD_TUNING_PROFILES = {
+    "very_smooth": {
+        CONF_PD_KP: 0.22,
+        CONF_PD_KD: 0.15,
+        CONF_PD_MAX_POWER_CHANGE: 400,
+    },
+    "smooth": {
+        CONF_PD_KP: 0.30,
+        CONF_PD_KD: 0.25,
+        CONF_PD_MAX_POWER_CHANGE: 600,
+    },
+    "balanced": {
+        CONF_PD_KP: DEFAULT_PD_KP,
+        CONF_PD_KD: DEFAULT_PD_KD,
+        CONF_PD_MAX_POWER_CHANGE: DEFAULT_PD_MAX_POWER_CHANGE,
+    },
+    "aggressive": {
+        CONF_PD_KP: 0.55,
+        CONF_PD_KD: 0.45,
+        CONF_PD_MAX_POWER_CHANGE: 1200,
+    },
+    "very_aggressive": {
+        CONF_PD_KP: 0.75,
+        CONF_PD_KD: 0.45,
+        CONF_PD_MAX_POWER_CHANGE: 2000,
+    },
+}
+
+# Option order shown in the select (custom last); 6 total incl. manual.
+PD_TUNING_PROFILE_OPTIONS = list(PD_TUNING_PROFILES.keys()) + [PD_PROFILE_CUSTOM]
+
+# Effective value of each profiled PD param when absent from config_entry.data.
+_PD_PROFILE_PARAM_DEFAULTS = {
+    CONF_PD_KP: DEFAULT_PD_KP,
+    CONF_PD_KD: DEFAULT_PD_KD,
+    CONF_PD_MAX_POWER_CHANGE: DEFAULT_PD_MAX_POWER_CHANGE,
+}
+
+
+def pd_profile_from_params(data) -> str:
+    """Return the preset name whose values match the PD gain params in `data`.
+
+    Falls back to PD_PROFILE_CUSTOM when no preset matches (i.e. the user has
+    hand-tuned the sliders). Deadband is not considered — it is user-owned and not
+    part of the profiles. Compared with a small epsilon to tolerate float Kp/Kd.
+    """
+    for name, params in PD_TUNING_PROFILES.items():
+        if all(
+            abs(float(data.get(key, _PD_PROFILE_PARAM_DEFAULTS[key])) - float(value)) < 1e-6
+            for key, value in params.items()
+        ):
+            return name
+    return PD_PROFILE_CUSTOM
+
 
 # Dynamic Pricing Mode Configuration
 CONF_PREDICTIVE_CHARGING_MODE = "predictive_charging_mode"
@@ -2086,6 +2252,26 @@ CONFIG_NUMBER_DEFINITIONS = [
         "unit": "W",
         "default": DEFAULT_PD_MIN_DISCHARGE_POWER,
         "icon": "mdi:battery-low",
+    },
+    {
+        "key": CONF_PD_RELAY_COOLDOWN,
+        "name": "PD Relay Cooldown",
+        "min": 0,
+        "max": 60,
+        "step": 1,
+        "unit": "s",
+        "default": DEFAULT_PD_RELAY_COOLDOWN,
+        "icon": "mdi:timer-cog-outline",
+    },
+    {
+        "key": CONF_PD_MIN_CYCLE_INTERVAL,
+        "name": "PD Min Cycle Interval",
+        "min": 0,
+        "max": 2,
+        "step": 0.1,
+        "unit": "s",
+        "default": DEFAULT_PD_MIN_CYCLE_INTERVAL,
+        "icon": "mdi:timer-pause-outline",
     },
     {
         "key": CONF_TARGET_GRID_POWER,
@@ -2186,6 +2372,17 @@ CONFIG_NUMBER_DEFINITIONS = [
         "unit": "kWh",
         "default": DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH,
         "icon": "mdi:solar-power-variant",
+        "condition": CONF_ENABLE_PREDICTIVE_CHARGING,
+    },
+    {
+        "key": CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
+        "name": "Predictive Grid Charge Margin",
+        "min": 0.0,
+        "max": 100.0,
+        "step": 5.0,
+        "unit": "%",
+        "default": DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT,
+        "icon": "mdi:transmission-tower-import",
         "condition": CONF_ENABLE_PREDICTIVE_CHARGING,
     },
 ]

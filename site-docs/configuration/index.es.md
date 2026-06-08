@@ -37,7 +37,7 @@ flowchart TD
 
 | Paso | Descripción | Obligatorio |
 |------|-------------|:-----------:|
-| [Sensor principal](main-sensor.md) | Sensor de consumo de red, sensor solar y sensor de consumo del hogar | ✅ |
+| [Sensor principal](main-sensor.md) | Sensor de consumo de red y sensor solar (el consumo del hogar se deriva) | ✅ |
 | Baterías | Número de unidades | ✅ |
 | [Baterías](batteries.md) | Config. por batería: nombre, IP, puerto, versión, límites de potencia y SOC | ✅ |
 | [Franjas horarias](time-slots.md) | Ventanas de descarga/carga con parámetros por franja | ❌ |

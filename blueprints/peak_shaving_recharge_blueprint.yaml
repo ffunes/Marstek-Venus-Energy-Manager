@@ -1,0 +1,169 @@
+blueprint:
+  name: "Marstek Venus - Peak Shaving Recharge To SOC"
+  description: >
+    While Peak Shaving (Capacity Protection) is active and the system SOC drops
+    below a configured floor, this automation moves the PD Target Grid Power to a
+    positive (import) value so the battery recharges from the grid. Once SOC
+    reaches the configured target, the target is restored to its idle value.
+
+    Default behavior:
+    - SOC below floor while peak shaving is active: set grid target to +500 W
+      (import from grid -> battery charges).
+    - SOC reaches target, OR peak shaving ends: restore grid target to 0 W.
+
+    The idle value is only restored when the current target still matches the
+    recharge value, so manual or other-automation changes are left untouched.
+  domain: automation
+  source_url: "https://github.com/ffunes/Marstek-Venus-Energy-Manager/blob/main/blueprints/peak_shaving_recharge_blueprint.yaml"
+
+  input:
+    soc_sensor:
+      name: "System SOC Sensor"
+      description: "Marstek Venus system SOC sensor."
+      default: sensor.marstek_venus_system_system_soc
+      selector:
+        entity:
+          filter:
+            domain: sensor
+
+    status_sensor:
+      name: "Integration Status Sensor"
+      description: >
+        Marstek Venus integration status sensor. Used to detect that Peak Shaving
+        (Capacity Protection) is active.
+      default: sensor.marstek_venus_system_integration_status
+      selector:
+        entity:
+          filter:
+            domain: sensor
+
+    target_grid_power_number:
+      name: "PD Target Grid Power Number"
+      description: "Marstek Venus PD Target Grid Power number entity (the offset to move)."
+      default: number.marstek_venus_system_pd_target_grid_power
+      selector:
+        entity:
+          filter:
+            domain: number
+
+    soc_floor_pct:
+      name: "SOC Floor (start recharge)"
+      description: "When SOC drops below this value while peak shaving is active, start recharging."
+      default: 20
+      selector:
+        number:
+          min: 5
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: box
+
+    soc_target_pct:
+      name: "SOC Target (stop recharge)"
+      description: "Recharge until SOC reaches this value, then restore the idle target. Set above the floor to avoid oscillation."
+      default: 25
+      selector:
+        number:
+          min: 5
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+          mode: box
+
+    charge_target_w:
+      name: "Grid Target While Recharging"
+      description: "Positive values mean import from grid (battery charges). The number entity clamps to its own range."
+      default: 500
+      selector:
+        number:
+          min: 0
+          max: 2500
+          step: 10
+          unit_of_measurement: W
+          mode: box
+
+    idle_target_w:
+      name: "Idle Grid Target"
+      description: "Value restored once SOC target is reached or peak shaving ends."
+      default: 0
+      selector:
+        number:
+          min: -2500
+          max: 2500
+          step: 10
+          unit_of_measurement: W
+          mode: box
+
+variables:
+  soc_sensor: !input soc_sensor
+  status_sensor: !input status_sensor
+  target_grid_power_number: !input target_grid_power_number
+  soc_floor_pct: !input soc_floor_pct
+  soc_target_pct: !input soc_target_pct
+  charge_target_w: !input charge_target_w
+  idle_target_w: !input idle_target_w
+  # Integration-status values that mean Peak Shaving / Capacity Protection is engaged.
+  peak_states:
+    - peak_shaving
+    - capacity_conserving
+    - capacity_protection_charging
+    - capacity_protection
+
+trigger:
+  - platform: numeric_state
+    entity_id: !input soc_sensor
+    below: !input soc_floor_pct
+    id: low_soc
+  - platform: numeric_state
+    entity_id: !input soc_sensor
+    above: !input soc_target_pct
+    id: soc_recovered
+  - platform: state
+    entity_id: !input status_sensor
+    id: status_changed
+  - platform: homeassistant
+    event: start
+    id: homeassistant_start
+
+condition: []
+
+mode: restart
+
+action:
+  - variables:
+      soc_now: "{{ states(soc_sensor) | float(-1) }}"
+      is_peak: "{{ states(status_sensor) in peak_states }}"
+      current_target_w: "{{ states(target_grid_power_number) | float(999999) }}"
+
+  - choose:
+      # Start / keep recharging: peak shaving active and SOC below the floor.
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ is_peak
+                 and (soc_now | float(-1)) >= 0
+                 and (soc_now | float(-1)) < (soc_floor_pct | float(0))
+                 and (current_target_w | float(999999)) != (charge_target_w | float(0)) }}
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input target_grid_power_number
+            data:
+              value: "{{ charge_target_w | float(0) }}"
+
+      # Stop recharging: SOC reached target OR peak shaving ended.
+      # Only restore if we are the ones holding the recharge target.
+      - conditions:
+          - condition: template
+            value_template: >
+              {{ (current_target_w | float(999999)) == (charge_target_w | float(0))
+                 and ( (soc_now | float(-1)) >= (soc_target_pct | float(0))
+                       or not is_peak ) }}
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input target_grid_power_number
+            data:
+              value: "{{ idle_target_w | float(0) }}"
+
+    default: []

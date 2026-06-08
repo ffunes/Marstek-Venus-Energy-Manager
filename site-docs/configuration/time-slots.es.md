@@ -54,5 +54,5 @@ La entidad `binary_sensor.predictive_charging_active` expone dos atributos del c
 ## Límites
 
 - Máximo 8 franjas por integración.
-- El override de SOC se aplica por software; espera 1–3 ciclos de control (~3–9 s) hasta que la carga o descarga se detenga al límite del slot.
+- El override de SOC se aplica por software; espera 1–3 ciclos de control (unos segundos, a la cadencia del sensor de red) hasta que la carga o descarga se detenga al límite del slot.
 - Las franjas que apuntan a un `battery_N` inexistente (p. ej. tras reducir el número de baterías) quedan inertes; edítalas o bórralas desde el menú de opciones.
