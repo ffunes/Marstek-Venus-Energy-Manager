@@ -1939,8 +1939,8 @@
     D --&gt; E(Charge with 95 W)
     E --&gt; F{max_cell_voltage &lt; 3.58 V}
     F --&gt;|Yes| D
-    F --&gt;|No| G([100% charge voltage taper stop])
-    G --&gt; H(Resume normal SOC charge/discharge logic)
+    F --&gt;|No| G([Stop charge and latch])
+    G --&gt; H(Stay stopped until SOC drops the resume margin)
     G --&gt; I(Wait 60s)
     I --&gt; J("Record cell_delta = (cell_Vmax - cell_Vmin) * 1000")</code></pre>
 <table>
@@ -1960,8 +1960,12 @@
 <td>Limit charge to 95 W</td>
 </tr>
 <tr>
-<td><code>max_cell_voltage</code> at or above 3.58 V</td>
-<td>Resume normal SOC charge/discharge logic</td>
+<td><code>max_cell_voltage</code> reaches 3.58 V</td>
+<td>Stop charging and <strong>latch</strong>; do not re-trickle when the cell relaxes</td>
+</tr>
+<tr>
+<td>SOC falls the resume margin (3%) below the latch SOC</td>
+<td>Release the latch; normal charge logic applies again</td>
 </tr>
 <tr>
 <td>After the 60 s wait</td>
@@ -1969,8 +1973,8 @@
 </tr>
 </tbody>
 </table>
-<p>The logic is voltage based. SOC is deliberately not used to decide when the top-voltage taper starts or stops, because SOC can be less reliable near the top than the cell-voltage registers. There is no extra voltage hysteresis in this path. </p>
-<p>Once the battery reaches 3.58 V, the normal SOC charge/discharge logic with hysteresis is resumed. The 60-second delta-V measurement still runs as a best-effort diagnostic; if it did not finish before completion, a one-shot snapshot is captured at completion time under phase <code>top_charge_taper_complete</code>.</p>
+<p>Starting the taper is voltage based: SOC is deliberately not used to decide when tapering begins, because SOC can be less reliable near the top than the cell-voltage registers.</p>
+<p>Once the battery reaches 3.58 V the taper stops charging and <strong>latches off</strong>. It does <em>not</em> re-trickle when the cell voltage relaxes — re-pausing every cycle would pin the cell at the top voltage and can keep some v3 BMSs from leaving standby to discharge. The latch releases — letting a later top-up taper again — only after SOC has dropped a small margin (default 3%, <code>NORMAL_BALANCE_RESUME_SOC_DROP</code>) below the SOC at which it latched, i.e. the battery was actually discharged. The 60-second delta-V measurement still runs as a best-effort diagnostic; if it did not finish before completion, a one-shot snapshot is captured at completion time under phase <code>top_charge_taper_complete</code>.</p>
 <p>In a multi-battery system, this is evaluated per battery. One battery can be limited or paused while another continues charging normally.</p>
 <h3 id="soc-recalibration-on-a-stuck-top-voltage">SOC recalibration on a stuck top voltage<a class="headerlink" href="#soc-recalibration-on-a-stuck-top-voltage" title="Permanent link">&para;</a></h3>
 <p>Some packs reach the 3.58 V pause point while the BMS still reports a SOC well below full (for example 60–70%). That gap is a sign the BMS coulomb counter has drifted: the cells are genuinely full but the reported SOC is wrong.</p>
@@ -2091,7 +2095,7 @@
 <tr>
 <td><strong>3.40 V</strong></td>
 <td>Lower bound for the active-balance retry voltage when charge rejection is detected</td>
-<td>The integration drops the retry voltage by 0.01 V each time the BMS rejects charge, but never below 3.40 V. Going further down exits the balance window entirely and forces a long, wasteful re-climb up the curve.</td>
+<td>The integration drops the retry voltage by 0.01 V each time the BMS rejects charge for 3 consecutive cycles (~6 s, so transient power dips during charge ramp-up or taper are ignored), but never below 3.40 V. Going further down exits the balance window entirely and forces a long, wasteful re-climb up the curve.</td>
 </tr>
 <tr>
 <td><strong>0.03 V (30 mV)</strong></td>
@@ -2252,6 +2256,10 @@
 <tr>
 <td><code>paused</code></td>
 <td>Whether charging is currently stopped by high cell voltage</td>
+</tr>
+<tr>
+<td><code>pause_latched_soc</code></td>
+<td>SOC at which the pause latched; charging stays stopped until SOC drops the resume margin below this (empty when not latched)</td>
 </tr>
 <tr>
 <td><code>max_cell_voltage</code> / <code>min_cell_voltage</code></td>

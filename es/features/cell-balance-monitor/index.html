@@ -1948,8 +1948,12 @@
 <td style="text-align: right;">Limita la carga a 95 W</td>
 </tr>
 <tr>
-<td><code>max_cell_voltage</code> igual o superior a 3.58 V</td>
-<td style="text-align: right;">Para la carga y espera 60 s</td>
+<td><code>max_cell_voltage</code> llega a 3.58 V</td>
+<td style="text-align: right;">Para la carga y <strong>enclava</strong>; no vuelve a cargar a goteo cuando la celda se relaja</td>
+</tr>
+<tr>
+<td>El SOC baja el margen de reanudación (3%) por debajo del SOC de enclavamiento</td>
+<td style="text-align: right;">Libera el enclavamiento; vuelve a aplicar la lógica de carga normal</td>
 </tr>
 <tr>
 <td>Tras la espera de 60 s</td>
@@ -1957,8 +1961,8 @@
 </tr>
 </tbody>
 </table>
-<p>La lógica se basa en tensión de celda. El SOC no se usa para decidir cuándo empieza o termina la reducción por voltaje, porque cerca del final de carga los registros de tensión de celda son más fiables que el SOC reportado.</p>
-<p>No hay histéresis adicional de voltaje en esta ruta. Cuando la batería llega a 3.58 V y se toma la lectura, la integración no fuerza una descarga. Deja la carga parada en esa tensión y permite que la lógica normal de SOC/carga decida cuándo se podrá volver a cargar.</p>
+<p>El inicio de la reducción se basa en tensión de celda: el SOC no se usa para decidir cuándo empieza, porque cerca del final de carga los registros de tensión de celda son más fiables que el SOC reportado.</p>
+<p>Cuando la batería llega a 3.58 V, la reducción para la carga y <strong>se enclava</strong>. No vuelve a cargar a goteo cuando la tensión de celda se relaja — re-pausar cada ciclo dejaría la celda clavada en la tensión alta y puede impedir que algunos BMS v3 salgan de standby para descargar. El enclavamiento se libera —dejando que una recarga posterior vuelva a reducir— solo cuando el SOC ha bajado un pequeño margen (por defecto 3%, <code>NORMAL_BALANCE_RESUME_SOC_DROP</code>) por debajo del SOC al que se enclavó, es decir, la batería se ha descargado de verdad.</p>
 <p>En sistemas con varias baterías, la lógica se evalúa por batería. Una batería puede estar limitada o pausada mientras otra sigue cargando con normalidad.</p>
 <h3 id="recalibracion-de-soc-con-tension-alta-atascada">Recalibración de SOC con tensión alta atascada<a class="headerlink" href="#recalibracion-de-soc-con-tension-alta-atascada" title="Permanent link">&para;</a></h3>
 <p>Algunos packs llegan al punto de pausa de 3.58 V mientras el BMS sigue reportando un SOC muy por debajo del total (por ejemplo 60–70 %). Esa diferencia indica que el contador de coulombs del BMS se ha desviado: las celdas están realmente llenas pero el SOC reportado es incorrecto.</p>
@@ -2057,7 +2061,7 @@
 <tr>
 <td><strong>3,40 V</strong></td>
 <td>Límite inferior del voltaje de reintento del balanceo activo cuando se detecta rechazo de carga</td>
-<td>La integración baja el voltaje de reintento en 0,01 V cada vez que el BMS rechaza la carga, pero nunca por debajo de 3,40 V. Bajar más saldría completamente de la ventana de balanceo y obligaría a volver a subir toda la curva, lo que es una pérdida de tiempo.</td>
+<td>La integración baja el voltaje de reintento en 0,01 V cada vez que el BMS rechaza la carga durante 3 ciclos consecutivos (~6 s, para ignorar caídas transitorias de potencia durante la rampa o el taper de carga), pero nunca por debajo de 3,40 V. Bajar más saldría completamente de la ventana de balanceo y obligaría a volver a subir toda la curva, lo que es una pérdida de tiempo.</td>
 </tr>
 <tr>
 <td><strong>0,03 V (30 mV)</strong></td>
@@ -2218,6 +2222,10 @@
 <tr>
 <td><code>paused</code></td>
 <td>Si la carga está parada por tensión alta de celda</td>
+</tr>
+<tr>
+<td><code>pause_latched_soc</code></td>
+<td>SOC al que se enclavó la pausa; la carga sigue parada hasta que el SOC baja el margen de reanudación por debajo de este valor (vacío si no está enclavada)</td>
 </tr>
 <tr>
 <td><code>max_cell_voltage</code> / <code>min_cell_voltage</code></td>
