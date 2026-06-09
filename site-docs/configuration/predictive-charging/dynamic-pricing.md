@@ -8,7 +8,7 @@ Automatically selects the **cheapest hours of the day** to cover the calculated 
 - **PVPC** (ESIOS REE, Spain)
 - **CKW** (Switzerland)
 - **EPEX Spot** (e.g. aWATTar)
-- **ENTSO-e** (Trnasparency Platform)
+- **ENTSO-e** (Transparency Platform)
 
 ## Configuration
 
