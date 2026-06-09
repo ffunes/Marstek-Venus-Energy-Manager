@@ -22,8 +22,6 @@ The integration automatically creates entities for each configured battery and a
 
 ## Cell balance monitor sensors (per battery)
 
-Only present when the [cell balance monitor](../features/cell-balance-monitor.md) is enabled in the weekly full charge configuration.
-
 | Entity | Description | Unit |
 |---|---|---|
 | `sensor.*_cell_delta` | Voltage spread between max and min cell at last OCV reading | mV |
