@@ -1160,7 +1160,7 @@ class ConsumptionTracker:
 
         # Adjust for excluded devices: remove power the battery doesn't cover and
         # add power the battery covers that isn't visible to the home sensor.
-        power_kw += ctrl._excluded_devices_consumption_delta_kw()
+        power_kw += ctrl._external_loads.consumption_delta_kw()
 
         now = monotonic()
         if self._household_last_accumulation_time is not None:

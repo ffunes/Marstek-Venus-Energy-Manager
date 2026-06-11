@@ -2040,7 +2040,7 @@ class ChargeDischargeController:
 
     def _refresh_ev_blocks(self) -> None:
         """Update EV charger blockers from no-telemetry charger state."""
-        ev_pause_active, ev_charging_active = self._check_ev_charger_state()
+        ev_pause_active, ev_charging_active = self._external_loads.check_ev_charger_state()
         if ev_pause_active:
             self.set_charge_block("ev_pause", "ev_pause", {"duration": "5_min"})
             self.set_discharge_block("ev_pause", "ev_pause", {"duration": "5_min"})
@@ -3351,45 +3351,6 @@ class ChargeDischargeController:
     
 
 
-    def _excluded_devices_consumption_delta_kw(self) -> float:
-        """Net kW correction to apply to the home sensor for excluded-device accounting.
-
-        Returns a value to ADD to the raw home sensor reading so the accumulator
-        reflects only the load the battery is expected to cover:
-          - included_in_consumption=True  → device IS in home sensor but battery skips it → subtract
-          - included_in_consumption=False → device NOT in home sensor but battery covers it → add
-        ev_charger_no_telemetry devices are skipped (no numeric power sensor).
-        Unavailable sensors are silently ignored.
-        """
-        excluded_devices = self.config_entry.data.get("excluded_devices", [])
-        if not excluded_devices:
-            return 0.0
-
-        delta = 0.0
-        for device in excluded_devices:
-            if not device.get("enabled", True):
-                continue
-            if device.get("ev_charger_no_telemetry", False):
-                continue
-            power_sensor = device.get("power_sensor")
-            if not power_sensor:
-                continue
-            state = self.hass.states.get(power_sensor)
-            if state is None or state.state in ("unknown", "unavailable"):
-                continue
-            try:
-                power_w = float(state.state)
-            except (ValueError, TypeError):
-                continue
-            unit = state.attributes.get("unit_of_measurement", "W")
-            device_kw = power_w / 1000.0 if unit == "W" else power_w
-            if device.get("included_in_consumption", True):
-                delta -= device_kw
-            else:
-                delta += device_kw
-
-        return delta
-
     def _is_in_predictive_charging_slot(self) -> bool:
         """Check if we're currently within the predictive charging time slot."""
         if not self.predictive_charging_enabled or self.charging_time_slot is None:
@@ -4280,163 +4241,6 @@ class ChargeDischargeController:
         await coordinator.write_register(rs485_reg, 21947, do_refresh=False)  # 0x55BB disable
         await asyncio.sleep(1)
         return await coordinator.write_register(rs485_reg, 21930, do_refresh=False)  # 0x55AA enable
-
-    def _calculate_excluded_devices_adjustment(self, current_grid_power: float) -> float:
-        """Calculate power adjustment for excluded devices.
-
-        Logic:
-        - If device IS included in home consumption sensor (included_in_consumption=True):
-          → SUBTRACT its power (battery should NOT power this device)
-          → If allow_solar_surplus is True:
-            - During DISCHARGE (previous_power < 0): full exclusion (battery won't discharge for device)
-            - During CHARGE (previous_power >= 0): no exclusion (PD sees real grid, reduces charging
-              to leave solar for the device — avoids feedback loop that causes grid import)
-        - If device is NOT included in home consumption sensor (included_in_consumption=False):
-          → ADD its power (battery SHOULD power this device, even though home sensor doesn't see it)
-
-        Returns the total adjustment to apply to sensor_actual.
-        Positive = reduce battery discharge
-        Negative = increase battery discharge
-        """
-        excluded_devices = self.config_entry.data.get("excluded_devices", [])
-        if not excluded_devices:
-            self._excluded_included_adjustment = 0.0
-            return 0.0
-
-        is_charging = self.previous_power >= 0
-
-        total_adjustment = 0.0
-        included_adjustment = 0.0  # Track included_in_consumption portion separately
-        for device in excluded_devices:
-            if not device.get("enabled", True):
-                continue
-            # EV chargers in no-telemetry mode expose a state sensor, not a numeric
-            # power sensor – their behaviour is handled by _check_ev_charger_state().
-            if device.get("ev_charger_no_telemetry", False):
-                continue
-
-            power_sensor = device.get("power_sensor")
-            if not power_sensor:
-                continue
-
-            state = self.hass.states.get(power_sensor)
-            if state is None or state.state in ("unknown", "unavailable"):
-                _LOGGER.debug("Excluded device sensor %s not available", power_sensor)
-                continue
-
-            try:
-                device_power = float(state.state)
-                included_in_consumption = device.get("included_in_consumption", True)
-                allow_solar_surplus = device.get("allow_solar_surplus", False)
-
-                if included_in_consumption:
-                    # Device IS in home sensor → SUBTRACT (don't power from battery)
-                    if allow_solar_surplus:
-                        if is_charging:
-                            # Battery is charging: do NOT adjust. PD must see real grid
-                            # to reduce charging and leave solar for the device.
-                            _LOGGER.debug("Excluded device %s consuming %.1fW (solar surplus, battery charging → no adjustment)",
-                                        power_sensor, device_power)
-                        else:
-                            # Battery is discharging: full exclusion so battery won't
-                            # discharge to power this device.
-                            total_adjustment += device_power
-                            included_adjustment += device_power
-                            current_grid_power -= device_power
-                            _LOGGER.debug("Excluded device %s consuming %.1fW (solar surplus, battery discharging → full exclusion)",
-                                        power_sensor, device_power)
-                    else:
-                        total_adjustment += device_power
-                        included_adjustment += device_power
-                        _LOGGER.debug("Excluded device %s consuming %.1fW (included in consumption, SUBTRACTING)",
-                                    power_sensor, device_power)
-                else:
-                    # Device is NOT in home sensor → ADD (power from battery)
-                    total_adjustment -= device_power
-                    _LOGGER.debug("Additional device %s consuming %.1fW (NOT in consumption, ADDING)",
-                                    power_sensor, device_power)
-            except (ValueError, TypeError):
-                _LOGGER.warning("Could not parse device sensor %s: %s", power_sensor, state.state)
-
-        # Store the included-in-consumption portion for capacity protection
-        self._excluded_included_adjustment = included_adjustment
-        return total_adjustment
-
-    def _check_ev_charger_state(self) -> tuple[bool, bool]:
-        """Check state of EV chargers configured with no-telemetry mode.
-
-        Detects a charging state by looking for 'charg' (English) or 'cargand'
-        (Spanish) in the sensor state string (case-insensitive).
-
-        On the first cycle a charging state is detected, a 5-minute pause is
-        started so the EV can grab as much current from the grid as it needs
-        before the battery interferes.  After the pause the battery is allowed
-        to charge from solar surplus but must never discharge.
-
-        Returns:
-            (pause_active, ev_charging_active):
-            - pause_active: True if the 5-min post-detection pause is still running
-            - ev_charging_active: True if EV is charging and pause has expired
-        """
-        excluded_devices = self.config_entry.data.get("excluded_devices", [])
-        now = dt_util.utcnow()
-        pause_active = False
-        ev_charging_active = False
-
-        for device in excluded_devices:
-            if not device.get("enabled", True):
-                continue
-            if not device.get("ev_charger_no_telemetry", False):
-                continue
-
-            sensor_id = device.get("power_sensor")
-            if not sensor_id:
-                continue
-
-            state = self.hass.states.get(sensor_id)
-            if state is None or state.state in ("unknown", "unavailable"):
-                continue
-
-            state_lower = state.state.lower().strip()
-            is_charging = "charg" in state_lower or "cargand" in state_lower
-
-            prev_charging = self._ev_charging_states.get(sensor_id, False)
-
-            if is_charging and not prev_charging:
-                # EV just started charging – start 5-minute battery pause
-                self._ev_pause_until[sensor_id] = now + timedelta(minutes=5)
-                _LOGGER.info(
-                    "EV charger %s: charging detected – 5-minute battery pause started",
-                    sensor_id,
-                )
-            elif not is_charging and prev_charging:
-                # EV stopped charging – cancel any remaining pause
-                self._ev_pause_until.pop(sensor_id, None)
-                _LOGGER.info(
-                    "EV charger %s: charging stopped – normal battery operation resumed",
-                    sensor_id,
-                )
-
-            self._ev_charging_states[sensor_id] = is_charging
-
-            pause_until = self._ev_pause_until.get(sensor_id)
-            if pause_until is not None:
-                if now < pause_until:
-                    pause_active = True
-                    _LOGGER.debug(
-                        "EV charger %s: pause active, %ds remaining",
-                        sensor_id,
-                        (pause_until - now).total_seconds(),
-                    )
-                else:
-                    # Pause has expired; remove entry and switch to discharge-block mode
-                    self._ev_pause_until.pop(sensor_id, None)
-                    if is_charging:
-                        ev_charging_active = True
-            elif is_charging:
-                ev_charging_active = True
-
-        return pause_active, ev_charging_active
 
     # =========================================================================
     # DYNAMIC PRICING: Price parsing methods
@@ -6231,7 +6035,7 @@ class ChargeDischargeController:
         # Adjust for excluded/additional devices before dynamic setpoint decisions.
         # Positive adjustment = reduce battery discharge (excluded devices)
         # Negative adjustment = increase battery discharge (additional devices not in home sensor)
-        excluded_adjustment = self._calculate_excluded_devices_adjustment(sensor_actual)
+        excluded_adjustment = self._external_loads.calculate_adjustment(sensor_actual)
         if excluded_adjustment != 0:
             if excluded_adjustment > 0:
                 _LOGGER.info("Reducing battery demand by %.1fW (excluded devices)", excluded_adjustment)
@@ -6698,7 +6502,7 @@ class ChargeDischargeController:
 
         # Check EV charger no-telemetry: 5-min full pause then discharge-block mode
         if not operation_restricted:
-            ev_pause_active, ev_charging_active = self._check_ev_charger_state()
+            ev_pause_active, ev_charging_active = self._external_loads.check_ev_charger_state()
             if ev_pause_active:
                 _LOGGER.info(
                     "ChargeDischargeController: EV charger detected – 5-minute battery pause, forcing 0W"
@@ -7287,6 +7091,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     from .consumption_tracker import ConsumptionTracker
     consumption_tracker = ConsumptionTracker(hass, entry, controller)
     controller._consumption_tracker = consumption_tracker
+
+    from .external_loads import ExternalLoads
+    controller._external_loads = ExternalLoads(hass, entry, controller)
 
     # Restore daily consumption history: try Store first (survives reloads), then binary sensor fallback
     loaded = await consumption_tracker.load_consumption_history()
