@@ -1,0 +1,13 @@
+# Test dependencies. Install into a Python 3.12/3.13 venv:
+#   py -3.12 -m venv .venv-test
+#   .venv-test\Scripts\python -m pip install -r requirements-test.txt
+#   .venv-test\Scripts\python -m pytest
+#
+# pytest-homeassistant-custom-component pins a compatible homeassistant,
+# pytest, and pytest-asyncio, so the Home Assistant core is mocked in-process
+# and no real battery or Modbus connection is needed.
+pytest-homeassistant-custom-component
+
+# Runtime requirement from manifest.json. The integration's package __init__
+# imports pymodbus at module load, so it must be present to import any submodule.
+pymodbus>=3.5.0
