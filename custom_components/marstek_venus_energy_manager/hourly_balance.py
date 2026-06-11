@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_HOURLY_BALANCE_MAX_OFFSET_W,
     DEFAULT_HOURLY_BALANCE_DEADBAND_WH,
     DEFAULT_HOURLY_BALANCE_HYSTERESIS_W,
-    _HOURLY_BALANCE_RAMP_IN_MIN,
+    HOURLY_BALANCE_RAMP_IN_MIN,
     EXTERNAL_NET_BALANCE_CANDIDATES,
 )
 
@@ -410,9 +410,9 @@ class HourlyBalanceManager:
                 needed_avg_w = deficit_wh / (remaining_min / 60.0)
                 offset_w = needed_avg_w  # positive = shift target towards import
 
-                # Ramp-in: attenuate during the first _HOURLY_BALANCE_RAMP_IN_MIN minutes
-                if elapsed_min < _HOURLY_BALANCE_RAMP_IN_MIN:
-                    offset_w *= elapsed_min / _HOURLY_BALANCE_RAMP_IN_MIN
+                # Ramp-in: attenuate during the first HOURLY_BALANCE_RAMP_IN_MIN minutes
+                if elapsed_min < HOURLY_BALANCE_RAMP_IN_MIN:
+                    offset_w *= elapsed_min / HOURLY_BALANCE_RAMP_IN_MIN
 
                 # Saturation
                 max_offset_w = self._config_entry.data.get(
