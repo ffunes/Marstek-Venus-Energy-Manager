@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.4] - Unreleased
+
+### Internal
+- **Automated test suite + CI**: first `pytest` coverage (consumption model, excluded-device and EV-charger logic), run on every PR. No user-facing change. [`tests/`](tests/), [`tests.yml`](.github/workflows/tests.yml).
+- **`external_loads` module extracted**: excluded-device and EV-charger logic moved out of `__init__.py` into [`external_loads.py`](custom_components/marstek_venus_energy_manager/external_loads.py); behavior unchanged, guarded by the new tests.
+
 ## [2.0.3] - 2026-06-10
 
 ### Fixed
