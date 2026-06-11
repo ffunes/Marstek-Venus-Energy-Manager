@@ -1462,7 +1462,12 @@
 <!-- The full changelog is maintained in CHANGELOG.md in the repository -->
 
 <h1 id="changelog_1">Changelog<a class="headerlink" href="#changelog_1" title="Permanent link">&para;</a></h1>
-<h2 id="204-2026-06-11">[2.0.4] - 2026-06-11<a class="headerlink" href="#204-2026-06-11" title="Permanent link">&para;</a></h2>
+<h2 id="204-unreleased">[2.0.4] - Unreleased<a class="headerlink" href="#204-unreleased" title="Permanent link">&para;</a></h2>
+<h3 id="internal">Internal<a class="headerlink" href="#internal" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Automated test suite + CI</strong>: first <code>pytest</code> coverage (consumption model, excluded-device and EV-charger logic), run on every PR. No user-facing change. <a href="tests/"><code>tests/</code></a>, <a href=".github/workflows/tests.yml"><code>tests.yml</code></a>.</li>
+<li><strong><code>external_loads</code> module extracted</strong>: excluded-device and EV-charger logic moved out of <code>__init__.py</code> into <a href="custom_components/marstek_venus_energy_manager/external_loads.py"><code>external_loads.py</code></a>; behavior unchanged, guarded by the new tests.</li>
+</ul>
 <h3 id="changed">Changed<a class="headerlink" href="#changed" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>const.py</code> split into a <code>const/</code> package</strong> (no behaviour change): per-model register/entity definitions moved to <code>registers_v2/v3/va/vd.py</code>, shared register infra to <code>registers_common.py</code>, and integration/feature constants to <code>integration_const.py</code>. <code>const/__init__.py</code> re-exports everything, so all existing imports keep working. <a href="custom_components/marstek_venus_energy_manager/const/"><code>const/</code></a>.</li>
