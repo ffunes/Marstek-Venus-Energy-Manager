@@ -100,8 +100,17 @@ class MarstekVenusEfficiencySensor(CoordinatorEntity, RestoreEntity, SensorEntit
         """Return round-trip efficiency (%)."""
         if self._integrate_mode:
             charge_eff, discharge_eff = self._leg_efficiencies()
-            if charge_eff is None or discharge_eff is None:
+            # A DC-coupled-PV unit (Venus A/D) charges its cells through the
+            # MPPT, not the AC port, so the charge leg only samples during the
+            # rare AC grid-charge windows — most installs never measure it and
+            # round-trip would sit at "unknown" forever. The inverter's AC<->DC
+            # conversion is near-symmetric, so when only one leg has been seen
+            # estimate the round trip from it; the real product takes over as
+            # soon as both legs exist. Per-leg attributes flag which is which.
+            if charge_eff is None and discharge_eff is None:
                 return None
+            charge_eff = charge_eff if charge_eff is not None else discharge_eff
+            discharge_eff = discharge_eff if discharge_eff is not None else charge_eff
             return round(min(charge_eff * discharge_eff * 100, 100.0), 2)
 
         if self.coordinator.data is None:

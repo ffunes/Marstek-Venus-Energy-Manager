@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.4b3] - 2026-06-12
+
+### Fixed
+- **Round-Trip Efficiency stuck at "unknown" on Venus A/D** (#325): the b2 dual-plane fix needed both the charge and discharge legs sampled, but a DC-coupled-PV unit charges through the MPPT (not the AC port), so the charge leg never samples and round-trip never resolved. It now estimates the round trip from whichever leg has been measured (inverter conversion is near-symmetric), switching to the real product once both exist. [`calculated_sensors.py`](custom_components/marstek_venus_energy_manager/calculated_sensors.py).
+- **Daily solar production ignored Venus-connected PV** (#354): the daily total integrated only the external solar sensor, so panels wired to a Venus A/D's own MPPT inputs were never counted, and removing the external sensor made the entity disappear. It now sums external + each vA/vD unit's MPPT power, and is created whenever either source exists. [`consumption_tracker.py`](custom_components/marstek_venus_energy_manager/consumption_tracker.py), [`sensor.py`](custom_components/marstek_venus_energy_manager/sensor.py).
+
 ## [2.0.4b2] - 2026-06-12
 
 ### Fixed
@@ -8,7 +14,7 @@
 - **Predictive charging backfill ignored disabled excluded devices**: when backfilling consumption history from recorder, disabled excluded devices were still subtracted from the daily total — inflating or deflating the forecast used to decide whether to charge from the grid. [`consumption_tracker.py`](custom_components/marstek_venus_energy_manager/consumption_tracker.py).
 - **Evening/startup evaluation ignored cheaper next-day slots** (#356): an HA restart or evening re-evaluation after ~13:00 (when tomorrow's EPEX/Nordpool prices are already available) only considered slots up to midnight, selecting expensive remaining-today slots instead of cheaper overnight ones. The price horizon now extends to `max(end_of_day, now + 12 h)` for startup recovery and evening recharge paths; the midnight-reset guard also uses the latest selected slot date so a cross-midnight schedule is not discarded before the overnight slots run. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
 - **EV charger cut-off ignored non-English charging states** (#358): state detection only matched `charg` (EN/FR) and `cargand` (ES); Dutch/German "Laden" (and others) were never recognised, so the battery kept discharging while the EV charged. Detection now covers NL/DE (laden), CA/PT (carreg), IT (caricand/carica), SV (ladd), NO/DA (lading). [`external_loads.py`](custom_components/marstek_venus_energy_manager/external_loads.py).
-- **Daily solar production ignored Venus-connected PV** (#354): the daily total integrated only the external solar sensor, so panels wired to a Venus A/D's own MPPT inputs were never counted, and removing the external sensor made the entity disappear. It now sums external + each vA/vD unit's MPPT power, and is created whenever either source exists. [`consumption_tracker.py`](custom_components/marstek_venus_energy_manager/consumption_tracker.py), [`sensor.py`](custom_components/marstek_venus_energy_manager/sensor.py).
+
 
 ## [2.0.4b1] - 2026-06-11
 
