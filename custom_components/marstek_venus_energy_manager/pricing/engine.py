@@ -27,6 +27,7 @@ from ..const import (
     PREDICTIVE_MODE_DYNAMIC_PRICING,
     PREDICTIVE_MODE_REALTIME_PRICE,
     NOTIFICATION_ID_PREFIX,
+    SOC_REEVALUATION_THRESHOLD,
     EVENING_REEVAL_HOURS_BEFORE_TEND,
     EVENING_REEVAL_FALLBACK_HOUR,
     EVENING_DEFICIT_THRESHOLD_KWH,
@@ -844,6 +845,125 @@ class PricingManager:
                 )
                 return
             await self._controller._handle_predictive_grid_charging()
+
+    # =========================================================================
+    # TIME SLOT: predictive charging handler
+    # =========================================================================
+
+    async def handle_time_slot_predictive_charging(self) -> None:
+        """Handle predictive charging in time slot mode (extracted from main loop)."""
+        # Check if we're in the actual time slot
+        in_time_window = (
+            self._controller.charging_time_slot is not None and
+            self._controller._check_time_window()
+        )
+
+        if in_time_window:
+            if self._controller.predictive_charging_overridden:
+                _LOGGER.debug("Predictive charging overridden by user - continuing normal operation")
+                if self._controller.grid_charging_active:
+                    self._controller.grid_charging_active = False
+                    self._controller._grid_charging_initialized = False
+                    self._controller.first_execution = True
+                return
+
+            current_avg_soc = sum(c.data.get("battery_soc", 0) for c in self._controller.coordinators if c.data) / len(self._controller.coordinators)
+            is_initial_eval = self._controller.last_evaluation_soc is None
+
+            # On slot entry, wait 5 minutes before the initial evaluation so the
+            # forecast sensor (which resets at midnight) has time to update.
+            if is_initial_eval:
+                if self._controller._slot_entry_time is None:
+                    self._controller._slot_entry_time = datetime.now()
+                    _LOGGER.info(
+                        "Time slot entered (SOC: %.1f%%) — waiting 5 min before evaluation "
+                        "to allow forecast sensor to update",
+                        current_avg_soc,
+                    )
+                wait_elapsed_s = (datetime.now() - self._controller._slot_entry_time).total_seconds()
+                if wait_elapsed_s < 5 * 60:
+                    _LOGGER.debug(
+                        "Predictive charging: waiting for forecast sensor (%.0f / 300 s) - normal operation continues",
+                        wait_elapsed_s,
+                    )
+                    return
+
+            should_reevaluate = (
+                is_initial_eval or
+                abs(current_avg_soc - self._controller.last_evaluation_soc) >= SOC_REEVALUATION_THRESHOLD
+            )
+
+            if should_reevaluate:
+                if is_initial_eval:
+                    _LOGGER.info("INITIAL evaluation of predictive grid charging (SOC: %.1f%%)", current_avg_soc)
+                else:
+                    _LOGGER.info("RE-EVALUATING predictive grid charging due to SOC drop (%.1f%% -> %.1f%%)",
+                                self._controller.last_evaluation_soc, current_avg_soc)
+
+                decision_data = await self._controller._should_activate_grid_charging()
+                self._controller.grid_charging_active = decision_data["should_charge"]
+                self._controller.last_evaluation_soc = current_avg_soc
+                self._controller._last_decision_data = decision_data
+
+                if is_initial_eval:
+                    await self._send_predictive_charging_notification(
+                        decision_data=decision_data
+                    )
+
+            if self._controller.grid_charging_active:
+                _LOGGER.info("Predictive Grid Charging ACTIVE - target power: %dW", self._controller.max_contracted_power)
+                await self._controller._handle_predictive_grid_charging()
+                return
+            else:
+                _LOGGER.info("In predictive charging slot but charging not needed - continuing normal operation")
+                return
+        else:
+            if self._controller.grid_charging_active or self._controller._grid_charging_initialized:
+                _LOGGER.info("Exiting predictive grid charging slot - returning to normal mode")
+                self._controller.grid_charging_active = False
+                self._controller.last_evaluation_soc = None
+                self._controller._grid_charging_initialized = False
+                self._controller.error_integral = 0.0
+                self._controller.previous_error = 0.0
+                self._controller.sign_changes = 0
+                await self._hass.services.async_call(
+                    "persistent_notification",
+                    "dismiss",
+                    {"notification_id": f"{NOTIFICATION_ID_PREFIX}predictive_charging_evaluation"},
+                )
+
+            self._controller._slot_entry_time = None
+
+    async def _send_predictive_charging_notification(
+        self,
+        decision_data: dict,
+        is_daily_evaluation: bool = False,
+    ) -> None:
+        """Send notification about predictive charging evaluation result.
+
+        Args:
+            decision_data: Dict from _should_activate_grid_charging() with decision factors
+            is_daily_evaluation: True when called from daily evaluation in automation_slots mode
+        """
+        # Format the notification using the pricing.notifications helper
+        title, message = notifications.format_predictive_notification_message(
+            decision_data,
+            is_daily_evaluation,
+            max_contracted_power=self._controller.max_contracted_power,
+            max_charge_capacity=self._controller.max_charge_capacity,
+            charging_time_slot=self._controller.charging_time_slot,
+        )
+
+        # Send the notification
+        await self._hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "title": title,
+                "message": message,
+                "notification_id": f"{NOTIFICATION_ID_PREFIX}predictive_charging_evaluation",
+            },
+        )
 
     # =========================================================================
     # Price-based discharge block
