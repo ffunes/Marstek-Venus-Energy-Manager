@@ -36,6 +36,12 @@ _FORCE_NONE = 0
 _FORCE_CHARGE = 1
 _FORCE_DISCHARGE = 2
 
+# RS485 control-mode toggle. The rs485_control register is a write-command
+# register, not a plain bool: 0x55AA enables external (Modbus) control, 0x55BB
+# disables it. v3 firmware rejects a plain 0/1 with Modbus exception 3.
+_RS485_ENABLE = 21930   # 0x55AA
+_RS485_DISABLE = 21947  # 0x55BB
+
 
 class MarstekModbusDriver(BatteryDriver):
     """Modbus-TCP driver for a single Marstek battery."""
@@ -246,4 +252,27 @@ class MarstekModbusDriver(BatteryDriver):
         return SetpointResult(
             ok=True, net_power_w=applied_net, confirmed=confirmed,
             battery_power_w=power_fb, applied=applied,
+        )
+
+    async def set_rs485_control(self, enable: bool) -> bool:
+        """Enable or disable RS485 (external Modbus) control mode.
+
+        RS485 control mode must be on for the battery to accept power commands;
+        a new TCP connection or a standby slip can drop it. ``enable=True`` writes
+        the enable command, ``False`` returns control to the battery's internal
+        logic. The 0x55AA / 0x55BB toggle values are Marstek transport detail and
+        live here, not in the control layer. Returns True if the write was
+        accepted, False if this version has no rs485_control register or the write
+        failed.
+
+        Concrete to this driver (not on :class:`BatteryDriver`): RS485 is a
+        Marstek-specific control gate. A push/MQTT brand has no equivalent; hoist
+        with a semantic name only when a second brand needs it.
+        """
+        reg = self.get_register("rs485_control")
+        if reg is None:
+            return False
+        self._client.unit_id = self._slave_id
+        return await self._client.async_write_register(
+            reg, _RS485_ENABLE if enable else _RS485_DISABLE
         )

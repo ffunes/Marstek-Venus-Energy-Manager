@@ -240,3 +240,54 @@ async def test_apply_setpoint_addresses_configured_slave():
     await drv.apply_setpoint(100, read_back=False)
 
     assert client.unit_id == 7
+
+
+# ----------------------------------------------------------------------
+# set_rs485_control
+# ----------------------------------------------------------------------
+async def test_set_rs485_control_enable_writes_0x55aa():
+    client = _fake_client()
+    drv = _driver("v3", client=client)
+
+    ok = await drv.set_rs485_control(True)
+
+    assert ok is True
+    reg = REGISTER_MAP["v3"]["rs485_control"]
+    client.async_write_register.assert_awaited_once_with(reg, 21930)  # 0x55AA
+
+
+async def test_set_rs485_control_disable_writes_0x55bb():
+    client = _fake_client()
+    drv = _driver("v3", client=client)
+
+    await drv.set_rs485_control(False)
+
+    reg = REGISTER_MAP["v3"]["rs485_control"]
+    client.async_write_register.assert_awaited_once_with(reg, 21947)  # 0x55BB
+
+
+async def test_set_rs485_control_addresses_configured_slave():
+    client = _fake_client()
+    drv = _driver("v3", slave_id=7, client=client)
+
+    await drv.set_rs485_control(True)
+
+    assert client.unit_id == 7
+
+
+async def test_set_rs485_control_returns_false_when_register_missing():
+    client = _fake_client()
+    drv = _driver("vX", client=client)  # unknown version -> no rs485_control register
+
+    ok = await drv.set_rs485_control(True)
+
+    assert ok is False
+    client.async_write_register.assert_not_awaited()
+
+
+async def test_set_rs485_control_propagates_write_failure():
+    client = _fake_client()
+    client.async_write_register = AsyncMock(return_value=False)
+    drv = _driver("v3", client=client)
+
+    assert await drv.set_rs485_control(True) is False

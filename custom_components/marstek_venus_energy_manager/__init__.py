@@ -3089,22 +3089,21 @@ class ChargeDischargeController:
         A battery that ACKs power commands but delivers 0 W has usually dropped its
         RS485 control mode (e.g. it slipped into standby). Simply re-asserting the
         enable value is a no-op if the battery already believes it is enabled, so we
-        force a real state transition: disable (0x55BB), wait 1 s, then re-enable
-        (0x55AA). Skipped when the user has disabled RS485 control. Returns True if
-        the re-enable write succeeded.
+        force a real state transition: disable, wait 1 s, then re-enable. Skipped
+        when the user has disabled RS485 control. Returns True if the re-enable
+        succeeded.
         """
         if coordinator.rs485_user_disabled:
             return False
-        rs485_reg = coordinator.get_register("rs485_control")
-        if not rs485_reg:
+        if coordinator.get_register("rs485_control") is None:
             return False
         _LOGGER.info(
-            "[%s] Non-delivery — RS485 wake toggle (disable 0x55BB → 1s → enable 0x55AA)",
+            "[%s] Non-delivery — RS485 wake toggle (disable → 1s → enable)",
             coordinator.name,
         )
-        await coordinator.write_register(rs485_reg, 21947, do_refresh=False)  # 0x55BB disable
+        await coordinator.set_rs485_control(False)
         await asyncio.sleep(1)
-        return await coordinator.write_register(rs485_reg, 21930, do_refresh=False)  # 0x55AA enable
+        return await coordinator.set_rs485_control(True)
 
     # =========================================================================
     # DYNAMIC PRICING / REAL-TIME PRICE: delegators to PricingManager
@@ -4429,9 +4428,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     _LOGGER.info("Skipping RS485 enable for %s (user disabled)", battery_config[CONF_NAME])
                 else:
                     _LOGGER.info("Enabling RS485 Control Mode for %s (only on initial setup)", battery_config[CONF_NAME])
-                    rs485_reg = coordinator.get_register("rs485_control")
-                    if rs485_reg:
-                        await coordinator.write_register(rs485_reg, 21930, do_refresh=False)  # 0x55AA
+                    if coordinator.get_register("rs485_control"):
+                        await coordinator.set_rs485_control(True)
                         await asyncio.sleep(0.1)
 
                 # Write initial configuration values to the battery
@@ -4731,7 +4729,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 # Disable RS485 Control Mode (return control to battery's internal logic)
                 _LOGGER.info("Disabling RS485 control mode for %s", coordinator.name)
                 if rs485_reg:
-                    await coordinator.write_register(rs485_reg, 21947, do_refresh=False)  # 0x55BB = disable
+                    await coordinator.set_rs485_control(False)
                     await asyncio.sleep(0.1)
 
                 _LOGGER.info("%s: Shutdown complete - all control registers reset", coordinator.name)

@@ -283,15 +283,13 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                 # A new TCP connection may reset the battery's RS485 state,
                 # causing commands to be silently ignored.
                 # Skip if the user explicitly disabled RS485 via the switch.
+                # Already inside self.lock, so call the driver directly (the
+                # set_rs485_control wrapper would re-acquire the lock and deadlock).
                 if not self.rs485_user_disabled:
-                    rs485_reg = self.get_register("rs485_control")
-                    if rs485_reg:
-                        self.client.unit_id = self.slave_id
-                        ok = await self.client.async_write_register(rs485_reg, 21930)  # 0x55AA
-                        if ok:
-                            _LOGGER.info("[%s] RS485 control mode re-enabled after reconnection", self.name)
-                        else:
-                            _LOGGER.warning("[%s] Failed to re-enable RS485 after reconnection", self.name)
+                    if await self.driver.set_rs485_control(True):
+                        _LOGGER.info("[%s] RS485 control mode re-enabled after reconnection", self.name)
+                    else:
+                        _LOGGER.warning("[%s] Failed to re-enable RS485 after reconnection", self.name)
             else:
                 self._is_connected = False
                 _LOGGER.warning("[%s] Fresh reconnection failed", self.name)
@@ -871,3 +869,27 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                 self._last_write_failure_reason = result.failure_reason
 
             return result
+
+    async def set_rs485_control(self, enable: bool) -> bool:
+        """Enable/disable RS485 control mode via the driver, holding self.lock.
+
+        Semantic entry point for the setup re-enable, shutdown disable and the
+        non-delivery wake toggle. The driver owns the toggle command values; this
+        wrapper only adds the per-coordinator infra (lock + health bookkeeping),
+        matching write_register. No refresh. Callers already inside self.lock
+        (the reconnect re-assert) must call self.driver.set_rs485_control directly
+        to avoid a deadlock.
+        """
+        async with self.lock:
+            try:
+                ok = await self.driver.set_rs485_control(enable)
+            except Exception as e:
+                if not self._is_shutting_down:
+                    _LOGGER.error("[%s] Exception toggling RS485 control: %s", self.name, e)
+                return False
+            if ok:
+                self._consecutive_failures = 0
+                self._is_connected = True
+            elif not self._is_shutting_down:
+                _LOGGER.warning("[%s] Failed to set RS485 control=%s", self.name, enable)
+            return ok
