@@ -206,3 +206,17 @@ class BatteryDriver(ABC):
         authoritative. ``read_back=False`` skips confirmation to cut bus traffic
         (result carries ``confirmed=False``).
         """
+
+    @abstractmethod
+    async def write_control(self, key: str, value: int) -> bool:
+        """Command a single logical control to a wire value.
+
+        Generic entity-write path for the user-facing number/select/switch/button
+        entities: the entity names a logical control *key* (e.g. ``force_mode``,
+        ``rs485_control_mode``, a select option's underlying value) and supplies the
+        already-encoded wire value; the driver resolves the key to its own wire
+        detail (Marstek: the register address). This keeps the platform code
+        register-free so a non-Modbus brand whose definitions carry no "register"
+        does not break here. Returns True if the write was accepted, False if this
+        driver has no control for the key or the write failed.
+        """

@@ -52,6 +52,7 @@ class FakeCoordinator:
         "balance_hold": False,
         "apply_power": None,
         "set_charge_cutoff": None,
+        "write_control": None,
     }
 
     def __init__(self, **kw):

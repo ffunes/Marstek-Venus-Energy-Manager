@@ -117,11 +117,12 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # packet correction; the coordinator and platform setups read the
         # per-platform definition lists back from it (see the passthrough
         # properties below) instead of branching on the version string.
-        # ``self.client`` is kept as a transitional alias because the generic
-        # entity-write path (``write_register``, used by number/select/switch/
-        # button entities) still uses the register-level client directly until a
-        # later phase migrates it. Telemetry reads (incl. block reads) and power/
-        # config writes already route through the driver.
+        # ``self.client`` is kept as a transitional alias for the two remaining
+        # register-level uses: the poll loop's per-battery ``unit_id`` set and the
+        # config-flow connection probe (Phase 6). Telemetry reads (incl. block
+        # reads) and all writes — power, config, and now the entity-write path
+        # (number/select/switch/button via ``write_control``) — route through the
+        # driver. The alias falls out once the probe moves behind the driver.
         self.driver = MarstekModbusDriver(
             self.host, self.port, self.battery_version, self.slave_id,
             max_charge_power_w=self.max_charge_power,
@@ -598,28 +599,33 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             # Default to sensor if not found
             return "sensor"
 
-    async def write_register(self, register: int, value: int, do_refresh: bool = True):
-        """Write a value to a register and optionally do an immediate refresh."""
+    async def write_control(self, key: str, value: int, do_refresh: bool = True):
+        """Command a single logical control to a wire value via the driver.
+
+        Semantic entity-write entry point (number/select/switch/button): the entity
+        names the logical control key and the driver resolves it to hardware. This
+        wrapper adds the per-coordinator infra — lock (so a poll read cannot
+        interleave), health bookkeeping and the optional immediate refresh — that
+        the former register-level ``write_register`` carried.
+        """
         success = False
         async with self.lock:
-            self.client.unit_id = self.slave_id
-
             try:
-                success = await self.client.async_write_register(register, value)
+                success = await self.driver.write_control(key, value)
                 if not success:
                     if not self._is_shutting_down:
-                        _LOGGER.warning("[%s] Failed to write register %d with value %d", self.name, register, value)
+                        _LOGGER.warning("[%s] Failed to write control %s with value %d", self.name, key, value)
                 else:
                     # Successful write confirms healthy connection
                     self._consecutive_failures = 0
                     self._is_connected = True
             except Exception as e:
                 if not self._is_shutting_down:
-                    _LOGGER.error("[%s] Exception writing register %d: %s", self.name, register, e)
+                    _LOGGER.error("[%s] Exception writing control %s: %s", self.name, key, e)
 
         # Do refresh outside the lock to avoid deadlock
         if success and do_refresh:
-            _LOGGER.debug("[%s] Write successful for register %d, triggering immediate refresh", self.name, register)
+            _LOGGER.debug("[%s] Write successful for control %s, triggering immediate refresh", self.name, key)
             await self.async_request_refresh()
 
         return success
@@ -676,7 +682,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         Semantic entry point for the setup re-enable, shutdown disable and the
         non-delivery wake toggle. The driver owns the toggle command values; this
         wrapper only adds the per-coordinator infra (lock + health bookkeeping),
-        matching write_register. No refresh. Callers already inside self.lock
+        matching write_control. No refresh. Callers already inside self.lock
         (the reconnect re-assert) must call self.driver.set_rs485_control directly
         to avoid a deadlock.
         """
@@ -707,7 +713,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         Semantic entry point for the setup path (max/min SOC cut-offs + power caps).
         The driver owns which registers exist for this version and the deci-percent
         scaling; this wrapper only adds the per-coordinator infra (lock + health
-        bookkeeping), matching write_register / set_rs485_control. No refresh.
+        bookkeeping), matching write_control / set_rs485_control. No refresh.
         """
         async with self.lock:
             try:
@@ -735,7 +741,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         that temporarily raise the BMS charge ceiling to 100% and later restore
         the configured max_soc. The driver owns the register address, the
         deci-percent scaling and the settle; this wrapper only adds the
-        per-coordinator infra (lock + health bookkeeping), matching write_register
+        per-coordinator infra (lock + health bookkeeping), matching write_control
         / apply_config. No refresh. Callers gate the v3 (no-register) case on
         capabilities.hardware_soc_cutoff, so a False here means the write failed.
         """

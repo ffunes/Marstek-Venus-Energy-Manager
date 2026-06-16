@@ -67,7 +67,6 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
         self._options_map = definition["options"]
-        self._register = definition["register"]
 
     @property
     def current_option(self):
@@ -89,7 +88,7 @@ class MarstekVenusSelect(CoordinatorEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         value = self._options_map[option]
-        await self.coordinator.write_register(self._register, value, do_refresh=True)
+        await self.coordinator.write_control(self.definition["key"], value, do_refresh=True)
         if self.definition.get("use_shadow_state"):
             self.coordinator.set_shadow_select(self.definition["key"], value)
 

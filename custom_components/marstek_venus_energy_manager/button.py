@@ -49,12 +49,12 @@ class MarstekVenusButton(ButtonEntity):
         self._attr_device_class = definition.get("device_class")
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
-        self._register = definition["register"]
+        self._key = definition["key"]
         self._command = definition["command"]
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.coordinator.write_register(self._register, self._command, do_refresh=True)
+        await self.coordinator.write_control(self._key, self._command, do_refresh=True)
 
     @property
     def device_info(self):

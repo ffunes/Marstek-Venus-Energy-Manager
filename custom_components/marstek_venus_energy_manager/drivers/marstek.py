@@ -469,6 +469,22 @@ class MarstekModbusDriver(BatteryDriver):
             battery_power_w=power_fb, applied=applied,
         )
 
+    async def write_control(self, key: str, value: int) -> bool:
+        """Write a single logical control register by key (entity-write path).
+
+        Resolves the logical key to its register for this version and writes the
+        already-encoded ``value`` (scaling/command-value choice stays in the entity,
+        which owns the user-facing units). Used by the number/select/switch/button
+        platforms so they never touch a register address. Returns True if the write
+        was accepted, False if this version has no register for the key or the write
+        failed.
+        """
+        reg = self.get_register(key)
+        if reg is None:
+            return False
+        self._client.unit_id = self._slave_id
+        return bool(await self._client.async_write_register(reg, value))
+
     async def apply_config(
         self,
         *,

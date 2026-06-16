@@ -93,7 +93,6 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
         self._attr_native_step = definition["step"]
         self._attr_entity_registry_enabled_default = definition.get("enabled_by_default", True)
         self._attr_should_poll = False
-        self._register = definition["register"]
         self._scale = definition.get("scale", 1.0)  # Scale factor for register conversion
 
     @property
@@ -118,8 +117,8 @@ class MarstekVenusNumber(CoordinatorEntity, NumberEntity):
                         self.definition['name'], value, self._attr_native_unit_of_measurement or '', 
                         register_value, self._scale)
         
-        # Write the converted value to register
-        await self.coordinator.write_register(self._register, register_value, do_refresh=True)
+        # Write the converted value via the logical control key
+        await self.coordinator.write_control(self.definition["key"], register_value, do_refresh=True)
         
         # Update coordinator attributes immediately for control loop
         # This ensures changes take effect immediately without waiting for scan_interval

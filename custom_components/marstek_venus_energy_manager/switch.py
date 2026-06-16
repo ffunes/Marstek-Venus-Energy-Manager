@@ -107,7 +107,6 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
         self._attr_should_poll = False
         self._command_on = definition["command_on"]
         self._command_off = definition["command_off"]
-        self._register = definition["register"]
 
     @property
     def is_on(self):
@@ -124,13 +123,13 @@ class MarstekVenusSwitch(CoordinatorEntity, SwitchEntity):
         """Turn the switch on."""
         if self.definition["key"] == "rs485_control_mode":
             self.coordinator.set_rs485_user_disabled(False)
-        await self.coordinator.write_register(self._register, self._command_on, do_refresh=True)
+        await self.coordinator.write_control(self.definition["key"], self._command_on, do_refresh=True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         if self.definition["key"] == "rs485_control_mode":
             self.coordinator.set_rs485_user_disabled(True)
-        await self.coordinator.write_register(self._register, self._command_off, do_refresh=True)
+        await self.coordinator.write_control(self.definition["key"], self._command_off, do_refresh=True)
 
     @property
     def device_info(self):

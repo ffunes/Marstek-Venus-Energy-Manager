@@ -398,6 +398,47 @@ async def test_apply_setpoint_addresses_configured_slave():
 
 
 # ----------------------------------------------------------------------
+# write_control (generic entity-write path: number/select/switch/button)
+# ----------------------------------------------------------------------
+async def test_write_control_resolves_key_to_register():
+    client = _fake_client()
+    drv = _driver("v3", client=client)
+
+    ok = await drv.write_control("force_mode", 2)
+
+    assert ok is True
+    reg = REGISTER_MAP["v3"]["force_mode"]
+    client.async_write_register.assert_awaited_once_with(reg, 2)
+
+
+async def test_write_control_addresses_configured_slave():
+    client = _fake_client()
+    drv = _driver("v3", slave_id=7, client=client)
+
+    await drv.write_control("force_mode", 1)
+
+    assert client.unit_id == 7
+
+
+async def test_write_control_returns_false_for_unknown_key():
+    client = _fake_client()
+    drv = _driver("v3", client=client)
+
+    ok = await drv.write_control("not_a_real_control", 1)
+
+    assert ok is False  # no register for the key -> nothing written
+    client.async_write_register.assert_not_awaited()
+
+
+async def test_write_control_propagates_write_failure():
+    client = _fake_client()
+    client.async_write_register = AsyncMock(return_value=False)
+    drv = _driver("v3", client=client)
+
+    assert await drv.write_control("force_mode", 1) is False
+
+
+# ----------------------------------------------------------------------
 # set_rs485_control
 # ----------------------------------------------------------------------
 async def test_set_rs485_control_enable_writes_0x55aa():

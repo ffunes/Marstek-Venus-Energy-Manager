@@ -24,6 +24,7 @@ from tests.conftest import FakeCoordinator
 # `is_available` vs `available`.
 CLASS_LEVEL_NAMES = (
     "is_available", "device_key", "apply_power", "capabilities", "set_charge_cutoff",
+    "write_control",
 )
 
 
