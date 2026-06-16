@@ -105,6 +105,53 @@ def test_rs485_control_capability(version):
 
 
 # ----------------------------------------------------------------------
+# entity definitions (loaded from the version, Phase 4b)
+# ----------------------------------------------------------------------
+def test_definitions_loaded_from_version_when_not_injected():
+    # Production passes no definitions: the driver loads this version's real set.
+    from custom_components.marstek_venus_energy_manager.const import (
+        SENSOR_DEFINITIONS,
+        NUMBER_DEFINITIONS,
+        SELECT_DEFINITIONS,
+        SWITCH_DEFINITIONS,
+        BINARY_SENSOR_DEFINITIONS,
+        BUTTON_DEFINITIONS,
+    )
+    drv = MarstekModbusDriver("1.2.3.4", 502, "v2", client=_fake_client())
+    assert drv.sensor_definitions is SENSOR_DEFINITIONS
+    assert drv.button_definitions is BUTTON_DEFINITIONS
+    assert drv.all_definitions == (
+        SENSOR_DEFINITIONS + NUMBER_DEFINITIONS + SELECT_DEFINITIONS
+        + SWITCH_DEFINITIONS + BINARY_SENSOR_DEFINITIONS
+    )
+    # all_definitions is the polled union; buttons (stateless) are excluded.
+    assert len(drv.all_definitions) == (
+        len(drv.sensor_definitions) + len(drv.number_definitions)
+        + len(drv.select_definitions) + len(drv.switch_definitions)
+        + len(drv.binary_sensor_definitions)
+    )
+    assert drv.button_definitions  # buttons exist, just not polled
+
+
+def test_injected_definitions_leave_per_platform_lists_empty():
+    # Test/override path: a flat list seeds telemetry only, no per-platform split.
+    drv = _driver("v3", definitions=_DEFS)
+    assert drv.sensor_definitions == []
+    assert drv.all_definitions == _DEFS
+
+
+def test_capabilities_use_version_loaded_definitions():
+    # vD really exposes MPPT/PV; v2 does not but carries alarm registers. Pins
+    # that the version-loaded definitions (not just the version string) feed the
+    # capability derivation / telemetry index.
+    vd = MarstekModbusDriver("1.2.3.4", 502, "vD", client=_fake_client()).capabilities
+    assert vd.has_mppt_pv is True
+    v2 = MarstekModbusDriver("1.2.3.4", 502, "v2", client=_fake_client()).capabilities
+    assert v2.has_mppt_pv is False
+    assert v2.has_alarm_registers is True
+
+
+# ----------------------------------------------------------------------
 # read_telemetry
 # ----------------------------------------------------------------------
 async def test_read_telemetry_reads_requested_keys_unscaled():

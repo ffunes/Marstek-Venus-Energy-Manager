@@ -43,6 +43,76 @@ _RS485_ENABLE = 21930   # 0x55AA
 _RS485_DISABLE = 21947  # 0x55BB
 
 
+def _load_definitions(version: str) -> dict[str, list[dict]]:
+    """Return this Marstek version's per-platform entity definitions.
+
+    Owns the version branch that used to live in the coordinator: each Marstek
+    firmware family exposes a different register/entity set. The keys are the HA
+    platforms plus ``all`` (the polled union — everything except buttons, which
+    are stateless commands and never read). Which registers a version has is
+    brand detail, so it belongs in the driver; the coordinator and platform
+    setups read these back instead of branching on the version string.
+    """
+    from ..const import (
+        SENSOR_DEFINITIONS,
+        NUMBER_DEFINITIONS,
+        SELECT_DEFINITIONS,
+        SWITCH_DEFINITIONS,
+        BINARY_SENSOR_DEFINITIONS,
+        BUTTON_DEFINITIONS,
+    )
+
+    if version == "v3":
+        from ..const import (
+            SENSOR_DEFINITIONS_V3,
+            NUMBER_DEFINITIONS_V3,
+            SELECT_DEFINITIONS_V3,
+            SWITCH_DEFINITIONS_V3,
+            BINARY_SENSOR_DEFINITIONS_V3,
+            BUTTON_DEFINITIONS_V3,
+        )
+        sensor = SENSOR_DEFINITIONS_V3
+        number = NUMBER_DEFINITIONS_V3
+        select = SELECT_DEFINITIONS_V3
+        switch = SWITCH_DEFINITIONS_V3
+        binary_sensor = BINARY_SENSOR_DEFINITIONS_V3
+        button = BUTTON_DEFINITIONS_V3
+    elif version in ("vA", "vD"):
+        from ..const import (
+            SENSOR_DEFINITIONS_VA,
+            NUMBER_DEFINITIONS_VA,
+            NUMBER_DEFINITIONS_VD,
+            SELECT_DEFINITIONS_VA,
+            SELECT_DEFINITIONS_VD,
+            SWITCH_DEFINITIONS_V3,
+            BINARY_SENSOR_DEFINITIONS_V3,
+            BUTTON_DEFINITIONS_V3,
+        )
+        sensor = SENSOR_DEFINITIONS_VA  # identical for vA and vD
+        number = NUMBER_DEFINITIONS_VA if version == "vA" else NUMBER_DEFINITIONS_VD
+        select = SELECT_DEFINITIONS_VA if version == "vA" else SELECT_DEFINITIONS_VD
+        switch = SWITCH_DEFINITIONS_V3
+        binary_sensor = BINARY_SENSOR_DEFINITIONS_V3
+        button = BUTTON_DEFINITIONS_V3
+    else:  # v2 (default)
+        sensor = SENSOR_DEFINITIONS
+        number = NUMBER_DEFINITIONS
+        select = SELECT_DEFINITIONS
+        switch = SWITCH_DEFINITIONS
+        binary_sensor = BINARY_SENSOR_DEFINITIONS
+        button = BUTTON_DEFINITIONS
+
+    return {
+        "sensor": sensor,
+        "number": number,
+        "select": select,
+        "switch": switch,
+        "binary_sensor": binary_sensor,
+        "button": button,
+        "all": sensor + number + select + switch + binary_sensor,
+    }
+
+
 class MarstekModbusDriver(BatteryDriver):
     """Modbus-TCP driver for a single Marstek battery."""
 
@@ -60,11 +130,14 @@ class MarstekModbusDriver(BatteryDriver):
     ) -> None:
         """Build the driver.
 
-        ``definitions`` is the version's entity definition list (each item a dict
-        with ``key``/``register``/``data_type``/``count``); it seeds the telemetry
-        index used by :meth:`read_telemetry`. ``client`` is injectable so unit
-        tests can supply a fake; production passes None and a real
-        :class:`MarstekModbusClient` is built with version-correct timing.
+        ``definitions`` overrides the entity definition list (each item a dict
+        with ``key``/``register``/``data_type``/``count``); it seeds the
+        telemetry index used by :meth:`read_telemetry`. Production passes None
+        and the driver loads this version's real per-platform definitions
+        itself; tests inject a flat list to drive telemetry/capabilities in
+        isolation. ``client`` is injectable so unit tests can supply a fake;
+        production passes None and a real :class:`MarstekModbusClient` is built
+        with version-correct timing.
         """
         self._version = version
         self._is_v3_family = version in _V3_FAMILY
@@ -81,9 +154,24 @@ class MarstekModbusDriver(BatteryDriver):
             )
         self._client = client
 
+        # Per-platform entity definitions. Production passes ``definitions=None``
+        # and the driver loads this version's real register/entity set (the
+        # version branch that used to live in the coordinator); the coordinator
+        # and platform setups read them back instead of branching on the version
+        # string. Tests inject a flat list to exercise telemetry/capabilities in
+        # isolation, in which case the per-platform lists stay empty.
+        if definitions is None:
+            self._definitions = _load_definitions(version)
+        else:
+            self._definitions = {
+                "sensor": [], "number": [], "select": [],
+                "switch": [], "binary_sensor": [], "button": [],
+                "all": list(definitions),
+            }
+
         # logical key -> (register, data_type, count) for telemetry reads.
         self._telemetry_index: dict[str, tuple[int, str, Optional[int]]] = {}
-        for defn in definitions or []:
+        for defn in self._definitions["all"]:
             register = defn.get("register")
             if register is None:
                 continue
@@ -114,6 +202,39 @@ class MarstekModbusDriver(BatteryDriver):
     @property
     def capabilities(self) -> DriverCapabilities:
         return self._capabilities
+
+    # --- entity definitions -------------------------------------------------
+    # The driver owns this version's register/entity set; the coordinator and
+    # platform setups read these back instead of branching on the version
+    # string. ``all_definitions`` is the polled union (buttons excluded).
+
+    @property
+    def sensor_definitions(self) -> list[dict]:
+        return self._definitions["sensor"]
+
+    @property
+    def number_definitions(self) -> list[dict]:
+        return self._definitions["number"]
+
+    @property
+    def select_definitions(self) -> list[dict]:
+        return self._definitions["select"]
+
+    @property
+    def switch_definitions(self) -> list[dict]:
+        return self._definitions["switch"]
+
+    @property
+    def binary_sensor_definitions(self) -> list[dict]:
+        return self._definitions["binary_sensor"]
+
+    @property
+    def button_definitions(self) -> list[dict]:
+        return self._definitions["button"]
+
+    @property
+    def all_definitions(self) -> list[dict]:
+        return self._definitions["all"]
 
     @property
     def client(self) -> MarstekModbusClient:

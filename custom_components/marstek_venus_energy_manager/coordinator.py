@@ -9,13 +9,7 @@ from homeassistant.helpers import entity_registry
 
 from .const import (
     DOMAIN,
-    SENSOR_DEFINITIONS,
     SCAN_INTERVAL,
-    NUMBER_DEFINITIONS,
-    SELECT_DEFINITIONS,
-    SWITCH_DEFINITIONS,
-    BINARY_SENSOR_DEFINITIONS,
-    BUTTON_DEFINITIONS,
     DEBUG_POLL_SENSOR_SKIPS,
     DEBUG_POLL_SENSOR_VALUES,
     CONF_ACTIVE_BALANCE_MODE_ENABLED,
@@ -119,70 +113,20 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self._config_entry = None  # Set after creation to allow persisting rs485_user_disabled
         self.balance_hold = False  # Legacy BalanceMonitor hold flag; kept for persisted-state cleanup
 
-        # Load version-specific definitions
-        if self.battery_version == "v3":
-            from .const import (
-                SENSOR_DEFINITIONS_V3,
-                NUMBER_DEFINITIONS_V3,
-                SELECT_DEFINITIONS_V3,
-                SWITCH_DEFINITIONS_V3,
-                BINARY_SENSOR_DEFINITIONS_V3,
-                BUTTON_DEFINITIONS_V3,
-            )
-            self.sensor_definitions = SENSOR_DEFINITIONS_V3
-            self.number_definitions = NUMBER_DEFINITIONS_V3
-            self.select_definitions = SELECT_DEFINITIONS_V3
-            self.switch_definitions = SWITCH_DEFINITIONS_V3
-            self.binary_sensor_definitions = BINARY_SENSOR_DEFINITIONS_V3
-            self.button_definitions = BUTTON_DEFINITIONS_V3
-            self._all_definitions = (
-                SENSOR_DEFINITIONS_V3 +
-                NUMBER_DEFINITIONS_V3 +
-                SELECT_DEFINITIONS_V3 +
-                SWITCH_DEFINITIONS_V3 +
-                BINARY_SENSOR_DEFINITIONS_V3
-            )
-        elif self.battery_version in ("vA", "vD"):
-            from .const import (
-                SENSOR_DEFINITIONS_VA,
-                NUMBER_DEFINITIONS_VA,
-                NUMBER_DEFINITIONS_VD,
-                SELECT_DEFINITIONS_VA,
-                SELECT_DEFINITIONS_VD,
-                SWITCH_DEFINITIONS_V3,
-                BINARY_SENSOR_DEFINITIONS_V3,
-                BUTTON_DEFINITIONS_V3,
-            )
-            sensor_defs = SENSOR_DEFINITIONS_VA  # identical for vA and vD
-            number_defs = NUMBER_DEFINITIONS_VA if self.battery_version == "vA" else NUMBER_DEFINITIONS_VD
-            select_defs = SELECT_DEFINITIONS_VA if self.battery_version == "vA" else SELECT_DEFINITIONS_VD
-            self.sensor_definitions = sensor_defs
-            self.number_definitions = number_defs
-            self.select_definitions = select_defs
-            self.switch_definitions = SWITCH_DEFINITIONS_V3
-            self.binary_sensor_definitions = BINARY_SENSOR_DEFINITIONS_V3
-            self.button_definitions = BUTTON_DEFINITIONS_V3
-            self._all_definitions = (
-                sensor_defs +
-                number_defs +
-                select_defs +
-                SWITCH_DEFINITIONS_V3 +
-                BINARY_SENSOR_DEFINITIONS_V3
-            )
-        else:  # v2 (default)
-            self.sensor_definitions = SENSOR_DEFINITIONS
-            self.number_definitions = NUMBER_DEFINITIONS
-            self.select_definitions = SELECT_DEFINITIONS
-            self.switch_definitions = SWITCH_DEFINITIONS
-            self.binary_sensor_definitions = BINARY_SENSOR_DEFINITIONS
-            self.button_definitions = BUTTON_DEFINITIONS
-            self._all_definitions = (
-                SENSOR_DEFINITIONS +
-                NUMBER_DEFINITIONS +
-                SELECT_DEFINITIONS +
-                SWITCH_DEFINITIONS +
-                BINARY_SENSOR_DEFINITIONS
-            )
+        # Hardware I/O goes through a brand-agnostic driver. The driver owns this
+        # version's register/entity definitions and its version-correct timing /
+        # packet correction; the coordinator and platform setups read the
+        # per-platform definition lists back from it (see the passthrough
+        # properties below) instead of branching on the version string.
+        # ``self.client`` is kept as a transitional alias because the write paths
+        # and block reads still use the register-level client directly until
+        # later phases migrate them.
+        self.driver = MarstekModbusDriver(
+            self.host, self.port, self.battery_version, self.slave_id,
+            max_charge_power_w=self.max_charge_power,
+            max_discharge_power_w=self.max_discharge_power,
+        )
+        self.client = self.driver.client
 
         # Block-read groups: contiguous register spans read in a single Modbus
         # request instead of one request per register (issue #361). v3/vA/vD share
@@ -209,21 +153,6 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # Log sensor count for debugging
         _LOGGER.info("[%s] Total sensors to poll: %d", self.name, len(self._all_definitions))
 
-        # Hardware I/O goes through a brand-agnostic driver (driver abstraction
-        # Phase 2: connection lifecycle + telemetry reads). The driver owns the
-        # Modbus client and its version-correct timing / packet correction, and
-        # is seeded with this version's definitions so read_telemetry can resolve
-        # logical keys to registers. ``self.client`` is kept as a transitional
-        # alias because the write paths and block reads still use the
-        # register-level client directly until later phases migrate them.
-        self.driver = MarstekModbusDriver(
-            self.host, self.port, self.battery_version, self.slave_id,
-            max_charge_power_w=self.max_charge_power,
-            max_discharge_power_w=self.max_discharge_power,
-            definitions=self._all_definitions,
-        )
-        self.client = self.driver.client
-
     @property
     def capabilities(self):
         """Static hardware traits, owned by the driver (see DriverCapabilities).
@@ -232,6 +161,39 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         version string, keeping them device-agnostic.
         """
         return self.driver.capabilities
+
+    # Per-platform entity definitions, owned by the driver (it loads this
+    # version's register/entity set). Platform setups and the poll loop read
+    # these back instead of branching on the version string. ``_all_definitions``
+    # is the polled union (buttons excluded); it keeps its leading underscore for
+    # backward compatibility with existing readers (e.g. sensor.py).
+    @property
+    def sensor_definitions(self):
+        return self.driver.sensor_definitions
+
+    @property
+    def number_definitions(self):
+        return self.driver.number_definitions
+
+    @property
+    def select_definitions(self):
+        return self.driver.select_definitions
+
+    @property
+    def switch_definitions(self):
+        return self.driver.switch_definitions
+
+    @property
+    def binary_sensor_definitions(self):
+        return self.driver.binary_sensor_definitions
+
+    @property
+    def button_definitions(self):
+        return self.driver.button_definitions
+
+    @property
+    def _all_definitions(self):
+        return self.driver.all_definitions
 
     @property
     def is_available(self) -> bool:
