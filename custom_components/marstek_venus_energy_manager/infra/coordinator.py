@@ -17,6 +17,7 @@ from ..const import (
     DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
 )
 from ..drivers.marstek import MarstekModbusDriver
+from ..drivers.zendure import ZendureLocalDriver
 from ..drivers.base import SetpointResult
 from .alarm_notifier import AlarmNotifier
 
@@ -34,7 +35,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                  backup_offgrid_threshold: int = 50,
                  allow_charge: bool = True, allow_discharge: bool = True,
                  active_balance_mode_enabled: bool = False,
-                 full_charge_voltage_taper_enabled: bool = DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED) -> None:
+                 full_charge_voltage_taper_enabled: bool = DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
+                 brand: str = "marstek") -> None:
         """Initialize the data update coordinator."""
         super().__init__(
             hass,
@@ -47,6 +49,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         self.port = port
         self.slave_id = slave_id
         self.consumption_sensor = consumption_sensor
+        self.brand = brand
 
         # Validate and store battery version
         from ..const import SUPPORTED_VERSIONS, DEFAULT_VERSION
@@ -117,11 +120,19 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
         # packet correction; the coordinator and platform setups read the
         # per-platform definition lists back from it (see the passthrough
         # properties below) instead of branching on the version string.
-        self.driver = MarstekModbusDriver(
-            self.host, self.port, self.battery_version, self.slave_id,
-            max_charge_power_w=self.max_charge_power,
-            max_discharge_power_w=self.max_discharge_power,
-        )
+        if self.brand == "zendure":
+            self.driver = ZendureLocalDriver(
+                self.host,
+                port=self.port,
+                max_charge_power_w=self.max_charge_power,
+                max_discharge_power_w=self.max_discharge_power,
+            )
+        else:
+            self.driver = MarstekModbusDriver(
+                self.host, self.port, self.battery_version, self.slave_id,
+                max_charge_power_w=self.max_charge_power,
+                max_discharge_power_w=self.max_discharge_power,
+            )
 
         # Fast key -> definition lookup so the poll loop can scale each raw value by
         # its definition's scale/precision/state_class. The driver returns raw

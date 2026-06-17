@@ -26,8 +26,18 @@
           "num_batteries": "Aantal batterijen"
         }
       },
+      "battery_brand": {
+        "title": "Batterij {battery_num} configureren — Merk",
+        "description": "Selecteer het merk en model van batterij {battery_num}.",
+        "data": {
+          "brand": "Batterijmerk"
+        },
+        "data_description": {
+          "brand": "Selecteer de fabrikant van de batterij. Marstek Venus gebruikt Modbus TCP. Zendure SolarFlow gebruikt lokaal HTTP (vereist HEMS ingeschakeld in de Zendure-app)."
+        }
+      },
       "battery_connection": {
-        "title": "Batterij {battery_num} configureren — Verbinding",
+        "title": "Batterij {battery_num} configureren — Verbinding (Marstek)",
         "description": "Voer verbindingsgegevens en batterijmodel in voor batterij {battery_num}.",
         "data": {
           "name": "Naam",
@@ -40,6 +50,20 @@
           "host": "IP-adres van de batterij op uw lokale netwerk",
           "port": "Modbus-poort (meestal 502)",
           "battery_version": "Selecteer de modelversie van uw batterij. Ev2 voor oudere modellen, Ev3 voor nieuwere modellen met bijgewerkte registerkaart, A (Venus A) of D (Venus D) voor hybride omvormermodellen"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Batterij {battery_num} configureren — Verbinding (Zendure)",
+        "description": "Voer verbindingsgegevens in voor de Zendure SolarFlow-batterij {battery_num}. Schakel eerst HEMS in de Zendure-app in.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres",
+          "port": "HTTP-poort"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de Zendure SolarFlow op uw lokale netwerk",
+          "port": "HTTP-poort (standaard 80)"
         }
       },
       "battery_limits": {
@@ -373,7 +397,7 @@
         }
       },
       "reconfigure_battery": {
-        "title": "Batterij {battery_num} opnieuw configureren — Verbinding",
+        "title": "Batterij {battery_num} opnieuw configureren — Verbinding (Marstek)",
         "description": "Verbindingsgegevens bijwerken voor batterij {battery_num}. Vermogenslimieten, SOC-limieten en alle andere instellingen blijven behouden.",
         "data": {
           "name": "Naam",
@@ -386,6 +410,20 @@
           "host": "Nieuw IP-adres van de batterij op het lokale netwerk",
           "port": "Modbus-poort (gewoonlijk 502)",
           "battery_version": "Selecteer uw batterijmodelversie"
+        }
+      },
+      "reconfigure_battery_zendure": {
+        "title": "Batterij {battery_num} opnieuw configureren — Verbinding (Zendure)",
+        "description": "Verbindingsgegevens bijwerken voor de Zendure SolarFlow-batterij {battery_num}. Alle andere instellingen blijven behouden.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres",
+          "port": "HTTP-poort"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "Nieuw IP-adres van de Zendure SolarFlow op het lokale netwerk",
+          "port": "HTTP-poort (standaard 80)"
         }
       }
     },
@@ -447,8 +485,18 @@
           "num_batteries": "Aantal batterijen"
         }
       },
+      "battery_brand": {
+        "title": "Batterij {battery_num} configureren — Merk",
+        "description": "Selecteer het merk en model van batterij {battery_num}.",
+        "data": {
+          "brand": "Batterijmerk"
+        },
+        "data_description": {
+          "brand": "Selecteer de fabrikant van de batterij. Marstek Venus gebruikt Modbus TCP. Zendure SolarFlow gebruikt lokaal HTTP (vereist HEMS ingeschakeld in de Zendure-app)."
+        }
+      },
       "battery_connection": {
-        "title": "Batterij {battery_num} configureren — Verbinding",
+        "title": "Batterij {battery_num} configureren — Verbinding (Marstek)",
         "description": "Wijzig verbindingsgegevens en batterijmodel voor batterij {battery_num}.",
         "data": {
           "name": "Naam",
@@ -461,6 +509,20 @@
           "host": "IP-adres van de batterij op uw lokale netwerk",
           "port": "Modbus-poort (meestal 502)",
           "battery_version": "Selecteer de modelversie van uw batterij. Ev2 voor oudere modellen, Ev3 voor nieuwere modellen met bijgewerkte registerkaart, A (Venus A) of D (Venus D) voor hybride omvormermodellen"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Batterij {battery_num} configureren — Verbinding (Zendure)",
+        "description": "Wijzig verbindingsgegevens voor de Zendure SolarFlow-batterij {battery_num}. Schakel eerst HEMS in de Zendure-app in.",
+        "data": {
+          "name": "Naam",
+          "host": "IP-adres",
+          "port": "HTTP-poort"
+        },
+        "data_description": {
+          "name": "Beschrijvende naam om deze batterij te identificeren",
+          "host": "IP-adres van de Zendure SolarFlow op uw lokale netwerk",
+          "port": "HTTP-poort (standaard 80)"
         }
       },
       "battery_limits": {

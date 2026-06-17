@@ -4364,6 +4364,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
                 DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
             ),
+            brand=battery_config.get("brand", "marstek"),
         )
 
         # Restore persisted RS485 user preference and store entry reference for future persistence

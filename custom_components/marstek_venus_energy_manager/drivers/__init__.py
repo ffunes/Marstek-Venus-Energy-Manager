@@ -8,7 +8,7 @@ writing a new driver, not by editing the control logic.
 
 Drivers:
   - ``marstek``: Modbus-TCP, register based, polled (the original hardware).
-  - ``zendure`` (planned): local MQTT, property based, push telemetry.
+  - ``zendure``: local HTTP REST, property based, polled (SolarFlow series).
 
 See ``docs/plans/driver_abstraction.md`` for the phased extraction plan.
 """
@@ -21,6 +21,7 @@ from .base import (
     TelemetrySnapshot,
 )
 from .marstek import MarstekModbusDriver
+from .zendure import ZendureLocalDriver
 
 __all__ = [
     "BatteryDriver",
@@ -29,4 +30,5 @@ __all__ = [
     "SetpointResult",
     "TelemetrySnapshot",
     "MarstekModbusDriver",
+    "ZendureLocalDriver",
 ]

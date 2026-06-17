@@ -26,8 +26,18 @@
           "num_batteries": "Nombre de bateries"
         }
       },
+      "battery_brand": {
+        "title": "Configurar bateria {battery_num} — Marca",
+        "description": "Selecciona la marca i model de la bateria {battery_num}.",
+        "data": {
+          "brand": "Marca de la bateria"
+        },
+        "data_description": {
+          "brand": "Selecciona el fabricant de la bateria. Marstek Venus utilitza Modbus TCP. Zendure SolarFlow utilitza HTTP local (requereix HEMS activat a l'app Zendure)."
+        }
+      },
       "battery_connection": {
-        "title": "Configurar bateria {battery_num} — Connexió",
+        "title": "Configurar bateria {battery_num} — Connexió (Marstek)",
         "description": "Introdueix les dades de connexió i el model de la bateria {battery_num}.",
         "data": {
           "name": "Nom",
@@ -42,6 +52,20 @@
           "port": "Port Modbus (normalment 502)",
           "slave_id": "ID d'esclau/unitat Modbus (per defecte 1). Canvia'l només si un proxy Modbus exposa diverses bateries a una mateixa IP:port amb IDs d'esclau diferents.",
           "battery_version": "Selecciona la versió del model de la teva bateria. Ev2 per a models antics, Ev3 per a models nous amb mapa de registres actualitzat, A (Venus A) o D (Venus D) per a models d'inversor híbrid"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Configurar bateria {battery_num} — Connexió (Zendure)",
+        "description": "Introdueix les dades de connexió per a la bateria Zendure SolarFlow {battery_num}. Activa primer HEMS a l'app Zendure.",
+        "data": {
+          "name": "Nom",
+          "host": "Adreça IP",
+          "port": "Port HTTP"
+        },
+        "data_description": {
+          "name": "Nom descriptiu per identificar aquesta bateria",
+          "host": "Adreça IP del Zendure SolarFlow a la teva xarxa local",
+          "port": "Port HTTP (per defecte 80)"
         }
       },
       "battery_limits": {
@@ -375,7 +399,7 @@
         }
       },
       "reconfigure_battery": {
-        "title": "Reconfigurar bateria {battery_num} — Connexió",
+        "title": "Reconfigurar bateria {battery_num} — Connexió (Marstek)",
         "description": "Actualitza les dades de connexió de la bateria {battery_num}. Els límits de potència, SOC i la resta de configuració es conserven.",
         "data": {
           "name": "Nom",
@@ -390,6 +414,20 @@
           "port": "Port Modbus (normalment 502)",
           "slave_id": "ID d'esclau/unitat Modbus (per defecte 1). Canvia'l només si un proxy Modbus exposa diverses bateries a una mateixa IP:port amb IDs d'esclau diferents.",
           "battery_version": "Selecciona la versió del teu model de bateria"
+        }
+      },
+      "reconfigure_battery_zendure": {
+        "title": "Reconfigurar bateria {battery_num} — Connexió (Zendure)",
+        "description": "Actualitza les dades de connexió de la bateria Zendure SolarFlow {battery_num}. La resta de configuració es conserva.",
+        "data": {
+          "name": "Nom",
+          "host": "Adreça IP",
+          "port": "Port HTTP"
+        },
+        "data_description": {
+          "name": "Nom descriptiu per identificar aquesta bateria",
+          "host": "Nova adreça IP del Zendure SolarFlow a la xarxa local",
+          "port": "Port HTTP (per defecte 80)"
         }
       }
     },
@@ -451,8 +489,18 @@
           "num_batteries": "Nombre de bateries"
         }
       },
+      "battery_brand": {
+        "title": "Configurar bateria {battery_num} — Marca",
+        "description": "Selecciona la marca i model de la bateria {battery_num}.",
+        "data": {
+          "brand": "Marca de la bateria"
+        },
+        "data_description": {
+          "brand": "Selecciona el fabricant de la bateria. Marstek Venus utilitza Modbus TCP. Zendure SolarFlow utilitza HTTP local (requereix HEMS activat a l'app Zendure)."
+        }
+      },
       "battery_connection": {
-        "title": "Configurar bateria {battery_num} — Connexió",
+        "title": "Configurar bateria {battery_num} — Connexió (Marstek)",
         "description": "Modifica les dades de connexió i el model de la bateria {battery_num}.",
         "data": {
           "name": "Nom",
@@ -467,6 +515,20 @@
           "port": "Port Modbus (normalment 502)",
           "slave_id": "ID d'esclau/unitat Modbus (per defecte 1). Canvia'l només si un proxy Modbus exposa diverses bateries a una mateixa IP:port amb IDs d'esclau diferents.",
           "battery_version": "Selecciona la versió del model de la teva bateria. Ev2 per a models antics, Ev3 per a models nous amb mapa de registres actualitzat, A (Venus A) o D (Venus D) per a models d'inversor híbrid"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Configurar bateria {battery_num} — Connexió (Zendure)",
+        "description": "Modifica les dades de connexió per a la bateria Zendure SolarFlow {battery_num}. Activa primer HEMS a l'app Zendure.",
+        "data": {
+          "name": "Nom",
+          "host": "Adreça IP",
+          "port": "Port HTTP"
+        },
+        "data_description": {
+          "name": "Nom descriptiu per identificar aquesta bateria",
+          "host": "Adreça IP del Zendure SolarFlow a la teva xarxa local",
+          "port": "Port HTTP (per defecte 80)"
         }
       },
       "battery_limits": {

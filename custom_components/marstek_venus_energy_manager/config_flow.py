@@ -113,6 +113,9 @@ from .const import (
     MAX_TIME_SLOTS,
 )
 from .drivers.marstek import MarstekModbusDriver
+from .drivers.zendure import ZendureLocalDriver
+
+_ZENDURE_MAX_POWER_W = 2400
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -425,14 +428,23 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._current_battery_data = {}  # Stores connection data between battery steps
         self._pending_slot_step_a: dict | None = None  # Buffer between slot step A and step B
 
-    async def _test_connection(self, host: str, port: int, version: str = "v2", slave_id: int = DEFAULT_SLAVE_ID) -> bool:
-        """Test connection to a Marstek Venus battery using version-specific register."""
-        _LOGGER.info("Testing connection to %s:%s (%s) slave %s", host, port, version, slave_id)
-        result = await MarstekModbusDriver.probe(host, port, version, slave_id)
-        if result:
-            _LOGGER.info("Successfully connected to %s:%s (%s)", host, port, version)
+    async def _test_connection(
+        self,
+        host: str,
+        port: int,
+        version: str = "v2",
+        slave_id: int = DEFAULT_SLAVE_ID,
+        brand: str = "marstek",
+    ) -> bool:
+        """Test connection to a battery."""
+        if brand == "zendure":
+            _LOGGER.info("Probing Zendure device at %s:%s", host, port)
+            result = await ZendureLocalDriver.probe(host, port)
         else:
-            _LOGGER.error("Failed to connect or read SOC from %s:%s (%s)", host, port, version)
+            _LOGGER.info("Probing Marstek %s at %s:%s slave %s", version, host, port, slave_id)
+            result = await MarstekModbusDriver.probe(host, port, version, slave_id)
+        if not result:
+            _LOGGER.error("Failed to connect to %s:%s (brand=%s)", host, port, brand)
         return result
 
     async def async_step_user(
@@ -501,7 +513,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step 2: Ask for the number of batteries."""
         if user_input is not None:
             self.config_data["num_batteries"] = int(user_input["num_batteries"])
-            return await self.async_step_battery_connection()
+            return await self.async_step_battery_brand()
 
         return self.async_show_form(
             step_id="batteries",
@@ -517,10 +529,39 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_battery_brand(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 3a: Select battery brand."""
+        battery_num = self.battery_index + 1
+        if user_input is not None:
+            brand = user_input["brand"]
+            self._current_battery_data = {"brand": brand}
+            if brand == "zendure":
+                return await self.async_step_battery_connection_zendure()
+            return await self.async_step_battery_connection()
+
+        return self.async_show_form(
+            step_id="battery_brand",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("brand", default="marstek"):
+                        SelectSelector(SelectSelectorConfig(
+                            options=[
+                                {"value": "marstek", "label": "Marstek Venus"},
+                                {"value": "zendure", "label": "Zendure SolarFlow"},
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )),
+                }
+            ),
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
     async def async_step_battery_connection(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 3a: Connection details and battery model for each battery."""
+        """Step 3b (Marstek): Connection details and battery model."""
         errors = {}
         battery_num = self.battery_index + 1
 
@@ -532,17 +573,19 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PORT],
                 battery_version,
                 slave_id,
+                brand="marstek",
             )
             if not connection_result:
                 errors["base"] = "cannot_connect"
             else:
-                self._current_battery_data = {
+                self._current_battery_data.update({
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_HOST: user_input[CONF_HOST],
                     CONF_PORT: user_input[CONF_PORT],
                     CONF_SLAVE_ID: slave_id,
                     CONF_BATTERY_VERSION: battery_version,
-                }
+                    "brand": "marstek",
+                })
                 return await self.async_step_battery_limits()
 
         return self.async_show_form(
@@ -570,13 +613,52 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"battery_num": str(battery_num)},
         )
 
+    async def async_step_battery_connection_zendure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Step 3b (Zendure): Connection details for a Zendure SolarFlow device."""
+        errors = {}
+        battery_num = self.battery_index + 1
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = int(user_input.get(CONF_PORT, 80))
+            connection_result = await self._test_connection(host, port, brand="zendure")
+            if not connection_result:
+                errors["base"] = "cannot_connect"
+            else:
+                self._current_battery_data.update({
+                    CONF_NAME: user_input[CONF_NAME],
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    "brand": "zendure",
+                })
+                return await self.async_step_battery_limits()
+
+        return self.async_show_form(
+            step_id="battery_connection_zendure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=f"Zendure SolarFlow {battery_num}"): str,
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=80): int,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
     async def async_step_battery_limits(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Step 3b: Power and SOC limits for the current battery."""
+        """Step 3c: Power and SOC limits for the current battery."""
         battery_num = self.battery_index + 1
-        battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
-        max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
+        brand = self._current_battery_data.get("brand", "marstek")
+        if brand == "zendure":
+            max_power = _ZENDURE_MAX_POWER_W
+        else:
+            battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+            max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
 
         if user_input is not None:
             merged = dict(self._current_battery_data)
@@ -597,7 +679,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             if self.battery_index >= self.config_data["num_batteries"]:
                 self.config_data["batteries"] = self.battery_configs
                 return await self.async_step_time_slots()
-            return await self.async_step_battery_connection()
+            return await self.async_step_battery_brand()
 
         return self.async_show_form(
             step_id="battery_limits",
@@ -1648,6 +1730,15 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
         current_batteries = entry.data.get("batteries", [])
         battery_num = self.battery_index + 1
+        current = (
+            current_batteries[self.battery_index]
+            if self.battery_index < len(current_batteries)
+            else {}
+        )
+
+        if current.get("brand", "marstek") == "zendure":
+            return await self.async_step_reconfigure_battery_zendure(user_input)
+
         errors = {}
 
         if user_input is not None:
@@ -1658,14 +1749,9 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "cannot_connect"
             else:
-                original = (
-                    current_batteries[self.battery_index]
-                    if self.battery_index < len(current_batteries)
-                    else {}
-                )
-                old_host = original.get(CONF_HOST)
-                old_port = original.get(CONF_PORT)
-                old_slave = original.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
+                old_host = current.get(CONF_HOST)
+                old_port = current.get(CONF_PORT)
+                old_slave = current.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
                 new_host = user_input[CONF_HOST]
                 new_port = user_input[CONF_PORT]
 
@@ -1678,7 +1764,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                         entry, old_host, old_port, new_host, new_port, old_slave, slave_id
                     )
 
-                updated = dict(original)
+                updated = dict(current)
                 updated[CONF_NAME] = user_input[CONF_NAME]
                 updated[CONF_HOST] = new_host
                 updated[CONF_PORT] = new_port
@@ -1694,11 +1780,6 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                 return await self.async_step_reconfigure_battery()
 
-        current = (
-            current_batteries[self.battery_index]
-            if self.battery_index < len(current_batteries)
-            else {}
-        )
         defaults = {
             CONF_NAME: current.get(CONF_NAME, f"Marstek Venus {battery_num}"),
             CONF_HOST: current.get(CONF_HOST, ""),
@@ -1735,6 +1816,69 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"battery_num": str(battery_num)},
         )
 
+    async def async_step_reconfigure_battery_zendure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Update connection settings for a Zendure battery during reconfiguration."""
+        entry = self._get_reconfigure_entry()
+        current_batteries = entry.data.get("batteries", [])
+        battery_num = self.battery_index + 1
+        current = (
+            current_batteries[self.battery_index]
+            if self.battery_index < len(current_batteries)
+            else {}
+        )
+        errors = {}
+
+        if user_input is not None:
+            if not await self._test_connection(
+                user_input[CONF_HOST], user_input[CONF_PORT], brand="zendure"
+            ):
+                errors["base"] = "cannot_connect"
+            else:
+                old_host = current.get(CONF_HOST)
+                old_port = current.get(CONF_PORT)
+                new_host = user_input[CONF_HOST]
+                new_port = user_input[CONF_PORT]
+
+                if old_host and old_port and (old_host != new_host or old_port != new_port):
+                    self._migrate_battery_registry_ids(
+                        entry, old_host, old_port, new_host, new_port
+                    )
+
+                updated = dict(current)
+                updated[CONF_NAME] = user_input[CONF_NAME]
+                updated[CONF_HOST] = new_host
+                updated[CONF_PORT] = new_port
+                self._reconfigure_batteries.append(updated)
+                self.battery_index += 1
+
+                if self.battery_index >= len(current_batteries):
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={"batteries": self._reconfigure_batteries},
+                    )
+                return await self.async_step_reconfigure_battery()
+
+        defaults = {
+            CONF_NAME: current.get(CONF_NAME, f"Zendure SolarFlow {battery_num}"),
+            CONF_HOST: current.get(CONF_HOST, ""),
+            CONF_PORT: current.get(CONF_PORT, 80),
+        }
+
+        return self.async_show_form(
+            step_id="reconfigure_battery_zendure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
+                    vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=defaults[CONF_PORT]): int,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
@@ -1755,14 +1899,25 @@ class OptionsFlowHandler(OptionsFlow):
         self._pending_slot_step_a: dict | None = None  # Buffer between slot step A and step B
         _LOGGER.info("OptionsFlowHandler initialized successfully for entry: %s", config_entry.entry_id)
 
-    async def _test_connection(self, host: str, port: int, version: str = "v2", slave_id: int = DEFAULT_SLAVE_ID) -> bool:
-        """Test connection to a Marstek Venus battery.
+    async def _test_connection(
+        self,
+        host: str,
+        port: int,
+        version: str = "v2",
+        slave_id: int = DEFAULT_SLAVE_ID,
+        brand: str = "marstek",
+    ) -> bool:
+        """Test connection to a battery.
 
-        If a coordinator already holds a connection to this host, temporarily
-        close it (under lock) to free the single-connection slot, run the test,
-        and reconnect. Marstek firmware only supports one Modbus TCP connection.
+        For Zendure: simple HTTP probe (no single-slot constraint).
+        For Marstek: temporarily closes any existing coordinator connection to
+        free the single Modbus TCP slot, probes, then reconnects.
         """
-        # Check if there's an active coordinator for this host + slave id
+        if brand == "zendure":
+            _LOGGER.info("Probing Zendure device at %s:%s", host, port)
+            return await ZendureLocalDriver.probe(host, port)
+
+        # Marstek: handle single-connection-slot constraint.
         entry_data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id, {})
         coordinators = entry_data.get("coordinators", [])
         existing_coordinator = None
@@ -1776,18 +1931,12 @@ class OptionsFlowHandler(OptionsFlow):
                 "Reusing coordinator for %s (version=%s) - closing connection for test",
                 host, existing_coordinator.battery_version
             )
-            # Hold the lock so polling and control loop wait (no errors/warnings)
             async with existing_coordinator.lock:
-                # Close existing connection to free the single-connection slot
                 await existing_coordinator.driver.close()
-                # Give firmware time to release the connection slot
                 await asyncio.sleep(0.5)
-
                 result = await MarstekModbusDriver.probe(host, port, version, slave_id)
                 await asyncio.sleep(0.3)
-                # Always reconnect coordinator, even on failure
                 await existing_coordinator.driver.connect()
-
                 if result:
                     _LOGGER.info("Test connection to %s successful, coordinator reconnected", host)
                 else:
@@ -1899,7 +2048,7 @@ class OptionsFlowHandler(OptionsFlow):
         try:
             if user_input is not None:
                 self.config_data["num_batteries"] = int(user_input["num_batteries"])
-                return await self.async_step_battery_connection()
+                return await self.async_step_battery_brand()
 
             # Load current number of batteries with defensive handling
             batteries = self.config_entry.data.get("batteries", [])
@@ -1922,8 +2071,42 @@ class OptionsFlowHandler(OptionsFlow):
             ),
         )
 
+    async def async_step_battery_brand(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Select battery brand for the current battery slot."""
+        battery_num = self.battery_index + 1
+        current_batteries = self.config_entry.data.get("batteries", [])
+        current_brand = (
+            current_batteries[self.battery_index].get("brand", "marstek")
+            if self.battery_index < len(current_batteries)
+            else "marstek"
+        )
+
+        if user_input is not None:
+            brand = user_input["brand"]
+            self._current_battery_data = {"brand": brand}
+            if brand == "zendure":
+                return await self.async_step_battery_connection_zendure()
+            return await self.async_step_battery_connection()
+
+        return self.async_show_form(
+            step_id="battery_brand",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("brand", default=current_brand):
+                        SelectSelector(SelectSelectorConfig(
+                            options=[
+                                {"value": "marstek", "label": "Marstek Venus"},
+                                {"value": "zendure", "label": "Zendure SolarFlow"},
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )),
+                }
+            ),
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
     async def async_step_battery_connection(self, user_input: dict[str, Any] | None = None) -> FlowResult:
-        """Configure connection details and battery model for each battery."""
+        """Configure connection details for a Marstek battery."""
         errors = {}
 
         try:
@@ -1938,17 +2121,19 @@ class OptionsFlowHandler(OptionsFlow):
                     user_input[CONF_PORT],
                     battery_version,
                     slave_id,
+                    brand="marstek",
                 )
                 if not connection_result:
                     errors["base"] = "cannot_connect"
                 else:
-                    self._current_battery_data = {
+                    self._current_battery_data.update({
                         CONF_NAME: user_input[CONF_NAME],
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                         CONF_SLAVE_ID: slave_id,
                         CONF_BATTERY_VERSION: battery_version,
-                    }
+                        "brand": "marstek",
+                    })
                     return await self.async_step_battery_limits()
 
             if self.battery_index < len(current_batteries):
@@ -1997,12 +2182,69 @@ class OptionsFlowHandler(OptionsFlow):
             description_placeholders={"battery_num": str(battery_num)},
         )
 
+    async def async_step_battery_connection_zendure(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+        """Configure connection details for a Zendure SolarFlow device."""
+        errors = {}
+
+        try:
+            battery_num = self.battery_index + 1
+            current_batteries = self.config_entry.data.get("batteries", [])
+
+            if user_input is not None:
+                host = user_input[CONF_HOST]
+                port = int(user_input.get(CONF_PORT, 80))
+                connection_result = await self._test_connection(host, port, brand="zendure")
+                if not connection_result:
+                    errors["base"] = "cannot_connect"
+                else:
+                    self._current_battery_data.update({
+                        CONF_NAME: user_input[CONF_NAME],
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                        "brand": "zendure",
+                    })
+                    return await self.async_step_battery_limits()
+
+            if self.battery_index < len(current_batteries):
+                current_battery = current_batteries[self.battery_index]
+                defaults = {
+                    CONF_NAME: current_battery.get(CONF_NAME, f"Zendure SolarFlow {battery_num}"),
+                    CONF_HOST: current_battery.get(CONF_HOST, ""),
+                    CONF_PORT: current_battery.get(CONF_PORT, 80),
+                }
+            else:
+                defaults = {
+                    CONF_NAME: f"Zendure SolarFlow {battery_num}",
+                    CONF_HOST: "",
+                    CONF_PORT: 80,
+                }
+        except Exception as e:
+            _LOGGER.error("Error in options flow battery_connection_zendure step: %s", e, exc_info=True)
+            return self.async_abort(reason="unknown_error")
+
+        return self.async_show_form(
+            step_id="battery_connection_zendure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=defaults[CONF_NAME]): str,
+                    vol.Required(CONF_HOST, default=defaults[CONF_HOST]): str,
+                    vol.Optional(CONF_PORT, default=defaults[CONF_PORT]): int,
+                }
+            ),
+            errors=errors,
+            description_placeholders={"battery_num": str(battery_num)},
+        )
+
     async def async_step_battery_limits(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Configure power and SOC limits for the current battery."""
         try:
             battery_num = self.battery_index + 1
-            battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
-            max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
+            brand = self._current_battery_data.get("brand", "marstek")
+            if brand == "zendure":
+                max_power = _ZENDURE_MAX_POWER_W
+            else:
+                battery_version = self._current_battery_data.get(CONF_BATTERY_VERSION, DEFAULT_VERSION)
+                max_power = MAX_POWER_BY_VERSION.get(battery_version, 2500)
             current_batteries = self.config_entry.data.get("batteries", [])
 
             if user_input is not None:
@@ -2025,7 +2267,7 @@ class OptionsFlowHandler(OptionsFlow):
                 if self.battery_index >= num_batteries:
                     self.config_data["batteries"] = self.battery_configs
                     return await self._save_and_finish()
-                return await self.async_step_battery_connection()
+                return await self.async_step_battery_brand()
 
             if self.battery_index < len(current_batteries):
                 current_battery = current_batteries[self.battery_index]

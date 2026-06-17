@@ -26,8 +26,18 @@
           "num_batteries": "Number of batteries"
         }
       },
+      "battery_brand": {
+        "title": "Battery {battery_num} — Brand",
+        "description": "Select the brand and type of battery {battery_num}.",
+        "data": {
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Marstek Venus: Modbus TCP. Zendure SolarFlow: local HTTP (enable HEMS in the Zendure app first)."
+        }
+      },
       "battery_connection": {
-        "title": "Configure battery {battery_num} — Connection",
+        "title": "Configure battery {battery_num} — Connection (Marstek)",
         "description": "Enter connection details and battery model for battery {battery_num}.",
         "data": {
           "name": "Name",
@@ -42,6 +52,20 @@
           "port": "Modbus port (usually 502)",
           "slave_id": "Modbus slave/unit id (default 1). Change only when a Modbus proxy maps several batteries to one IP:port using distinct slave ids.",
           "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Configure battery {battery_num} — Connection (Zendure)",
+        "description": "Enter connection details for the Zendure SolarFlow device. Make sure HEMS is enabled in the Zendure app.",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "port": "HTTP Port"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the Zendure device on your local network",
+          "port": "HTTP port (default 80)"
         }
       },
       "battery_limits": {
@@ -369,7 +393,7 @@
         }
       },
       "reconfigure_battery": {
-        "title": "Reconfigure battery {battery_num} — Connection",
+        "title": "Reconfigure battery {battery_num} — Connection (Marstek)",
         "description": "Update connection details for battery {battery_num}. Power limits, SOC limits and all other settings are preserved.",
         "data": {
           "name": "Name",
@@ -384,6 +408,20 @@
           "port": "Modbus port (usually 502)",
           "slave_id": "Modbus slave/unit id (default 1). Change only when a Modbus proxy maps several batteries to one IP:port using distinct slave ids.",
           "battery_version": "Select your battery model version"
+        }
+      },
+      "reconfigure_battery_zendure": {
+        "title": "Reconfigure battery {battery_num} — Connection (Zendure)",
+        "description": "Update connection details for the Zendure SolarFlow battery {battery_num}. All other settings are preserved.",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "port": "HTTP Port"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "New IP address of the Zendure SolarFlow on your local network",
+          "port": "HTTP port (default 80)"
         }
       }
     },
@@ -445,8 +483,18 @@
           "num_batteries": "Number of batteries"
         }
       },
+      "battery_brand": {
+        "title": "Battery {battery_num} — Brand",
+        "description": "Select the brand and type of battery {battery_num}.",
+        "data": {
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Marstek Venus: Modbus TCP. Zendure SolarFlow: local HTTP (enable HEMS in the Zendure app first)."
+        }
+      },
       "battery_connection": {
-        "title": "Configure battery {battery_num} — Connection",
+        "title": "Configure battery {battery_num} — Connection (Marstek)",
         "description": "Modify connection details and battery model for battery {battery_num}.",
         "data": {
           "name": "Name",
@@ -461,6 +509,20 @@
           "port": "Modbus port (usually 502)",
           "slave_id": "Modbus slave/unit id (default 1). Change only when a Modbus proxy maps several batteries to one IP:port using distinct slave ids.",
           "battery_version": "Select your battery model version. Ev2 for older models, Ev3 for newer models with updated register map, A (Venus A) or D (Venus D) for hybrid inverter models"
+        }
+      },
+      "battery_connection_zendure": {
+        "title": "Configure battery {battery_num} — Connection (Zendure)",
+        "description": "Modify connection details for the Zendure SolarFlow device. Make sure HEMS is enabled in the Zendure app.",
+        "data": {
+          "name": "Name",
+          "host": "IP Address",
+          "port": "HTTP Port"
+        },
+        "data_description": {
+          "name": "Descriptive name to identify this battery",
+          "host": "IP address of the Zendure device on your local network",
+          "port": "HTTP port (default 80)"
         }
       },
       "battery_limits": {
