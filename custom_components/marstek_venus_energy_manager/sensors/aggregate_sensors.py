@@ -11,7 +11,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
-from ..const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES, CONF_SOLAR_PRODUCTION_SENSOR, pd_profile_from_params
+from ..const import DOMAIN, ALARM_BIT_DESCRIPTIONS, FAULT_BIT_DESCRIPTIONS, DEBUG_POLL_SENSOR_VALUES, CONF_SOLAR_PRODUCTION_SENSOR, CONF_METER_INVERTED, pd_profile_from_params
 from ..infra.coordinator import MarstekVenusDataUpdateCoordinator
 
 
@@ -452,7 +452,8 @@ class MarstekVenusAggregateSensor(SensorEntity):
         grid_w = self._read_power_w(grid_eid) if grid_eid else None
         if grid_w is None:
             return None
-
+        if data.get(CONF_METER_INVERTED, False):
+            grid_w = -grid_w
         total = grid_w
         for coordinator in self.coordinators:
             # Skip a disconnected battery: its ac_power stays frozen at the last
