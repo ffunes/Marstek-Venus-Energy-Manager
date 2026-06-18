@@ -14,7 +14,56 @@ To opt a future test into loading the integration, request the
 """
 from __future__ import annotations
 
+import sys
+
+import pytest
+
 from custom_components.marstek_venus_energy_manager.drivers import DriverCapabilities
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Allow the asyncio self-pipe socketpair so the ``hass`` fixture runs on Windows.
+
+    The HA test plugin disables sockets before every test
+    (``pytest_socket.disable_socket(allow_unix_socket=True)``). On Linux the
+    asyncio event-loop self-pipe uses an ``AF_UNIX`` socketpair (allowed); on
+    Windows it falls back to an ``AF_INET`` socketpair, which the guard blocks —
+    so the (session-scoped) event loop can never be built and any ``hass``-based
+    test errors at setup. The plugin calls ``disable_socket`` by reference at
+    runtime, so neutralising it here (before any loop is created) lifts the guard
+    for the whole session. Tests in this suite do no real network I/O.
+
+    Scoped to Windows only: on Linux/CI the guard works and is kept, so accidental
+    network use is still caught there.
+    """
+    if sys.platform != "win32":
+        return
+
+    import pytest_socket
+
+    pytest_socket.disable_socket = lambda *args, **kwargs: None  # type: ignore[assignment]
+    pytest_socket.enable_socket()
+
+
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: list[pytest.Item]
+) -> None:
+    """Skip ``hass``-based tests when the HA test plugin is disabled.
+
+    The fast unit run uses ``-p no:homeassistant`` (see ``pytest.ini``), which
+    drops the plugin and its ``hass`` fixture. Without this, the integration
+    tests that request ``hass`` would error at setup instead of being skipped.
+    Drop the flag (e.g. ``-o addopts=""``) to actually run them.
+    """
+    if config.pluginmanager.has_plugin("homeassistant"):
+        return
+
+    skip_no_hass = pytest.mark.skip(
+        reason="needs the HA test plugin; run without -p no:homeassistant"
+    )
+    for item in items:
+        if "hass" in getattr(item, "fixturenames", ()):
+            item.add_marker(skip_no_hass)
 
 
 class _FakeMarstekDriver:
