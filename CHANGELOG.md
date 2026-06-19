@@ -3,6 +3,7 @@
 ## [2.0.5] - 2026-06-17
 
 ### Fixed
+- **PD controller stuck after all batteries hit max_soc simultaneously** (#390): `_stop_blocked_active_batteries` called `.remove()` after an `await`, which raised `ValueError` if `switch.async_turn_off/on` reset the list during that suspension; the uncaught exception aborted `_run_control_cycle`, freezing the controller at setpoint 0 with no recovery. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
 - **Home Consumption wrong with inverted grid meter**: when `meter_inverted` is enabled, Home Consumption was calculated with the raw (wrong-sign) grid value instead of the negated one, causing inflated or negative readings. [`aggregate_sensors.py`](custom_components/marstek_venus_energy_manager/aggregate_sensors.py).
 - **Predictive charging evaluated at midnight instead of 00:05**: the ±5 min polling window around 00:05 included 00:00:00–00:10:00, so the first coordinator cycle after midnight triggered the daily evaluation instead of waiting for 00:05. Replaced the polling check with `async_track_time_change(hour=0, minute=5, second=0)`. [`pricing/engine.py`](custom_components/marstek_venus_energy_manager/pricing/engine.py), [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
 
