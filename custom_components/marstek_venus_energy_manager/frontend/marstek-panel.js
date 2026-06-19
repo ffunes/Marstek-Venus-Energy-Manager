@@ -1066,14 +1066,21 @@ class MarstekVenusPanel extends HTMLElement {
     const a = cfg.attributes || {};
     const n = Number(a.num_excluded_devices) || 0;
     let total = null;
+    let included = 0; // portion the home sensor already counts (subtract from Home)
     for (let i = 1; i <= n; i++) {
       if (a[`excluded_device_${i}_enabled`] === false) continue;
       const sid = a[`excluded_device_${i}_sensor`];
       if (!sid) continue; // EV-no-telemetry has no power sensor
       const w = this._watts(hass.states[sid]);
-      if (w != null) total = (total || 0) + w;
+      if (w == null) continue;
+      total = (total || 0) + w;
+      // Only devices the home sensor already includes (included_in_consumption
+      // !== false) may be subtracted from the Home node. "Additional" devices
+      // are not in the home sensor, so subtracting them would wrongly drive
+      // Home toward 0.
+      if (a[`excluded_device_${i}_included_in_consumption`] !== false) included += w;
     }
-    return total;
+    return total == null ? null : { total, included };
   }
 
   // --- model builder ---------------------------------------------------------
@@ -1229,13 +1236,14 @@ class MarstekVenusPanel extends HTMLElement {
     // excluded devices: summed power of all enabled excluded loads (kW). null
     // when none expose a power sensor — the flow node is hidden in that case.
     const excludedW = this._excludedPowerW();
-    const excluded = excludedW != null ? excludedW / 1000 : null;
     const hasExcluded = excludedW != null;
+    const excluded = hasExcluded ? excludedW.total / 1000 : null;
 
-    // The home sensor already includes the excluded devices that the flow chart
-    // draws as their own node. Subtract them so the household node shows only the
-    // remaining house load (avoids double-counting the excluded consumption).
-    if (hasExcluded) home = Math.max(0, home - excluded);
+    // Subtract from the Home node only the excluded devices the home sensor
+    // already counts (included_in_consumption). They are drawn as their own
+    // node, so subtracting avoids double-counting. "Additional" devices are not
+    // in the home sensor — subtracting them would wrongly drive Home to 0.
+    if (hasExcluded) home = Math.max(0, home - excludedW.included / 1000);
 
     const netBalance = this._num(this._stateFor(byKey, K.netBalance));
 

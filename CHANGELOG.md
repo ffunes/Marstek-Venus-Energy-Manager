@@ -4,6 +4,7 @@
 
 ### Fixed
 - **Home Consumption dropped registerless-driver (Zendure) discharge**: the aggregate summed only `ac_power`, so a Zendure (which exposes only `battery_power`) was missing from Home Consumption — undercounting it and collapsing the dashboard Energy Flow Home node toward 0 once an excluded device was subtracted. Now reuses the `_ac_convention_power` fallback (−`battery_power`), matching the charge/discharge aggregates. [`sensors/aggregate_sensors.py`](custom_components/marstek_venus_energy_manager/sensors/aggregate_sensors.py).
+- **Energy Flow Home node hit 0 with an "additional" excluded device**: the panel subtracted every excluded device's power from the Home node, but "additional" devices (`included_in_consumption` = false) are not in the home sensor, so subtracting them drove Home to 0. Now only the `included_in_consumption` portion is subtracted. [`frontend/marstek-panel.js`](custom_components/marstek_venus_energy_manager/frontend/marstek-panel.js).
 
 ### Internal
 - **Source reorganisation into subpackages**: moved 18 modules out of the integration root into four subpackages — [`sensors/`](custom_components/marstek_venus_energy_manager/sensors/), [`control/`](custom_components/marstek_venus_energy_manager/control/), [`tracking/`](custom_components/marstek_venus_energy_manager/tracking/), [`infra/`](custom_components/marstek_venus_energy_manager/infra/). Root now contains only the HA-required platform files. No behaviour change.
