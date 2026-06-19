@@ -266,7 +266,7 @@ class MarstekSoftSocLimitNumber(CoordinatorEntity, NumberEntity):
             self._attr_translation_key = "discharging_cutoff_capacity"
             self._attr_unique_id = f"{coordinator.device_key}_discharging_cutoff_capacity"
             self._attr_icon = "mdi:battery-arrow-down"
-            self._attr_native_min_value = 5
+            self._attr_native_min_value = 12
             self._attr_native_max_value = 50
         self.entity_id = english_entity_id("number", coordinator.name, self._attr_translation_key)
 

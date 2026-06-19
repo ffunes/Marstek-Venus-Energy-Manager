@@ -3,6 +3,7 @@
 ## [2.0.5] - 2026-06-17
 
 ### Fixed
+- **Min SOC dashboard slider allowed values below 12% on v3/vA/vD**: the software SOC limit entity for batteries without hardware cutoff registers had a native minimum of 5%, letting users drag it below the 12% floor enforced everywhere else. Now clamped to 12%. [`number.py`](custom_components/marstek_venus_energy_manager/number.py).
 - **Manual Mode off could corrupt PD state mid-cycle**: `async_turn_off` reset `error_integral`, `_active_charge_batteries`, etc. without holding `_control_lock`, so a running control cycle could observe a partially-reset state. Reset now happens inside `async with _control_lock`. [`switch.py`](custom_components/marstek_venus_energy_manager/switch.py).
 - **PD controller stuck after all batteries hit max_soc simultaneously** (#390): `_stop_blocked_active_batteries` called `.remove()` after an `await`, which raised `ValueError` if `switch.async_turn_off/on` reset the list during that suspension; the uncaught exception aborted `_run_control_cycle`, freezing the controller at setpoint 0 with no recovery. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
 - **Home Consumption wrong with inverted grid meter**: when `meter_inverted` is enabled, Home Consumption was calculated with the raw (wrong-sign) grid value instead of the negated one, causing inflated or negative readings. [`aggregate_sensors.py`](custom_components/marstek_venus_energy_manager/aggregate_sensors.py).
