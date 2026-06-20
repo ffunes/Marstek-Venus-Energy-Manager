@@ -1499,6 +1499,18 @@ class ChargeDischargeController:
                             taper_at_top_voltage = float(_vmax) >= NORMAL_BALANCE_PAUSE_CELL_VOLTAGE
                         except (TypeError, ValueError):
                             pass
+                # If the configured ceiling was raised above the latched base SOC,
+                # the latch is stale: it captured a lower, since-raised ceiling
+                # (e.g. Target SOC bumped back up after a temporary reduction).
+                # Clear it so charge can resume toward the new target; a genuine
+                # top-of-charge re-arms immediately below.
+                if (
+                    coordinator._hysteresis_base_soc is not None
+                    and coordinator.max_soc > coordinator._hysteresis_base_soc
+                ):
+                    coordinator._hysteresis_active = False
+                    coordinator._hysteresis_base_soc = None
+
                 if current_soc >= coordinator.max_soc or bms_cutoff or taper_at_top_voltage:
                     coordinator._hysteresis_active = True
                     if coordinator._hysteresis_base_soc is None:
@@ -1797,6 +1809,17 @@ class ChargeDischargeController:
                                 _taper_at_top = float(_vmax_hysteresis) >= NORMAL_BALANCE_PAUSE_CELL_VOLTAGE
                             except (TypeError, ValueError):
                                 pass
+                        # If the configured ceiling was raised above the latched
+                        # base SOC, the latch is stale (Target SOC bumped back up
+                        # after a temporary reduction). Clear it so charge resumes
+                        # toward the new target; a genuine top re-arms below.
+                        if (
+                            coordinator._hysteresis_base_soc is not None
+                            and coordinator.max_soc > coordinator._hysteresis_base_soc
+                        ):
+                            coordinator._hysteresis_active = False
+                            coordinator._hysteresis_base_soc = None
+
                         if current_soc >= coordinator.max_soc or _taper_at_top:
                             coordinator._hysteresis_active = True
                             # Capture the actual SOC that triggered hysteresis (may be 100% after full charge)

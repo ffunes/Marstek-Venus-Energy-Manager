@@ -20,8 +20,9 @@ smartMode=1 on a write keeps the setpoint in RAM instead of flash, so the per-cy
 real-time PD writes don't wear the flash. It obeys the commanded acMode and holds the
 setpoint as long as HEMS is DISABLED (required for this integration). With HEMS enabled
 the device's smart-matching loop ignores acMode and reverts manual control after ~10-14 s
-(the "charge 2 s then back to 0" symptom). Config writes (apply_config, write_control)
-omit smartMode so they persist to flash across reboots.
+(the "charge 2 s then back to 0" symptom). smartMode is a sticky device property, so
+the per-cycle power loop holds it at 1; config writes (apply_config, write_control)
+must send smartMode=0 explicitly to commit to flash and survive reboots.
 
 battery_power is synthesised: outputPackPower − packInputPower
   (+charge: outputPackPower > 0; −discharge: packInputPower > 0)
@@ -70,8 +71,8 @@ _PROP_TO_KEY: dict[str, str] = {
     "minSoc":           "min_soc",
     "inverseMaxPower":  "inverse_max_power",
     # Off-grid output port mode (3-state enum, confirmed on a 2400 AC+):
-    # 0=normal, 1=economy, 2=off. Exposed as a select; write persists to flash
-    # (write_control omits smartMode) so the user's choice survives reboots.
+    # 0=normal, 1=economy, 2=off. Exposed as a select; write_control sends
+    # smartMode=0 so the flash write survives reboots.
     "gridOffMode":      "grid_off_mode",
     # Device's real AC charge ceiling (distinct from inverseMaxPower, which caps
     # discharge/inverter output). Mapped to the control-layer max_charge_power so
@@ -504,7 +505,9 @@ class ZendureLocalDriver(BatteryDriver):
         indefinitely (verified on a 2400 AC+). The acMode-ignoring "auto /
         smart-matching" behavior only appears when HEMS is enabled, where its
         loop reverts manual control after ~10-14 s. Config writes (apply_config,
-        write_control) omit smartMode so they persist to flash across reboots.
+        write_control) send smartMode=0 so they commit to flash and survive
+        reboots — smartMode is sticky, so they can't rely on omitting it (the
+        power loop leaves the device in smartMode=1).
         """
         if net_power_w > 0:
             power = min(net_power_w, self._capabilities.max_charge_power_w)
@@ -578,8 +581,11 @@ class ZendureLocalDriver(BatteryDriver):
     async def write_control(self, key: str, value: int) -> bool:
         """Write a single logical control property by key (entity-write path).
 
-        No smartMode: user-facing configuration writes (soc_set, min_soc,
-        inverse_max_power) should persist across reboots.
+        smartMode=0: user-facing configuration writes (soc_set, min_soc,
+        inverse_max_power, grid_off_mode) must persist across reboots. smartMode
+        is a sticky device property and the per-cycle power loop holds it at 1
+        (RAM), so omitting it here would inherit that 1 and land the config in
+        RAM, lost on the next reboot. Set it to 0 explicitly to commit to flash.
         """
         prop = _KEY_TO_PROP.get(key)
         if prop is None:
@@ -587,7 +593,7 @@ class ZendureLocalDriver(BatteryDriver):
             return False
         if key in _DECIPERCENT_KEYS:
             value = int(round(value * 10))  # whole percent → device deci-percent
-        return await self._post_write({prop: value})
+        return await self._post_write({prop: value, "smartMode": 0})
 
     def net_power_from_data(self, data: dict):
         ac_mode = data.get("ac_mode")
@@ -622,7 +628,7 @@ class ZendureLocalDriver(BatteryDriver):
         max_charge_power_w: int,
         max_discharge_power_w: int,
     ) -> bool:
-        """Write SOC limits to the device (persists to flash, no smartMode).
+        """Write SOC limits to the device (smartMode=0 → persists to flash).
 
         Zendure uses socSet (70-100 %) and minSoc (0-50 %).  The power caps
         are not written here; use the inverseMaxPower number entity instead.
@@ -631,7 +637,7 @@ class ZendureLocalDriver(BatteryDriver):
         """
         soc_set = max(70, min(100, int(max_soc_pct)))
         min_soc = max(0, min(50, int(min_soc_pct)))
-        return await self._post_write({"socSet": soc_set * 10, "minSoc": min_soc * 10})
+        return await self._post_write({"socSet": soc_set * 10, "minSoc": min_soc * 10, "smartMode": 0})
 
     async def standby(self) -> bool:
         """Stop discharge for teardown (smartMode=1, does not persist)."""

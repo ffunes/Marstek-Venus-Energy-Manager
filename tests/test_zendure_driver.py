@@ -498,10 +498,11 @@ async def test_write_control_maps_key_to_property():
     ok = await _driver(session=sess).write_control("soc_set", 90)
 
     assert ok is True
-    # config write: must NOT include smartMode so the value survives a reboot.
-    # soc_set is deci-percent on the device, so 90 % → 900.
+    # config write: smartMode=0 forces a flash write so the value survives a
+    # reboot. smartMode is sticky and the power loop holds it at 1 (RAM), so
+    # omitting it would land the config in RAM. soc_set is deci-percent → 90 % → 900.
     props = sess.post.call_args.kwargs["json"]["properties"]
-    assert props == {"socSet": 900}
+    assert props == {"socSet": 900, "smartMode": 0}
 
 
 async def test_write_control_grid_off_mode_posts_raw_enum():
@@ -509,10 +510,10 @@ async def test_write_control_grid_off_mode_posts_raw_enum():
     ok = await _driver(session=sess).write_control("grid_off_mode", 2)
 
     assert ok is True
-    # Raw enum value, no deci-percent scaling, and no smartMode so the off-grid
+    # Raw enum value, no deci-percent scaling, and smartMode=0 so the off-grid
     # port mode persists to flash across reboots.
     props = sess.post.call_args.kwargs["json"]["properties"]
-    assert props == {"gridOffMode": 2}
+    assert props == {"gridOffMode": 2, "smartMode": 0}
 
 
 async def test_write_control_unknown_key_returns_false():
@@ -542,7 +543,7 @@ async def test_apply_config_writes_soc_set_and_min_soc():
     props = sess.post.call_args.kwargs["json"]["properties"]
     assert props["socSet"] == 900   # 90 % in deci-percent
     assert props["minSoc"] == 200   # 20 % in deci-percent
-    assert "smartMode" not in props  # config write must persist across reboots
+    assert props["smartMode"] == 0  # flash write so config persists across reboots
 
 
 @pytest.mark.parametrize("raw,expected", [

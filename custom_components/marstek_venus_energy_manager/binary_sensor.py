@@ -142,11 +142,21 @@ class ChargeHysteresisActiveSensor(RestoreEntity, BinarySensorEntity):
         if self.coordinator.data:
             current_soc = self.coordinator.data.get("battery_soc")
 
-        charge_threshold = self.coordinator.max_soc - self.coordinator.charge_hysteresis_percent
+        # Use the latched base SOC (the ceiling actually hit) as the threshold
+        # base, matching the control logic in _refresh_battery_charge_limit_blocks;
+        # fall back to max_soc when not latched. Reporting max_soc here was
+        # misleading whenever the latch captured a different SOC.
+        base = (
+            self.coordinator._hysteresis_base_soc
+            if self.coordinator._hysteresis_base_soc is not None
+            else self.coordinator.max_soc
+        )
+        charge_threshold = base - self.coordinator.charge_hysteresis_percent
 
         return {
             "max_soc": self.coordinator.max_soc,
             "hysteresis_percent": self.coordinator.charge_hysteresis_percent,
+            "base_soc": base,
             "charge_resume_threshold": charge_threshold,
             "current_soc": current_soc,
         }
