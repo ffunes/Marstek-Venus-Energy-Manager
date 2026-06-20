@@ -272,6 +272,7 @@ class ZendureLocalDriver(BatteryDriver):
             has_alarm_registers=True,    # faultLevel + is_error
             has_rs485_control=False,
             has_energy_counters=False,   # no kWh / capacity in the report; synthesised
+            setpoint_confirm_reliable=False,  # HTTP report echoes the previous limit for ~2 s
         )
 
         self._definitions: dict[str, list[dict]] = {

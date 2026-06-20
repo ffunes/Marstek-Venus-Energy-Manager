@@ -78,6 +78,15 @@ class DriverCapabilities:
     # register-backed drivers need no change.
     has_energy_counters: bool = True
 
+    # True if a setpoint readback reliably reflects the just-written command on the
+    # confirmation cycle. Register batteries (Marstek) echo the written value at
+    # once. A driver whose device applies writes with latency (Zendure: the HTTP
+    # report echoes the previous limit for ~2 s, so an in-flight PD setpoint change
+    # reads back "not yet applied" even though the write was accepted) reports
+    # False, so the control layer logs an unconfirmed first attempt at debug rather
+    # than warning — the retry still confirms it. Defaults True.
+    setpoint_confirm_reliable: bool = True
+
 
 @dataclass(frozen=True)
 class SetpointResult:

@@ -184,6 +184,15 @@ BMS_DISCHARGE_CUTOFF_SOC = 20                  # %: below this, refused discharg
 # delivering are caught up to N writes later instead of immediately.
 PD_READBACK_EVERY_N_WRITES = 5
 
+# Discharge engage grace: a slow inverter (e.g. Zendure HTTP) takes seconds to
+# reverse from charge/idle into discharge — measured up to ~20-30 s on a cold
+# charge→discharge transition. During that window an ACK'd command legitimately
+# reads back 0 W out, which is engage latency, not a fault. Suppress non-delivery
+# recording for this long after the commanded direction flips to discharge so the
+# inverter is not excluded before it has had time to engage. A battery that never
+# engages is still caught, just this many seconds later.
+DISCHARGE_ENGAGE_GRACE_S = 30
+
 # Active balance mode.
 # Once the battery has reached the top, keep the cells in the balancing window
 # with gentle charge/discharge micro-cycles instead of only resting at 100% SOC.

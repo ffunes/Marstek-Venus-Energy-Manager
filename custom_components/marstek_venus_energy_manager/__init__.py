@@ -109,6 +109,7 @@ from .const import (
     NORMAL_BALANCE_RECAL_INVERTER_STANDBY,
     BMS_DISCHARGE_CUTOFF_SOC,
     PD_READBACK_EVERY_N_WRITES,
+    DISCHARGE_ENGAGE_GRACE_S,
     CONF_ACTIVE_BALANCE_MODE_ENABLED,
     CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
@@ -419,6 +420,13 @@ class ChargeDischargeController:
         self._non_responsive = NonResponsiveTracker()
         # Alias to the tracker's internal dict for backward-compat with sensor.py diagnostics
         self._non_responsive_batteries = self._non_responsive.batteries
+        # Discharge engage grace: sign of the last commanded net power per battery
+        # (+1 charge / -1 discharge / 0 idle) to detect a flip into discharge, and
+        # the time that flip happened — non-delivery is suppressed for
+        # DISCHARGE_ENGAGE_GRACE_S after the flip so a slow inverter is not excluded
+        # while it is still engaging. See _set_battery_power.
+        self._last_commanded_net_sign: dict[MarstekVenusDataUpdateCoordinator, int] = {}
+        self._discharge_engage_started: dict[MarstekVenusDataUpdateCoordinator, datetime] = {}
 
         # Coordinators currently owned by a manual time-slot this cycle.
         # PD/predictive logic must not touch these — _set_battery_power short-circuits.
@@ -2946,6 +2954,17 @@ class ChargeDischargeController:
         else:
             net_power = 0
 
+        # Engage-grace bookkeeping: stamp the moment the commanded direction flips
+        # into discharge so non-delivery detection below can give a slow inverter
+        # time to engage before judging it. Done before the skip-write short-circuit
+        # so the flip is seen even on a cycle that skips the write, and the tracker
+        # is reset on the flip so a stale count from a prior session can't carry over.
+        net_sign = 1 if net_power > 0 else -1 if net_power < 0 else 0
+        if net_sign == -1 and self._last_commanded_net_sign.get(coordinator) != -1:
+            self._discharge_engage_started[coordinator] = dt_util.utcnow()
+            self._non_responsive.clear(coordinator)
+        self._last_commanded_net_sign[coordinator] = net_sign
+
         # Record the live commanded setpoint so the manual sliders / force_mode
         # select can mirror it (parity with the Marstek register entities).
         # Done before the skip-write short-circuit so it tracks intent even when
@@ -3047,7 +3066,25 @@ class ChargeDischargeController:
                 # Detect non-responsive battery: ACK ok but not delivering discharge power
                 if discharge_power >= 100 and charge_power == 0:
                     actual_abs = abs(actual_power)
-                    if actual_abs < 0.10 * discharge_power:
+                    not_delivering = actual_abs < 0.10 * discharge_power
+                    engage_started = self._discharge_engage_started.get(coordinator)
+                    within_engage_grace = (
+                        engage_started is not None
+                        and (dt_util.utcnow() - engage_started).total_seconds()
+                        < DISCHARGE_ENGAGE_GRACE_S
+                    )
+                    if not_delivering and within_engage_grace:
+                        # A slow inverter (Zendure HTTP) takes seconds to reverse into
+                        # discharge from charge/idle — up to ~20-30 s on a cold
+                        # charge→discharge transition. 0 W out this soon after the
+                        # direction flip is engage latency, not a fault; give it time
+                        # before judging. The flip already reset the tracker.
+                        _LOGGER.debug(
+                            "[%s] No discharge delivered yet but within %ds engage "
+                            "grace — inverter still engaging, not a fault",
+                            coordinator.name, DISCHARGE_ENGAGE_GRACE_S,
+                        )
+                    elif not_delivering:
                         # Skip non-responsive recording when the BMS is legitimately
                         # refusing discharge: either at/near the configured min-SOC, or
                         # anywhere below the low-SOC protective floor where the BMS may
@@ -3110,14 +3147,24 @@ class ChargeDischargeController:
             # confirmation read never followed (feedback_timeout). Both retryable.
             last_fail_reason = result.failure_reason or "ack_mismatch"
             if attempt == 0:
+                # On a driver whose readback lags the write (Zendure HTTP echoes the
+                # previous limit for ~2 s), a first-attempt mismatch is expected
+                # echo/engage latency that the retry resolves — log it at debug, not
+                # warning, so it does not read as a fault. Register drivers, whose
+                # readback is immediate, keep the warning.
+                _log = (
+                    _LOGGER.warning
+                    if coordinator.driver.capabilities.setpoint_confirm_reliable
+                    else _LOGGER.debug
+                )
                 if result.failure_reason == "feedback_timeout":
-                    _LOGGER.warning(
+                    _log(
                         "[%s] Power feedback read failed (attempt 1/2), retrying.",
                         coordinator.name,
                     )
                 else:
                     echo = result.applied or {}
-                    _LOGGER.warning(
+                    _log(
                         "[%s] Power command not ACK'd (attempt 1/2), retrying. "
                         "requested(force=%d charge=%dW discharge=%dW) "
                         "readback(force=%s charge=%sW discharge=%sW battery=%sW)",

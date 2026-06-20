@@ -52,6 +52,8 @@ def _controller():
         get_discharge_blockers=lambda c: {},
         _log_low_power_delivery=lambda coordinator, **k: None,
         _normal_balance_top_voltage_seen={},
+        _last_commanded_net_sign={},
+        _discharge_engage_started={},
         _non_responsive=SimpleNamespace(
             record_non_delivery=lambda *a, **k: False,
             clear=lambda c: None,
@@ -108,6 +110,9 @@ async def test_no_skip_when_discharge_unchanged_but_not_delivering():
     # ACK'd (confirmed) but delivering 0 W -> non-delivery tracker must fire.
     coord.apply_power = AsyncMock(return_value=_ok(-300, battery_power_w=0))
     ctrl = _controller()
+    # Already discharging for a while (v3 silent-stop), so this is steady state,
+    # not a fresh charge→discharge flip — past the engage grace window.
+    ctrl._last_commanded_net_sign[coord] = -1
     record = MagicMock(return_value=False)  # sync: not awaited in _set_battery_power
     ctrl._non_responsive.record_non_delivery = record
 
@@ -116,6 +121,31 @@ async def test_no_skip_when_discharge_unchanged_but_not_delivering():
     assert result is True
     coord.apply_power.assert_called_once()
     record.assert_called_once()
+
+
+async def test_no_record_during_discharge_engage_grace():
+    """A fresh charge→discharge flip that has not engaged yet must NOT be recorded
+    as non-delivery while within the engage grace window — a slow inverter takes
+    seconds to reverse into discharge and 0 W out that soon is engage latency."""
+    coord = _Coord({
+        "force_mode": 2,
+        "set_charge_power": 0,
+        "set_discharge_power": 300,
+        "battery_power": 0,  # not delivering yet — still engaging
+        "battery_soc": 80,
+        "inverter_state": None,
+    })
+    coord.apply_power = AsyncMock(return_value=_ok(-300, battery_power_w=0))
+    ctrl = _controller()
+    ctrl._last_commanded_net_sign[coord] = 1  # was charging -> this call flips to discharge
+    record = MagicMock(return_value=False)
+    ctrl._non_responsive.record_non_delivery = record
+
+    result = await ChargeDischargeController._set_battery_power(ctrl, coord, 0, 300)
+
+    assert result is True
+    coord.apply_power.assert_called_once()
+    record.assert_not_called()  # suppressed: inverter still within engage grace
 
 
 async def test_no_skip_when_setpoints_differ():
