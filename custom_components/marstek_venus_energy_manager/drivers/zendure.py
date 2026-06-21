@@ -50,6 +50,15 @@ _LOGGER = logging.getLogger(__name__)
 _HTTP_TIMEOUT = aiohttp.ClientTimeout(total=10)
 _PROBE_TIMEOUT = aiohttp.ClientTimeout(total=5)
 
+# Supported device model identifiers.
+ZENDURE_MODEL_2400AC_PRO = "2400ac_pro"
+ZENDURE_MODEL_2400AC_PLUS = "2400ac_plus"
+
+# Keys absent on the 2400 AC+ (no DC-coupled MPPT, no dedicated solar-input port).
+_SOLAR_MPPT_KEYS: frozenset[str] = frozenset({
+    "solar_power", "mppt1_power", "mppt2_power", "mppt3_power", "mppt4_power",
+})
+
 # Zendure API property name → logical coordinator key.
 _PROP_TO_KEY: dict[str, str] = {
     "electricLevel":    "battery_soc",
@@ -146,10 +155,10 @@ SENSOR_DEFINITIONS: list[dict] = [
      "scan_interval": "low",        "enabled_by_default": True},
     {"key": "remain_discharge_time","name": "Remaining Discharge Time", "unit": "min",
      "device_class": "duration",    "state_class": "measurement",       "scale": 1, "precision": 0,
-     "scan_interval": "medium",     "enabled_by_default": True},
+     "scan_interval": "medium",     "enabled_by_default": False},
     {"key": "fault_level",          "name": "Fault Level",              "unit": None,
      "device_class": None,          "state_class": None,                "scale": 1, "precision": 0,
-     "scan_interval": "low",        "enabled_by_default": False},
+     "category": "diagnostic",      "scan_interval": "low",             "enabled_by_default": False},
     {"key": "pack_count",           "name": "Battery Pack Count",       "unit": None,
      "device_class": None,          "state_class": None,                "scale": 1, "precision": 0,
      "scan_interval": "low",        "enabled_by_default": False},
@@ -226,6 +235,7 @@ class ZendureLocalDriver(BatteryDriver):
         host: str,
         *,
         port: int = 80,
+        model: str = ZENDURE_MODEL_2400AC_PRO,
         max_charge_power_w: int = 2400,
         max_discharge_power_w: int = 2400,
         session: Optional[aiohttp.ClientSession] = None,
@@ -245,6 +255,7 @@ class ZendureLocalDriver(BatteryDriver):
         self._shutting_down = False
         self._sn: Optional[str] = None  # populated from first GET response
         self._product: Optional[str] = None  # device model from the report root
+        self._model = model
 
         self._capabilities = DriverCapabilities(
             hardware_soc_cutoff=True,    # minSoc + socSet exist on the device
@@ -259,14 +270,17 @@ class ZendureLocalDriver(BatteryDriver):
             setpoint_confirm_reliable=False,  # HTTP report echoes the previous limit for ~2 s
         )
 
+        _excluded = _SOLAR_MPPT_KEYS if model == ZENDURE_MODEL_2400AC_PLUS else frozenset()
+        _sensor_defs = [d for d in SENSOR_DEFINITIONS if d["key"] not in _excluded]
+
         self._definitions: dict[str, list[dict]] = {
-            "sensor":        SENSOR_DEFINITIONS,
+            "sensor":        _sensor_defs,
             "number":        NUMBER_DEFINITIONS,
             "select":        SELECT_DEFINITIONS,
             "switch":        [],
             "binary_sensor": [],
             "button":        [],
-            "all":           SENSOR_DEFINITIONS + NUMBER_DEFINITIONS + SELECT_DEFINITIONS,
+            "all":           _sensor_defs + NUMBER_DEFINITIONS + SELECT_DEFINITIONS,
         }
 
         # Single read group: one HTTP GET returns all properties, so there is
@@ -689,12 +703,13 @@ class ZendureLocalDriver(BatteryDriver):
             return False
 
     @classmethod
-    async def probe(cls, host: str, port: int = 80) -> bool:
+    async def probe(cls, host: str, port: int = 80) -> tuple[bool, str | None]:
         """Test whether a Zendure device responds at host:port.
 
-        Creates a temporary session, GETs /properties/report, and checks for
-        the ``properties`` key.  Used by the config/options flow to validate
-        the device IP before committing it.
+        Returns (reachable, product_string). ``product_string`` is the raw
+        ``product`` field from the report root; None if absent or on failure.
+        Used by the config/options flow to validate the IP and auto-detect the
+        device model without requiring user input.
         """
         port_suffix = f":{port}" if port != 80 else ""
         url = f"http://{host}{port_suffix}/properties/report"
@@ -702,9 +717,31 @@ class ZendureLocalDriver(BatteryDriver):
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=_PROBE_TIMEOUT) as resp:
                     if resp.status != 200:
-                        return False
+                        return False, None
                     data = await resp.json(content_type=None)
-                    return "properties" in data
+                    if "properties" not in data:
+                        return False, None
+                    return True, data.get("product")
         except Exception as exc:
             _LOGGER.debug("Zendure probe of %s failed: %s", host, exc)
-            return False
+            return False, None
+
+
+def detect_model(product: str | None) -> str:
+    """Map a raw device product string to a ZENDURE_MODEL_* constant.
+
+    Matching is case-insensitive on "pro": the 2400 AC Pro reports a product
+    string containing "Pro"; the 2400 AC+ does not. Unknown / absent strings
+    default to ZENDURE_MODEL_2400AC_PRO so all sensor entities are registered
+    (the extra MPPT sensors are simply unavailable on hardware that lacks them,
+    which is less surprising than missing sensors on hardware that has them).
+    """
+    if product and "pro" in product.lower():
+        return ZENDURE_MODEL_2400AC_PRO
+    if product:
+        return ZENDURE_MODEL_2400AC_PLUS
+    _LOGGER.warning(
+        "Zendure device reported no product string; defaulting to %s",
+        ZENDURE_MODEL_2400AC_PRO,
+    )
+    return ZENDURE_MODEL_2400AC_PRO

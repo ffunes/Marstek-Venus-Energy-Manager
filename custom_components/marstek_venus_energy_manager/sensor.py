@@ -115,6 +115,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor platform."""
     coordinators: list[MarstekVenusDataUpdateCoordinator] = hass.data[DOMAIN][entry.entry_id]["coordinators"]
+
     entities = []
 
     # Add individual battery sensors. The driver owns the per-platform split, so

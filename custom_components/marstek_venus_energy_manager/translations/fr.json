@@ -1250,6 +1250,15 @@
       },
       "ac_mode": {
         "name": "Mode AC"
+      },
+      "pack_count": {
+        "name": "Nombre de Packs de Batterie"
+      },
+      "output_limit": {
+        "name": "Limite de Sortie"
+      },
+      "input_limit": {
+        "name": "Limite d'Entrée"
       }
     },
     "binary_sensor": {

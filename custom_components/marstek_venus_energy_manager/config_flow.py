@@ -116,7 +116,7 @@ from .const import (
     MAX_TIME_SLOTS,
 )
 from .drivers.marstek import MarstekModbusDriver
-from .drivers.zendure import ZendureLocalDriver
+from .drivers.zendure import ZendureLocalDriver, detect_model as _detect_zendure_model
 
 _ZENDURE_MAX_POWER_W = 2400
 
@@ -442,7 +442,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test connection to a battery."""
         if brand == "zendure":
             _LOGGER.info("Probing Zendure device at %s:%s", host, port)
-            result = await ZendureLocalDriver.probe(host, port)
+            result, _ = await ZendureLocalDriver.probe(host, port)
         else:
             _LOGGER.info("Probing Marstek %s at %s:%s slave %s", version, host, port, slave_id)
             result = await MarstekModbusDriver.probe(host, port, version, slave_id)
@@ -626,8 +626,8 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = int(user_input.get(CONF_PORT, 80))
-            connection_result = await self._test_connection(host, port, brand="zendure")
-            if not connection_result:
+            ok, product = await ZendureLocalDriver.probe(host, port)
+            if not ok:
                 errors["base"] = "cannot_connect"
             else:
                 self._current_battery_data.update({
@@ -635,6 +635,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST: host,
                     CONF_PORT: port,
                     "brand": "zendure",
+                    "zendure_model": _detect_zendure_model(product),
                 })
                 return await self.async_step_battery_limits()
 
@@ -1845,15 +1846,14 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if not await self._test_connection(
-                user_input[CONF_HOST], user_input[CONF_PORT], brand="zendure"
-            ):
+            new_host = user_input[CONF_HOST]
+            new_port = user_input[CONF_PORT]
+            ok, product = await ZendureLocalDriver.probe(new_host, new_port)
+            if not ok:
                 errors["base"] = "cannot_connect"
             else:
                 old_host = current.get(CONF_HOST)
                 old_port = current.get(CONF_PORT)
-                new_host = user_input[CONF_HOST]
-                new_port = user_input[CONF_PORT]
 
                 if old_host and old_port and (old_host != new_host or old_port != new_port):
                     self._migrate_battery_registry_ids(
@@ -1864,6 +1864,7 @@ class MarstekVenusConfigFlow(ConfigFlow, domain=DOMAIN):
                 updated[CONF_NAME] = user_input[CONF_NAME]
                 updated[CONF_HOST] = new_host
                 updated[CONF_PORT] = new_port
+                updated["zendure_model"] = _detect_zendure_model(product)
                 self._reconfigure_batteries.append(updated)
                 self.battery_index += 1
 
@@ -1929,7 +1930,8 @@ class OptionsFlowHandler(OptionsFlow):
         """
         if brand == "zendure":
             _LOGGER.info("Probing Zendure device at %s:%s", host, port)
-            return await ZendureLocalDriver.probe(host, port)
+            ok, _ = await ZendureLocalDriver.probe(host, port)
+            return ok
 
         # Marstek: handle single-connection-slot constraint.
         entry_data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id, {})
@@ -2207,8 +2209,8 @@ class OptionsFlowHandler(OptionsFlow):
             if user_input is not None:
                 host = user_input[CONF_HOST]
                 port = int(user_input.get(CONF_PORT, 80))
-                connection_result = await self._test_connection(host, port, brand="zendure")
-                if not connection_result:
+                ok, product = await ZendureLocalDriver.probe(host, port)
+                if not ok:
                     errors["base"] = "cannot_connect"
                 else:
                     self._current_battery_data.update({
@@ -2216,6 +2218,7 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_HOST: host,
                         CONF_PORT: port,
                         "brand": "zendure",
+                        "zendure_model": _detect_zendure_model(product),
                     })
                     return await self.async_step_battery_limits()
 

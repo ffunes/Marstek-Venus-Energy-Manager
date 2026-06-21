@@ -17,7 +17,7 @@ from ..const import (
     DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
 )
 from ..drivers.marstek import MarstekModbusDriver
-from ..drivers.zendure import ZendureLocalDriver
+from ..drivers.zendure import ZendureLocalDriver, ZENDURE_MODEL_2400AC_PRO
 from ..drivers.base import SetpointResult
 from .alarm_notifier import AlarmNotifier
 
@@ -36,7 +36,8 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
                  allow_charge: bool = True, allow_discharge: bool = True,
                  active_balance_mode_enabled: bool = False,
                  full_charge_voltage_taper_enabled: bool = DEFAULT_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
-                 brand: str = "marstek") -> None:
+                 brand: str = "marstek",
+                 zendure_model: str = ZENDURE_MODEL_2400AC_PRO) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
             hass,
@@ -159,6 +160,7 @@ class MarstekVenusDataUpdateCoordinator(DataUpdateCoordinator):
             self.driver = ZendureLocalDriver(
                 self.host,
                 port=self.port,
+                model=zendure_model,
             )
         else:
             self.driver = MarstekModbusDriver(
