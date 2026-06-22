@@ -401,7 +401,12 @@ class DischargeWindowSensor(SensorEntity):
         current_day = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"][now.weekday()]
         active_slot = None
 
-        for i, slot in enumerate(enabled_slots):
+        # Index over the full slot list so the number matches the panel's
+        # "Franja N" (switch time_slot_{index}); skip slots that don't govern
+        # discharge inline rather than enumerating the filtered list.
+        for i, slot in enumerate(all_slots):
+            if not slot.get("enabled", True) or not slot.get("allow_discharge", DEFAULT_SLOT_ALLOW_DISCHARGE):
+                continue
             if current_day not in slot.get("days", []):
                 continue
             try:

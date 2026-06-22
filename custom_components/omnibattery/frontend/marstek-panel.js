@@ -2465,8 +2465,11 @@ class MarstekVenusPanel extends HTMLElement {
       case K.predictiveActive:
       case K.capacityActive:
         return { text: disp, tone: raw === "on" ? "good" : "neutral" };
-      case K.dischargeWindow:
-        return { text: disp, tone: raw === "active" ? "good" : "neutral" };
+      case K.dischargeWindow: {
+        const n = so.attributes && so.attributes.active_slot;
+        const txt = raw === "active" && n ? `${disp} · ${this._t("itemSlot")} ${n}` : disp;
+        return { text: txt, tone: raw === "active" ? "good" : "neutral" };
+      }
       case K.weeklyFullCharge:
         return { text: disp, tone: raw === "charging" || raw === "complete" ? "good" : "neutral" };
       case K.chargeDelay: {
