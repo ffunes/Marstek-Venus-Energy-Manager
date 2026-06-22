@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- **No-PD direct-tracking mode** (opt-in switch): the battery follows the consumption sensor 1:1 in a single cycle — no integral, derivative, smoothing, rate limiter or hysteresis — instead of the PD control law. Reuses the deadband, min charge/discharge power, relay min-ON and grid-setpoint sliders, plus a new **No-PD Command Delay** slider that debounces fast meters (collapses a burst into one command on the latest value). Off by default; the PD controller is unchanged. [`__init__.py`](custom_components/omnibattery/__init__.py), [`switch.py`](custom_components/omnibattery/switch.py).
 - **Opt-in rename of system entities to `omnibattery_*`**: system entities now *suggest* an `omnibattery_*` entity ID while keeping their legacy `unique_id` (so recorder history and statistics stay linked). Existing installs are untouched until you trigger HA's built-in **Settings → Devices & Services → Omnibattery → ⋯ → Recreate entity IDs**, which renames `sensor.marstek_venus_system_*` → `sensor.omnibattery_*` in place (history preserved); new installs get the Omnibattery IDs from the start. The dashboard matches by translation_key, so it keeps working through the rename. ⚠️ Your own automations/templates/Energy-dashboard config that reference the old IDs must be repointed manually. [`infra/entity_naming.py`](custom_components/omnibattery/infra/entity_naming.py).
 
 ### Fixed

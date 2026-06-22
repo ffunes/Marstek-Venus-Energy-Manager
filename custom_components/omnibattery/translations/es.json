@@ -924,6 +924,9 @@
       "manual_mode": {
         "name": "Modo Manual"
       },
+      "no_pd_mode": {
+        "name": "Seguimiento Directo sin PD"
+      },
       "predictive_charging": {
         "name": "Carga Predictiva"
       },
@@ -1379,6 +1382,9 @@
       },
       "pd_min_cycle_interval": {
         "name": "PD Intervalo Mínimo de Ciclo"
+      },
+      "no_pd_command_delay": {
+        "name": "No-PD Retardo de Orden"
       },
       "pd_target_grid_power": {
         "name": "PD Potencia Objetivo Red"

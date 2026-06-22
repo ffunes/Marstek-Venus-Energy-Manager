@@ -298,6 +298,11 @@ CONF_PD_MIN_DISCHARGE_POWER = "pd_min_discharge_power"
 CONF_PD_RELAY_COOLDOWN = "pd_relay_cooldown"
 CONF_PD_MIN_CYCLE_INTERVAL = "pd_min_cycle_interval"
 CONF_TARGET_GRID_POWER = "pd_target_grid_power"
+# No-PD direct-tracking mode (opt-in): track the consumption sensor 1:1 with no
+# integral/derivative/smoothing curve. Reuses the deadband, min charge/discharge
+# power, relay min-ON and target-grid-power knobs above; adds only a command delay.
+CONF_NO_PD_MODE_ENABLED = "no_pd_mode_enabled"
+CONF_NO_PD_COMMAND_DELAY = "no_pd_command_delay"
 CONF_ENABLE_SYSTEM_POWER_LIMITS = "enable_system_power_limits"
 CONF_SYSTEM_MAX_CHARGE_POWER = "system_max_charge_power"
 CONF_SYSTEM_MAX_DISCHARGE_POWER = "system_max_discharge_power"
@@ -327,6 +332,14 @@ RELAY_COOLDOWN_HOLD_POWER = 100
 # can choke on. Drops surplus sensor-triggered cycles; the 2 s safety timer is
 # never gated. 0 = disabled (pre-feature behaviour); default 1 s caps bursts.
 DEFAULT_PD_MIN_CYCLE_INTERVAL = 1.0
+# Grid-sample EMA smoothing time constant (s). Single source of truth so no-PD
+# mode can drop it to 0 (raw passthrough) and restore it when the mode is off.
+DEFAULT_GRID_FILTER_TAU = 2.0
+# No-PD direct-tracking mode defaults. Command delay debounces fast meters: events
+# inside a delay window collapse into one command issued on the latest value
+# (0 = act on every event, paced only by CONF_PD_MIN_CYCLE_INTERVAL).
+DEFAULT_NO_PD_MODE_ENABLED = False
+DEFAULT_NO_PD_COMMAND_DELAY = 0.0
 DEFAULT_TARGET_GRID_POWER = 0
 DEFAULT_ENABLE_SYSTEM_POWER_LIMITS = False
 DEFAULT_SYSTEM_MAX_CHARGE_POWER = 0       # 0 = disabled
@@ -515,6 +528,16 @@ CONFIG_NUMBER_DEFINITIONS = [
         "unit": "s",
         "default": DEFAULT_PD_MIN_CYCLE_INTERVAL,
         "icon": "mdi:timer-pause-outline",
+    },
+    {
+        "key": CONF_NO_PD_COMMAND_DELAY,
+        "name": "No-PD Command Delay",
+        "min": 0,
+        "max": 3,
+        "step": 0.1,
+        "unit": "s",
+        "default": DEFAULT_NO_PD_COMMAND_DELAY,
+        "icon": "mdi:timer-sand",
     },
     {
         "key": CONF_TARGET_GRID_POWER,

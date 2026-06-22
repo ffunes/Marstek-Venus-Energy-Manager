@@ -924,6 +924,9 @@
       "manual_mode": {
         "name": "Mode Manual"
       },
+      "no_pd_mode": {
+        "name": "Seguiment Directe sense PD"
+      },
       "predictive_charging": {
         "name": "Càrrega Predictiva"
       },
@@ -1379,6 +1382,9 @@
       },
       "pd_min_cycle_interval": {
         "name": "PD Interval Mínim de Cicle"
+      },
+      "no_pd_command_delay": {
+        "name": "No-PD Retard d'Ordre"
       },
       "pd_target_grid_power": {
         "name": "PD Potència Objectiu Xarxa"

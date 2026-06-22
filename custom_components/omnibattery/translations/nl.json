@@ -924,6 +924,9 @@
       "manual_mode": {
         "name": "Handmatige Modus"
       },
+      "no_pd_mode": {
+        "name": "Directe Tracking zonder PD"
+      },
       "predictive_charging": {
         "name": "Voorspellend Laden"
       },
@@ -1379,6 +1382,9 @@
       },
       "pd_min_cycle_interval": {
         "name": "PD Min. Cyclusinterval"
+      },
+      "no_pd_command_delay": {
+        "name": "No-PD Commandovertraging"
       },
       "pd_target_grid_power": {
         "name": "PD Doelnetvermogen"

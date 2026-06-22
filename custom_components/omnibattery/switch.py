@@ -21,6 +21,7 @@ from .const import (
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
     CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     CONF_MANUAL_MODE_ENABLED,
+    CONF_NO_PD_MODE_ENABLED,
     CONF_PREDICTIVE_CHARGING_OVERRIDDEN,
     NOTIFICATION_ID_PREFIX,
 )
@@ -54,6 +55,7 @@ async def async_setup_entry(
     # Add manual mode switch (system-level, always present)
     if controller:
         entities.append(ManualModeSwitch(hass, entry, controller))
+        entities.append(NoPdModeSwitch(hass, entry, controller))
 
     # Add predictive charging switch (system-level, not per-battery)
     if controller and controller.predictive_charging_enabled:
@@ -874,6 +876,73 @@ class ManualModeSwitch(SwitchEntity):
             {"notification_id": f"{NOTIFICATION_ID_PREFIX}manual_mode_active"},
         )
         self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Omnibattery System",
+            "manufacturer": "Omnibattery",
+            "model": "Multi-Battery System",
+        }
+
+
+class NoPdModeSwitch(SwitchEntity):
+    """Switch to enable no-PD direct-tracking mode.
+
+    When on, the controller tracks the consumption sensor 1:1 (proportional gain 1,
+    no integral, derivative, smoothing, rate limiter or directional hysteresis). It
+    reuses the deadband, min charge/discharge power, relay min-ON dwell and grid
+    setpoint sliders, plus the No-PD Command Delay slider. Off restores normal PD.
+    """
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the no-PD mode switch."""
+        self.hass = hass
+        self.entry = entry
+        self.controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "no_pd_mode"
+        self._attr_unique_id = "marstek_venus_system_no_pd_mode"
+        self.entity_id = system_entity_id("switch", "no_pd_mode")
+        self._attr_icon = "mdi:sine-wave"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if no-PD direct-tracking mode is active."""
+        return self.controller.no_pd_mode_enabled
+
+    async def _set_enabled(self, enabled: bool) -> None:
+        """Persist the flag and hot-reload the controller parameters."""
+        new_data = dict(self.entry.data)
+        new_data[CONF_NO_PD_MODE_ENABLED] = enabled
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+
+        # Apply under the control lock so a running cycle never sees a half-applied
+        # parameter swap. update_pd_parameters re-reads config and (re)applies the
+        # no-PD overrides; reset the PD transient state so neither law inherits a
+        # stale derivative/integral across the switch.
+        async with self.controller._control_lock:
+            self.controller._cancel_no_pd_debounced_run()
+            self.controller.no_pd_mode_enabled = enabled
+            self.controller.update_pd_parameters()
+            self.controller.error_integral = 0.0
+            self.controller.previous_error = 0.0
+            self.controller.derivative_filtered = 0.0
+            self.controller.sign_changes = 0
+        _LOGGER.info("No-PD direct-tracking mode %s", "ENABLED" if enabled else "DISABLED")
+        self.async_write_ha_state()
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Enable no-PD direct-tracking mode."""
+        await self._set_enabled(True)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable no-PD mode and restore normal PD control."""
+        await self._set_enabled(False)
 
     @property
     def device_info(self):

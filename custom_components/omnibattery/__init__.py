@@ -14,7 +14,7 @@ from homeassistant.const import Platform, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.event import async_track_time_interval, async_track_time_change, async_track_state_change_event
+from homeassistant.helpers.event import async_track_time_interval, async_track_time_change, async_track_state_change_event, async_call_later
 from homeassistant.util import dt as dt_util
 
 from pymodbus.exceptions import ConnectionException
@@ -67,6 +67,11 @@ from .const import (
     DEFAULT_PD_MIN_CYCLE_INTERVAL,
     CONF_TARGET_GRID_POWER,
     DEFAULT_TARGET_GRID_POWER,
+    CONF_NO_PD_MODE_ENABLED,
+    CONF_NO_PD_COMMAND_DELAY,
+    DEFAULT_NO_PD_MODE_ENABLED,
+    DEFAULT_NO_PD_COMMAND_DELAY,
+    DEFAULT_GRID_FILTER_TAU,
     CONF_ENABLE_SYSTEM_POWER_LIMITS,
     CONF_SYSTEM_MAX_CHARGE_POWER,
     CONF_SYSTEM_MAX_DISCHARGE_POWER,
@@ -323,6 +328,11 @@ class ChargeDischargeController:
         self._min_cycle_interval_s = config_entry.data.get(CONF_PD_MIN_CYCLE_INTERVAL, DEFAULT_PD_MIN_CYCLE_INTERVAL)
         self._last_cycle_monotonic = 0.0
         self.target_grid_power = config_entry.data.get(CONF_TARGET_GRID_POWER, DEFAULT_TARGET_GRID_POWER)
+        # No-PD direct-tracking mode (opt-in): see _apply_no_pd_overrides. Overrides
+        # are applied at the end of __init__, after the grid filter tau is set below.
+        self.no_pd_mode_enabled = config_entry.data.get(CONF_NO_PD_MODE_ENABLED, DEFAULT_NO_PD_MODE_ENABLED)
+        self._no_pd_command_delay = config_entry.data.get(CONF_NO_PD_COMMAND_DELAY, DEFAULT_NO_PD_COMMAND_DELAY)
+        self._no_pd_debounce_unsub = None  # cancel handle for a pending debounced cycle
         self.enable_system_power_limits = config_entry.data.get(
             CONF_ENABLE_SYSTEM_POWER_LIMITS,
             (
@@ -336,7 +346,7 @@ class ChargeDischargeController:
         # Sensor filtering to avoid reacting to instantaneous spikes. Time-constant
         # EMA (alpha = elapsed/(tau+elapsed)) instead of a fixed N-sample average, so
         # the smoothing time stays constant under the variable event-driven cadence.
-        self._grid_filter_tau = 2.0     # seconds; larger = smoother but more lag
+        self._grid_filter_tau = DEFAULT_GRID_FILTER_TAU  # seconds; larger = smoother but more lag
         self._grid_filter_ema = None    # filtered grid value (W); None until first sample
 
         # PID controller state variables (Ki currently disabled)
@@ -639,6 +649,10 @@ class ChargeDischargeController:
         # solar T_start). Set from async_setup_entry after the controller exists.
         self._consumption_tracker = None
 
+        # Apply no-PD direct-tracking overrides last, so they win over the PD params
+        # loaded above (and the grid filter tau just set).
+        self._apply_no_pd_overrides()
+
         _LOGGER.info("PD Controller initialized (user-configurable): Kp=%.2f, Ki=%.2f, Kd=%.2f, "
                      "Deadband=±%dW, Filter τ=%.1fs, Hysteresis=%dW, MaxChange=%dW/cycle, Limits: ±%dW",
                      self.kp, self.ki, self.kd,
@@ -933,6 +947,21 @@ class ChargeDischargeController:
         limit = self._max_soc_mgr.apply_charge_taper(coordinator, limit)
         return self._apply_slot_power_ceiling(coordinator, True, limit)
 
+    def _apply_no_pd_overrides(self):
+        """Read the grid sensor raw while no-PD direct-tracking mode is active.
+
+        The control law itself is swapped in _run_control_cycle (raw deadbeat
+        `new_power = previous - error`, one cycle, gain 1) — not via the PD gains.
+        The only runtime parameter no-PD touches is the grid EMA smoothing time
+        constant: drop it to 0 (raw, unsmoothed sensor) when on, restore the
+        default when off. Deadband, min charge/discharge power, relay min-ON dwell
+        and grid setpoint are reused unchanged.
+
+        Idempotent: called after every parameter (re)load in __init__ and
+        update_pd_parameters, so toggling the mode flips behaviour cleanly.
+        """
+        self._grid_filter_tau = 0.0 if self.no_pd_mode_enabled else DEFAULT_GRID_FILTER_TAU
+
     def update_pd_parameters(self):
         """Re-read PD controller parameters from config_entry.data (hot-reload)."""
         # Update weekly full charge settings; reset completion state if day changed
@@ -974,6 +1003,11 @@ class ChargeDischargeController:
         self.system_max_discharge_power = self.config_entry.data.get(CONF_SYSTEM_MAX_DISCHARGE_POWER, DEFAULT_SYSTEM_MAX_DISCHARGE_POWER)
         self._refresh_effective_system_capacities()
         self._setpoint_offsets["user_target"] = self.target_grid_power
+        # No-PD direct-tracking: re-read flags and (re)apply/release the overrides.
+        # Must run after the PD params above are reloaded so the override wins.
+        self.no_pd_mode_enabled = self.config_entry.data.get(CONF_NO_PD_MODE_ENABLED, DEFAULT_NO_PD_MODE_ENABLED)
+        self._no_pd_command_delay = self.config_entry.data.get(CONF_NO_PD_COMMAND_DELAY, DEFAULT_NO_PD_COMMAND_DELAY)
+        self._apply_no_pd_overrides()
         self.max_contracted_power = self.config_entry.data.get(CONF_MAX_CONTRACTED_POWER, 7000)
         self._delay_safety_margin_h = self.config_entry.data.get(CONF_DELAY_SAFETY_MARGIN_MIN, DEFAULT_DELAY_SAFETY_MARGIN_MIN) / 60.0
         self._charge_delay_status["safety_margin_min"] = int(self._delay_safety_margin_h * 60)
@@ -3393,6 +3427,14 @@ class ChargeDischargeController:
         trigger is skipped: the in-flight cycle already reads the current state,
         so re-entering would only risk concurrent Modbus writes.
         """
+        # No-PD command delay (debounce): on a sensor event, defer the cycle by
+        # the configured delay and collapse any further events in that window into
+        # the single deferred run, which reads the latest sensor value at fire time.
+        # Replaces the rate-limit throttle below while active. The periodic safety
+        # timer (now is a datetime) is never deferred.
+        if now is None and self.no_pd_mode_enabled and self._no_pd_command_delay > 0:
+            self._schedule_no_pd_debounced_run()
+            return
         # Event-driven rate limit: drop a consumption-sensor trigger that lands
         # within _min_cycle_interval_s of the last cycle, so a fast-publishing
         # meter can't flood slow Modbus bridges (e.g. Elfin EW11) with write
@@ -3415,6 +3457,249 @@ class ChargeDischargeController:
         async with self._control_lock:
             self._last_cycle_monotonic = time.monotonic()
             await self._run_control_cycle(now)
+
+    def _schedule_no_pd_debounced_run(self):
+        """Arm a one-shot deferred control cycle for the no-PD command delay.
+
+        If a deferred run is already pending, do nothing: it will read the latest
+        sensor value when it fires, so events arriving inside the window collapse
+        into that single run (one command per delay window, on fresh data).
+        """
+        if self._no_pd_debounce_unsub is not None:
+            return
+        self._no_pd_debounce_unsub = async_call_later(
+            self.hass, self._no_pd_command_delay, self._fire_no_pd_debounced_run
+        )
+
+    async def _fire_no_pd_debounced_run(self, _now):
+        """Run the deferred no-PD control cycle (called by async_call_later)."""
+        self._no_pd_debounce_unsub = None
+        if self._control_lock.locked():
+            return
+        async with self._control_lock:
+            self._last_cycle_monotonic = time.monotonic()
+            await self._run_control_cycle()
+
+    def _cancel_no_pd_debounced_run(self):
+        """Cancel any pending deferred no-PD cycle (e.g. on mode-off / unload)."""
+        if self._no_pd_debounce_unsub is not None:
+            self._no_pd_debounce_unsub()
+            self._no_pd_debounce_unsub = None
+
+    def _compute_pd_new_power(self, error, sensor_elapsed_s, stale_safety_recalc):
+        """Incremental PD control law: anti-windup re-anchor, optional integral,
+        filtered derivative, P/I/D terms, rate limiter and directional hysteresis.
+
+        Returns the new commanded power in watts (+charge / -discharge). The shared
+        tail (min power, relay dwell, restrictions, distribution) runs in
+        _run_control_cycle for both modes. Bypassed entirely by no-PD
+        direct-tracking mode, which commands raw deadbeat (previous - error).
+        """
+        # ANTI-WINDUP (back-calculation): the incremental loop assumes the batteries
+        # delivered exactly the last commanded power. When they can't (SOC/voltage
+        # taper, ramp lag, internal derating not captured by the capacity clamp),
+        # previous_power drifts past reality and the integral-like P term winds up,
+        # causing an overshoot/export spike when load later drops. Re-anchor the
+        # increment base to the MEASURED AC power once under-delivery is sustained
+        # (a single cycle may just be scan-interval lag). The sign guard prevents a
+        # transient near-zero reading from flipping direction, and we only ever clamp
+        # the base DOWN toward reality, never inflate it.
+        measured_power = self._measured_battery_power()
+        shortfall_active = (
+            measured_power is not None
+            and self.previous_power != 0
+            and (self.previous_power > 0) == (measured_power >= 0)
+            and abs(self.previous_power) - abs(measured_power) > self.saturation_backcalc_threshold
+        )
+        if shortfall_active:
+            saturated = self._backcalc_is_saturated(self.previous_power > 0)
+            if self._saturation_shortfall_since is None:
+                self._saturation_shortfall_since = dt_util.utcnow()
+            sustained_s = (
+                dt_util.utcnow() - self._saturation_shortfall_since
+            ).total_seconds()
+            # Fast path: a real limit is active, so the shortfall is genuine
+            # saturation — re-anchor after a few cycles. Slow path: no known
+            # limit (likely actuator ramp lag), so only re-anchor after a long
+            # sustained shortfall as a windup safety net for unmodelled derate.
+            if saturated:
+                self._saturation_cycles += 1
+            else:
+                self._saturation_cycles = 0
+            if (
+                saturated and self._saturation_cycles >= self.saturation_backcalc_cycles
+            ) or sustained_s >= self.saturation_backcalc_fallback_s:
+                _LOGGER.debug(
+                    "PD anti-windup: re-anchoring base %.0fW -> measured %.0fW "
+                    "(shortfall %.0fW, saturated=%s, sustained %.0fs)",
+                    self.previous_power, measured_power,
+                    abs(self.previous_power) - abs(measured_power),
+                    saturated, sustained_s,
+                )
+                self.previous_power = measured_power
+                self._saturation_cycles = 0
+                self._saturation_shortfall_since = None
+        else:
+            self._saturation_cycles = 0
+            self._saturation_shortfall_since = None
+
+        # Note: Oscillation detection moved to end of method (after checking restrictions)
+        # This prevents false positives when controller is paused by time slot restrictions
+
+        # Only process integral if Ki > 0 (integral is enabled)
+        if self.ki > 0:
+            # DIRECTIONAL RESET: If integral is working AGAINST the current error, it's obsolete
+            # Example: integral is positive (wants to charge) but error is negative (should discharge)
+            # This means the integral accumulated from old conditions and must be cleared
+            integral_sign = 1 if self.error_integral > 0 else (-1 if self.error_integral < 0 else 0)
+            error_sign = 1 if error > 0 else (-1 if error < 0 else 0)
+            
+            if integral_sign != 0 and error_sign != 0 and integral_sign != error_sign:
+                # Integral and error have opposite signs - integral is working against the error
+                _LOGGER.error("PID DIRECTIONAL CONFLICT: Integral=%.1fW (%s) but Error=%.1fW (%s) - RESETTING integral!",
+                            self.error_integral, "charge" if integral_sign > 0 else "discharge",
+                            error, "charge" if error_sign > 0 else "discharge")
+                self.error_integral = 0.0
+                self.sign_changes = 0  # Reset oscillation counter too
+            
+            # LEAKY INTEGRATOR: Apply decay before adding new error
+            # This prevents the integral from growing unbounded and helps it "forget" old errors
+            self.error_integral *= self.integral_decay
+            
+            # Calculate potential new integral value
+            new_integral = self.error_integral + error * self.dt
+            
+            # CONDITIONAL INTEGRATION (Anti-windup):
+            # Only accumulate integral if we're NOT saturated at the limits
+            # This prevents integral windup when output is already at maximum
+            is_saturated_positive = new_integral > self.max_charge_capacity
+            is_saturated_negative = new_integral < -self.max_discharge_capacity
+            
+            if is_saturated_positive:
+                self.error_integral = self.max_charge_capacity
+                _LOGGER.warning("PID anti-windup: Integral SATURATED at max charge capacity +%dW (not accumulating)", 
+                              self.max_charge_capacity)
+            elif is_saturated_negative:
+                self.error_integral = -self.max_discharge_capacity
+                _LOGGER.warning("PID anti-windup: Integral SATURATED at max discharge capacity -%dW (not accumulating)", 
+                              self.max_discharge_capacity)
+            else:
+                # Not saturated, safe to accumulate
+                self.error_integral = new_integral
+                _LOGGER.debug("PID: Integral updated to %.1fW (within limits)", self.error_integral)
+        else:
+            # Integral disabled - ensure it stays at zero
+            self.error_integral = 0.0
+        
+        # Time bases for the cadence-dependent terms. The derivative keeps a 1 s floor
+        # (dividing by a sub-second dt would amplify noise into a spike); the P-term and
+        # rate-limiter scaling use a smaller floor so they stay accurate for sub-second
+        # sensors (a 1 s floor there would over-weight fast cadences).
+        if self._stale_cycles > self._max_stale_cycles:
+            # Safety valve: suppress derivative to avoid spike from stale data
+            real_dt = self.dt
+            scale_dt = self.dt
+            error_derivative = 0.0
+            self.derivative_filtered = 0.0  # drop stale derivative state
+        else:
+            base_dt = sensor_elapsed_s if (sensor_elapsed_s and sensor_elapsed_s > 0) else self.dt
+            real_dt = max(1.0, min(base_dt, 30.0))
+            scale_dt = max(0.1, min(base_dt, 30.0))
+            error_derivative_raw = (error - self.previous_error) / real_dt
+            # Low-pass the derivative: differentiating a barely-filtered grid signal
+            # (2-sample moving average) amplifies PWM/quantization noise, which the D
+            # term would otherwise inject into the output. EMA with a real-time alpha.
+            d_alpha = real_dt / (self.derivative_tau + real_dt)
+            self.derivative_filtered += d_alpha * (error_derivative_raw - self.derivative_filtered)
+            error_derivative = self.derivative_filtered
+        
+        # PID terms
+        # The P term is applied incrementally (new_power -= P) every cycle, so it acts
+        # as integral action whose effective rate scales with cycle frequency. The loop
+        # is now event-driven (variable cadence, ~1 s) rather than a fixed 2 s timer, so
+        # scale by real elapsed time normalized to the nominal dt — this keeps the
+        # per-second correction, and therefore the tuning, independent of cadence.
+        # Cap the cadence multiplier on the incremental (integral-like) P term so the
+        # effective per-update gain (kp * ratio) stays within the discrete stability
+        # bound. Scaling P up by elapsed/dt is only valid while the loop closes between
+        # samples; for a slow sensor the sample interval IS the feedback dead time, so an
+        # uncapped step is applied open-loop and oscillates rail-to-rail (Keff > 1).
+        p_scale = scale_dt / self.dt
+        if self.kp > 0:
+            p_scale = min(p_scale, max(1.0, 1.0 / self.kp))
+        if stale_safety_recalc:
+            p_scale = 0.0  # hold command; no fresh grid data to integrate (see above)
+        P = self.kp * error * p_scale
+        I = self.ki * self.error_integral
+        D = self.kd * error_derivative
+        
+        # Calculate ADJUSTMENT to apply to current power (incremental control)
+        # P term responds to current error
+        # D term dampens rapid changes
+        pd_adjustment = P + I + D
+        
+        # Apply adjustment to previous power to get new target
+        new_power_raw = self.previous_power - pd_adjustment  # Minus because we're correcting the imbalance
+        
+        # RATE LIMITER: Prevent abrupt changes that cause overshoot. The configured
+        # value is a per-cycle cap calibrated for the nominal dt; scale by real elapsed
+        # time so the effective ramp rate (W/s) stays constant under the variable
+        # event-driven cadence (otherwise faster cycles would multiply the ramp rate).
+        max_change = self.max_power_change_per_cycle * (scale_dt / self.dt)
+        power_change = new_power_raw - self.previous_power
+        if abs(power_change) > max_change:
+            # Clamp the change to maximum allowed rate
+            sign = 1 if power_change > 0 else -1
+            new_power = self.previous_power + (sign * max_change)
+            if self._should_log_rate_limiter(power_change):
+                _LOGGER.info(
+                    "PD rate limiter: requested_change=%.1fW limit=+/-%.0fW applied_change=%.1fW",
+                    power_change,
+                    max_change,
+                    new_power - self.previous_power,
+                )
+        else:
+            self._clear_rate_limiter_state()
+            new_power = new_power_raw
+        
+        if DEBUG_CONTROL_LOOP_DETAIL:
+            _LOGGER.debug("PD: Adjustment=%.1fW, Previous power=%.1fW, New target=%.1fW",
+                         pd_adjustment, self.previous_power, new_power)
+        
+        # DIRECTIONAL HYSTERESIS: Prevent rapid switching between charge/discharge
+        # If we're changing direction, the new power must overcome the hysteresis threshold
+        current_output_sign = 1 if new_power > 0 else (-1 if new_power < 0 else 0)
+        
+        if self.last_output_sign != 0 and current_output_sign != 0:
+            if self.last_output_sign != current_output_sign:
+                # Direction is changing - check if it overcomes hysteresis
+                if abs(new_power) < self.direction_hysteresis:
+                    _LOGGER.info("PD: Direction change suppressed by hysteresis - output=%.1fW < threshold=%dW, staying at 0W",
+                                new_power, self.direction_hysteresis)
+                    new_power = 0
+                    current_output_sign = 0
+                else:
+                    _LOGGER.info("PD: Direction change ALLOWED - output=%.1fW > threshold=%dW",
+                                abs(new_power), self.direction_hysteresis)
+        # Log control output
+        if self.ki > 0:
+            # Calculate integral utilization percentage for monitoring
+            if self.error_integral > 0:  # Integral is positive (charging direction)
+                integral_percent = (self.error_integral / self.max_charge_capacity) * 100 if self.max_charge_capacity > 0 else 0
+            elif self.error_integral < 0:  # Integral is negative (discharging direction)
+                integral_percent = (abs(self.error_integral) / self.max_discharge_capacity) * 100 if self.max_discharge_capacity > 0 else 0
+            else:
+                integral_percent = 0
+            
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, I=%.1fW (%.0f%%), D=%.1fW, Adjustment=%.1fW, New=%.1fW",
+                              error, P, I, integral_percent, D, pd_adjustment, new_power)
+        else:
+            # Integral disabled - simpler log
+            if DEBUG_CONTROL_LOOP_DETAIL:
+                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, D=%.1fW, Adjustment=%.1fW, New=%.1fW",
+                              error, P, D, pd_adjustment, new_power)
+        return new_power
 
     async def _run_control_cycle(self, now=None):
         """Update the charge/discharge power of the batteries."""
@@ -3820,192 +4105,25 @@ class ChargeDischargeController:
         # active_target was calculated before deadband check (reuse it here)
         error = sensor_actual - active_target
 
-        # ANTI-WINDUP (back-calculation): the incremental loop assumes the batteries
-        # delivered exactly the last commanded power. When they can't (SOC/voltage
-        # taper, ramp lag, internal derating not captured by the capacity clamp),
-        # previous_power drifts past reality and the integral-like P term winds up,
-        # causing an overshoot/export spike when load later drops. Re-anchor the
-        # increment base to the MEASURED AC power once under-delivery is sustained
-        # (a single cycle may just be scan-interval lag). The sign guard prevents a
-        # transient near-zero reading from flipping direction, and we only ever clamp
-        # the base DOWN toward reality, never inflate it.
-        measured_power = self._measured_battery_power()
-        shortfall_active = (
-            measured_power is not None
-            and self.previous_power != 0
-            and (self.previous_power > 0) == (measured_power >= 0)
-            and abs(self.previous_power) - abs(measured_power) > self.saturation_backcalc_threshold
-        )
-        if shortfall_active:
-            saturated = self._backcalc_is_saturated(self.previous_power > 0)
-            if self._saturation_shortfall_since is None:
-                self._saturation_shortfall_since = dt_util.utcnow()
-            sustained_s = (
-                dt_util.utcnow() - self._saturation_shortfall_since
-            ).total_seconds()
-            # Fast path: a real limit is active, so the shortfall is genuine
-            # saturation — re-anchor after a few cycles. Slow path: no known
-            # limit (likely actuator ramp lag), so only re-anchor after a long
-            # sustained shortfall as a windup safety net for unmodelled derate.
-            if saturated:
-                self._saturation_cycles += 1
-            else:
-                self._saturation_cycles = 0
-            if (
-                saturated and self._saturation_cycles >= self.saturation_backcalc_cycles
-            ) or sustained_s >= self.saturation_backcalc_fallback_s:
+        if self.no_pd_mode_enabled:
+            # No-PD direct tracking: drive the grid to target in a single cycle
+            # (gain 1; no integral, derivative, smoothing, rate limiter or
+            # hysteresis). The grid sensor already includes the battery's current
+            # output, so the correction is incremental: new = previous - error.
+            new_power = self.previous_power - error
+            if DEBUG_CONTROL_LOOP_DETAIL:
                 _LOGGER.debug(
-                    "PD anti-windup: re-anchoring base %.0fW -> measured %.0fW "
-                    "(shortfall %.0fW, saturated=%s, sustained %.0fs)",
-                    self.previous_power, measured_power,
-                    abs(self.previous_power) - abs(measured_power),
-                    saturated, sustained_s,
-                )
-                self.previous_power = measured_power
-                self._saturation_cycles = 0
-                self._saturation_shortfall_since = None
-        else:
-            self._saturation_cycles = 0
-            self._saturation_shortfall_since = None
-
-        # Note: Oscillation detection moved to end of method (after checking restrictions)
-        # This prevents false positives when controller is paused by time slot restrictions
-
-        # Only process integral if Ki > 0 (integral is enabled)
-        if self.ki > 0:
-            # DIRECTIONAL RESET: If integral is working AGAINST the current error, it's obsolete
-            # Example: integral is positive (wants to charge) but error is negative (should discharge)
-            # This means the integral accumulated from old conditions and must be cleared
-            integral_sign = 1 if self.error_integral > 0 else (-1 if self.error_integral < 0 else 0)
-            error_sign = 1 if error > 0 else (-1 if error < 0 else 0)
-            
-            if integral_sign != 0 and error_sign != 0 and integral_sign != error_sign:
-                # Integral and error have opposite signs - integral is working against the error
-                _LOGGER.error("PID DIRECTIONAL CONFLICT: Integral=%.1fW (%s) but Error=%.1fW (%s) - RESETTING integral!",
-                            self.error_integral, "charge" if integral_sign > 0 else "discharge",
-                            error, "charge" if error_sign > 0 else "discharge")
-                self.error_integral = 0.0
-                self.sign_changes = 0  # Reset oscillation counter too
-            
-            # LEAKY INTEGRATOR: Apply decay before adding new error
-            # This prevents the integral from growing unbounded and helps it "forget" old errors
-            self.error_integral *= self.integral_decay
-            
-            # Calculate potential new integral value
-            new_integral = self.error_integral + error * self.dt
-            
-            # CONDITIONAL INTEGRATION (Anti-windup):
-            # Only accumulate integral if we're NOT saturated at the limits
-            # This prevents integral windup when output is already at maximum
-            is_saturated_positive = new_integral > self.max_charge_capacity
-            is_saturated_negative = new_integral < -self.max_discharge_capacity
-            
-            if is_saturated_positive:
-                self.error_integral = self.max_charge_capacity
-                _LOGGER.warning("PID anti-windup: Integral SATURATED at max charge capacity +%dW (not accumulating)", 
-                              self.max_charge_capacity)
-            elif is_saturated_negative:
-                self.error_integral = -self.max_discharge_capacity
-                _LOGGER.warning("PID anti-windup: Integral SATURATED at max discharge capacity -%dW (not accumulating)", 
-                              self.max_discharge_capacity)
-            else:
-                # Not saturated, safe to accumulate
-                self.error_integral = new_integral
-                _LOGGER.debug("PID: Integral updated to %.1fW (within limits)", self.error_integral)
-        else:
-            # Integral disabled - ensure it stays at zero
-            self.error_integral = 0.0
-        
-        # Time bases for the cadence-dependent terms. The derivative keeps a 1 s floor
-        # (dividing by a sub-second dt would amplify noise into a spike); the P-term and
-        # rate-limiter scaling use a smaller floor so they stay accurate for sub-second
-        # sensors (a 1 s floor there would over-weight fast cadences).
-        if self._stale_cycles > self._max_stale_cycles:
-            # Safety valve: suppress derivative to avoid spike from stale data
-            real_dt = self.dt
-            scale_dt = self.dt
-            error_derivative = 0.0
-            self.derivative_filtered = 0.0  # drop stale derivative state
-        else:
-            base_dt = sensor_elapsed_s if (sensor_elapsed_s and sensor_elapsed_s > 0) else self.dt
-            real_dt = max(1.0, min(base_dt, 30.0))
-            scale_dt = max(0.1, min(base_dt, 30.0))
-            error_derivative_raw = (error - self.previous_error) / real_dt
-            # Low-pass the derivative: differentiating a barely-filtered grid signal
-            # (2-sample moving average) amplifies PWM/quantization noise, which the D
-            # term would otherwise inject into the output. EMA with a real-time alpha.
-            d_alpha = real_dt / (self.derivative_tau + real_dt)
-            self.derivative_filtered += d_alpha * (error_derivative_raw - self.derivative_filtered)
-            error_derivative = self.derivative_filtered
-        
-        # PID terms
-        # The P term is applied incrementally (new_power -= P) every cycle, so it acts
-        # as integral action whose effective rate scales with cycle frequency. The loop
-        # is now event-driven (variable cadence, ~1 s) rather than a fixed 2 s timer, so
-        # scale by real elapsed time normalized to the nominal dt — this keeps the
-        # per-second correction, and therefore the tuning, independent of cadence.
-        # Cap the cadence multiplier on the incremental (integral-like) P term so the
-        # effective per-update gain (kp * ratio) stays within the discrete stability
-        # bound. Scaling P up by elapsed/dt is only valid while the loop closes between
-        # samples; for a slow sensor the sample interval IS the feedback dead time, so an
-        # uncapped step is applied open-loop and oscillates rail-to-rail (Keff > 1).
-        p_scale = scale_dt / self.dt
-        if self.kp > 0:
-            p_scale = min(p_scale, max(1.0, 1.0 / self.kp))
-        if stale_safety_recalc:
-            p_scale = 0.0  # hold command; no fresh grid data to integrate (see above)
-        P = self.kp * error * p_scale
-        I = self.ki * self.error_integral
-        D = self.kd * error_derivative
-        
-        # Calculate ADJUSTMENT to apply to current power (incremental control)
-        # P term responds to current error
-        # D term dampens rapid changes
-        pd_adjustment = P + I + D
-        
-        # Apply adjustment to previous power to get new target
-        new_power_raw = self.previous_power - pd_adjustment  # Minus because we're correcting the imbalance
-        
-        # RATE LIMITER: Prevent abrupt changes that cause overshoot. The configured
-        # value is a per-cycle cap calibrated for the nominal dt; scale by real elapsed
-        # time so the effective ramp rate (W/s) stays constant under the variable
-        # event-driven cadence (otherwise faster cycles would multiply the ramp rate).
-        max_change = self.max_power_change_per_cycle * (scale_dt / self.dt)
-        power_change = new_power_raw - self.previous_power
-        if abs(power_change) > max_change:
-            # Clamp the change to maximum allowed rate
-            sign = 1 if power_change > 0 else -1
-            new_power = self.previous_power + (sign * max_change)
-            if self._should_log_rate_limiter(power_change):
-                _LOGGER.info(
-                    "PD rate limiter: requested_change=%.1fW limit=+/-%.0fW applied_change=%.1fW",
-                    power_change,
-                    max_change,
-                    new_power - self.previous_power,
+                    "No-PD direct tracking: error=%.1fW, previous=%.1fW, new=%.1fW",
+                    error, self.previous_power, new_power,
                 )
         else:
-            self._clear_rate_limiter_state()
-            new_power = new_power_raw
-        
-        if DEBUG_CONTROL_LOOP_DETAIL:
-            _LOGGER.debug("PD: Adjustment=%.1fW, Previous power=%.1fW, New target=%.1fW",
-                         pd_adjustment, self.previous_power, new_power)
-        
-        # DIRECTIONAL HYSTERESIS: Prevent rapid switching between charge/discharge
-        # If we're changing direction, the new power must overcome the hysteresis threshold
+            new_power = self._compute_pd_new_power(
+                error, sensor_elapsed_s, stale_safety_recalc
+            )
+        # Final commanded direction (feeds last_output_sign at end of cycle). In the
+        # PD path the hysteresis inside _compute_pd_new_power already zeroed new_power
+        # for a suppressed direction change, so recomputing from new_power matches.
         current_output_sign = 1 if new_power > 0 else (-1 if new_power < 0 else 0)
-        
-        if self.last_output_sign != 0 and current_output_sign != 0:
-            if self.last_output_sign != current_output_sign:
-                # Direction is changing - check if it overcomes hysteresis
-                if abs(new_power) < self.direction_hysteresis:
-                    _LOGGER.info("PD: Direction change suppressed by hysteresis - output=%.1fW < threshold=%dW, staying at 0W",
-                                new_power, self.direction_hysteresis)
-                    new_power = 0
-                    current_output_sign = 0
-                else:
-                    _LOGGER.info("PD: Direction change ALLOWED - output=%.1fW > threshold=%dW",
-                                abs(new_power), self.direction_hysteresis)
         
         # Note: last_output_sign and previous_error will be updated at the end of the method
         # This is done conditionally based on whether the operation is restricted by time slots
@@ -4051,24 +4169,6 @@ class ChargeDischargeController:
                     abs(new_power), held_s, self._relay_cooldown_s,
                 )
 
-        # Log control output
-        if self.ki > 0:
-            # Calculate integral utilization percentage for monitoring
-            if self.error_integral > 0:  # Integral is positive (charging direction)
-                integral_percent = (self.error_integral / self.max_charge_capacity) * 100 if self.max_charge_capacity > 0 else 0
-            elif self.error_integral < 0:  # Integral is negative (discharging direction)
-                integral_percent = (abs(self.error_integral) / self.max_discharge_capacity) * 100 if self.max_discharge_capacity > 0 else 0
-            else:
-                integral_percent = 0
-            
-            if DEBUG_CONTROL_LOOP_DETAIL:
-                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, I=%.1fW (%.0f%%), D=%.1fW, Adjustment=%.1fW, New=%.1fW",
-                              error, P, I, integral_percent, D, pd_adjustment, new_power)
-        else:
-            # Integral disabled - simpler log
-            if DEBUG_CONTROL_LOOP_DETAIL:
-                _LOGGER.debug("ChargeDischargeController: PD Control - Grid=%.1fW, P=%.1fW, D=%.1fW, Adjustment=%.1fW, New=%.1fW",
-                              error, P, D, pd_adjustment, new_power)
         
         # Determine if charging or discharging (before applying restrictions)
         is_charging = new_power > 0
