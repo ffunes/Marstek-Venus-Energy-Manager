@@ -930,6 +930,9 @@
       "no_pd_mode": {
         "name": "Suivi Direct sans PD"
       },
+      "system_power_limits": {
+        "name": "Limites de Puissance du Système"
+      },
       "predictive_charging": {
         "name": "Charge Prédictive"
       },

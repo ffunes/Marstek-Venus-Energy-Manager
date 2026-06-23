@@ -18,11 +18,14 @@ from .const import (
     CONF_CAPACITY_PROTECTION_ENABLED,
     CONF_ENABLE_CHARGE_DELAY,
     CONF_ENABLE_HOURLY_BALANCE,
+    CONF_ENABLE_SYSTEM_POWER_LIMITS,
     CONF_ENABLE_WEEKLY_FULL_CHARGE_DELAY,
     CONF_FULL_CHARGE_VOLTAGE_TAPER_ENABLED,
     CONF_MANUAL_MODE_ENABLED,
     CONF_NO_PD_MODE_ENABLED,
     CONF_PREDICTIVE_CHARGING_OVERRIDDEN,
+    CONF_SYSTEM_MAX_CHARGE_POWER,
+    CONF_SYSTEM_MAX_DISCHARGE_POWER,
     NOTIFICATION_ID_PREFIX,
 )
 from .infra.coordinator import MarstekVenusDataUpdateCoordinator
@@ -76,6 +79,17 @@ async def async_setup_entry(
     # Add hourly balance switch (system-level, when hourly balance is configured)
     if controller and CONF_ENABLE_HOURLY_BALANCE in entry.data:
         entities.append(HourlyBalanceSwitch(hass, entry, controller))
+
+    # Add system power limits switch when the feature is configured. Mirrors the
+    # number-platform heuristic so the toggle appears exactly when its sliders do
+    # (key present, or a legacy config with a non-zero limit predating the key).
+    has_system_limits_config = (
+        CONF_ENABLE_SYSTEM_POWER_LIMITS in entry.data
+        or (entry.data.get(CONF_SYSTEM_MAX_CHARGE_POWER, 0) or 0) > 0
+        or (entry.data.get(CONF_SYSTEM_MAX_DISCHARGE_POWER, 0) or 0) > 0
+    )
+    if controller and has_system_limits_config:
+        entities.append(SystemPowerLimitsSwitch(hass, entry, controller))
 
     # Add time slot enable/disable switches
     time_slots = entry.data.get("no_discharge_time_slots", [])
@@ -943,6 +957,56 @@ class NoPdModeSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         """Disable no-PD mode and restore normal PD control."""
         await self._set_enabled(False)
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Omnibattery System",
+            "manufacturer": "Omnibattery",
+            "model": "Multi-Battery System",
+        }
+
+
+class SystemPowerLimitsSwitch(SwitchEntity):
+    """Switch to enable/disable the system-wide combined power limits at runtime."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, controller) -> None:
+        """Initialize the system power limits switch."""
+        self.hass = hass
+        self.entry = entry
+        self.controller = controller
+
+        self._attr_has_entity_name = True
+        self._attr_translation_key = "system_power_limits"
+        self._attr_unique_id = "marstek_venus_system_system_power_limits"
+        self.entity_id = system_entity_id("switch", "system_power_limits")
+        self._attr_icon = "mdi:speedometer"
+        self._attr_should_poll = False
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the system power limits are enforced."""
+        return self.controller.enable_system_power_limits
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Enable the system-wide combined charge/discharge power limits."""
+        self.controller.enable_system_power_limits = True
+        new_data = dict(self.entry.data)
+        new_data[CONF_ENABLE_SYSTEM_POWER_LIMITS] = True
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+        _LOGGER.info("System power limits ENABLED")
+        self.async_write_ha_state()
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Disable the system-wide combined charge/discharge power limits."""
+        self.controller.enable_system_power_limits = False
+        new_data = dict(self.entry.data)
+        new_data[CONF_ENABLE_SYSTEM_POWER_LIMITS] = False
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+        _LOGGER.info("System power limits DISABLED")
+        self.async_write_ha_state()
 
     @property
     def device_info(self):

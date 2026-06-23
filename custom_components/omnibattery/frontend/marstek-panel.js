@@ -91,7 +91,7 @@ const I18N = {
     secExcluded: "Excluded devices", itemExcludedDevice: "Excluded device", itemSolarSurplus: "Solar surplus", itemExclusionPct: "Exclusion %",
     secSysLimits: "System power limits", itemSysMaxCharge: "System max charge", itemSysMaxDischarge: "System max discharge",
     secCommon: "Common control (PD + No-PD)",
-    secPd: "PD controller (advanced)",
+    secPd: "PD controller (advanced)", itemPdEnable: "Use PD controller",
     secNoPd: "No-PD direct tracking", itemNoPdDelay: "Command delay",
     itemPdProfile: "Tuning profile", itemPdQuality: "Control quality",
     itemPdKp: "Proportional gain (Kp)", itemPdKd: "Derivative gain (Kd)", itemPdDeadband: "Deadband",
@@ -155,7 +155,7 @@ const I18N = {
     secExcluded: "Dispositivos excluidos", itemExcludedDevice: "Dispositivo excluido", itemSolarSurplus: "Excedente solar", itemExclusionPct: "% excluido",
     secSysLimits: "Límites de potencia del sistema", itemSysMaxCharge: "Máx. carga del sistema", itemSysMaxDischarge: "Máx. descarga del sistema",
     secCommon: "Control común (PD + No-PD)",
-    secPd: "Controlador PD (avanzado)",
+    secPd: "Controlador PD (avanzado)", itemPdEnable: "Usar controlador PD",
     secNoPd: "Seguimiento directo sin PD", itemNoPdDelay: "Retardo de orden",
     itemPdProfile: "Perfil de ajuste", itemPdQuality: "Calidad de control",
     itemPdKp: "Ganancia proporcional (Kp)", itemPdKd: "Ganancia derivativa (Kd)", itemPdDeadband: "Banda muerta",
@@ -634,12 +634,17 @@ const SYS_SECTIONS = [
       { key: "pd_min_discharge_power", lk: "itemPdMinDischarge", icon: "mdi:battery-low" },
       { key: "pd_relay_cooldown", lk: "itemPdRelayCooldown", icon: "mdi:timer-cog-outline" },
       { key: "pd_target_grid_power", lk: "itemPdTargetGrid", icon: "mdi:transmission-tower-export" },
+      { key: "max_contracted_power", lk: "itemMaxContracted", icon: "mdi:transmission-tower" },
     ],
   },
   {
     tk: "secPd",
     icon: "mdi:tune",
     items: [
+      // Inverted gate: ON = PD active (no_pd_mode OFF). Toggling it flips the same
+      // no_pd_mode switch, so PD and No-PD are mutually exclusive — enabling one
+      // collapses the other's params.
+      { key: "no_pd_mode", domain: "switch", lk: "itemPdEnable", icon: "mdi:tune", gate: true, gateInvert: true },
       { key: "pd_tuning_profile", domain: "select", lk: "itemPdProfile", icon: "mdi:tune-variant" },
       { key: "system_pd_control_quality", domain: "sensor", lk: "itemPdQuality", icon: "mdi:gauge" },
       { key: "pd_controller_kp", lk: "itemPdKp", icon: "mdi:tune" },
@@ -662,7 +667,6 @@ const SYS_SECTIONS = [
     icon: "mdi:brain",
     items: [
       { key: "predictive_charging", domain: "switch", lk: "itemEnable", icon: "mdi:brain", gate: true },
-      { key: "max_contracted_power", lk: "itemMaxContracted", icon: "mdi:transmission-tower" },
       { key: "predictive_safety_margin_kwh", lk: "itemSolarSafety", icon: "mdi:solar-power-variant" },
       { key: "predictive_grid_charge_margin_pct", lk: "itemGridChargeMargin", icon: "mdi:transmission-tower-import" },
     ],
@@ -687,6 +691,7 @@ const SYS_SECTIONS = [
     tk: "secSysLimits",
     icon: "mdi:speedometer",
     items: [
+      { key: "system_power_limits", domain: "switch", lk: "itemEnable", icon: "mdi:speedometer", gate: true },
       { key: "system_max_charge_power", lk: "itemSysMaxCharge", icon: "mdi:battery-arrow-up-outline" },
       { key: "system_max_discharge_power", lk: "itemSysMaxDischarge", icon: "mdi:battery-arrow-down-outline" },
     ],
@@ -3763,20 +3768,23 @@ class MarstekVenusPanel extends HTMLElement {
       grid.className = "bat-ctl-grid sys-grid";
       // A `gate` switch (e.g. predictive_charging) hides its sibling param rows
       // when OFF: the feature's sliders disappear, the switch stays so it can be
-      // turned back on. _patchSysControl keeps this in sync on state changes.
-      let gateId = null;
+      // turned back on. `gateInvert` flips this (PD section: show when no_pd_mode
+      // is OFF). _patchSysControl keeps this in sync on state changes.
+      let gateKey = null;
       const gatedNodes = [];
       for (const r of rows) {
         const frag = this._buildSysControl(r.item, r.id, store, r.multi);
         const nodes = [...frag.childNodes];
         grid.appendChild(frag);
-        if (r.item.gate) gateId = r.id;
+        if (r.item.gate) gateKey = this._sysStoreKey(r.item, r.id);
         else gatedNodes.push(...nodes);
       }
-      if (gateId && gatedNodes.length && store[gateId]) {
-        store[gateId].gatedNodes = gatedNodes;
-        const on = (this._hass.states[gateId] || {}).state === "on";
-        for (const n of gatedNodes) n.style.display = on ? "" : "none";
+      if (gateKey && gatedNodes.length && store[gateKey]) {
+        const w = store[gateKey];
+        w.gatedNodes = gatedNodes;
+        const on = (this._hass.states[w.realId || gateKey] || {}).state === "on";
+        const shown = w.invert ? !on : on;
+        for (const n of gatedNodes) n.style.display = shown ? "" : "none";
       }
       if (sec.tk === "secHourly") {
         const warn = this._hourlyWarnEl();
@@ -3983,7 +3991,7 @@ class MarstekVenusPanel extends HTMLElement {
       this._main.appendChild(renderFn()); // resets store + sig
     }
     for (const [id, w] of Object.entries(this[storeKey])) {
-      const st = this._hass.states[id];
+      const st = this._hass.states[w.realId || id];
       if (st) this._patchSysControl(w, st);
     }
   }
@@ -4027,6 +4035,12 @@ class MarstekVenusPanel extends HTMLElement {
     return fn;
   }
 
+  /** Store key for a sys control. Inverted gates get a suffixed key so the same
+   *  entity can back two widgets (e.g. PD "Use PD controller" + No-PD switch). */
+  _sysStoreKey(item, id) {
+    return item.gateInvert ? id + "::inv" : id;
+  }
+
   /** Build one system control's grid items (label + widget), keyed by entity_id
    *  in `store`. Mirrors _buildControlRow but resolves by id and formats numbers
    *  with step-derived decimals (PD params use fractional steps). */
@@ -4034,6 +4048,10 @@ class MarstekVenusPanel extends HTMLElement {
     const hass = this._hass;
     const state = hass.states[id];
     const domain = item.domain || "number";
+    // An inverted gate reuses the same entity as a normal gate elsewhere (e.g.
+    // no_pd_mode in both PD and No-PD sections), so key its widget separately to
+    // avoid one overwriting the other in the store.
+    const sk = this._sysStoreKey(item, id);
     const shortName = this._entityShortName(state, id);
     const t = this._t.bind(this);
     let label = this._t(item.lk);
@@ -4050,7 +4068,7 @@ class MarstekVenusPanel extends HTMLElement {
         hass.callService("button", "press", { entity_id: id });
       });
       frag.appendChild(btn);
-      store[id] = { type: "button" };
+      store[sk] = { type: "button" };
       return frag;
     }
 
@@ -4086,7 +4104,8 @@ class MarstekVenusPanel extends HTMLElement {
       btn.innerHTML = `<span class="ctl-knob"></span>`;
       btn.addEventListener("click", () => hass.callService("switch", "toggle", { entity_id: id }));
       frag.appendChild(btn);
-      store[id] = { type: "switch", el: btn };
+      store[sk] = { type: "switch", el: btn };
+      if (item.gateInvert) { store[sk].realId = id; store[sk].invert = true; }
     } else if (domain === "select") {
       const sel = document.createElement("select");
       sel.className = "ctl-select";
@@ -4094,7 +4113,7 @@ class MarstekVenusPanel extends HTMLElement {
         hass.callService("select", "select_option", { entity_id: id, option: sel.value })
       );
       frag.appendChild(sel);
-      store[id] = { type: "select", el: sel };
+      store[sk] = { type: "select", el: sel };
     } else if (domain === "sensor") {
       // read-only verdict (e.g. PD control quality) — localized state, no input.
       // Clicking the value opens HA more-info (state history graph).
@@ -4102,7 +4121,7 @@ class MarstekVenusPanel extends HTMLElement {
       valEl.className = "ctl-val ctl-sensor";
       this._linkMoreInfo(valEl, id);
       frag.appendChild(valEl);
-      store[id] = { type: "sensor", val: valEl };
+      store[sk] = { type: "sensor", val: valEl };
     } else {
       const wrap = document.createElement("div");
       wrap.className = "ctl-num";
@@ -4122,12 +4141,12 @@ class MarstekVenusPanel extends HTMLElement {
       wrap.appendChild(range);
       wrap.appendChild(valEl);
       frag.appendChild(wrap);
-      store[id] = { type: "number", el: range, val: valEl, step, unit };
+      store[sk] = { type: "number", el: range, val: valEl, step, unit };
     }
     // optional hover tooltip (set on the label cell, kept fresh on patch)
-    if (item.titleFn && store[id]) {
-      store[id].titleEl = k;
-      store[id].titleFn = item.titleFn;
+    if (item.titleFn && store[sk]) {
+      store[sk].titleEl = k;
+      store[sk].titleFn = item.titleFn;
     }
     return frag;
   }
@@ -4137,10 +4156,10 @@ class MarstekVenusPanel extends HTMLElement {
     if (w.titleEl && w.titleFn) w.titleEl.title = w.titleFn(state, this._t.bind(this)) || "";
     const focused = this.shadowRoot && this.shadowRoot.activeElement === w.el;
     if (w.type === "switch") {
-      const on = state.state === "on";
-      w.el.classList.toggle("on", on);
+      const shown = w.invert ? state.state !== "on" : state.state === "on";
+      w.el.classList.toggle("on", shown);
       // gated feature switch: show/hide its sibling param rows when toggled
-      if (w.gatedNodes) for (const n of w.gatedNodes) n.style.display = on ? "" : "none";
+      if (w.gatedNodes) for (const n of w.gatedNodes) n.style.display = shown ? "" : "none";
     } else if (w.type === "select") {
       const opts = Array.isArray(state.attributes.options) ? state.attributes.options : [];
       const sig = opts.join("|");

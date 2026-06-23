@@ -930,6 +930,9 @@
       "no_pd_mode": {
         "name": "Direkte Nachführung ohne PD"
       },
+      "system_power_limits": {
+        "name": "System-Leistungsgrenzen"
+      },
       "predictive_charging": {
         "name": "Prädiktives Laden"
       },

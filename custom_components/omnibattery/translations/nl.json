@@ -930,6 +930,9 @@
       "no_pd_mode": {
         "name": "Directe Tracking zonder PD"
       },
+      "system_power_limits": {
+        "name": "Systeemvermogenslimieten"
+      },
       "predictive_charging": {
         "name": "Voorspellend Laden"
       },

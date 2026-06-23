@@ -933,6 +933,9 @@
       "no_pd_mode": {
         "name": "No-PD Direct Tracking"
       },
+      "system_power_limits": {
+        "name": "System Power Limits"
+      },
       "predictive_charging": {
         "name": "Predictive Charging"
       },
