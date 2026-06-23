@@ -73,6 +73,8 @@ const I18N = {
     invBackup: "Backup", invUpdating: "Updating", invStandby: "Standby", invBypass: "Bypass",
     active: "Active", inactive: "Inactive",
     ctlEmpty: "No controls enabled. Enable them on the device (Settings → disabled entities).",
+    ctlArrange: "Arrange", ctlArrangeHint: "Drag cards to reorder · controls are locked",
+    ctlCols: "Columns", ctlRows: "Rows", ctlAuto: "Auto",
     sysEmptyTitle: "No controls available",
     sysEmptyMsg: "This integration exposes no system controls, or they are disabled. Enable them in Settings → entities.",
     bcAllowCharge: "Allow charge", bcAllowDischarge: "Allow discharge",
@@ -135,6 +137,8 @@ const I18N = {
     invBackup: "Respaldo", invUpdating: "Actualizando", invStandby: "En espera", invBypass: "Bypass",
     active: "Activa", inactive: "Inactiva",
     ctlEmpty: "No hay controles habilitados. Actívalos en el dispositivo (Ajustes → entidades deshabilitadas).",
+    ctlArrange: "Reordenar", ctlArrangeHint: "Arrastra las tarjetas para reordenar · controles bloqueados",
+    ctlCols: "Columnas", ctlRows: "Filas", ctlAuto: "Auto",
     sysEmptyTitle: "Sin controles disponibles",
     sysEmptyMsg: "Esta integración no expone controles de sistema, o están deshabilitados. Actívalos en Ajustes → entidades.",
     bcAllowCharge: "Permitir carga", bcAllowDischarge: "Permitir descarga",
@@ -648,7 +652,7 @@ const SYS_SECTIONS = [
     tk: "secNoPd",
     icon: "mdi:vector-line",
     items: [
-      { key: "no_pd_mode", domain: "switch", lk: "secNoPd", icon: "mdi:vector-line" },
+      { key: "no_pd_mode", domain: "switch", lk: "secNoPd", icon: "mdi:vector-line", gate: true },
       { key: "no_pd_command_delay", lk: "itemNoPdDelay", icon: "mdi:timer-sand" },
     ],
   },
@@ -656,7 +660,7 @@ const SYS_SECTIONS = [
     tk: "diagPredictive",
     icon: "mdi:brain",
     items: [
-      { key: "predictive_charging", domain: "switch", lk: "itemEnable", icon: "mdi:brain" },
+      { key: "predictive_charging", domain: "switch", lk: "itemEnable", icon: "mdi:brain", gate: true },
       { key: "max_contracted_power", lk: "itemMaxContracted", icon: "mdi:transmission-tower" },
       { key: "predictive_safety_margin_kwh", lk: "itemSolarSafety", icon: "mdi:solar-power-variant" },
       { key: "predictive_grid_charge_margin_pct", lk: "itemGridChargeMargin", icon: "mdi:transmission-tower-import" },
@@ -666,7 +670,7 @@ const SYS_SECTIONS = [
     tk: "diagChargeDelay",
     icon: "mdi:timer-sand",
     items: [
-      { key: "charge_delay", domain: "switch", lk: "itemEnable", icon: "mdi:timer-sand" },
+      { key: "charge_delay", domain: "switch", lk: "itemEnable", icon: "mdi:timer-sand", gate: true },
       { key: "delay_safety_margin_min", lk: "itemDelaySafety", icon: "mdi:timer-sand-complete" },
       { key: "delay_soc_setpoint", lk: "itemDelaySoc", icon: "mdi:battery-charging-50" },
     ],
@@ -690,7 +694,7 @@ const SYS_SECTIONS = [
     tk: "diagPeak",
     icon: "mdi:flash-alert",
     items: [
-      { key: "capacity_protection", domain: "switch", lk: "itemEnable", icon: "mdi:flash-alert" },
+      { key: "capacity_protection", domain: "switch", lk: "itemEnable", icon: "mdi:flash-alert", gate: true },
       { key: "capacity_protection_soc_threshold", lk: "itemSocThreshold", icon: "mdi:battery-alert-variant-outline" },
       { key: "capacity_protection_limit", lk: "itemPeakLimit", icon: "mdi:flash" },
     ],
@@ -716,6 +720,18 @@ const SYS_LAYOUT = [
   { col: ["secExcluded"] },
   { col: ["secCommon", "secPd", "secNoPd"] },
 ];
+
+// Flattened SYS_LAYOUT → the default left-to-right card order for the Control
+// tab when the user hasn't reordered it (drag-and-drop persists their own order
+// in localStorage; see _loadCtlOrder). Keeps the intended grouping as the seed.
+const DEFAULT_SYS_ORDER = (() => {
+  const out = [];
+  for (const block of SYS_LAYOUT) {
+    if (block.pair) for (const [a, b] of block.pair) { if (a) out.push(a); if (b) out.push(b); }
+    else if (block.col) for (const tk of block.col) out.push(tk);
+  }
+  return out;
+})();
 
 // Control-tab help text, sourced verbatim from the options-flow data_description
 // (strings.json / translations). Keyed by section tk or entity translation_key.
@@ -965,6 +981,7 @@ class MarstekVenusPanel extends HTMLElement {
     this._panelConfig = {};
     this._built = false;
     this._view = "resumen";
+    this._arrangeMode = false; // Control tab: drag-to-reorder cards (sticky)
     this._r = {}; // dynamic node refs for patch-in-place
     this._edgeSig = {}; // per flow edge: last dot signature
     this._socSeries = []; // SOC % samples for the sparkline (history seed + live)
@@ -3584,7 +3601,106 @@ class MarstekVenusPanel extends HTMLElement {
       msg: this._t("sysEmptyMsg"),
     });
     this._ctlSig = sig;
-    return wrap;
+    // Only offer drag-to-arrange when there are real cards (not the empty state).
+    if (!wrap.querySelector(".card")) return wrap;
+    // Layout: a fixed column+row count switches to a manual C×R matrix (drag any
+    // card into any cell, empty cells included); otherwise a responsive flow grid
+    // (fixed-or-auto columns, drag reorders the sequence).
+    if (this._isMatrixMode()) this._layoutMatrix(wrap);
+    else this._applyCtlGrid(wrap);
+    const root = document.createElement("div");
+    root.className = "ctl-root";
+    root.appendChild(this._buildArrangeBar(wrap));
+    root.appendChild(wrap);
+    return root;
+  }
+
+  /** Manual matrix is active only when BOTH a column and a row count are pinned;
+   *  a single axis (or Auto) stays on the responsive flow grid. */
+  _isMatrixMode() { return this._loadCtlCols() >= 1 && this._loadCtlRows() >= 1; }
+
+  /** Rebuild the whole Control view in place (used when a stepper changes, since
+   *  switching flow↔matrix or track counts restructures the DOM, not just CSS). */
+  _rebuildControl() {
+    if (this._view !== "control" || !this._main) return;
+    this._main.innerHTML = "";
+    this._main.appendChild(this._renderControl());
+  }
+
+  /** Toolbar above the Control grid: the arrange-mode toggle. While ON, cards
+   *  are draggable and their inner controls are locked (so a drag never grabs a
+   *  slider); OFF restores normal interaction. State is sticky across rebuilds. */
+  _buildArrangeBar(stack) {
+    const bar = document.createElement("div");
+    bar.className = "ctl-bar";
+    const hint = document.createElement("span");
+    hint.className = "ctl-hint";
+    bar.appendChild(hint);
+    const tools = document.createElement("div");
+    tools.className = "ctl-tools";
+    tools.append(
+      this._buildStepper(this._t("ctlCols"), () => this._loadCtlCols(), (n) => this._saveCtlCols(n), 5, 3),
+      this._buildStepper(this._t("ctlRows"), () => this._loadCtlRows(), (n) => this._saveCtlRows(n), 8, 4),
+    );
+    bar.appendChild(tools);
+    const btn = document.createElement("button");
+    btn.className = "ctl-arrange-btn";
+    btn.innerHTML = `<ha-icon icon="mdi:drag-variant"></ha-icon><span>${this._t("ctlArrange")}</span>`;
+    btn.addEventListener("click", () => {
+      this._arrangeMode = !this._arrangeMode;
+      this._applyArrangeMode(stack, btn, hint, tools);
+    });
+    bar.appendChild(btn);
+    this._applyArrangeMode(stack, btn, hint, tools); // restore sticky state on rebuild
+    return bar;
+  }
+
+  /** A small `[label − N +]` stepper. `load`/`save` read & persist the value
+   *  (0 = Auto). From Auto, the first increment jumps to `autoStart`; decrement
+   *  past 1 returns to Auto; `max` clamps the top. Each change rebuilds the
+   *  Control view. Used for both the column- and row-count controls. */
+  _buildStepper(label, load, save, max, autoStart) {
+    const box = document.createElement("div");
+    box.className = "ctl-cols";
+    const lbl = document.createElement("span");
+    lbl.className = "ctl-cols-lbl";
+    lbl.textContent = label;
+    const dec = document.createElement("button");
+    dec.type = "button";
+    dec.innerHTML = `<ha-icon icon="mdi:minus"></ha-icon>`;
+    const val = document.createElement("span");
+    val.className = "ctl-cols-val";
+    const inc = document.createElement("button");
+    inc.type = "button";
+    inc.innerHTML = `<ha-icon icon="mdi:plus"></ha-icon>`;
+    const refresh = () => {
+      const n = load();
+      val.textContent = n >= 1 ? String(n) : this._t("ctlAuto");
+    };
+    dec.addEventListener("click", () => {
+      const n = load();
+      save(n >= 1 ? n - 1 : 0); // 1 → 0 returns to Auto
+      refresh();
+      this._rebuildControl();
+    });
+    inc.addEventListener("click", () => {
+      const n = load();
+      save(Math.min((n || (autoStart - 1)) + 1, max)); // from Auto → autoStart
+      refresh();
+      this._rebuildControl();
+    });
+    box.append(lbl, dec, val, inc);
+    refresh();
+    return box;
+  }
+
+  _applyArrangeMode(stack, btn, hint, tools) {
+    const on = !!this._arrangeMode;
+    stack.classList.toggle("arranging", on);
+    btn.classList.toggle("active", on);
+    hint.textContent = on ? this._t("ctlArrangeHint") : "";
+    if (tools) tools.style.display = on ? "" : "none";
+    for (const card of stack.querySelectorAll(".card")) card.draggable = on;
   }
   _patchControl() {
     this._patchSysView(SYS_SECTIONS, "_ctlStore", "_ctlSig", "control", () => this._renderControl());
@@ -3626,65 +3742,204 @@ class MarstekVenusPanel extends HTMLElement {
       wrap.appendChild(e);
       return { wrap, sig };
     }
-    // Build one card per live section, keyed by tk.
+    // Build one card per live section, keyed by tk. Each card is an independent
+    // box in the responsive grid (flattened layout) so it can be drag-reordered.
     const cardByTk = {};
     for (const { sec, rows } of sections) {
       const { card, head } = this._card(this._t(sec.tk), sec.icon || "mdi:cog-outline");
+      card.dataset.tk = sec.tk;
       this._attachHelp(head, this._help(sec.tk));
       const grid = document.createElement("div");
       grid.className = "bat-ctl-grid sys-grid";
-      for (const r of rows) grid.appendChild(this._buildSysControl(r.item, r.id, store, r.multi));
+      // A `gate` switch (e.g. predictive_charging) hides its sibling param rows
+      // when OFF: the feature's sliders disappear, the switch stays so it can be
+      // turned back on. _patchSysControl keeps this in sync on state changes.
+      let gateId = null;
+      const gatedNodes = [];
+      for (const r of rows) {
+        const frag = this._buildSysControl(r.item, r.id, store, r.multi);
+        const nodes = [...frag.childNodes];
+        grid.appendChild(frag);
+        if (r.item.gate) gateId = r.id;
+        else gatedNodes.push(...nodes);
+      }
+      if (gateId && gatedNodes.length && store[gateId]) {
+        store[gateId].gatedNodes = gatedNodes;
+        const on = (this._hass.states[gateId] || {}).state === "on";
+        for (const n of gatedNodes) n.style.display = on ? "" : "none";
+      }
       card.appendChild(grid);
+      this._makeCardDraggable(card, wrap);
       cardByTk[sec.tk] = card;
     }
-    // Place cards per the layout blocks; skip empty columns/rows so the rest
-    // stays flush (no gaps). Sections missing from the layout fall back to a
-    // trailing single column.
-    const placed = new Set();
-    for (const block of SYS_LAYOUT) {
-      if (block.pair) {
-        const grid = document.createElement("div");
-        grid.className = "sys-pair";
-        for (const [a, b] of block.pair) {
-          const ca = a && cardByTk[a];
-          const cb = b && cardByTk[b];
-          if (!ca && !cb) continue; // drop the whole row
-          // emit exactly two cells so the two columns stay aligned row-by-row
-          grid.appendChild(ca || this._pairSpacer());
-          grid.appendChild(cb || this._pairSpacer());
-          if (ca) placed.add(a);
-          if (cb) placed.add(b);
-        }
-        if (grid.childNodes.length) wrap.appendChild(grid);
-      } else {
-        const col = document.createElement("div");
-        col.className = "sys-col";
-        for (const tk of block.col) {
-          if (cardByTk[tk]) {
-            col.appendChild(cardByTk[tk]);
-            placed.add(tk);
-          }
-        }
-        if (col.childNodes.length) wrap.appendChild(col);
-      }
-    }
-    for (const { sec } of sections) {
-      if (placed.has(sec.tk)) continue;
-      const col = document.createElement("div");
-      col.className = "sys-col";
-      col.appendChild(cardByTk[sec.tk]);
-      wrap.appendChild(col);
-    }
+    // Place cards in the user's saved order (drag-and-drop persists it), seeded
+    // by the default layout order, with any new/unknown sections appended.
+    const seen = new Set();
+    const order = [];
+    const push = (tk) => { if (cardByTk[tk] && !seen.has(tk)) { order.push(tk); seen.add(tk); } };
+    for (const tk of (this._loadCtlOrder() || [])) push(tk);
+    for (const tk of DEFAULT_SYS_ORDER) push(tk);
+    for (const { sec } of sections) push(sec.tk);
+    for (const tk of order) wrap.appendChild(cardByTk[tk]);
     return { wrap, sig };
   }
 
-  /** Invisible cell that holds a paired-grid column slot when a partner card is
-   *  absent, so the two columns stay aligned row-by-row. */
-  _pairSpacer() {
-    const d = document.createElement("div");
-    d.className = "sys-pair-spacer";
-    d.setAttribute("aria-hidden", "true");
-    return d;
+  // --- Control-tab column count (fixed-width override, persisted per browser) --
+  _ctlColsKey() { return "omnibattery:control-columns"; }
+  /** Saved column count, or 0 = Auto (responsive auto-fit default). */
+  _loadCtlCols() {
+    const n = parseInt(localStorage.getItem(this._ctlColsKey()), 10);
+    return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 0;
+  }
+  _saveCtlCols(n) {
+    try {
+      if (n >= 1) localStorage.setItem(this._ctlColsKey(), String(n));
+      else localStorage.removeItem(this._ctlColsKey());
+    } catch { /* private mode */ }
+  }
+  _ctlRowsKey() { return "omnibattery:control-rows"; }
+  /** Saved cards-per-column count, or 0 = Auto (row-major flow, no row cap). */
+  _loadCtlRows() {
+    const n = parseInt(localStorage.getItem(this._ctlRowsKey()), 10);
+    return Number.isFinite(n) && n >= 1 && n <= 8 ? n : 0;
+  }
+  _saveCtlRows(n) {
+    try {
+      if (n >= 1) localStorage.setItem(this._ctlRowsKey(), String(n));
+      else localStorage.removeItem(this._ctlRowsKey());
+    } catch { /* private mode */ }
+  }
+  /** Flow grid: pin a fixed column count (minmax(340px, 1fr) keeps cards usable
+   *  yet stretching) or, when Auto, fall back to the CSS auto-fit default. Cards
+   *  stay a single drag-reorderable sequence. (Row count only matters in matrix
+   *  mode — see _layoutMatrix.) */
+  _applyCtlGrid(stack) {
+    const c = this._loadCtlCols();
+    stack.style.gridTemplateColumns = c >= 1 ? `repeat(${c}, minmax(340px, 1fr))` : "";
+  }
+
+  // --- Control-tab manual matrix (drag cards into explicit C×R cells) ----------
+  _ctlCellsKey() { return "omnibattery:control-cells"; }
+  /** Saved card→cell map: { [tk]: { c, r } }. */
+  _loadCells() {
+    try {
+      const v = JSON.parse(localStorage.getItem(this._ctlCellsKey()));
+      return v && typeof v === "object" ? v : {};
+    } catch { return {}; }
+  }
+  /** Persist the current cell occupancy by reading each cell's card back. */
+  _saveCells(stack) {
+    const map = {};
+    for (const cell of stack.querySelectorAll(".ctl-cell")) {
+      const card = cell.firstElementChild;
+      if (card && card.dataset.tk) map[card.dataset.tk] = { c: +cell.dataset.c, r: +cell.dataset.r };
+    }
+    try { localStorage.setItem(this._ctlCellsKey(), JSON.stringify(map)); } catch { /* private mode */ }
+  }
+
+  /** Lay the cards out as a manual C×R matrix: build C·R empty cell drop-zones,
+   *  place each card in its saved cell, then fill any unplaced/overflow cards into
+   *  the first free cells. Rows grow past the requested count if needed so no card
+   *  is ever lost. Empty cells stay as valid drop targets while arranging. */
+  _layoutMatrix(stack) {
+    const C = this._loadCtlCols();
+    const cards = [...stack.querySelectorAll(".card")];
+    const R = Math.max(this._loadCtlRows(), Math.ceil(cards.length / C));
+    const saved = this._loadCells();
+    for (const card of cards) card.remove();
+    stack.classList.add("matrix");
+    stack.style.gridTemplateColumns = `repeat(${C}, minmax(340px, 1fr))`;
+    stack.style.gridTemplateRows = `repeat(${R}, min-content)`;
+    const cells = [];
+    for (let r = 0; r < R; r++) {
+      for (let c = 0; c < C; c++) {
+        const cell = document.createElement("div");
+        cell.className = "ctl-cell";
+        cell.dataset.c = c;
+        cell.dataset.r = r;
+        this._wireCell(cell, stack);
+        stack.appendChild(cell);
+        cells.push(cell);
+      }
+    }
+    // Place cards honoring saved positions first; collect the rest as leftovers.
+    const leftover = [];
+    for (const card of cards) {
+      const pos = saved[card.dataset.tk];
+      const cell = pos && pos.c < C && pos.r < R ? cells[pos.r * C + pos.c] : null;
+      if (cell && !cell.firstElementChild) cell.appendChild(card);
+      else leftover.push(card);
+    }
+    let idx = 0;
+    for (const card of leftover) {
+      while (idx < cells.length && cells[idx].firstElementChild) idx++;
+      if (idx < cells.length) cells[idx].appendChild(card);
+    }
+  }
+
+  /** Wire a matrix cell as a drop target: dropping a dragged card moves it here,
+   *  swapping with any current occupant back into the card's old cell. */
+  _wireCell(cell, stack) {
+    cell.addEventListener("dragover", (e) => {
+      if (!this._arrangeMode || !this._dragEl) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      cell.classList.add("drop-target");
+    });
+    cell.addEventListener("dragleave", () => cell.classList.remove("drop-target"));
+    cell.addEventListener("drop", (e) => {
+      if (!this._arrangeMode || !this._dragEl) return;
+      e.preventDefault();
+      cell.classList.remove("drop-target");
+      const dragged = this._dragEl;
+      const occupant = cell.firstElementChild;
+      if (occupant === dragged) return;
+      const from = dragged.parentElement;
+      if (occupant) from.appendChild(occupant); // swap into the vacated cell
+      cell.appendChild(dragged);
+      this._saveCells(stack);
+    });
+  }
+
+  // --- Control-tab card reordering (drag-and-drop, persisted per browser) -----
+  _ctlOrderKey() { return "omnibattery:control-order"; }
+  _loadCtlOrder() {
+    try {
+      const v = JSON.parse(localStorage.getItem(this._ctlOrderKey()));
+      return Array.isArray(v) ? v : null;
+    } catch { return null; }
+  }
+  _saveCtlOrder(stack) {
+    const order = [...stack.querySelectorAll(".card")].map((c) => c.dataset.tk).filter(Boolean);
+    try { localStorage.setItem(this._ctlOrderKey(), JSON.stringify(order)); } catch { /* private mode */ }
+  }
+  /** Wire HTML5 drag events on a card. Active only while arrange mode is ON
+   *  (card.draggable is toggled by _applyArrangeMode). In flow mode it reorders
+   *  the DOM sequence live; in matrix mode the cell drop-zones own placement so
+   *  the sequence handlers stand down (dragstart/dragend stay shared). */
+  _makeCardDraggable(card, stack) {
+    card.addEventListener("dragstart", (e) => {
+      if (!this._arrangeMode) { e.preventDefault(); return; }
+      this._dragEl = card;
+      card.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+      try { e.dataTransfer.setData("text/plain", card.dataset.tk || ""); } catch { /* IE */ }
+    });
+    card.addEventListener("dragend", () => {
+      card.classList.remove("dragging");
+      this._dragEl = null;
+      if (!this._isMatrixMode()) this._saveCtlOrder(stack);
+    });
+    card.addEventListener("dragover", (e) => {
+      if (this._isMatrixMode()) return; // cells handle placement
+      if (!this._arrangeMode || !this._dragEl || this._dragEl === card) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const r = card.getBoundingClientRect();
+      const before = e.clientX < r.left + r.width / 2;
+      stack.insertBefore(this._dragEl, before ? card : card.nextSibling);
+    });
+    card.addEventListener("drop", (e) => e.preventDefault());
   }
 
   /** Patch all widgets in a system view; rebuild it if the available set changed. */
@@ -3851,7 +4106,10 @@ class MarstekVenusPanel extends HTMLElement {
     if (w.titleEl && w.titleFn) w.titleEl.title = w.titleFn(state, this._t.bind(this)) || "";
     const focused = this.shadowRoot && this.shadowRoot.activeElement === w.el;
     if (w.type === "switch") {
-      w.el.classList.toggle("on", state.state === "on");
+      const on = state.state === "on";
+      w.el.classList.toggle("on", on);
+      // gated feature switch: show/hide its sibling param rows when toggled
+      if (w.gatedNodes) for (const n of w.gatedNodes) n.style.display = on ? "" : "none";
     } else if (w.type === "select") {
       const opts = Array.isArray(state.attributes.options) ? state.attributes.options : [];
       const sig = opts.join("|");
@@ -4310,25 +4568,52 @@ class MarstekVenusPanel extends HTMLElement {
       @media (max-width: 480px) { .bat-grid { grid-template-columns: 1fr; } }
 
       /* ===== Control tab ===== */
-      /* feature-grouped cards; pack into columns on wide screens (align-items:start
-         so a tall section, e.g. PD, doesn't stretch its neighbours) */
-      /* Control layout: a grid of blocks. .sys-col is an independent
-         vertical stack (cards pack tight, no shared heights). .sys-pair is a
-         2-col grid whose rows DO share a height (align-items: stretch), so the
-         first two columns line up card-for-card row by row. */
-      /* responsive grid of blocks: tracks size themselves (auto-fit), so columns
-         appear/collapse with width without magic breakpoints, and grid-auto-flow
-         dense backfills empty trailing cells. .sys-pair spans two tracks to keep
-         its 2-col card alignment; .sys-col is one track (cards stack vertically). */
+      /* Flattened layout: every feature card is an independent box in a single
+         responsive grid (tracks size themselves via auto-fit, so columns
+         appear/collapse with width; dense backfills empty trailing cells). Cards
+         can be drag-reordered in arrange mode; order persists in localStorage. */
+      .ctl-root { display: flex; flex-direction: column; gap: var(--gap); }
+      .ctl-bar { display: flex; align-items: center; gap: 10px; }
+      .ctl-hint { margin-right: auto; color: var(--ink-dim); font-size: 12px; }
+      .ctl-arrange-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+        border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg-1);
+        color: var(--ink-mid); cursor: pointer; font-size: 13px; --mdc-icon-size: 16px; }
+      .ctl-arrange-btn:hover { color: var(--ink); }
+      .ctl-arrange-btn.active { color: var(--accent); border-color: var(--accent); }
+      /* column/row steppers (arrange mode only): pin a fixed grid shape */
+      .ctl-tools { display: inline-flex; align-items: center; gap: 16px; }
+      .ctl-cols { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-mid); font-size: 13px; }
+      .ctl-cols-lbl { color: var(--ink-dim); }
+      .ctl-cols button { display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+        background: var(--bg-1); color: var(--ink-mid); cursor: pointer; --mdc-icon-size: 16px; }
+      .ctl-cols button:hover { color: var(--ink); }
+      .ctl-cols-val { min-width: 2.5ch; text-align: center; font-variant-numeric: tabular-nums; }
       .sys-stack { display: grid; gap: var(--gap); align-items: start;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         grid-auto-flow: row dense; }
-      .sys-col { min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
-      .sys-pair { grid-column: span 2; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: stretch; align-content: start; }
-      .sys-pair > .card { height: 100%; }
-      .sys-pair-spacer { min-width: 0; }
+      /* let cards shrink to their track (the old .sys-col grid item carried this);
+         without it long-label cards (PD/Common) stay at min-content and the inner
+         2-col grid collapses the slider column to just the thumb */
+      .sys-stack > .card { min-width: 0; }
       .sys-stack > .placeholder { grid-column: 1 / -1; }
       .sys-stack .card-head { margin-bottom: 0; }
+      /* arrange mode: cards become grabbable, inner controls are locked so a drag
+         never grabs a slider; the card being dragged dims */
+      .sys-stack.arranging .card { cursor: grab; border-style: dashed; }
+      .sys-stack.arranging .card:active { cursor: grabbing; }
+      .sys-stack.arranging .card .bat-ctl-grid { pointer-events: none; }
+      .sys-stack .card.dragging { opacity: 0.4; }
+      /* manual matrix: cards sit inside fixed cells that are themselves drop
+         targets. min-width:0 (the > .card rule above can't reach them now) keeps
+         the inner slider grid from collapsing; empty cells show as dashed slots
+         while arranging so it's clear where a card can be dropped. */
+      .ctl-cell { min-width: 0; display: flex; }
+      .ctl-cell > .card { width: 100%; min-width: 0; }
+      .sys-stack.matrix.arranging .ctl-cell:empty { min-height: 64px;
+        border: 1px dashed var(--line); border-radius: var(--radius-sm); }
+      .ctl-cell.drop-target { outline: 2px solid var(--accent); outline-offset: -2px;
+        border-radius: var(--radius-sm); }
       /* options-flow help affordance pinned to the right of a section header */
       .card-info { margin-left: auto; padding: 0; border: 0; background: none; cursor: pointer;
         color: var(--ink-dim); display: grid; place-items: center; --mdc-icon-size: 16px; }
@@ -4344,10 +4629,6 @@ class MarstekVenusPanel extends HTMLElement {
         border-radius: var(--radius-sm); background: var(--bg-2); border: 1px solid var(--line-strong);
         color: var(--ink); font-family: var(--font-ui); font-size: 12px; line-height: 1.5; white-space: pre-line;
         box-shadow: 0 8px 24px oklch(0 0 0 / 0.4); }
-      /* below ~2 usable tracks the pair can't keep its 2-up split: make it full
-         width and single column so its cards never overflow */
-      @media (max-width: 900px) { .sys-pair { grid-column: 1 / -1; grid-template-columns: 1fr; } }
-      @media (max-width: 480px) { .sys-pair-spacer { display: none; } }
 
       @media (max-width: 720px) {
         .appbar { padding: 0 14px; gap: 14px; height: 60px; }
