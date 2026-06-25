@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, PREDICTIVE_MODE_DYNAMIC_PRICING
 from .infra.coordinator import MarstekVenusDataUpdateCoordinator
-from .infra.entity_naming import english_entity_id, system_entity_id
+from .infra.entity_naming import english_entity_id, system_entity_id, SYSTEM_UNIQUE_ID_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class ReevaluateDynamicPricingButton(ButtonEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "reevaluate_dynamic_pricing"
-        self._attr_unique_id = "marstek_venus_system_reevaluate_dynamic_pricing"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}reevaluate_dynamic_pricing"
         self.entity_id = system_entity_id("button", "reevaluate_dynamic_pricing")
         self._attr_icon = "mdi:calendar-refresh"
         self._attr_should_poll = False

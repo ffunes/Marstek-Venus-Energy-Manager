@@ -246,6 +246,7 @@
           "price_integration_type": "Integración de precios",
           "price_sensor": "Sensor de precio eléctrico",
           "max_price_threshold": "Precio máximo (opcional)",
+          "discharge_price_threshold": "Precio mínimo de descarga (opcional)",
           "dp_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
           "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
@@ -254,7 +255,8 @@
         "data_description": {
           "price_integration_type": "Selecciona tu integración de precios de electricidad. Tibber funciona por servicio: lee los precios del servicio tibber.get_prices, así que el sensor de precio de abajo puede dejarse vacío.",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
-          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
+          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga salvo que configures abajo un precio mínimo de descarga aparte. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
+          "discharge_price_threshold": "Umbral separado opcional para la descarga por precio. La descarga se bloquea mientras el precio sea igual o inferior a este valor, abriendo una banda neutra entre el precio máximo de carga (arriba) y este mínimo: en esa banda la batería ni carga de red ni descarga (la carga por excedente solar sigue funcionando). Déjalo vacío para reutilizar el precio máximo para ambos (comportamiento actual de umbral único).",
           "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio máximo configurado. Si no hay umbral configurado, usa el precio medio del día calculado automáticamente a partir del sensor de precios. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
@@ -444,7 +446,8 @@
       "slot_does_nothing": "La franja debe permitir al menos una dirección (carga o descarga).",
       "manual_requires_power": "El modo manual requiere activar el control de potencia.",
       "no_price_data": "El sensor seleccionado no tiene los atributos de precio esperados. Nordpool: necesita `raw_today`. PVPC: necesita `price_00h` … `price_23h`. CKW: necesita el atributo `prices` con una lista de franjas. EPEX: necesita el atributo `data` con una lista de franjas. ENTSO-e: necesita el atributo `prices_today` con una lista de franjas.",
-      "tibber_unavailable": "La integración Tibber no está instalada, o su servicio `tibber.get_prices` no está disponible. Instala y configura Tibber primero."
+      "tibber_unavailable": "La integración Tibber no está instalada, o su servicio `tibber.get_prices` no está disponible. Instala y configura Tibber primero.",
+      "discharge_below_charge": "El precio mínimo de descarga no puede ser inferior al precio máximo (de carga). Ponlo igual o superior, o déjalo vacío para reutilizar el umbral de carga."
     },
     "abort": {
       "already_configured": "Esta integración ya está configurada.",
@@ -712,6 +715,7 @@
           "price_integration_type": "Integración de precios",
           "price_sensor": "Sensor de precio eléctrico",
           "max_price_threshold": "Precio máximo (opcional)",
+          "discharge_price_threshold": "Precio mínimo de descarga (opcional)",
           "dp_price_discharge_control": "Descargar solo cuando el precio supere el umbral",
           "solar_forecast_sensor": "Sensor de predicción solar (kWh)",
           "predictive_safety_margin_kwh": "Margen de seguridad de previsión solar (kWh)",
@@ -720,7 +724,8 @@
         "data_description": {
           "price_integration_type": "Selecciona tu integración de precios de electricidad. Tibber funciona por servicio: lee los precios del servicio tibber.get_prices, así que el sensor de precio de abajo puede dejarse vacío.",
           "price_sensor": "Sensor que proporciona precios horarios de electricidad",
-          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
+          "max_price_threshold": "Las horas por encima de este precio no serán seleccionadas. Cuando el control de descarga por precio está activado, este valor también se usa como umbral de descarga salvo que configures abajo un precio mínimo de descarga aparte. Usa la misma unidad que el sensor: €/kWh para Nordpool/PVPC, CHF/kWh para CKW. Deja vacío para usar todas las horas y usar la media diaria como umbral de descarga.",
+          "discharge_price_threshold": "Umbral separado opcional para la descarga por precio. La descarga se bloquea mientras el precio sea igual o inferior a este valor, abriendo una banda neutra entre el precio máximo de carga (arriba) y este mínimo: en esa banda la batería ni carga de red ni descarga (la carga por excedente solar sigue funcionando). Déjalo vacío para reutilizar el precio máximo para ambos (comportamiento actual de umbral único).",
           "dp_price_discharge_control": "Si está activado, la batería solo descarga cuando el precio eléctrico actual supera el precio máximo configurado. Si no hay umbral configurado, usa el precio medio del día calculado automáticamente a partir del sensor de precios. Si hay franjas de descarga configuradas, ambas condiciones deben cumplirse.",
           "solar_forecast_sensor": "Sensor que proporciona la predicción de producción solar en kWh (ej: Solcast). Si tienes paneles solares, configúralo — el sistema solo cargará desde la red cuando la previsión solar sea insuficiente. Si no tienes paneles, déjalo vacío — el sistema cargará cuando la batería no tenga energía suficiente para el día. No es necesario si ya configuraste este sensor en el paso inicial: se usará automáticamente.",
           "predictive_safety_margin_kwh": "Energía adicional añadida a la previsión de consumo antes de decidir si cargar. Útil cuando tu previsión solar tiende a ser optimista. Pon 0 para desactivar (por defecto). Limitado a la capacidad total de la batería.",
@@ -878,7 +883,8 @@
       "slot_does_nothing": "La franja debe permitir al menos una dirección (carga o descarga).",
       "manual_requires_power": "El modo manual requiere activar el control de potencia.",
       "no_price_data": "El sensor seleccionado no tiene los atributos de precio esperados. Nordpool: necesita `raw_today`. PVPC: necesita `price_00h` … `price_23h`. CKW: necesita el atributo `prices` con una lista de franjas. EPEX: necesita el atributo `data` con una lista de franjas. ENTSO-e: necesita el atributo `prices_today` con una lista de franjas.",
-      "tibber_unavailable": "La integración Tibber no está instalada, o su servicio `tibber.get_prices` no está disponible. Instala y configura Tibber primero."
+      "tibber_unavailable": "La integración Tibber no está instalada, o su servicio `tibber.get_prices` no está disponible. Instala y configura Tibber primero.",
+      "discharge_below_charge": "El precio mínimo de descarga no puede ser inferior al precio máximo (de carga). Ponlo igual o superior, o déjalo vacío para reutilizar el umbral de carga."
     }
   },
   "selector": {
@@ -1446,6 +1452,12 @@
       },
       "inverse_max_power": {
         "name": "Potencia Máx. del Inversor"
+      },
+      "max_price_threshold": {
+        "name": "Precio máximo (carga)"
+      },
+      "discharge_price_threshold": {
+        "name": "Precio mínimo de descarga"
       }
     },
     "button": {

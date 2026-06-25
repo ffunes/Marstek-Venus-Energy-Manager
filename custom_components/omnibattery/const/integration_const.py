@@ -422,6 +422,10 @@ CONF_PREDICTIVE_CHARGING_MODE = "predictive_charging_mode"
 CONF_PRICE_SENSOR = "price_sensor"
 CONF_PRICE_INTEGRATION_TYPE = "price_integration_type"
 CONF_MAX_PRICE_THRESHOLD = "max_price_threshold"
+# Discharge floor for the price hysteresis band (#408). Discharge is blocked
+# while price <= this value; unset → falls back to max_price_threshold so
+# existing single-threshold installs keep identical behavior.
+CONF_DISCHARGE_PRICE_THRESHOLD = "discharge_price_threshold"
 
 PREDICTIVE_MODE_TIME_SLOT = "time_slot"
 PREDICTIVE_MODE_DYNAMIC_PRICING = "dynamic_pricing"

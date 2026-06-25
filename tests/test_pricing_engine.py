@@ -57,6 +57,7 @@ def _controller(**overrides):
         price_sensor=None,
         price_integration_type=PRICE_INTEGRATION_NORDPOOL,
         max_price_threshold=None,
+        discharge_price_threshold=None,
         average_price_sensor=None,
     )
     base.update(overrides)
@@ -188,3 +189,51 @@ def test_discharge_block_removed_when_rt_control_disabled():
     )
     _mgr(ctrl).apply_price_discharge_block()
     assert ctrl._removed == ["price_discharge"]
+
+
+# ----------------------------------------------------------------------
+# apply_price_discharge_block — separate discharge floor / idle band (#408)
+# ----------------------------------------------------------------------
+
+def _mgr_with_price(ctrl, price):
+    """PricingManager whose price sensor reads ``price`` (Nordpool float path)."""
+    state = SimpleNamespace(state=str(price), attributes={})
+    hass = SimpleNamespace(states=SimpleNamespace(get=lambda _eid: state))
+    return PricingManager(hass, ctrl)
+
+
+def _dp_band_controller(**overrides):
+    base = dict(
+        predictive_charging_mode=PREDICTIVE_MODE_DYNAMIC_PRICING,
+        dp_price_discharge_control=True,
+        price_sensor="sensor.price",
+        max_price_threshold=0.20,   # charge ceiling
+        discharge_price_threshold=0.30,  # discharge floor
+    )
+    base.update(overrides)
+    return _controller(**base)
+
+
+def test_dp_discharge_floor_blocks_inside_idle_band():
+    # price 0.25 sits in the idle band (ceiling 0.20 < 0.25 < floor 0.30):
+    # discharge stays blocked. Single-threshold behavior would unblock at 0.21.
+    ctrl = _dp_band_controller()
+    _mgr_with_price(ctrl, 0.25).apply_price_discharge_block()
+    assert ctrl._set and ctrl._set[0][0] == "price_discharge"
+    assert ctrl._price_based_discharge_blocked is True
+
+
+def test_dp_discharge_allowed_above_floor():
+    ctrl = _dp_band_controller()
+    _mgr_with_price(ctrl, 0.35).apply_price_discharge_block()
+    assert ctrl._removed == ["price_discharge"]
+    assert ctrl._price_based_discharge_blocked is False
+
+
+def test_dp_discharge_floor_unset_falls_back_to_charge_ceiling():
+    # Back-compat: no floor → reuse max_price_threshold (0.20) for both, so
+    # price 0.25 > 0.20 unblocks discharge exactly as before #408.
+    ctrl = _dp_band_controller(discharge_price_threshold=None)
+    _mgr_with_price(ctrl, 0.25).apply_price_discharge_block()
+    assert ctrl._removed == ["price_discharge"]
+    assert ctrl._price_based_discharge_blocked is False

@@ -246,6 +246,7 @@
           "price_integration_type": "Integració de preus",
           "price_sensor": "Sensor de preu elèctric",
           "max_price_threshold": "Preu màxim (opcional)",
+          "discharge_price_threshold": "Preu mínim de descàrrega (opcional)",
           "dp_price_discharge_control": "Descarregar només quan el preu superi el llindar",
           "solar_forecast_sensor": "Sensor de predicció solar (kWh)",
           "predictive_safety_margin_kwh": "Marge de seguretat de previsió solar (kWh)",
@@ -254,7 +255,8 @@
         "data_description": {
           "price_integration_type": "Selecciona la teva integració de preus d'electricitat",
           "price_sensor": "Sensor que proporciona preus horaris d'electricitat",
-          "max_price_threshold": "Les hores per sobre d'aquest preu no seran seleccionades. Quan el control de descàrrega per preu està activat, aquest valor també s'usa com a llindar de descàrrega. Usa la mateixa unitat que el sensor: €/kWh per a Nordpool/PVPC, CHF/kWh per a CKW. Deixa buit per usar totes les hores i usar la mitjana diària com a llindar de descàrrega.",
+          "max_price_threshold": "Les hores per sobre d'aquest preu no seran seleccionades. Quan el control de descàrrega per preu està activat, aquest valor també s'usa com a llindar de descàrrega. Usa la mateixa unitat que el sensor: €/kWh per a Nordpool/PVPC, CHF/kWh per a CKW. Deixa buit per usar totes les hores i usar la mitjana diària com a llindar de descàrrega. Tret que configuris a sota un preu mínim de descàrrega per separat.",
+          "discharge_price_threshold": "Llindar separat opcional per a la descàrrega per preu. La descàrrega es bloqueja mentre el preu sigui igual o inferior a aquest valor, obrint una banda neutra entre el preu màxim de càrrega (a dalt) i aquest mínim: en aquesta banda la bateria ni carrega de xarxa ni descarrega (la càrrega per excedent solar continua funcionant). Deixa-ho buit per reutilitzar el preu màxim per a tots dos (comportament actual d'un sol llindar).",
           "dp_price_discharge_control": "Si està activat, la bateria només descarrega quan el preu elèctric actual supera el preu màxim configurat. Si no hi ha llindar configurat, usa el preu mitjà del dia calculat automàticament a partir del sensor de preus. Si hi ha franges de descàrrega configurades, ambdues condicions han de complir-se.",
           "solar_forecast_sensor": "Sensor que proporciona la predicció de producció solar en kWh (ex: Solcast). Si tens panells solars, configura'l — el sistema només carregarà des de la xarxa quan la previsió solar sigui insuficient. Si no tens panells, deixa'l buit — el sistema carregarà quan la bateria no tingui energia suficient per al dia. No cal si ja has configurat aquest sensor al pas inicial: s'utilitzarà automàticament.",
           "predictive_safety_margin_kwh": "Energia addicional afegida a la previsió de consum abans de decidir si carregar. Útil quan la teva previsió solar tendeix a ser optimista. Posa 0 per desactivar (per defecte). Limitat a la capacitat total de la bateria.",
@@ -444,7 +446,8 @@
       "slot_does_nothing": "La franja ha de permetre almenys una direcció (càrrega o descàrrega).",
       "manual_requires_power": "El mode manual requereix activar el control de potència.",
       "no_price_data": "El sensor seleccionat no té els atributs de preu esperats. Nordpool: necessita `raw_today`. PVPC: necessita `price_00h` … `price_23h`. CKW: necessita l'atribut `prices` amb una llista de franges. EPEX: necessita l'atribut `data` amb una llista de franges. ENTSO-e: necessita l'atribut `prices_today` amb una llista de franges.",
-      "tibber_unavailable": "La integració Tibber no està instal·lada, o el seu servei `tibber.get_prices` no està disponible. Instal·la i configura Tibber primer."
+      "tibber_unavailable": "La integració Tibber no està instal·lada, o el seu servei `tibber.get_prices` no està disponible. Instal·la i configura Tibber primer.",
+      "discharge_below_charge": "El preu mínim de descàrrega no pot ser inferior al preu màxim (de càrrega). Posa'l igual o superior, o deixa'l buit per reutilitzar el llindar de càrrega."
     },
     "abort": {
       "already_configured": "Aquesta integració ja està configurada.",
@@ -712,6 +715,7 @@
           "price_integration_type": "Integració de preus",
           "price_sensor": "Sensor de preu elèctric",
           "max_price_threshold": "Preu màxim (opcional)",
+          "discharge_price_threshold": "Preu mínim de descàrrega (opcional)",
           "dp_price_discharge_control": "Descarregar només quan el preu superi el llindar",
           "solar_forecast_sensor": "Sensor de predicció solar (kWh)",
           "predictive_safety_margin_kwh": "Marge de seguretat de previsió solar (kWh)",
@@ -720,7 +724,8 @@
         "data_description": {
           "price_integration_type": "Selecciona la teva integració de preus d'electricitat",
           "price_sensor": "Sensor que proporciona preus horaris d'electricitat",
-          "max_price_threshold": "Les hores per sobre d'aquest preu no seran seleccionades. Quan el control de descàrrega per preu està activat, aquest valor també s'usa com a llindar de descàrrega. Usa la mateixa unitat que el sensor: €/kWh per a Nordpool/PVPC, CHF/kWh per a CKW. Deixa buit per usar totes les hores i usar la mitjana diària com a llindar de descàrrega.",
+          "max_price_threshold": "Les hores per sobre d'aquest preu no seran seleccionades. Quan el control de descàrrega per preu està activat, aquest valor també s'usa com a llindar de descàrrega. Usa la mateixa unitat que el sensor: €/kWh per a Nordpool/PVPC, CHF/kWh per a CKW. Deixa buit per usar totes les hores i usar la mitjana diària com a llindar de descàrrega. Tret que configuris a sota un preu mínim de descàrrega per separat.",
+          "discharge_price_threshold": "Llindar separat opcional per a la descàrrega per preu. La descàrrega es bloqueja mentre el preu sigui igual o inferior a aquest valor, obrint una banda neutra entre el preu màxim de càrrega (a dalt) i aquest mínim: en aquesta banda la bateria ni carrega de xarxa ni descarrega (la càrrega per excedent solar continua funcionant). Deixa-ho buit per reutilitzar el preu màxim per a tots dos (comportament actual d'un sol llindar).",
           "dp_price_discharge_control": "Si està activat, la bateria només descarrega quan el preu elèctric actual supera el preu màxim configurat. Si no hi ha llindar configurat, usa el preu mitjà del dia calculat automàticament a partir del sensor de preus. Si hi ha franges de descàrrega configurades, ambdues condicions han de complir-se.",
           "solar_forecast_sensor": "Sensor que proporciona la predicció de producció solar en kWh (ex: Solcast). Si tens panells solars, configura'l — el sistema només carregarà des de la xarxa quan la previsió solar sigui insuficient. Si no tens panells, deixa'l buit — el sistema carregarà quan la bateria no tingui energia suficient per al dia. No cal si ja has configurat aquest sensor al pas inicial: s'utilitzarà automàticament.",
           "predictive_safety_margin_kwh": "Energia addicional afegida a la previsió de consum abans de decidir si carregar. Útil quan la teva previsió solar tendeix a ser optimista. Posa 0 per desactivar (per defecte). Limitat a la capacitat total de la bateria.",
@@ -878,7 +883,8 @@
       "slot_does_nothing": "La franja ha de permetre almenys una direcció (càrrega o descàrrega).",
       "manual_requires_power": "El mode manual requereix activar el control de potència.",
       "no_price_data": "El sensor seleccionat no té els atributs de preu esperats. Nordpool: necessita `raw_today`. PVPC: necessita `price_00h` … `price_23h`. CKW: necessita l'atribut `prices` amb una llista de franges. EPEX: necessita l'atribut `data` amb una llista de franges. ENTSO-e: necessita l'atribut `prices_today` amb una llista de franges.",
-      "tibber_unavailable": "La integració Tibber no està instal·lada, o el seu servei `tibber.get_prices` no està disponible. Instal·la i configura Tibber primer."
+      "tibber_unavailable": "La integració Tibber no està instal·lada, o el seu servei `tibber.get_prices` no està disponible. Instal·la i configura Tibber primer.",
+      "discharge_below_charge": "El preu mínim de descàrrega no pot ser inferior al preu màxim (de càrrega). Posa'l igual o superior, o deixa'l buit per reutilitzar el llindar de càrrega."
     }
   },
   "selector": {
@@ -1446,6 +1452,12 @@
       },
       "inverse_max_power": {
         "name": "Potència Màx. de l'Inversor"
+      },
+      "max_price_threshold": {
+        "name": "Preu màxim (càrrega)"
+      },
+      "discharge_price_threshold": {
+        "name": "Preu mínim de descàrrega"
       }
     },
     "button": {

@@ -246,6 +246,7 @@
           "price_integration_type": "Type d'intégration de prix",
           "price_sensor": "Capteur de prix",
           "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "discharge_price_threshold": "Prix plancher de décharge (optionnel)",
           "dp_price_discharge_control": "Décharger uniquement si le prix dépasse le seuil",
           "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
           "predictive_safety_margin_kwh": "Marge de sécurité prévision solaire (kWh)",
@@ -254,7 +255,8 @@
         "data_description": {
           "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
-          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Quand le contrôle de décharge par prix est activé, cette valeur sert aussi de seuil de décharge. Utiliser la même unité que le capteur : €/kWh pour Nordpool/PVPC, CHF/kWh pour CKW. Laisser vide pour utiliser tous les créneaux et utiliser la moyenne journalière comme seuil de décharge.",
+          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Quand le contrôle de décharge par prix est activé, cette valeur sert aussi de seuil de décharge. Utiliser la même unité que le capteur : €/kWh pour Nordpool/PVPC, CHF/kWh pour CKW. Laisser vide pour utiliser tous les créneaux et utiliser la moyenne journalière comme seuil de décharge. Sauf si un prix plancher de décharge distinct est défini ci-dessous.",
+          "discharge_price_threshold": "Seuil distinct optionnel pour la décharge pilotée par le prix. La décharge est bloquée tant que le prix est inférieur ou égal à cette valeur, ouvrant une bande neutre entre le prix maximal de charge (au-dessus) et ce plancher : dans cette bande, la batterie ne se charge pas depuis le réseau et ne se décharge pas (la charge par surplus solaire fonctionne toujours). Laissez vide pour réutiliser le prix maximal pour les deux (comportement actuel à seuil unique).",
           "dp_price_discharge_control": "Si activé, la batterie ne se décharge que lorsque le prix actuel dépasse le seuil de prix maximum configuré. Si aucun seuil n'est configuré, la moyenne journalière calculée automatiquement depuis le capteur de prix est utilisée. Si des plages horaires de décharge sont configurées, les deux conditions doivent être remplies.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "predictive_safety_margin_kwh": "Tampon d'énergie supplémentaire ajouté à la prévision de consommation. Utile si la prévision solaire est trop optimiste. Mettre à 0 pour désactiver (défaut). Limité à la capacité totale de la batterie.",
@@ -444,7 +446,8 @@
       "slot_does_nothing": "Le créneau doit autoriser au moins une direction (charge ou décharge).",
       "manual_requires_power": "Le mode manuel nécessite l'activation du contrôle de puissance.",
       "no_price_data": "Le capteur sélectionné ne possède pas les attributs de prix attendus. Nordpool : nécessite `raw_today`. PVPC : nécessite `price_00h` … `price_23h`. CKW : nécessite l'attribut `prices` avec une liste de créneaux. EPEX : nécessite l'attribut `data` avec une liste de créneaux. ENTSO-e : nécessite l'attribut `prices_today` avec une liste de créneaux.",
-      "tibber_unavailable": "L'intégration Tibber n'est pas installée, ou son service `tibber.get_prices` est indisponible. Installez et configurez d'abord Tibber."
+      "tibber_unavailable": "L'intégration Tibber n'est pas installée, ou son service `tibber.get_prices` est indisponible. Installez et configurez d'abord Tibber.",
+      "discharge_below_charge": "Le prix plancher de décharge ne peut pas être inférieur au prix maximal (de charge). Définissez-le égal ou supérieur, ou laissez-le vide pour réutiliser le seuil de charge."
     },
     "abort": {
       "already_configured": "Cette intégration est déjà configurée.",
@@ -712,6 +715,7 @@
           "price_integration_type": "Type d'intégration de prix",
           "price_sensor": "Capteur de prix",
           "max_price_threshold": "Seuil de prix maximum (€/kWh, optionnel)",
+          "discharge_price_threshold": "Prix plancher de décharge (optionnel)",
           "dp_price_discharge_control": "Décharger uniquement si le prix dépasse le seuil",
           "solar_forecast_sensor": "Capteur de prévision solaire (kWh)",
           "predictive_safety_margin_kwh": "Marge de sécurité prévision solaire (kWh)",
@@ -720,7 +724,8 @@
         "data_description": {
           "price_integration_type": "Sélectionnez l'intégration domotique qui fournit les données de prix de l'électricité",
           "price_sensor": "Capteur contenant les prix horaires de l'électricité (ex : sensor.nordpool_kwh_fr_eur_3_10_025)",
-          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Quand le contrôle de décharge par prix est activé, cette valeur sert aussi de seuil de décharge. Utiliser la même unité que le capteur : €/kWh pour Nordpool/PVPC, CHF/kWh pour CKW. Laisser vide pour utiliser tous les créneaux et utiliser la moyenne journalière comme seuil de décharge.",
+          "max_price_threshold": "Les créneaux au-dessus de ce prix ne seront pas sélectionnés. Quand le contrôle de décharge par prix est activé, cette valeur sert aussi de seuil de décharge. Utiliser la même unité que le capteur : €/kWh pour Nordpool/PVPC, CHF/kWh pour CKW. Laisser vide pour utiliser tous les créneaux et utiliser la moyenne journalière comme seuil de décharge. Sauf si un prix plancher de décharge distinct est défini ci-dessous.",
+          "discharge_price_threshold": "Seuil distinct optionnel pour la décharge pilotée par le prix. La décharge est bloquée tant que le prix est inférieur ou égal à cette valeur, ouvrant une bande neutre entre le prix maximal de charge (au-dessus) et ce plancher : dans cette bande, la batterie ne se charge pas depuis le réseau et ne se décharge pas (la charge par surplus solaire fonctionne toujours). Laissez vide pour réutiliser le prix maximal pour les deux (comportement actuel à seuil unique).",
           "dp_price_discharge_control": "Si activé, la batterie ne se décharge que lorsque le prix actuel dépasse le seuil de prix maximum configuré. Si aucun seuil n'est configuré, la moyenne journalière calculée automatiquement depuis le capteur de prix est utilisée. Si des plages horaires de décharge sont configurées, les deux conditions doivent être remplies.",
           "solar_forecast_sensor": "Capteur fournissant la prévision de production solaire en kWh (ex : Solcast). Avec panneaux solaires : configurez ce capteur — le système ne chargera depuis le réseau que si la prévision est insuffisante. Sans panneaux solaires : laissez vide — le système chargera quand l'énergie de la batterie est insuffisante pour la journée. Non requis si ce capteur a déjà été configuré à l'étape initiale — il sera utilisé automatiquement.",
           "predictive_safety_margin_kwh": "Tampon d'énergie supplémentaire ajouté à la prévision de consommation. Utile si la prévision solaire est trop optimiste. Mettre à 0 pour désactiver (défaut). Limité à la capacité totale de la batterie.",
@@ -878,7 +883,8 @@
       "slot_does_nothing": "Le créneau doit autoriser au moins une direction (charge ou décharge).",
       "manual_requires_power": "Le mode manuel nécessite l'activation du contrôle de puissance.",
       "no_price_data": "Le capteur sélectionné ne possède pas les attributs de prix attendus. Nordpool : nécessite `raw_today`. PVPC : nécessite `price_00h` … `price_23h`. CKW : nécessite l'attribut `prices` avec une liste de créneaux. EPEX : nécessite l'attribut `data` avec une liste de créneaux. ENTSO-e : nécessite l'attribut `prices_today` avec une liste de créneaux.",
-      "tibber_unavailable": "L'intégration Tibber n'est pas installée, ou son service `tibber.get_prices` est indisponible. Installez et configurez d'abord Tibber."
+      "tibber_unavailable": "L'intégration Tibber n'est pas installée, ou son service `tibber.get_prices` est indisponible. Installez et configurez d'abord Tibber.",
+      "discharge_below_charge": "Le prix plancher de décharge ne peut pas être inférieur au prix maximal (de charge). Définissez-le égal ou supérieur, ou laissez-le vide pour réutiliser le seuil de charge."
     }
   },
   "selector": {
@@ -1446,6 +1452,12 @@
       },
       "inverse_max_power": {
         "name": "Puissance Max. de l'Onduleur"
+      },
+      "max_price_threshold": {
+        "name": "Prix maximum (charge)"
+      },
+      "discharge_price_threshold": {
+        "name": "Prix plancher de décharge"
       }
     },
     "button": {

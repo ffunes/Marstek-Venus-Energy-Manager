@@ -16,7 +16,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .infra.entity_naming import english_entity_id, system_entity_id
+from .infra.entity_naming import english_entity_id, system_entity_id, SYSTEM_UNIQUE_ID_PREFIX
 from .const import (
     DOMAIN,
     EFFICIENCY_SENSOR_DEFINITIONS,
@@ -69,6 +69,7 @@ from .const import (
     CONF_PRICE_SENSOR,
     CONF_PRICE_INTEGRATION_TYPE,
     CONF_MAX_PRICE_THRESHOLD,
+    CONF_DISCHARGE_PRICE_THRESHOLD,
     CONF_AVERAGE_PRICE_SENSOR,
     CONF_DP_PRICE_DISCHARGE_CONTROL,
     CONF_RT_PRICE_DISCHARGE_CONTROL,
@@ -343,7 +344,7 @@ class DischargeWindowSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "discharge_window"
-        self._attr_unique_id = f"marstek_venus_system_discharge_window"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}discharge_window"
         self.entity_id = system_entity_id("sensor", "discharge_window")
         self._attr_icon = "mdi:clock-check-outline"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -460,7 +461,7 @@ class ActiveBatteriesSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "active_batteries"
-        self._attr_unique_id = f"marstek_venus_system_active_batteries"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}active_batteries"
         self.entity_id = system_entity_id("sensor", "active_batteries")
         self._attr_icon = "mdi:battery-sync"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -529,7 +530,7 @@ class WeeklyFullChargeSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "weekly_full_charge"
-        self._attr_unique_id = f"marstek_venus_system_weekly_full_charge_status"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}weekly_full_charge_status"
         self.entity_id = system_entity_id("sensor", "weekly_full_charge_status")
         self._attr_icon = "mdi:battery-clock"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -586,7 +587,7 @@ class ChargeDelaySensor(RestoreEntity, SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "charge_delay_status"
-        self._attr_unique_id = f"marstek_venus_system_charge_delay_status"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}charge_delay_status"
         self.entity_id = system_entity_id("sensor", "charge_delay_status")
         self._attr_icon = "mdi:clock-alert-outline"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -689,7 +690,7 @@ class ConfigurationSummarySensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "configuration_summary"
-        self._attr_unique_id = f"marstek_venus_system_configuration_summary"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}configuration_summary"
         self.entity_id = system_entity_id("sensor", "configuration_summary")
         self._attr_icon = "mdi:cog-outline"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -818,6 +819,9 @@ class ConfigurationSummarySensor(SensorEntity):
             max_price = data.get(CONF_MAX_PRICE_THRESHOLD)
             if max_price is not None:
                 attrs["max_price_threshold"] = max_price
+            discharge_price = data.get(CONF_DISCHARGE_PRICE_THRESHOLD)
+            if discharge_price is not None:
+                attrs["discharge_price_threshold"] = discharge_price
             avg_price_sensor = data.get(CONF_AVERAGE_PRICE_SENSOR)
             if avg_price_sensor:
                 attrs["average_price_sensor"] = avg_price_sensor
@@ -965,7 +969,7 @@ class IntegrationStatusSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "integration_status"
-        self._attr_unique_id = f"marstek_venus_system_integration_status"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}integration_status"
         self.entity_id = system_entity_id("sensor", "integration_status")
         self._attr_icon = "mdi:home-battery"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -1242,7 +1246,7 @@ class NonResponsiveBatteriesSensor(SensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "non_responsive_batteries"
-        self._attr_unique_id = f"marstek_venus_system_non_responsive_batteries"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}non_responsive_batteries"
         self.entity_id = system_entity_id("sensor", "non_responsive_batteries")
         self._attr_icon = "mdi:battery-alert"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
@@ -1314,7 +1318,7 @@ class DailySolarEnergySensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "system_daily_solar_energy"
-    _attr_unique_id = "marstek_venus_system_daily_solar_energy"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}daily_solar_energy"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = "kWh"
@@ -1356,7 +1360,7 @@ class SystemSolarPowerSensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "system_solar_power"
-    _attr_unique_id = "marstek_venus_system_solar_power"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}solar_power"
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = "W"
@@ -1401,7 +1405,7 @@ class DailyHomeEnergySensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "system_daily_home_energy"
-    _attr_unique_id = "marstek_venus_system_daily_home_energy"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}daily_home_energy"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = "kWh"
@@ -1440,7 +1444,7 @@ class DailyGridImportEnergySensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "system_daily_grid_import_energy"
-    _attr_unique_id = "marstek_venus_system_daily_grid_import_energy"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}daily_grid_import_energy"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = "kWh"
@@ -1478,7 +1482,7 @@ class DailyGridExportEnergySensor(SensorEntity):
 
     _attr_has_entity_name = True
     _attr_translation_key = "system_daily_grid_export_energy"
-    _attr_unique_id = "marstek_venus_system_daily_grid_export_energy"
+    _attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}daily_grid_export_energy"
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
     _attr_native_unit_of_measurement = "kWh"

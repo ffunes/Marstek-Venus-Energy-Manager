@@ -246,6 +246,7 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "discharge_price_threshold": "Ontlaad-prijsondergrens (optioneel)",
           "dp_price_discharge_control": "Alleen ontladen als prijs boven drempelwaarde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "predictive_safety_margin_kwh": "Veiligheidsmarge zonne-energieprognose (kWh)",
@@ -254,7 +255,8 @@
         "data_description": {
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
-          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Wanneer prijsgestuurde ontlading is ingeschakeld, wordt deze waarde ook gebruikt als ontlaaddrempel. Gebruik dezelfde eenheid als de sensor: €/kWh voor Nordpool/PVPC, CHF/kWh voor CKW. Leeg laten om alle slots te gebruiken en het daggemiddelde als ontlaaddrempel te gebruiken.",
+          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Wanneer prijsgestuurde ontlading is ingeschakeld, wordt deze waarde ook gebruikt als ontlaaddrempel. Gebruik dezelfde eenheid als de sensor: €/kWh voor Nordpool/PVPC, CHF/kWh voor CKW. Leeg laten om alle slots te gebruiken en het daggemiddelde als ontlaaddrempel te gebruiken. Tenzij hieronder een aparte ontlaadondergrens is ingesteld.",
+          "discharge_price_threshold": "Optionele aparte ondergrens voor prijsgestuurde ontlading. Ontlading wordt geblokkeerd zolang de prijs lager dan of gelijk aan deze waarde is, waardoor een neutrale band ontstaat tussen de maximale laadprijs (hierboven) en deze ondergrens: in die band laadt de batterij niet vanaf het net en ontlaadt deze niet (laden met zonne-overschot blijft werken). Laat leeg om de maximale prijs voor beide te gebruiken (huidig gedrag met één drempel).",
           "dp_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteitsprijs de geconfigureerde maximale prijsdrempel overschrijdt. Als er geen drempel is geconfigureerd, wordt het automatisch uit de prijssensor berekende daggemiddelde gebruikt. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "predictive_safety_margin_kwh": "Extra energiebuffer opgeteld bij de verbruiksprognose. Nuttig als de zonne-energieprognose te optimistisch is. Op 0 zetten om uit te schakelen (standaard). Begrensd door de totale batterijcapaciteit.",
@@ -444,7 +446,8 @@
       "slot_does_nothing": "Het slot moet ten minste één richting toestaan (laden of ontladen).",
       "manual_requires_power": "Handmatige modus vereist dat vermogenscontrole is ingeschakeld.",
       "no_price_data": "De geselecteerde sensor heeft niet de verwachte prijsattributen. Nordpool: heeft `raw_today` nodig. PVPC: heeft `price_00h` … `price_23h` nodig. CKW: heeft het attribuut `prices` met een lijst van slots nodig. EPEX: heeft het attribuut `data` met een lijst van slots nodig. ENTSO-e: heeft het attribuut `prices_today` met een lijst van slots nodig.",
-      "tibber_unavailable": "De Tibber-integratie is niet geïnstalleerd, of de service `tibber.get_prices` is niet beschikbaar. Installeer en configureer eerst Tibber."
+      "tibber_unavailable": "De Tibber-integratie is niet geïnstalleerd, of de service `tibber.get_prices` is niet beschikbaar. Installeer en configureer eerst Tibber.",
+      "discharge_below_charge": "De ontlaad-prijsondergrens mag niet lager zijn dan de maximale (laad)prijsdrempel. Stel deze gelijk of hoger in, of laat leeg om de laaddrempel te hergebruiken."
     },
     "abort": {
       "already_configured": "Deze integratie is al geconfigureerd.",
@@ -712,6 +715,7 @@
           "price_integration_type": "Prijsintegratie",
           "price_sensor": "Prijssensor",
           "max_price_threshold": "Maximale prijsdrempel (€/kWh, optioneel)",
+          "discharge_price_threshold": "Ontlaad-prijsondergrens (optioneel)",
           "dp_price_discharge_control": "Alleen ontladen als prijs boven drempelwaarde",
           "solar_forecast_sensor": "Zonnevoorspellingssensor (kWh)",
           "predictive_safety_margin_kwh": "Veiligheidsmarge zonne-energieprognose (kWh)",
@@ -720,7 +724,8 @@
         "data_description": {
           "price_integration_type": "Selecteer de domoticaintegratie die stroomprijs gegevens levert",
           "price_sensor": "Sensor met uurlijkse stroomprijzen (bijv. sensor.nordpool_kwh_nl_eur_3_10_025)",
-          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Wanneer prijsgestuurde ontlading is ingeschakeld, wordt deze waarde ook gebruikt als ontlaaddrempel. Gebruik dezelfde eenheid als de sensor: €/kWh voor Nordpool/PVPC, CHF/kWh voor CKW. Leeg laten om alle slots te gebruiken en het daggemiddelde als ontlaaddrempel te gebruiken.",
+          "max_price_threshold": "Tijdsloten boven deze prijs worden niet geselecteerd. Wanneer prijsgestuurde ontlading is ingeschakeld, wordt deze waarde ook gebruikt als ontlaaddrempel. Gebruik dezelfde eenheid als de sensor: €/kWh voor Nordpool/PVPC, CHF/kWh voor CKW. Leeg laten om alle slots te gebruiken en het daggemiddelde als ontlaaddrempel te gebruiken. Tenzij hieronder een aparte ontlaadondergrens is ingesteld.",
+          "discharge_price_threshold": "Optionele aparte ondergrens voor prijsgestuurde ontlading. Ontlading wordt geblokkeerd zolang de prijs lager dan of gelijk aan deze waarde is, waardoor een neutrale band ontstaat tussen de maximale laadprijs (hierboven) en deze ondergrens: in die band laadt de batterij niet vanaf het net en ontlaadt deze niet (laden met zonne-overschot blijft werken). Laat leeg om de maximale prijs voor beide te gebruiken (huidig gedrag met één drempel).",
           "dp_price_discharge_control": "Indien ingeschakeld, ontlaadt de batterij alleen wanneer de huidige elektriciteitsprijs de geconfigureerde maximale prijsdrempel overschrijdt. Als er geen drempel is geconfigureerd, wordt het automatisch uit de prijssensor berekende daggemiddelde gebruikt. Als ontladingstijdsloten zijn geconfigureerd, moeten aan beide voorwaarden worden voldaan.",
           "solar_forecast_sensor": "Sensor die de zonneproductievoorspelling in kWh levert (bijv. Solcast). Met zonnepanelen: configureer deze sensor — het systeem laadt alleen van het net als de voorspelling onvoldoende is. Zonder zonnepanelen: laat leeg — het systeem laadt wanneer de batterij-energie niet voldoende is voor de dag. Niet vereist als u deze sensor al in de eerste stap heeft geconfigureerd — hij wordt automatisch gebruikt.",
           "predictive_safety_margin_kwh": "Extra energiebuffer opgeteld bij de verbruiksprognose. Nuttig als de zonne-energieprognose te optimistisch is. Op 0 zetten om uit te schakelen (standaard). Begrensd door de totale batterijcapaciteit.",
@@ -878,7 +883,8 @@
       "slot_does_nothing": "Het slot moet ten minste één richting toestaan (laden of ontladen).",
       "manual_requires_power": "Handmatige modus vereist dat vermogenscontrole is ingeschakeld.",
       "no_price_data": "De geselecteerde sensor heeft niet de verwachte prijsattributen. Nordpool: heeft `raw_today` nodig. PVPC: heeft `price_00h` … `price_23h` nodig. CKW: heeft het attribuut `prices` met een lijst van slots nodig. EPEX: heeft het attribuut `data` met een lijst van slots nodig. ENTSO-e: heeft het attribuut `prices_today` met een lijst van slots nodig.",
-      "tibber_unavailable": "De Tibber-integratie is niet geïnstalleerd, of de service `tibber.get_prices` is niet beschikbaar. Installeer en configureer eerst Tibber."
+      "tibber_unavailable": "De Tibber-integratie is niet geïnstalleerd, of de service `tibber.get_prices` is niet beschikbaar. Installeer en configureer eerst Tibber.",
+      "discharge_below_charge": "De ontlaad-prijsondergrens mag niet lager zijn dan de maximale (laad)prijsdrempel. Stel deze gelijk of hoger in, of laat leeg om de laaddrempel te hergebruiken."
     }
   },
   "selector": {
@@ -1446,6 +1452,12 @@
       },
       "inverse_max_power": {
         "name": "Max. Omvormervermogen"
+      },
+      "max_price_threshold": {
+        "name": "Maximale prijs (laden)"
+      },
+      "discharge_price_threshold": {
+        "name": "Ontlaad-prijsondergrens"
       }
     },
     "button": {

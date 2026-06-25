@@ -29,7 +29,7 @@ from .const import (
     NOTIFICATION_ID_PREFIX,
 )
 from .infra.coordinator import MarstekVenusDataUpdateCoordinator
-from .infra.entity_naming import english_entity_id, system_entity_id
+from .infra.entity_naming import english_entity_id, system_entity_id, SYSTEM_UNIQUE_ID_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -392,7 +392,7 @@ class PredictiveChargingSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "predictive_charging"
-        self._attr_unique_id = f"marstek_venus_system_predictive_charging"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}predictive_charging"
         self.entity_id = system_entity_id("switch", "predictive_charging")
         self._attr_icon = "mdi:solar-power"
         self._attr_should_poll = False
@@ -461,7 +461,7 @@ class TimeSlotSwitch(SwitchEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "time_slot"
         self._attr_translation_placeholders = {"slot_number": str(index + 1)}
-        self._attr_unique_id = f"marstek_venus_system_time_slot_{index}_enabled"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}time_slot_{index}_enabled"
         self.entity_id = system_entity_id("switch", f"time_slot_{index}_enabled")
         self._attr_icon = "mdi:clock-outline"
         self._attr_should_poll = False
@@ -547,7 +547,7 @@ class CapacityProtectionSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "capacity_protection"
-        self._attr_unique_id = f"marstek_venus_system_capacity_protection"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}capacity_protection"
         self.entity_id = system_entity_id("switch", "capacity_protection")
         self._attr_icon = "mdi:battery-lock"
         self._attr_should_poll = False
@@ -599,7 +599,7 @@ class ChargeDelaySwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "charge_delay"
-        self._attr_unique_id = f"marstek_venus_system_charge_delay"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}charge_delay"
         self.entity_id = system_entity_id("switch", "charge_delay")
         self._attr_icon = "mdi:battery-clock"
         self._attr_should_poll = False
@@ -667,7 +667,7 @@ class ExcludedDeviceEnabledSwitch(SwitchEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "excluded_device_enabled"
         self._attr_translation_placeholders = {"device": friendly}
-        self._attr_unique_id = f"marstek_venus_system_excluded_device_enabled_{index}"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}excluded_device_enabled_{index}"
         self.entity_id = system_entity_id("switch", f"excluded_device_enabled_{index}")
         self._attr_icon = "mdi:power-plug-off"
         self._attr_should_poll = False
@@ -750,7 +750,7 @@ class ExcludedDeviceSolarSurplusSwitch(SwitchEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "excluded_device_solar_surplus"
         self._attr_translation_placeholders = {"device": friendly}
-        self._attr_unique_id = f"marstek_venus_system_solar_surplus_{index}"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}solar_surplus_{index}"
         self.entity_id = system_entity_id("switch", f"solar_surplus_{index}")
         self._attr_icon = "mdi:solar-power-variant"
         self._attr_should_poll = False
@@ -822,7 +822,7 @@ class ManualModeSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "manual_mode"
-        self._attr_unique_id = f"marstek_venus_system_manual_mode"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}manual_mode"
         self.entity_id = system_entity_id("switch", "manual_mode")
         self._attr_icon = "mdi:hand-back-right"
         self._attr_should_poll = False
@@ -919,7 +919,7 @@ class NoPdModeSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "no_pd_mode"
-        self._attr_unique_id = "marstek_venus_system_no_pd_mode"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}no_pd_mode"
         self.entity_id = system_entity_id("switch", "no_pd_mode")
         self._attr_icon = "mdi:sine-wave"
         self._attr_should_poll = False
@@ -980,7 +980,7 @@ class SystemPowerLimitsSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "system_power_limits"
-        self._attr_unique_id = "marstek_venus_system_system_power_limits"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}system_power_limits"
         self.entity_id = system_entity_id("switch", "system_power_limits")
         self._attr_icon = "mdi:speedometer"
         self._attr_should_poll = False
@@ -1030,7 +1030,7 @@ class HourlyBalanceSwitch(SwitchEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "hourly_balance"
-        self._attr_unique_id = f"marstek_venus_system_hourly_balance"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}hourly_balance"
         self.entity_id = system_entity_id("switch", "hourly_balance")
         self._attr_icon = "mdi:scale-balance"
         self._attr_should_poll = False

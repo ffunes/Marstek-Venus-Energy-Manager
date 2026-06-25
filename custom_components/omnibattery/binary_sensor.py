@@ -13,7 +13,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN, CONF_CAPACITY_PROTECTION_ENABLED
 from .infra.coordinator import MarstekVenusDataUpdateCoordinator
-from .infra.entity_naming import english_entity_id, system_entity_id
+from .infra.entity_naming import english_entity_id, system_entity_id, SYSTEM_UNIQUE_ID_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,7 +183,7 @@ class CapacityProtectionStatusSensor(BinarySensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "capacity_protection_active"
-        self._attr_unique_id = f"marstek_venus_system_capacity_protection_active"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}capacity_protection_active"
         self.entity_id = system_entity_id("binary_sensor", "capacity_protection_active")
         self._attr_device_class = "running"
         self._attr_icon = "mdi:shield-alert"
@@ -232,7 +232,7 @@ class PredictiveChargingStatusSensor(BinarySensorEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = "predictive_charging_active"
-        self._attr_unique_id = f"marstek_venus_system_predictive_charging_active"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}predictive_charging_active"
         self.entity_id = system_entity_id("binary_sensor", "predictive_charging_active")
         self._attr_device_class = "running"
         self._attr_icon = "mdi:battery-charging-wireless"

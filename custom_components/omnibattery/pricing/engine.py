@@ -1097,7 +1097,18 @@ class PricingManager:
         # where _dynamic_pricing_schedule is None.
         threshold = None
         if mode == PREDICTIVE_MODE_DYNAMIC_PRICING:
-            threshold = self._controller.max_price_threshold
+            # Discharge uses its own floor when configured, opening an idle band
+            # between the charge ceiling (max_price_threshold, used by
+            # select_cheapest_hours) and this discharge floor: price <= floor
+            # blocks discharge, price > ceiling selects no charge slot, so the
+            # gap idles (PV-surplus charging via normal PD still allowed). Unset
+            # → falls back to the charge ceiling, then the daily slot average, so
+            # single-threshold installs are unchanged. #408
+            # ponytail: a floor below the ceiling just collapses the band toward
+            # current behavior — benign, not validated.
+            threshold = self._controller.discharge_price_threshold
+            if threshold is None:
+                threshold = self._controller.max_price_threshold
             if threshold is None:
                 threshold = self._controller._dp_daily_avg_price
         elif self._controller.average_price_sensor:

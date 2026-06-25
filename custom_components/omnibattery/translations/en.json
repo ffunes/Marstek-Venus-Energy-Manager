@@ -246,6 +246,7 @@
           "price_integration_type": "Price integration",
           "price_sensor": "Electricity price sensor",
           "max_price_threshold": "Maximum price threshold (optional)",
+          "discharge_price_threshold": "Discharge price floor (optional)",
           "dp_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
@@ -254,7 +255,8 @@
         "data_description": {
           "price_integration_type": "Select your electricity price provider integration. Tibber is service-based: it reads prices from the tibber.get_prices service, so the price sensor below can be left empty.",
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
-          "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
+          "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold unless a separate discharge floor is set below. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
+          "discharge_price_threshold": "Optional separate floor for price-gated discharge. Discharge is blocked while the price is at or below this value, opening an idle band between the charge ceiling above and this floor: in that band the battery neither grid-charges nor discharges (solar-surplus charging still works). Leave empty to reuse the maximum price threshold for both (current single-threshold behavior).",
           "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the configured maximum price threshold. If no threshold is configured, it uses today's average price computed automatically from the price sensor. If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
@@ -444,7 +446,8 @@
       "slot_does_nothing": "The slot must allow at least one direction (charge or discharge).",
       "manual_requires_power": "Manual mode requires the power override tick to be enabled.",
       "no_price_data": "Selected sensor does not have the expected price attributes. Nordpool: needs `raw_today` attribute. PVPC: needs `price_00h` … `price_23h` attributes. CKW: needs `prices` attribute with a list of slots. EPEX: needs `data` attribute with a list of slots. ENTSO-e: needs `prices_today` attribute with a list of slots.",
-      "tibber_unavailable": "The Tibber integration is not installed, or its `tibber.get_prices` service is unavailable. Install and configure Tibber first."
+      "tibber_unavailable": "The Tibber integration is not installed, or its `tibber.get_prices` service is unavailable. Install and configure Tibber first.",
+      "discharge_below_charge": "The discharge price floor cannot be below the maximum (charge) price threshold. Set it equal or higher, or leave it empty to reuse the charge threshold."
     },
     "abort": {
       "already_configured": "This integration is already configured.",
@@ -712,6 +715,7 @@
           "price_integration_type": "Price integration",
           "price_sensor": "Electricity price sensor",
           "max_price_threshold": "Maximum price threshold (optional)",
+          "discharge_price_threshold": "Discharge price floor (optional)",
           "dp_price_discharge_control": "Only discharge when price is above threshold",
           "solar_forecast_sensor": "Solar forecast sensor (kWh)",
           "predictive_safety_margin_kwh": "Solar forecast safety margin (kWh)",
@@ -720,7 +724,8 @@
         "data_description": {
           "price_integration_type": "Select your electricity price provider integration. Tibber is service-based: it reads prices from the tibber.get_prices service, so the price sensor below can be left empty.",
           "price_sensor": "Sensor providing electricity prices (e.g., sensor.nordpool_kwh_es_eur_3_10_0 for Nordpool, sensor.esios_pvpc for PVPC, or your CKW sensor for Switzerland)",
-          "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
+          "max_price_threshold": "Slots above this price will not be selected. When price-gated discharge is enabled, this value is also used as the discharge threshold unless a separate discharge floor is set below. Use the same unit as the sensor: €/kWh for Nordpool/PVPC, CHF/kWh for CKW. Leave empty to use all slots and use the daily average as the discharge threshold.",
+          "discharge_price_threshold": "Optional separate floor for price-gated discharge. Discharge is blocked while the price is at or below this value, opening an idle band between the charge ceiling above and this floor: in that band the battery neither grid-charges nor discharges (solar-surplus charging still works). Leave empty to reuse the maximum price threshold for both (current single-threshold behavior).",
           "dp_price_discharge_control": "When enabled, the battery only discharges when the current electricity price exceeds the configured maximum price threshold. If no threshold is configured, it uses today's average price computed automatically from the price sensor. If discharge time slots are configured, both conditions must be met.",
           "solar_forecast_sensor": "Sensor providing the solar production forecast in kWh (e.g., Solcast). If you have solar panels, configure this sensor — the system will only charge from the grid when solar forecast is insufficient. If you have no solar panels, leave this empty — the system will charge whenever battery energy is not enough for the day. Not required if you already configured this sensor in the initial setup step — it will be used automatically.",
           "predictive_safety_margin_kwh": "Extra energy buffer added to the consumption forecast before deciding whether to charge. Useful when your solar forecast tends to be optimistic. Set to 0 to disable (default). Capped at total battery capacity.",
@@ -878,7 +883,8 @@
       "slot_does_nothing": "The slot must allow at least one direction (charge or discharge).",
       "manual_requires_power": "Manual mode requires the power override tick to be enabled.",
       "no_price_data": "Selected sensor does not have the expected price attributes. Nordpool: needs `raw_today` attribute. PVPC: needs `price_00h` … `price_23h` attributes. CKW: needs `prices` attribute with a list of slots. EPEX: needs `data` attribute with a list of slots. ENTSO-e: needs `prices_today` attribute with a list of slots.",
-      "tibber_unavailable": "The Tibber integration is not installed, or its `tibber.get_prices` service is unavailable. Install and configure Tibber first."
+      "tibber_unavailable": "The Tibber integration is not installed, or its `tibber.get_prices` service is unavailable. Install and configure Tibber first.",
+      "discharge_below_charge": "The discharge price floor cannot be below the maximum (charge) price threshold. Set it equal or higher, or leave it empty to reuse the charge threshold."
     }
   },
   "selector": {
@@ -1446,6 +1452,12 @@
       },
       "inverse_max_power": {
         "name": "Max Inverter Output"
+      },
+      "max_price_threshold": {
+        "name": "Max Price Threshold (Charge)"
+      },
+      "discharge_price_threshold": {
+        "name": "Discharge Price Floor"
       }
     },
     "button": {

@@ -6,6 +6,7 @@ import logging
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -15,12 +16,18 @@ from .const import (
     CONF_ENABLE_SYSTEM_POWER_LIMITS,
     CONF_SYSTEM_MAX_CHARGE_POWER,
     CONF_SYSTEM_MAX_DISCHARGE_POWER,
+    CONF_MAX_PRICE_THRESHOLD,
+    CONF_DISCHARGE_PRICE_THRESHOLD,
+    CONF_PREDICTIVE_CHARGING_MODE,
+    CONF_PRICE_INTEGRATION_TYPE,
+    PREDICTIVE_MODE_DYNAMIC_PRICING,
+    PRICE_INTEGRATION_CKW,
     MIN_CHARGE_HYSTERESIS_PERCENT,
     MAX_CHARGE_HYSTERESIS_PERCENT,
     DOMAIN,
 )
 from .infra.coordinator import MarstekVenusDataUpdateCoordinator
-from .infra.entity_naming import english_entity_id, system_entity_id
+from .infra.entity_naming import english_entity_id, system_entity_id, SYSTEM_UNIQUE_ID_PREFIX
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +89,16 @@ async def async_setup_entry(
         if condition and definition.get("condition_enabled") and not condition_enabled:
             continue
         entities.append(MarstekConfigNumberEntity(hass, entry, definition))
+
+    # Dynamic-pricing charge ceiling / discharge floor as live entities (#408),
+    # so automations can rewrite them. Scoped to dynamic-pricing mode (the
+    # discharge floor only applies there).
+    if (
+        entry.data.get("enable_predictive_charging")
+        and entry.data.get(CONF_PREDICTIVE_CHARGING_MODE) == PREDICTIVE_MODE_DYNAMIC_PRICING
+    ):
+        entities.append(MarstekPriceThresholdNumber(hass, entry, "charge"))
+        entities.append(MarstekPriceThresholdNumber(hass, entry, "discharge"))
 
     # Per-excluded-device "exclusion %" sliders (runtime adjustable). EV
     # no-telemetry devices have no numeric power sensor, so the slider would do
@@ -205,7 +222,7 @@ class MarstekConfigNumberEntity(NumberEntity):
 
         self._attr_has_entity_name = True
         self._attr_translation_key = definition["key"]
-        self._attr_unique_id = f"marstek_venus_system_{definition['key']}"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}{definition['key']}"
         self.entity_id = system_entity_id("number", definition["key"])
         self._attr_icon = definition.get("icon")
         self._attr_native_unit_of_measurement = definition.get("unit")
@@ -261,6 +278,83 @@ class MarstekConfigNumberEntity(NumberEntity):
         }
 
 
+class MarstekPriceThresholdNumber(NumberEntity):
+    """Live-editable dynamic-pricing charge ceiling / discharge floor (#408).
+
+    Mirrors the optional config-flow value into ``config_entry.data`` so an
+    automation can rewrite it via ``number.set_value``. ``update_pd_parameters``
+    re-reads both thresholds on every entry update (the same hot-reload hook the
+    options flow uses), so changes take effect on the next control cycle. The
+    value may be unset (``None`` → ``unknown`` state); the engine then falls back
+    (discharge → charge ceiling → daily average).
+    """
+
+    _attr_has_entity_name = True
+    _attr_mode = NumberMode.BOX
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_native_min_value = -1.0
+    _attr_native_max_value = 2.0
+    _attr_native_step = 0.001
+    _attr_should_poll = False
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, kind: str) -> None:
+        """kind = 'charge' (max_price_threshold) or 'discharge' (discharge floor)."""
+        self.hass = hass
+        self.entry = entry
+        self._kind = kind
+        key = "max_price_threshold" if kind == "charge" else "discharge_price_threshold"
+        self._conf_key = CONF_MAX_PRICE_THRESHOLD if kind == "charge" else CONF_DISCHARGE_PRICE_THRESHOLD
+        self._attr_translation_key = key
+        # unique_id keeps the legacy prefix (registry identity → preserves history
+        # across the Omnibattery rebrand); only the entity_id is rebranded.
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}{key}"
+        self.entity_id = system_entity_id("number", key)
+        self._attr_icon = "mdi:cash-plus" if kind == "charge" else "mdi:cash-minus"
+        is_chf = entry.data.get(CONF_PRICE_INTEGRATION_TYPE) == PRICE_INTEGRATION_CKW
+        self._attr_native_unit_of_measurement = "CHF/kWh" if is_chf else "€/kWh"
+
+    async def async_added_to_hass(self) -> None:
+        """Refresh state when config_entry.data changes (options flow / sibling write)."""
+        self.async_on_remove(self.entry.add_update_listener(self._handle_entry_update))
+
+    async def _handle_entry_update(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self):
+        """Current threshold from config_entry.data (None → unknown)."""
+        return self.entry.data.get(self._conf_key)
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Persist after enforcing charge ceiling <= discharge floor (#408)."""
+        max_price = self.entry.data.get(CONF_MAX_PRICE_THRESHOLD)
+        discharge_price = self.entry.data.get(CONF_DISCHARGE_PRICE_THRESHOLD)
+        if self._kind == "charge" and discharge_price is not None and value > discharge_price:
+            raise ServiceValidationError(
+                f"Charge threshold ({value}) cannot exceed the discharge floor ({discharge_price})."
+            )
+        if self._kind == "discharge" and max_price is not None and value < max_price:
+            raise ServiceValidationError(
+                f"Discharge floor ({value}) cannot be below the charge threshold ({max_price})."
+            )
+
+        new_data = dict(self.entry.data)
+        new_data[self._conf_key] = value
+        self.hass.config_entries.async_update_entry(self.entry, data=new_data)
+        _LOGGER.info("Dynamic pricing %s price threshold updated to %s", self._kind, value)
+        self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for the system."""
+        return {
+            "identifiers": {(DOMAIN, "marstek_venus_system")},
+            "name": "Omnibattery System",
+            "manufacturer": "Omnibattery",
+            "model": "Multi-Battery System",
+        }
+
+
 class ExcludedDeviceExclusionPctNumber(NumberEntity):
     """Runtime slider: percentage of an excluded device's demand kept excluded
     from the battery.
@@ -285,7 +379,7 @@ class ExcludedDeviceExclusionPctNumber(NumberEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = "excluded_device_exclusion_pct"
         self._attr_translation_placeholders = {"device": friendly}
-        self._attr_unique_id = f"marstek_venus_system_exclusion_pct_{index}"
+        self._attr_unique_id = f"{SYSTEM_UNIQUE_ID_PREFIX}exclusion_pct_{index}"
         self.entity_id = system_entity_id("number", f"exclusion_pct_{index}")
         self._attr_icon = "mdi:battery-charging-50"
         self._attr_native_unit_of_measurement = "%"

@@ -86,6 +86,7 @@ from .const import (
     CONF_PRICE_SENSOR,
     CONF_PRICE_INTEGRATION_TYPE,
     CONF_MAX_PRICE_THRESHOLD,
+    CONF_DISCHARGE_PRICE_THRESHOLD,
     CONF_AVERAGE_PRICE_SENSOR,
     CONF_DP_PRICE_DISCHARGE_CONTROL,
     CONF_RT_PRICE_DISCHARGE_CONTROL,
@@ -1142,19 +1143,25 @@ class MarstekVenusConfigFlow(LegacyDomainMigrationMixin, ConfigFlow, domain=DOMA
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
                     max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
+                    discharge_price_raw = user_input.get(CONF_DISCHARGE_PRICE_THRESHOLD)
+                    discharge_price = float(str(discharge_price_raw).replace(",", ".")) if discharge_price_raw else None
 
-                    self.config_data["enable_predictive_charging"] = True
-                    self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
-                    self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
-                    self.config_data[CONF_PRICE_SENSOR] = price_sensor
-                    self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
-                    self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data["charging_time_slot"] = None
-                    self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
-                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
+                    if max_price is not None and discharge_price is not None and discharge_price < max_price:
+                        errors[CONF_DISCHARGE_PRICE_THRESHOLD] = "discharge_below_charge"
+                    else:
+                        self.config_data["enable_predictive_charging"] = True
+                        self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
+                        self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
+                        self.config_data[CONF_PRICE_SENSOR] = price_sensor
+                        self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
+                        self.config_data[CONF_DISCHARGE_PRICE_THRESHOLD] = discharge_price
+                        self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                        self.config_data["charging_time_slot"] = None
+                        self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                        self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
 
-                    return await self.async_step_weekly_full_charge()
+                        return await self.async_step_weekly_full_charge()
             except Exception as e:
                 _LOGGER.error("Error validating dynamic pricing config: %s", e)
                 errors["base"] = "unknown"
@@ -1179,6 +1186,8 @@ class MarstekVenusConfigFlow(LegacyDomainMigrationMixin, ConfigFlow, domain=DOMA
             vol.Optional(CONF_PRICE_SENSOR):
                 EntitySelector(EntitySelectorConfig(domain="sensor")),
             vol.Optional(CONF_MAX_PRICE_THRESHOLD):
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+            vol.Optional(CONF_DISCHARGE_PRICE_THRESHOLD):
                 TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=False): bool,
         }
@@ -2838,18 +2847,24 @@ class OptionsFlowHandler(OptionsFlow):
                 if not errors:
                     max_price_raw = user_input.get(CONF_MAX_PRICE_THRESHOLD)
                     max_price = float(str(max_price_raw).replace(",", ".")) if max_price_raw else None
+                    discharge_price_raw = user_input.get(CONF_DISCHARGE_PRICE_THRESHOLD)
+                    discharge_price = float(str(discharge_price_raw).replace(",", ".")) if discharge_price_raw else None
 
-                    self.config_data["enable_predictive_charging"] = True
-                    self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
-                    self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
-                    self.config_data[CONF_PRICE_SENSOR] = price_sensor
-                    self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
-                    self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
-                    self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
-                    self.config_data["charging_time_slot"] = None
-                    self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
-                    self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
-                    return await self._save_and_finish()
+                    if max_price is not None and discharge_price is not None and discharge_price < max_price:
+                        errors[CONF_DISCHARGE_PRICE_THRESHOLD] = "discharge_below_charge"
+                    else:
+                        self.config_data["enable_predictive_charging"] = True
+                        self.config_data[CONF_PREDICTIVE_CHARGING_MODE] = PREDICTIVE_MODE_DYNAMIC_PRICING
+                        self.config_data[CONF_PRICE_INTEGRATION_TYPE] = integration_type
+                        self.config_data[CONF_PRICE_SENSOR] = price_sensor
+                        self.config_data[CONF_MAX_PRICE_THRESHOLD] = max_price
+                        self.config_data[CONF_DISCHARGE_PRICE_THRESHOLD] = discharge_price
+                        self.config_data[CONF_DP_PRICE_DISCHARGE_CONTROL] = user_input.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
+                        self.config_data[CONF_SOLAR_FORECAST_SENSOR] = forecast_sensor
+                        self.config_data["charging_time_slot"] = None
+                        self.config_data[CONF_PREDICTIVE_SAFETY_MARGIN_KWH] = user_input.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
+                        self.config_data[CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT] = user_input.get(CONF_PREDICTIVE_GRID_CHARGE_MARGIN_PCT, DEFAULT_PREDICTIVE_GRID_CHARGE_MARGIN_PCT)
+                        return await self._save_and_finish()
             except Exception as e:
                 _LOGGER.error("Error validating dynamic pricing config: %s", e)
                 errors["base"] = "unknown"
@@ -2857,6 +2872,7 @@ class OptionsFlowHandler(OptionsFlow):
         default_integration = existing_config.get(CONF_PRICE_INTEGRATION_TYPE, PRICE_INTEGRATION_NORDPOOL)
         default_sensor = existing_config.get(CONF_PRICE_SENSOR, "")
         default_max_price = existing_config.get(CONF_MAX_PRICE_THRESHOLD)
+        default_discharge_price = existing_config.get(CONF_DISCHARGE_PRICE_THRESHOLD)
         default_forecast = existing_config.get("solar_forecast_sensor", "")
         default_dp_discharge_control = existing_config.get(CONF_DP_PRICE_DISCHARGE_CONTROL, False)
         default_margin = existing_config.get(CONF_PREDICTIVE_SAFETY_MARGIN_KWH, DEFAULT_PREDICTIVE_SAFETY_MARGIN_KWH)
@@ -2884,6 +2900,11 @@ class OptionsFlowHandler(OptionsFlow):
             vol.Optional(
                 CONF_MAX_PRICE_THRESHOLD,
                 description={"suggested_value": str(default_max_price)} if default_max_price is not None else {}
+            ):
+                TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
+            vol.Optional(
+                CONF_DISCHARGE_PRICE_THRESHOLD,
+                description={"suggested_value": str(default_discharge_price)} if default_discharge_price is not None else {}
             ):
                 TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             vol.Required(CONF_DP_PRICE_DISCHARGE_CONTROL, default=default_dp_discharge_control): bool,
