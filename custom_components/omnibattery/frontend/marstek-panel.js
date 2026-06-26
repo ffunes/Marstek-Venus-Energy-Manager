@@ -3327,7 +3327,7 @@ class MarstekVenusPanel extends HTMLElement {
     } else if (b.powerW != null) {
       // No inverter_state sensor (e.g. Zendure): derive the chip from power flow.
       const w = b.powerW;
-      const disp = w > 30 ? this._t("charging") : w < -30 ? this._t("discharging") : this._t("idle");
+      const disp = w > 30 ? this._t("charging") : w < -30 ? this._t("discharging") : this._t("invStandby");
       this._setChip(r.state, disp, w > 30 || w < -30 ? "good" : "neutral");
       r.state.style.display = "";
     } else {
