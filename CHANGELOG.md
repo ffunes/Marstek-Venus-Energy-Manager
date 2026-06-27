@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.0.6] - 2026-06-27
+
+### Added
+- **Config backup for seamless rebrand migration**: on setup and on every options change, the integration writes each config entry's data and options to a HA Store under the fixed key `marstek_venus_energy_manager.config_backup`. The key is domain-independent and survives a config-entry deletion, so the upcoming Omnibattery build can restore the full configuration even when the user removes the integration manually before reinstalling. [`config_backup.py`](custom_components/marstek_venus_energy_manager/config_backup.py), [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py).
+
 ## [2.0.5] - 2026-06-20
 
 ### Added

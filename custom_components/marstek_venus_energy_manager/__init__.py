@@ -4381,6 +4381,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             _LOGGER.info("Migrated %s to %s (default for existing installations)",
                         battery_config[CONF_NAME], DEFAULT_VERSION)
 
+    # Persist a copy of the config so a full integration delete stays recoverable
+    # (see config_backup.py). Survives a config-entry deletion, so the Omnibattery
+    # rebrand can restore data + options even if the user deletes the integration
+    # instead of just removing the HACS repository.
+    from .config_backup import async_save_config_backup
+    await async_save_config_backup(hass)
+
     coordinators = []
     for battery_config in entry.data["batteries"]:
         coordinator = MarstekVenusDataUpdateCoordinator(
@@ -4645,6 +4652,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.debug("Config entry updated, hot-reloading controller parameters")
         if controller:
             controller.update_pd_parameters()
+        # Keep the recovery copy in sync with the latest options.
+        from .config_backup import async_save_config_backup
+        await async_save_config_backup(hass)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
