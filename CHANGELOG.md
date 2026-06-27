@@ -1,8 +1,17 @@
 # Changelog
 
-## [3.0.0] - 2026-06-21
+## [3.0.0b1] - 2026-06-27
 
-> ⚠️ **The integration is now “Omnibattery”** (renamed from Marstek Venus Energy Manager — it is multi-brand now). After updating via HACS the old integration disappears: go to **Settings → Devices & Services → Add Integration → Omnibattery** and confirm the migration when prompted. Everything is preserved — config, entity IDs, history, settings. Hard-refresh the browser (**Ctrl+F5**) so the renamed sidebar panel loads.
+> ### ⚠️ Major change — the integration is now “Omnibattery”
+> Renamed from *Marstek Venus Energy Manager*; it is multi-brand now (Marstek + Zendure). The HA domain changed (`marstek_venus_energy_manager` → `omnibattery`), so the upgrade needs **one manual step**. **Everything is preserved** — configuration, entity IDs (they stay `marstek_venus_*`), recorder history, long-term statistics, dashboards and automations.
+>
+> **After updating via HACS:**
+> 1. The old integration stops loading / disappears from the list — this is expected, your data is safe.
+> 2. Go to **Settings → Devices & Services → Add Integration → Omnibattery**.
+> 3. **Confirm the migration** when prompted — it recreates your config on the new domain and re-links every entity, its history and stored state.
+> 4. Hard-refresh the browser (**Ctrl+F5**) so the renamed sidebar panel loads.
+>
+> Take a Home Assistant backup before updating, just in case. This is a **beta** — please report anything odd on GitHub.
 
 ### Added
 - **Modbus serial / RTU support** (#350): a Marstek battery wired over RS485 (USB adapter) instead of WiFi can now be added by entering a serial port path (e.g. `/dev/ttyUSB0`) instead of an IP. Fixed at 115200 8N1; leave the path empty for the usual Modbus TCP. [`infra/modbus_client.py`](custom_components/omnibattery/infra/modbus_client.py), [`config_flow.py`](custom_components/omnibattery/config_flow.py).

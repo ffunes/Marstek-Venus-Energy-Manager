@@ -21,7 +21,7 @@
     "pymodbus>=3.5.0",
     "pyserial>=3.5"
   ],
-  "version": "3.0.0",
+  "version": "3.0.0b1",
   "zeroconf": [
     "_modbus._tcp.local."
   ]
