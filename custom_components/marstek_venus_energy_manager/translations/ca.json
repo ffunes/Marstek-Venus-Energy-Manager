@@ -1328,5 +1328,11 @@
         "name": "Reiniciar Dispositiu"
       }
     }
+  },
+  "issues": {
+    "discontinued_use_omnibattery": {
+      "title": "Aquesta integració està descontinuada — migra a Omnibattery",
+      "description": "**Marstek Venus Energy Manager ja no rep manteniment.** Continuarà funcionant, però no hi haurà noves funcionalitats, correccions d'errors ni suport.\n\nEl desenvolupament continua a **Omnibattery**, que substitueix aquesta integració i on es publiquen totes les novetats i correccions.\n\nMigra ara: https://github.com/ffunes/Omnibattery\n\nLa teva configuració actual està desada i Omnibattery la restaura automàticament, així que pots eliminar aquesta integració i instal·lar Omnibattery sense reconfigurar-ho tot."
+    }
   }
 }

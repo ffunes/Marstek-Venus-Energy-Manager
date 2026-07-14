@@ -1328,5 +1328,11 @@
         "name": "Reiniciar Dispositivo"
       }
     }
+  },
+  "issues": {
+    "discontinued_use_omnibattery": {
+      "title": "Esta integración está descontinuada — migra a Omnibattery",
+      "description": "**Marstek Venus Energy Manager ya no recibe mantenimiento.** Seguirá funcionando, pero no habrá nuevas funcionalidades, correcciones de errores ni soporte.\n\nEl desarrollo continúa en **Omnibattery**, que reemplaza a esta integración y donde se publican todas las nuevas funcionalidades y correcciones.\n\nMigra ahora: https://github.com/ffunes/Omnibattery\n\nTu configuración actual está respaldada y Omnibattery la restaura automáticamente, así que puedes eliminar esta integración e instalar Omnibattery sin reconfigurar todo."
+    }
   }
 }

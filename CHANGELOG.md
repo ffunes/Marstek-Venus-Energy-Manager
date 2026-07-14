@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0] - 2026-07-14
+
+> ⚠️ **This integration is discontinued.** It keeps working, but receives no new features, bug fixes or support. Development continues in **[Omnibattery](https://github.com/ffunes/Omnibattery)**.
+
+### Added
+- **End-of-support repair issue**: on setup the integration now raises a permanent (non-fixable) repair issue in Home Assistant announcing that the integration is discontinued, that new features and bugfixes ship in [Omnibattery](https://github.com/ffunes/Omnibattery), and that users should migrate. The config backup added in 2.0.6 lets Omnibattery restore the existing configuration automatically. Translated in all six supported languages. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py), `strings.json`, `translations/`.
+
 ## [2.0.6] - 2026-06-27
 
 ### Added

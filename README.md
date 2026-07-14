@@ -1,5 +1,9 @@
 # Marstek Venus Energy Manager for Home Assistant
 
+> [!IMPORTANT]
+> **This integration is discontinued and no longer supported.**
+> Development continues in **[Omnibattery](https://github.com/ffunes/Omnibattery)**, which replaces it and is where all new features and bug fixes are released. Please migrate — your configuration is backed up and Omnibattery restores it automatically.
+
 The **Marstek Venus Energy Manager** is a comprehensive Home Assistant integration designed to monitor and control Marstek Venus E and C series batteries (v2 and v3) and Venus D and Venus A series batteries via Modbus TCP. It provides advanced energy management features including predictive grid charging, customizable time slots for discharge control, and device load exclusion logic.
 
 > [!CAUTION]

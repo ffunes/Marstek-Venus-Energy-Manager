@@ -1322,5 +1322,11 @@
         "name": "Apparaat Resetten"
       }
     }
+  },
+  "issues": {
+    "discontinued_use_omnibattery": {
+      "title": "Deze integratie wordt stopgezet — migreer naar Omnibattery",
+      "description": "**Marstek Venus Energy Manager wordt niet langer onderhouden.** De integratie blijft werken, maar krijgt geen nieuwe functies, bugfixes of ondersteuning meer.\n\nDe ontwikkeling gaat verder in **Omnibattery**, dat deze integratie vervangt en waarin alle nieuwe functies en fixes verschijnen.\n\nMigreer nu: https://github.com/ffunes/Omnibattery\n\nJe huidige configuratie is geback-upt en Omnibattery herstelt die automatisch, dus je kunt deze integratie verwijderen en Omnibattery installeren zonder alles opnieuw in te stellen."
+    }
   }
 }

@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.event import async_track_time_interval, async_track_time_change, async_track_state_change_event
 from homeassistant.util import dt as dt_util
@@ -125,6 +126,9 @@ from .pricing import DynamicPricingSchedule, notifications
 from .pricing.engine import PricingManager
 
 _LOGGER = logging.getLogger(__name__)
+
+# This integration is discontinued; all further work happens in Omnibattery.
+OMNIBATTERY_URL = "https://github.com/ffunes/Omnibattery"
 
 # Charge taper is voltage-only. SOC is deliberately ignored near the top because
 # some batteries report unstable SOC values while cell voltage remains reliable.
@@ -4368,6 +4372,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Marstek Venus Energy Manager from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+
+    # This integration is discontinued in favour of Omnibattery. Surface a
+    # permanent repair issue pointing users at the migration.
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "discontinued_use_omnibattery",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="discontinued_use_omnibattery",
+        learn_more_url=OMNIBATTERY_URL,
+    )
 
     # Register the sidebar dashboard panel (once per HA instance, non-blocking).
     await _async_register_frontend_panel(hass, entry)
