@@ -1326,7 +1326,7 @@
   "issues": {
     "discontinued_use_omnibattery": {
       "title": "Diese Integration wird eingestellt — zu Omnibattery migrieren",
-      "description": "**Marstek Venus Energy Manager wird nicht mehr gepflegt.** Die Integration funktioniert weiterhin, erhält aber keine neuen Funktionen, Fehlerbehebungen oder Support mehr.\n\nDie Entwicklung wird in **Omnibattery** fortgesetzt. Omnibattery ersetzt diese Integration und enthält alle neuen Funktionen und Fehlerbehebungen.\n\nJetzt migrieren: https://github.com/ffunes/Omnibattery\n\nDeine aktuelle Konfiguration wurde gesichert und wird von Omnibattery automatisch wiederhergestellt. Du kannst diese Integration entfernen und Omnibattery installieren, ohne alles neu einzurichten."
+      "description": "**Marstek Venus Energy Manager wird nicht mehr gepflegt.** Die Integration funktioniert weiterhin, erhält aber keine neuen Funktionen, Fehlerbehebungen oder Support mehr.\n\nDie Entwicklung wird in **[Omnibattery]({omnibattery_url})** fortgesetzt. Omnibattery ersetzt diese Integration und enthält alle neuen Funktionen und Fehlerbehebungen.\n\nDeine aktuelle Konfiguration wurde gesichert und wird von Omnibattery automatisch wiederhergestellt. Du kannst diese Integration entfernen und Omnibattery installieren, ohne alles neu einzurichten."
     }
   }
 }

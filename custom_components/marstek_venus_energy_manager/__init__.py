@@ -4382,6 +4382,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="discontinued_use_omnibattery",
+        # hassfest rejects literal URLs inside translation strings; pass it as a placeholder.
+        translation_placeholders={"omnibattery_url": OMNIBATTERY_URL},
         learn_more_url=OMNIBATTERY_URL,
     )
 

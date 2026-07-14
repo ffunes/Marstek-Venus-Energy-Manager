@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.1] - 2026-07-14
+
+### Fixed
+- **hassfest failed on the 2.1.0 deprecation notice**: translation strings may not contain literal URLs. The Omnibattery link is now passed as a `{omnibattery_url}` description placeholder and rendered as a markdown link. [`__init__.py`](custom_components/marstek_venus_energy_manager/__init__.py), `strings.json`, `translations/`.
+
 ## [2.1.0] - 2026-07-14
 
 > ⚠️ **This integration is discontinued.** It keeps working, but receives no new features, bug fixes or support. Development continues in **[Omnibattery](https://github.com/ffunes/Omnibattery)**.
